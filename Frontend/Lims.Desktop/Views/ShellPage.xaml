@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="Lims.Desktop.Views.ShellPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Background="{StaticResource LimsBackgroundBrush}">
+    <Grid Padding="48">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <Grid>
+            <StackPanel Orientation="Horizontal" Spacing="12">
+                <Border Width="36" Height="36" Background="{StaticResource LimsAccentBrush}" CornerRadius="8">
+                    <TextBlock
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        FontWeight="Bold"
+                        Foreground="White"
+                        Text="L" />
+                </Border>
+                <StackPanel>
+                    <TextBlock FontSize="18" FontWeight="SemiBold" Text="LIMS" />
+                    <TextBlock
+                        FontSize="11"
+                        Foreground="{StaticResource LimsTextSecondaryBrush}"
+                        Text="Nueva generación · checkpoint de autenticación" />
+                </StackPanel>
+            </StackPanel>
+            <Button
+                HorizontalAlignment="Right"
+                AutomationProperties.Name="Cerrar sesión"
+                Command="{x:Bind ViewModel.LogoutCommand}"
+                Content="Cerrar sesión" />
+        </Grid>
+
+        <Border
+            Grid.Row="1"
+            MaxWidth="760"
+            Padding="40"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"
+            Background="{StaticResource LimsSurfaceBrush}"
+            BorderBrush="{StaticResource LimsBorderBrush}"
+            BorderThickness="1"
+            CornerRadius="{StaticResource LimsSurfaceCornerRadius}">
+            <StackPanel Spacing="22">
+                <StackPanel Spacing="6">
+                    <TextBlock Style="{StaticResource LimsHeadingStyle}" Text="Sesión verificada" />
+                    <TextBlock
+                        Foreground="{StaticResource LimsTextSecondaryBrush}"
+                        Text="Esta pantalla temporal confirma el flujo completo de autenticación." />
+                </StackPanel>
+                <Grid ColumnSpacing="36" RowSpacing="18">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="150" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <TextBlock Foreground="{StaticResource LimsTextSecondaryBrush}" Text="Nombre" />
+                    <TextBlock Grid.Column="1" FontWeight="SemiBold" Text="{x:Bind ViewModel.DisplayName, Mode=OneWay}" />
+                    <TextBlock Grid.Row="1" Foreground="{StaticResource LimsTextSecondaryBrush}" Text="Rol" />
+                    <TextBlock Grid.Row="1" Grid.Column="1" Text="{x:Bind ViewModel.Role, Mode=OneWay}" />
+                    <TextBlock Grid.Row="2" Foreground="{StaticResource LimsTextSecondaryBrush}" Text="Departamento" />
+                    <TextBlock Grid.Row="2" Grid.Column="1" Text="{x:Bind ViewModel.Department, Mode=OneWay}" />
+                    <TextBlock Grid.Row="3" Foreground="{StaticResource LimsTextSecondaryBrush}" Text="Estado" />
+                    <TextBlock
+                        Grid.Row="3"
+                        Grid.Column="1"
+                        Foreground="{StaticResource LimsSuccessBrush}"
+                        Text="{x:Bind ViewModel.SessionMessage, Mode=OneWay}" />
+                </Grid>
+                <InfoBar
+                    IsClosable="False"
+                    IsOpen="True"
+                    Message="Los módulos operativos se implementarán después de aprobar este checkpoint."
+                    Severity="Informational"
+                    Title="Alcance controlado" />
+            </StackPanel>
+        </Border>
+    </Grid>
+</Page>

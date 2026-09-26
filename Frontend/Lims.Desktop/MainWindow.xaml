@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Window
+    x:Class="Lims.Desktop.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Title="LIMS">
+    <Grid
+        Background="{ThemeResource LimsBackgroundBrush}"
+        RequestedTheme="Dark">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="48" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <Grid
+            x:Name="AppTitleBar"
+            Height="48"
+            Background="{ThemeResource LimsBackgroundBrush}">
+            <Border
+                BorderBrush="{ThemeResource LimsBorderBrush}"
+                BorderThickness="0,0,0,1">
+                <StackPanel
+                    Margin="16,0,0,0"
+                    VerticalAlignment="Center"
+                    Orientation="Horizontal"
+                    Spacing="10">
+                    <Image
+                        Width="22"
+                        Height="22"
+                        AutomationProperties.Name="Icono LIMS"
+                        IsHitTestVisible="False"
+                        Source="ms-appx:///Assets/Branding/LIMS.png"
+                        Stretch="Uniform" />
+                    <TextBlock
+                        VerticalAlignment="Center"
+                        FontFamily="{StaticResource LimsDisplayFontFamily}"
+                        FontSize="14"
+                        FontWeight="SemiBold"
+                        Foreground="{ThemeResource LimsTextPrimaryBrush}"
+                        Text="LIMS" />
+                    <Rectangle
+                        Width="1"
+                        Height="18"
+                        Margin="2,0"
+                        VerticalAlignment="Center"
+                        Fill="{ThemeResource LimsBorderBrush}" />
+                    <TextBlock
+                        VerticalAlignment="Center"
+                        FontFamily="{StaticResource LimsFontFamily}"
+                        FontSize="12"
+                        Foreground="{ThemeResource LimsTextSecondaryBrush}"
+                        Text="Gestión de laboratorio" />
+                </StackPanel>
+            </Border>
+        </Grid>
+
+        <ContentControl
+            x:Name="RootContent"
+            Grid.Row="1"
+            HorizontalContentAlignment="Stretch"
+            VerticalContentAlignment="Stretch" />
+    </Grid>
+</Window>

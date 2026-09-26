@@ -1,0 +1,9 @@
+@Lims_Api_HostAddress = https://localhost:7142
+
+GET {{Lims_Api_HostAddress}}/
+Accept: application/json
+
+###
+
+GET {{Lims_Api_HostAddress}}/health/live
+Accept: application/json

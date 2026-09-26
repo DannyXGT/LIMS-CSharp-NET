@@ -1,0 +1,387 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <ResourceDictionary.ThemeDictionaries>
+        <ResourceDictionary x:Key="Light">
+            <Color x:Key="LimsBackgroundColor">#FFF4F7FA</Color>
+            <Color x:Key="LimsSurfaceColor">#FFFFFFFF</Color>
+            <Color x:Key="LimsSurfaceElevatedColor">#FFF8FAFC</Color>
+            <Color x:Key="LimsSurfaceSecondaryColor">#FFEAF1F7</Color>
+            <Color x:Key="LimsBorderColor">#FFC7D4E0</Color>
+            <Color x:Key="LimsBorderStrongColor">#FF91A8BA</Color>
+            <Color x:Key="LimsTextPrimaryColor">#FF142231</Color>
+            <Color x:Key="LimsTextSecondaryColor">#FF53697A</Color>
+            <Color x:Key="LimsTextTertiaryColor">#FF728597</Color>
+            <Color x:Key="LimsAccentColor">#FF176FC1</Color>
+            <Color x:Key="LimsAccentHoverColor">#FF0E5FAE</Color>
+            <Color x:Key="LimsAccentPressedColor">#FF0B4E91</Color>
+            <Color x:Key="LimsAccentDisabledColor">#FFB4C9DD</Color>
+            <Color x:Key="LimsOnAccentColor">#FFFFFFFF</Color>
+            <Color x:Key="LimsFocusColor">#FF176FC1</Color>
+            <Color x:Key="LimsDangerColor">#FFB4232C</Color>
+            <Color x:Key="LimsDangerSurfaceColor">#FFFFEEF0</Color>
+            <Color x:Key="LimsDangerBorderColor">#FFF2BBC1</Color>
+            <Color x:Key="LimsInformationColor">#FF176FC1</Color>
+            <Color x:Key="LimsSuccessColor">#FF147A4E</Color>
+            <Color x:Key="LimsWarningColor">#FFA46100</Color>
+            <Color x:Key="LimsDisabledColor">#FFDCE4EB</Color>
+            <Color x:Key="LimsDisabledTextColor">#FF8997A4</Color>
+            <Color x:Key="LimsInputBackgroundColor">#FFFFFFFF</Color>
+            <Color x:Key="LimsInputBorderColor">#FFA8BBCB</Color>
+            <Color x:Key="LimsInputHoverColor">#FF6F8DA5</Color>
+            <Color x:Key="LimsOverlayColor">#B30A1017</Color>
+            <Color x:Key="LimsSelectionColor">#4D2A8BF2</Color>
+            <Color x:Key="LimsShadowColor">#260A1017</Color>
+            <Color x:Key="LimsAccentSoftColor">#1A176FC1</Color>
+
+            <SolidColorBrush x:Key="LimsBackgroundBrush" Color="{StaticResource LimsBackgroundColor}" />
+            <SolidColorBrush x:Key="LimsSurfaceBrush" Color="{StaticResource LimsSurfaceColor}" />
+            <SolidColorBrush x:Key="LimsSurfaceElevatedBrush" Color="{StaticResource LimsSurfaceElevatedColor}" />
+            <SolidColorBrush x:Key="LimsSurfaceSecondaryBrush" Color="{StaticResource LimsSurfaceSecondaryColor}" />
+            <SolidColorBrush x:Key="LimsBorderBrush" Color="{StaticResource LimsBorderColor}" />
+            <SolidColorBrush x:Key="LimsBorderStrongBrush" Color="{StaticResource LimsBorderStrongColor}" />
+            <SolidColorBrush x:Key="LimsTextPrimaryBrush" Color="{StaticResource LimsTextPrimaryColor}" />
+            <SolidColorBrush x:Key="LimsTextSecondaryBrush" Color="{StaticResource LimsTextSecondaryColor}" />
+            <SolidColorBrush x:Key="LimsTextTertiaryBrush" Color="{StaticResource LimsTextTertiaryColor}" />
+            <SolidColorBrush x:Key="LimsAccentBrush" Color="{StaticResource LimsAccentColor}" />
+            <SolidColorBrush x:Key="LimsAccentHoverBrush" Color="{StaticResource LimsAccentHoverColor}" />
+            <SolidColorBrush x:Key="LimsAccentPressedBrush" Color="{StaticResource LimsAccentPressedColor}" />
+            <SolidColorBrush x:Key="LimsAccentDisabledBrush" Color="{StaticResource LimsAccentDisabledColor}" />
+            <SolidColorBrush x:Key="LimsOnAccentBrush" Color="{StaticResource LimsOnAccentColor}" />
+            <SolidColorBrush x:Key="LimsFocusBrush" Color="{StaticResource LimsFocusColor}" />
+            <SolidColorBrush x:Key="LimsDangerBrush" Color="{StaticResource LimsDangerColor}" />
+            <SolidColorBrush x:Key="LimsDangerSurfaceBrush" Color="{StaticResource LimsDangerSurfaceColor}" />
+            <SolidColorBrush x:Key="LimsDangerBorderBrush" Color="{StaticResource LimsDangerBorderColor}" />
+            <SolidColorBrush x:Key="LimsInformationBrush" Color="{StaticResource LimsInformationColor}" />
+            <SolidColorBrush x:Key="LimsSuccessBrush" Color="{StaticResource LimsSuccessColor}" />
+            <SolidColorBrush x:Key="LimsWarningBrush" Color="{StaticResource LimsWarningColor}" />
+            <SolidColorBrush x:Key="LimsDisabledBrush" Color="{StaticResource LimsDisabledColor}" />
+            <SolidColorBrush x:Key="LimsDisabledTextBrush" Color="{StaticResource LimsDisabledTextColor}" />
+            <SolidColorBrush x:Key="LimsInputBackgroundBrush" Color="{StaticResource LimsInputBackgroundColor}" />
+            <SolidColorBrush x:Key="LimsInputBorderBrush" Color="{StaticResource LimsInputBorderColor}" />
+            <SolidColorBrush x:Key="LimsInputHoverBrush" Color="{StaticResource LimsInputHoverColor}" />
+            <SolidColorBrush x:Key="LimsPanelBrush" Color="{StaticResource LimsSurfaceSecondaryColor}" />
+            <SolidColorBrush x:Key="LimsPanelElevatedBrush" Color="{StaticResource LimsSurfaceElevatedColor}" />
+            <SolidColorBrush x:Key="LimsElevatedPanelBrush" Color="{StaticResource LimsSurfaceElevatedColor}" />
+            <SolidColorBrush x:Key="LimsOverlayBrush" Color="{StaticResource LimsOverlayColor}" />
+            <SolidColorBrush x:Key="LimsSelectionBrush" Color="{StaticResource LimsSelectionColor}" />
+            <SolidColorBrush x:Key="LimsErrorBrush" Color="{StaticResource LimsDangerColor}" />
+            <SolidColorBrush x:Key="LimsErrorSurfaceBrush" Color="{StaticResource LimsDangerSurfaceColor}" />
+            <SolidColorBrush x:Key="LimsErrorBorderBrush" Color="{StaticResource LimsDangerBorderColor}" />
+            <SolidColorBrush x:Key="LimsErrorBackgroundBrush" Color="{StaticResource LimsDangerSurfaceColor}" />
+            <SolidColorBrush x:Key="LimsErrorTextBrush" Color="{StaticResource LimsDangerColor}" />
+            <SolidColorBrush x:Key="LimsShadowBrush" Color="{StaticResource LimsShadowColor}" />
+            <SolidColorBrush x:Key="LimsAccentSoftBrush" Color="{StaticResource LimsAccentSoftColor}" />
+            <LinearGradientBrush x:Key="LimsLoginBackdropBrush" StartPoint="0,0" EndPoint="1,1">
+                <GradientStop Color="{StaticResource LimsBackgroundColor}" Offset="0" />
+                <GradientStop Color="{StaticResource LimsSurfaceColor}" Offset="1" />
+            </LinearGradientBrush>
+
+            <SolidColorBrush x:Key="AccentButtonBackground" Color="{StaticResource LimsAccentColor}" />
+            <SolidColorBrush x:Key="AccentButtonBackgroundPointerOver" Color="{StaticResource LimsAccentHoverColor}" />
+            <SolidColorBrush x:Key="AccentButtonBackgroundPressed" Color="{StaticResource LimsAccentPressedColor}" />
+            <SolidColorBrush x:Key="AccentButtonBackgroundDisabled" Color="{StaticResource LimsAccentDisabledColor}" />
+            <SolidColorBrush x:Key="AccentButtonForeground" Color="{StaticResource LimsOnAccentColor}" />
+            <SolidColorBrush x:Key="AccentButtonForegroundPointerOver" Color="{StaticResource LimsOnAccentColor}" />
+            <SolidColorBrush x:Key="AccentButtonForegroundPressed" Color="{StaticResource LimsOnAccentColor}" />
+            <SolidColorBrush x:Key="AccentButtonForegroundDisabled" Color="{StaticResource LimsDisabledTextColor}" />
+            <SolidColorBrush x:Key="TextControlBackground" Color="{StaticResource LimsInputBackgroundColor}" />
+            <SolidColorBrush x:Key="TextControlBackgroundPointerOver" Color="{StaticResource LimsInputBackgroundColor}" />
+            <SolidColorBrush x:Key="TextControlBackgroundFocused" Color="{StaticResource LimsInputBackgroundColor}" />
+            <SolidColorBrush x:Key="TextControlBorderBrush" Color="{StaticResource LimsInputBorderColor}" />
+            <SolidColorBrush x:Key="TextControlBorderBrushPointerOver" Color="{StaticResource LimsInputHoverColor}" />
+            <SolidColorBrush x:Key="TextControlBorderBrushFocused" Color="{StaticResource LimsFocusColor}" />
+        </ResourceDictionary>
+
+        <ResourceDictionary x:Key="Dark">
+            <Color x:Key="LimsBackgroundColor">#FF0A1017</Color>
+            <Color x:Key="LimsSurfaceColor">#FF121C26</Color>
+            <Color x:Key="LimsSurfaceElevatedColor">#FF203246</Color>
+            <Color x:Key="LimsSurfaceSecondaryColor">#FF182635</Color>
+            <Color x:Key="LimsBorderColor">#FF30465A</Color>
+            <Color x:Key="LimsBorderStrongColor">#FF3A5268</Color>
+            <Color x:Key="LimsTextPrimaryColor">#FFF5F7FA</Color>
+            <Color x:Key="LimsTextSecondaryColor">#FFB1BDCA</Color>
+            <Color x:Key="LimsTextTertiaryColor">#FF8497AA</Color>
+            <Color x:Key="LimsAccentColor">#FF2A8BF2</Color>
+            <Color x:Key="LimsAccentHoverColor">#FF58A6FF</Color>
+            <Color x:Key="LimsAccentPressedColor">#FF1E6FC5</Color>
+            <Color x:Key="LimsAccentDisabledColor">#FF1D5E9E</Color>
+            <Color x:Key="LimsOnAccentColor">#FFFFFFFF</Color>
+            <Color x:Key="LimsFocusColor">#FF58A6FF</Color>
+            <Color x:Key="LimsDangerColor">#FFFF7A84</Color>
+            <Color x:Key="LimsDangerSurfaceColor">#FF33232B</Color>
+            <Color x:Key="LimsDangerBorderColor">#FF71404A</Color>
+            <Color x:Key="LimsInformationColor">#FF58A6FF</Color>
+            <Color x:Key="LimsSuccessColor">#FF4CC38A</Color>
+            <Color x:Key="LimsWarningColor">#FFF2B84B</Color>
+            <Color x:Key="LimsDisabledColor">#FF243544</Color>
+            <Color x:Key="LimsDisabledTextColor">#FF7F91A1</Color>
+            <Color x:Key="LimsInputBackgroundColor">#FF101923</Color>
+            <Color x:Key="LimsInputBorderColor">#FF3A5268</Color>
+            <Color x:Key="LimsInputHoverColor">#FF48647D</Color>
+            <Color x:Key="LimsOverlayColor">#B30A1017</Color>
+            <Color x:Key="LimsSelectionColor">#662A8BF2</Color>
+            <Color x:Key="LimsShadowColor">#8F000000</Color>
+            <Color x:Key="LimsAccentSoftColor">#262A8BF2</Color>
+
+            <SolidColorBrush x:Key="LimsBackgroundBrush" Color="{StaticResource LimsBackgroundColor}" />
+            <SolidColorBrush x:Key="LimsSurfaceBrush" Color="{StaticResource LimsSurfaceColor}" />
+            <SolidColorBrush x:Key="LimsSurfaceElevatedBrush" Color="{StaticResource LimsSurfaceElevatedColor}" />
+            <SolidColorBrush x:Key="LimsSurfaceSecondaryBrush" Color="{StaticResource LimsSurfaceSecondaryColor}" />
+            <SolidColorBrush x:Key="LimsBorderBrush" Color="{StaticResource LimsBorderColor}" />
+            <SolidColorBrush x:Key="LimsBorderStrongBrush" Color="{StaticResource LimsBorderStrongColor}" />
+            <SolidColorBrush x:Key="LimsTextPrimaryBrush" Color="{StaticResource LimsTextPrimaryColor}" />
+            <SolidColorBrush x:Key="LimsTextSecondaryBrush" Color="{StaticResource LimsTextSecondaryColor}" />
+            <SolidColorBrush x:Key="LimsTextTertiaryBrush" Color="{StaticResource LimsTextTertiaryColor}" />
+            <SolidColorBrush x:Key="LimsAccentBrush" Color="{StaticResource LimsAccentColor}" />
+            <SolidColorBrush x:Key="LimsAccentHoverBrush" Color="{StaticResource LimsAccentHoverColor}" />
+            <SolidColorBrush x:Key="LimsAccentPressedBrush" Color="{StaticResource LimsAccentPressedColor}" />
+            <SolidColorBrush x:Key="LimsAccentDisabledBrush" Color="{StaticResource LimsAccentDisabledColor}" />
+            <SolidColorBrush x:Key="LimsOnAccentBrush" Color="{StaticResource LimsOnAccentColor}" />
+            <SolidColorBrush x:Key="LimsFocusBrush" Color="{StaticResource LimsFocusColor}" />
+            <SolidColorBrush x:Key="LimsDangerBrush" Color="{StaticResource LimsDangerColor}" />
+            <SolidColorBrush x:Key="LimsDangerSurfaceBrush" Color="{StaticResource LimsDangerSurfaceColor}" />
+            <SolidColorBrush x:Key="LimsDangerBorderBrush" Color="{StaticResource LimsDangerBorderColor}" />
+            <SolidColorBrush x:Key="LimsInformationBrush" Color="{StaticResource LimsInformationColor}" />
+            <SolidColorBrush x:Key="LimsSuccessBrush" Color="{StaticResource LimsSuccessColor}" />
+            <SolidColorBrush x:Key="LimsWarningBrush" Color="{StaticResource LimsWarningColor}" />
+            <SolidColorBrush x:Key="LimsDisabledBrush" Color="{StaticResource LimsDisabledColor}" />
+            <SolidColorBrush x:Key="LimsDisabledTextBrush" Color="{StaticResource LimsDisabledTextColor}" />
+            <SolidColorBrush x:Key="LimsInputBackgroundBrush" Color="{StaticResource LimsInputBackgroundColor}" />
+            <SolidColorBrush x:Key="LimsInputBorderBrush" Color="{StaticResource LimsInputBorderColor}" />
+            <SolidColorBrush x:Key="LimsInputHoverBrush" Color="{StaticResource LimsInputHoverColor}" />
+            <SolidColorBrush x:Key="LimsPanelBrush" Color="{StaticResource LimsSurfaceSecondaryColor}" />
+            <SolidColorBrush x:Key="LimsPanelElevatedBrush" Color="{StaticResource LimsSurfaceElevatedColor}" />
+            <SolidColorBrush x:Key="LimsElevatedPanelBrush" Color="{StaticResource LimsSurfaceElevatedColor}" />
+            <SolidColorBrush x:Key="LimsOverlayBrush" Color="{StaticResource LimsOverlayColor}" />
+            <SolidColorBrush x:Key="LimsSelectionBrush" Color="{StaticResource LimsSelectionColor}" />
+            <SolidColorBrush x:Key="LimsErrorBrush" Color="{StaticResource LimsDangerColor}" />
+            <SolidColorBrush x:Key="LimsErrorSurfaceBrush" Color="{StaticResource LimsDangerSurfaceColor}" />
+            <SolidColorBrush x:Key="LimsErrorBorderBrush" Color="{StaticResource LimsDangerBorderColor}" />
+            <SolidColorBrush x:Key="LimsErrorBackgroundBrush" Color="{StaticResource LimsDangerSurfaceColor}" />
+            <SolidColorBrush x:Key="LimsErrorTextBrush" Color="{StaticResource LimsDangerColor}" />
+            <SolidColorBrush x:Key="LimsShadowBrush" Color="{StaticResource LimsShadowColor}" />
+            <SolidColorBrush x:Key="LimsAccentSoftBrush" Color="{StaticResource LimsAccentSoftColor}" />
+            <LinearGradientBrush x:Key="LimsLoginBackdropBrush" StartPoint="0,0" EndPoint="1,1">
+                <GradientStop Color="{StaticResource LimsBackgroundColor}" Offset="0" />
+                <GradientStop Color="{StaticResource LimsSurfaceColor}" Offset="1" />
+            </LinearGradientBrush>
+
+            <SolidColorBrush x:Key="AccentButtonBackground" Color="{StaticResource LimsAccentColor}" />
+            <SolidColorBrush x:Key="AccentButtonBackgroundPointerOver" Color="{StaticResource LimsAccentHoverColor}" />
+            <SolidColorBrush x:Key="AccentButtonBackgroundPressed" Color="{StaticResource LimsAccentPressedColor}" />
+            <SolidColorBrush x:Key="AccentButtonBackgroundDisabled" Color="{StaticResource LimsAccentDisabledColor}" />
+            <SolidColorBrush x:Key="AccentButtonForeground" Color="{StaticResource LimsOnAccentColor}" />
+            <SolidColorBrush x:Key="AccentButtonForegroundPointerOver" Color="{StaticResource LimsOnAccentColor}" />
+            <SolidColorBrush x:Key="AccentButtonForegroundPressed" Color="{StaticResource LimsOnAccentColor}" />
+            <SolidColorBrush x:Key="AccentButtonForegroundDisabled" Color="#FFD8E8F7" />
+            <SolidColorBrush x:Key="TextControlBackground" Color="{StaticResource LimsInputBackgroundColor}" />
+            <SolidColorBrush x:Key="TextControlBackgroundPointerOver" Color="{StaticResource LimsInputBackgroundColor}" />
+            <SolidColorBrush x:Key="TextControlBackgroundFocused" Color="{StaticResource LimsInputBackgroundColor}" />
+            <SolidColorBrush x:Key="TextControlBorderBrush" Color="{StaticResource LimsInputBorderColor}" />
+            <SolidColorBrush x:Key="TextControlBorderBrushPointerOver" Color="{StaticResource LimsInputHoverColor}" />
+            <SolidColorBrush x:Key="TextControlBorderBrushFocused" Color="{StaticResource LimsFocusColor}" />
+        </ResourceDictionary>
+    </ResourceDictionary.ThemeDictionaries>
+
+    <FontFamily x:Key="LimsFontFamily">Segoe UI Variable Text</FontFamily>
+    <FontFamily x:Key="LimsDisplayFontFamily">Segoe UI Variable Display</FontFamily>
+
+    <x:Double x:Key="LimsSpacing4">4</x:Double>
+    <x:Double x:Key="LimsSpacing8">8</x:Double>
+    <x:Double x:Key="LimsSpacing12">12</x:Double>
+    <x:Double x:Key="LimsSpacing16">16</x:Double>
+    <x:Double x:Key="LimsSpacing24">24</x:Double>
+    <x:Double x:Key="LimsSpacing32">32</x:Double>
+    <x:Double x:Key="LimsSpacing48">48</x:Double>
+    <x:Double x:Key="LimsSpacing64">64</x:Double>
+    <x:Double x:Key="LimsLoginFormWidth">448</x:Double>
+    <x:Double x:Key="LimsLoginCardWidth">520</x:Double>
+
+    <CornerRadius x:Key="LimsCornerRadiusSmall">4</CornerRadius>
+    <CornerRadius x:Key="LimsCornerRadiusMedium">7</CornerRadius>
+    <CornerRadius x:Key="LimsCornerRadiusLarge">12</CornerRadius>
+    <CornerRadius x:Key="LimsCornerRadiusXLarge">16</CornerRadius>
+    <CornerRadius x:Key="LimsControlCornerRadius">7</CornerRadius>
+    <CornerRadius x:Key="LimsSurfaceCornerRadius">12</CornerRadius>
+    <CornerRadius x:Key="LimsBadgeCornerRadius">6</CornerRadius>
+    <Thickness x:Key="LimsControlPadding">16,10</Thickness>
+    <Thickness x:Key="LimsCorporateIdentifierPadding">46,10,142,10</Thickness>
+    <Thickness x:Key="LimsPasswordPadding">46,10,54,10</Thickness>
+    <Thickness x:Key="LimsSurfacePadding">24</Thickness>
+    <Thickness x:Key="LimsPagePadding">32,16</Thickness>
+    <Thickness x:Key="LimsCompactPagePadding">16,12</Thickness>
+    <Thickness x:Key="LimsLoginPanelPadding">56,36</Thickness>
+    <Thickness x:Key="LimsLoginPanelCompactPadding">28,20</Thickness>
+    <Thickness x:Key="LimsHeroBrandPadding">48,64,40,40</Thickness>
+    <Thickness x:Key="LimsHeroBrandCompactPadding">32,44,24,28</Thickness>
+    <Thickness x:Key="LimsLoginCardPadding">36,34</Thickness>
+    <Thickness x:Key="LimsLoginCardCompactPadding">28,28</Thickness>
+
+    <Style x:Key="LimsDisplayStyle" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="{StaticResource LimsDisplayFontFamily}" />
+        <Setter Property="FontSize" Value="40" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Foreground" Value="{ThemeResource LimsTextPrimaryBrush}" />
+        <Setter Property="TextWrapping" Value="Wrap" />
+    </Style>
+
+    <Style x:Key="LimsProductTitleStyle" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="{StaticResource LimsDisplayFontFamily}" />
+        <Setter Property="FontSize" Value="20" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Foreground" Value="{ThemeResource LimsTextPrimaryBrush}" />
+    </Style>
+
+    <Style x:Key="LimsPageTitleStyle" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="{StaticResource LimsDisplayFontFamily}" />
+        <Setter Property="FontSize" Value="32" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Foreground" Value="{ThemeResource LimsTextPrimaryBrush}" />
+        <Setter Property="TextWrapping" Value="Wrap" />
+    </Style>
+
+    <Style
+        x:Key="LimsHeadingStyle"
+        BasedOn="{StaticResource LimsPageTitleStyle}"
+        TargetType="TextBlock" />
+
+    <Style x:Key="LimsSectionTitleStyle" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="{StaticResource LimsDisplayFontFamily}" />
+        <Setter Property="FontSize" Value="18" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Foreground" Value="{ThemeResource LimsTextPrimaryBrush}" />
+    </Style>
+
+    <Style x:Key="LimsBodyStyle" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="{StaticResource LimsFontFamily}" />
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="Foreground" Value="{ThemeResource LimsTextSecondaryBrush}" />
+        <Setter Property="TextWrapping" Value="Wrap" />
+    </Style>
+
+    <Style x:Key="LimsLabelStyle" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="{StaticResource LimsFontFamily}" />
+        <Setter Property="FontSize" Value="13" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Foreground" Value="{ThemeResource LimsTextPrimaryBrush}" />
+    </Style>
+
+    <Style x:Key="LimsCaptionStyle" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="{StaticResource LimsFontFamily}" />
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="Foreground" Value="{ThemeResource LimsTextTertiaryBrush}" />
+        <Setter Property="TextWrapping" Value="Wrap" />
+    </Style>
+
+    <Style x:Key="LimsLoginSurfaceStyle" TargetType="Border">
+        <Setter Property="Background" Value="{ThemeResource LimsPanelBrush}" />
+        <Setter Property="BorderBrush" Value="{ThemeResource LimsBorderBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="{StaticResource LimsCornerRadiusXLarge}" />
+        <Setter Property="Padding" Value="{StaticResource LimsLoginCardPadding}" />
+    </Style>
+
+    <Style x:Key="LimsErrorSurfaceStyle" TargetType="Border">
+        <Setter Property="Background" Value="{ThemeResource LimsErrorBackgroundBrush}" />
+        <Setter Property="BorderBrush" Value="{ThemeResource LimsErrorBorderBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="{StaticResource LimsControlCornerRadius}" />
+        <Setter Property="Padding" Value="12,10" />
+    </Style>
+
+    <Style x:Key="LimsPrimaryButtonStyle" TargetType="Button" BasedOn="{StaticResource AccentButtonStyle}">
+        <Setter Property="MinHeight" Value="52" />
+        <Setter Property="MaxHeight" Value="52" />
+        <Setter Property="Padding" Value="{StaticResource LimsControlPadding}" />
+        <Setter Property="CornerRadius" Value="{StaticResource LimsControlCornerRadius}" />
+        <Setter Property="BorderBrush" Value="{ThemeResource LimsAccentHoverBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="FontFamily" Value="{StaticResource LimsFontFamily}" />
+        <Setter Property="FontSize" Value="15" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="HorizontalAlignment" Value="Stretch" />
+        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+    </Style>
+
+    <Style x:Key="LimsIconButtonStyle" TargetType="Button">
+        <Setter Property="MinWidth" Value="46" />
+        <Setter Property="MinHeight" Value="46" />
+        <Setter Property="Padding" Value="10" />
+        <Setter Property="CornerRadius" Value="{StaticResource LimsControlCornerRadius}" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Foreground" Value="{ThemeResource LimsTextSecondaryBrush}" />
+    </Style>
+
+    <Style x:Key="LimsInputContainerStyle" TargetType="Border">
+        <Setter Property="MinHeight" Value="50" />
+        <Setter Property="MaxHeight" Value="50" />
+        <Setter Property="Background" Value="{ThemeResource LimsInputBackgroundBrush}" />
+        <Setter Property="BorderBrush" Value="{ThemeResource LimsInputBorderBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="{StaticResource LimsControlCornerRadius}" />
+    </Style>
+
+    <Style x:Key="LimsInlineTextBoxStyle" TargetType="TextBox">
+        <Setter Property="MinHeight" Value="48" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="CornerRadius" Value="0" />
+        <Setter Property="Foreground" Value="{ThemeResource LimsTextPrimaryBrush}" />
+        <Setter Property="SelectionHighlightColor" Value="{ThemeResource LimsSelectionBrush}" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+        <Setter Property="UseSystemFocusVisuals" Value="False" />
+    </Style>
+
+    <Style x:Key="LimsInlinePasswordBoxStyle" TargetType="PasswordBox">
+        <Setter Property="MinHeight" Value="48" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="CornerRadius" Value="0" />
+        <Setter Property="Foreground" Value="{ThemeResource LimsTextPrimaryBrush}" />
+        <Setter Property="SelectionHighlightColor" Value="{ThemeResource LimsSelectionBrush}" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+        <Setter Property="UseSystemFocusVisuals" Value="False" />
+    </Style>
+
+    <Style x:Key="LimsTextBoxStyle" TargetType="TextBox">
+        <Setter Property="MinHeight" Value="50" />
+        <Setter Property="MaxHeight" Value="50" />
+        <Setter Property="Padding" Value="{StaticResource LimsControlPadding}" />
+        <Setter Property="CornerRadius" Value="{StaticResource LimsControlCornerRadius}" />
+        <Setter Property="BorderBrush" Value="{ThemeResource LimsInputBorderBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="Background" Value="{ThemeResource LimsInputBackgroundBrush}" />
+        <Setter Property="Foreground" Value="{ThemeResource LimsTextPrimaryBrush}" />
+        <Setter Property="SelectionHighlightColor" Value="{ThemeResource LimsSelectionBrush}" />
+    </Style>
+
+    <Style x:Key="LimsCorporateTextBoxStyle" TargetType="TextBox">
+        <Setter Property="MinHeight" Value="50" />
+        <Setter Property="MaxHeight" Value="50" />
+        <Setter Property="Padding" Value="{StaticResource LimsCorporateIdentifierPadding}" />
+        <Setter Property="CornerRadius" Value="{StaticResource LimsControlCornerRadius}" />
+        <Setter Property="BorderBrush" Value="{ThemeResource LimsInputBorderBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="Background" Value="{ThemeResource LimsInputBackgroundBrush}" />
+        <Setter Property="Foreground" Value="{ThemeResource LimsTextPrimaryBrush}" />
+        <Setter Property="SelectionHighlightColor" Value="{ThemeResource LimsSelectionBrush}" />
+    </Style>
+
+    <Style x:Key="LimsPasswordBoxStyle" TargetType="PasswordBox">
+        <Setter Property="MinHeight" Value="50" />
+        <Setter Property="MaxHeight" Value="50" />
+        <Setter Property="Padding" Value="{StaticResource LimsPasswordPadding}" />
+        <Setter Property="CornerRadius" Value="{StaticResource LimsControlCornerRadius}" />
+        <Setter Property="BorderBrush" Value="{ThemeResource LimsInputBorderBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="Background" Value="{ThemeResource LimsInputBackgroundBrush}" />
+        <Setter Property="Foreground" Value="{ThemeResource LimsTextPrimaryBrush}" />
+        <Setter Property="SelectionHighlightColor" Value="{ThemeResource LimsSelectionBrush}" />
+    </Style>
+</ResourceDictionary>

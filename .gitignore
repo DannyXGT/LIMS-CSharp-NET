@@ -1,0 +1,66 @@
+## Build outputs
+bin/
+obj/
+artifacts/
+TestResults/
+
+## Visual Studio and user-specific files
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+## Local configuration and secrets
+appsettings.Local.json
+appsettings.*.Local.json
+.env
+.env.*
+!.env.example
+secrets.json
+
+## Logs and generated telemetry
+logs/
+*.log
+
+## Packaging outputs
+AppPackages/
+BundleArtifacts/
+*.appx
+*.appxbundle
+*.msix
+*.msixbundle
+*.cer
+*.pfx
+
+## OS/editor files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# ============================================================
+# LIMS - local / production secrets
+# ============================================================
+
+.env
+.env.*
+!.env.example
+
+**/appsettings.Local.json
+**/appsettings.Production.json
+**/appsettings.Secrets.json
+
+# Local certificates
+*.pfx
+*.p12
+*.key
+
+# Local publish/deployment output
+artifacts/publish/
+artifacts/releases/
+
+# Temporary UI files
+*.tmp
+*.bak
+
