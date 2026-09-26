@@ -1,0 +1,63 @@
+name: Publish LIMS API
+
+on:
+  workflow_dispatch:
+
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  publish-api:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Restore API
+        run: dotnet restore Backend/Lims.Api/Lims.Api.csproj
+
+      - name: Test Application
+        run: dotnet test Tests/Backend/Lims.Application.Tests/Lims.Application.Tests.csproj -c Release
+
+      - name: Test Infrastructure
+        run: dotnet test Tests/Backend/Lims.Infrastructure.Tests/Lims.Infrastructure.Tests.csproj -c Release
+
+      - name: Test API
+        run: dotnet test Tests/Backend/Lims.Api.Tests/Lims.Api.Tests.csproj -c Release
+
+      - name: Publish API
+        run: >
+          dotnet publish Backend/Lims.Api/Lims.Api.csproj
+          -c Release
+          -r win-x64
+          --self-contained false
+          -o artifacts/publish/Lims.Api
+
+      - name: Create ZIP
+        shell: pwsh
+        run: |
+          Compress-Archive `
+            -Path "artifacts/publish/Lims.Api/*" `
+            -DestinationPath "artifacts/Lims.Api.zip" `
+            -Force
+
+      - name: Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${{ github.ref_name }}" `
+            "artifacts/Lims.Api.zip#LIMS API Windows x64" `
+            --title "LIMS ${{ github.ref_name }}" `
+            --generate-notes
