@@ -1,7 +1,10 @@
 ## Build outputs
 bin/
 obj/
-artifacts/
+artifacts/*
+!artifacts/sql/
+artifacts/sql/*
+!artifacts/sql/authentication.sql
 TestResults/
 
 ## Visual Studio and user-specific files

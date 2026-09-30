@@ -54,7 +54,7 @@ public sealed class User
 
     public bool IsActive { get; private set; }
 
-    public DateTimeOffset CreatedAt { get; private set; }
+    public DateTime CreatedAt { get; private set; }
 
     public IReadOnlyCollection<UserPermissionGrant> Permissions => _permissions;
 

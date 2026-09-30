@@ -55,7 +55,9 @@ public sealed class LimsDbContext(DbContextOptions<LimsDbContext> options) : DbC
             builder.Property(user => user.RoleId).HasColumnName("id_rol");
             builder.Property(user => user.DepartmentId).HasColumnName("id_departamento");
             builder.Property(user => user.IsActive).HasColumnName("activo").IsRequired();
-            builder.Property(user => user.CreatedAt).HasColumnName("fecha_creacion");
+            builder.Property(user => user.CreatedAt)
+                .HasColumnName("fecha_creacion")
+                .HasColumnType("timestamp without time zone");
 
             builder.HasOne(user => user.Role)
                 .WithMany()

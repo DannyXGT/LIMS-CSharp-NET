@@ -3,6 +3,8 @@ namespace Lims.Desktop.Services;
 public sealed class DesktopOptions
 {
     public const string ConfigurationSection = "Desktop";
+    private const string ApprovedInternalHttpHost = "10.226.248.191";
+    private const int ApprovedInternalHttpPort = 8080;
 
     public string ApiBaseUrl { get; init; } = string.Empty;
 
@@ -14,9 +16,11 @@ public sealed class DesktopOptions
 
     public Uri GetValidatedBaseAddress()
     {
-        if (!Uri.TryCreate(ApiBaseUrl, UriKind.Absolute, out var uri) || uri.Scheme != Uri.UriSchemeHttps)
+        if (!Uri.TryCreate(ApiBaseUrl, UriKind.Absolute, out var uri) ||
+            (uri.Scheme != Uri.UriSchemeHttps && !IsApprovedInternalHttpEndpoint(uri)))
         {
-            throw new InvalidOperationException("Desktop:ApiBaseUrl must be an absolute HTTPS URL.");
+            throw new InvalidOperationException(
+                $"Desktop:ApiBaseUrl must be an absolute HTTPS URL or the approved internal endpoint http://{ApprovedInternalHttpHost}:{ApprovedInternalHttpPort}/.");
         }
 
         if (RequestTimeoutSeconds is < 5 or > 120)
@@ -31,4 +35,12 @@ public sealed class DesktopOptions
 
         return uri;
     }
+
+    private static bool IsApprovedInternalHttpEndpoint(Uri uri) =>
+        uri.Scheme == Uri.UriSchemeHttp &&
+        string.Equals(uri.Host, ApprovedInternalHttpHost, StringComparison.OrdinalIgnoreCase) &&
+        uri.Port == ApprovedInternalHttpPort &&
+        uri.AbsolutePath == "/" &&
+        string.IsNullOrEmpty(uri.Query) &&
+        string.IsNullOrEmpty(uri.Fragment);
 }

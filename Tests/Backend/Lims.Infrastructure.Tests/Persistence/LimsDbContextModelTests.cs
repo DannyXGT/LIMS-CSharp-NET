@@ -21,6 +21,44 @@ public sealed class LimsDbContextModelTests
     }
 
     [Fact]
+    public void LegacyUserCreationTimestampMatchesInterDbTimestampWithoutTimeZone()
+    {
+        using var context = CreateContext();
+
+        var model = context.GetService<IDesignTimeModel>().Model;
+        var user = Assert.IsAssignableFrom<IEntityType>(model.FindEntityType(typeof(User)));
+        var createdAt = Assert.IsAssignableFrom<IProperty>(user.FindProperty(nameof(User.CreatedAt)));
+
+        Assert.Equal(typeof(DateTime), createdAt.ClrType);
+        Assert.Equal("timestamp without time zone", createdAt.GetColumnType());
+    }
+
+    [Fact]
+    public void LoginIdentityGraphContainsNoDateTimeOffsetProperties()
+    {
+        using var context = CreateContext();
+
+        var model = context.GetService<IDesignTimeModel>().Model;
+        var loginEntityTypes = new[]
+        {
+            typeof(User),
+            typeof(Role),
+            typeof(Department),
+            typeof(UserPermissionGrant),
+        };
+
+        var incompatibleProperties = loginEntityTypes
+            .Select(type => Assert.IsAssignableFrom<IEntityType>(model.FindEntityType(type)))
+            .SelectMany(entity => entity.GetProperties())
+            .Where(property => Nullable.GetUnderlyingType(property.ClrType) == typeof(DateTimeOffset)
+                || property.ClrType == typeof(DateTimeOffset))
+            .Select(property => $"{property.DeclaringType.Name}.{property.Name}")
+            .ToArray();
+
+        Assert.Empty(incompatibleProperties);
+    }
+
+    [Fact]
     public void AuthenticationTablesAreOwnedByThisModelAndHaveRequiredUniqueIndexes()
     {
         using var context = CreateContext();
