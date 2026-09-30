@@ -12,12 +12,16 @@ public sealed class AuthenticationSessionStore(LimsDbContext dbContext) : IAuthe
         RefreshToken refreshToken,
         CancellationToken cancellationToken)
     {
-        await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken)
-            .ConfigureAwait(false);
-        dbContext.AuthSessions.Add(session);
-        dbContext.RefreshTokens.Add(refreshToken);
-        await dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-        await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
+        var strategy = dbContext.Database.CreateExecutionStrategy();
+        await strategy.ExecuteAsync(async () =>
+        {
+            await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken)
+                .ConfigureAwait(false);
+            dbContext.AuthSessions.Add(session);
+            dbContext.RefreshTokens.Add(refreshToken);
+            await dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
+        }).ConfigureAwait(false);
     }
 
     public async Task<RefreshSessionSnapshot?> FindByRefreshTokenHashAsync(
@@ -46,37 +50,41 @@ public sealed class AuthenticationSessionStore(LimsDbContext dbContext) : IAuthe
         DateTimeOffset instant,
         CancellationToken cancellationToken)
     {
-        await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken)
-            .ConfigureAwait(false);
-
-        dbContext.RefreshTokens.Add(replacement);
-        await dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-
-        var updated = await dbContext.RefreshTokens
-            .Where(token =>
-                token.Id == currentTokenId &&
-                token.ConsumedAt == null &&
-                token.RevokedAt == null &&
-                token.ExpiresAt > instant)
-            .ExecuteUpdateAsync(
-                setters => setters
-                    .SetProperty(token => token.ConsumedAt, instant)
-                    .SetProperty(token => token.ReplacedByTokenId, replacement.Id),
-                cancellationToken)
-            .ConfigureAwait(false);
-
-        if (updated == 0)
+        var strategy = dbContext.Database.CreateExecutionStrategy();
+        return await strategy.ExecuteAsync(async () =>
         {
-            var current = await dbContext.RefreshTokens
-                .AsNoTracking()
-                .SingleOrDefaultAsync(token => token.Id == currentTokenId, cancellationToken)
+            await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken)
                 .ConfigureAwait(false);
-            await transaction.RollbackAsync(cancellationToken).ConfigureAwait(false);
-            return Classify(current, instant);
-        }
 
-        await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
-        return RefreshRotationStatus.Rotated;
+            dbContext.RefreshTokens.Add(replacement);
+            await dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
+            var updated = await dbContext.RefreshTokens
+                .Where(token =>
+                    token.Id == currentTokenId &&
+                    token.ConsumedAt == null &&
+                    token.RevokedAt == null &&
+                    token.ExpiresAt > instant)
+                .ExecuteUpdateAsync(
+                    setters => setters
+                        .SetProperty(token => token.ConsumedAt, instant)
+                        .SetProperty(token => token.ReplacedByTokenId, replacement.Id),
+                    cancellationToken)
+                .ConfigureAwait(false);
+
+            if (updated == 0)
+            {
+                var current = await dbContext.RefreshTokens
+                    .AsNoTracking()
+                    .SingleOrDefaultAsync(token => token.Id == currentTokenId, cancellationToken)
+                    .ConfigureAwait(false);
+                await transaction.RollbackAsync(cancellationToken).ConfigureAwait(false);
+                return Classify(current, instant);
+            }
+
+            await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
+            return RefreshRotationStatus.Rotated;
+        }).ConfigureAwait(false);
     }
 
     public Task<AuthSession?> FindActiveSessionAsync(
@@ -98,25 +106,29 @@ public sealed class AuthenticationSessionStore(LimsDbContext dbContext) : IAuthe
         string reason,
         CancellationToken cancellationToken)
     {
-        await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken)
-            .ConfigureAwait(false);
-        var updated = await dbContext.AuthSessions
-            .Where(session => session.Id == sessionId && session.RevokedAt == null)
-            .ExecuteUpdateAsync(
-                setters => setters
-                    .SetProperty(session => session.RevokedAt, instant)
-                    .SetProperty(session => session.RevocationReason, reason),
-                cancellationToken)
-            .ConfigureAwait(false);
+        var strategy = dbContext.Database.CreateExecutionStrategy();
+        return await strategy.ExecuteAsync(async () =>
+        {
+            await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken)
+                .ConfigureAwait(false);
+            var updated = await dbContext.AuthSessions
+                .Where(session => session.Id == sessionId && session.RevokedAt == null)
+                .ExecuteUpdateAsync(
+                    setters => setters
+                        .SetProperty(session => session.RevokedAt, instant)
+                        .SetProperty(session => session.RevocationReason, reason),
+                    cancellationToken)
+                .ConfigureAwait(false);
 
-        await dbContext.RefreshTokens
-            .Where(token => token.SessionId == sessionId && token.RevokedAt == null)
-            .ExecuteUpdateAsync(
-                setters => setters.SetProperty(token => token.RevokedAt, instant),
-                cancellationToken)
-            .ConfigureAwait(false);
-        await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
-        return updated > 0;
+            await dbContext.RefreshTokens
+                .Where(token => token.SessionId == sessionId && token.RevokedAt == null)
+                .ExecuteUpdateAsync(
+                    setters => setters.SetProperty(token => token.RevokedAt, instant),
+                    cancellationToken)
+                .ConfigureAwait(false);
+            await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
+            return updated > 0;
+        }).ConfigureAwait(false);
     }
 
     private static RefreshRotationStatus Classify(RefreshToken? token, DateTimeOffset instant)
