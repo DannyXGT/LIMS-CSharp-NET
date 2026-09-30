@@ -1,6 +1,7 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Lims.Desktop.Services;
+using Lims.Contracts.ReferenceMaterials;
 
 namespace Lims.Desktop.ViewModels;
 
@@ -21,6 +22,18 @@ public sealed partial class ShellViewModel(
     [ObservableProperty]
     public partial string SessionMessage { get; set; } = "Sesión activa";
 
+    public string Initials
+    {
+        get
+        {
+            var parts = DisplayName.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            return string.Concat(parts.Take(2).Select(part => char.ToUpperInvariant(part[0])));
+        }
+    }
+
+    public bool CanViewReferenceMaterials =>
+        session.Profile?.Permissions.Contains(ReferenceMaterialPermissions.View, StringComparer.Ordinal) == true;
+
     public void RefreshProfile()
     {
         var profile = session.Profile;
@@ -28,6 +41,8 @@ public sealed partial class ShellViewModel(
         Role = profile?.Role ?? string.Empty;
         Department = profile?.Department ?? "Sin departamento";
         SessionMessage = "Sesión activa";
+        OnPropertyChanged(nameof(Initials));
+        OnPropertyChanged(nameof(CanViewReferenceMaterials));
     }
 
     [RelayCommand(AllowConcurrentExecutions = false)]

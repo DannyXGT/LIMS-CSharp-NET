@@ -1,6 +1,7 @@
 using Lims.Domain.Authentication;
 using Lims.Domain.Identity;
 using Lims.Infrastructure.Persistence;
+using Lims.Domain.ReferenceMaterials;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
@@ -77,6 +78,26 @@ public sealed class LimsDbContextModelTests
             index.IsUnique && index.Properties.Single().Name == nameof(AuthSession.TokenFamilyId));
         Assert.Contains(refresh.GetIndexes(), index =>
             index.IsUnique && index.Properties.Single().Name == nameof(RefreshToken.TokenHash));
+    }
+
+    [Fact]
+    public void ReferenceMaterialMappingUsesDeterministicDecimalPrecisionAndConcurrencyToken()
+    {
+        using var context = CreateContext();
+
+        var model = context.GetService<IDesignTimeModel>().Model;
+        var material = Assert.IsAssignableFrom<IEntityType>(model.FindEntityType(typeof(ReferenceMaterial)));
+        var purity = Assert.IsAssignableFrom<IProperty>(material.FindProperty(nameof(ReferenceMaterial.PurityPercent)));
+        var presentation = Assert.IsAssignableFrom<IProperty>(material.FindProperty(nameof(ReferenceMaterial.PresentationQuantity)));
+        var available = Assert.IsAssignableFrom<IProperty>(material.FindProperty(nameof(ReferenceMaterial.AvailableQuantity)));
+        var version = Assert.IsAssignableFrom<IProperty>(material.FindProperty(nameof(ReferenceMaterial.Version)));
+
+        Assert.Equal("numeric(7,4)", purity.GetColumnType());
+        Assert.Equal("numeric(18,6)", presentation.GetColumnType());
+        Assert.Equal("numeric(18,6)", available.GetColumnType());
+        Assert.True(version.IsConcurrencyToken);
+        Assert.Contains(material.GetCheckConstraints(), constraint => constraint.Name == "ck_reference_materials_dates");
+        Assert.Contains(material.GetCheckConstraints(), constraint => constraint.Name == "ck_reference_materials_available_quantity");
     }
 
     private static LimsDbContext CreateContext()

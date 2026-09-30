@@ -3,6 +3,7 @@ using System;
 using Lims.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Lims.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(LimsDbContext))]
-    partial class LimsDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260930060339_CreateReferenceMaterials")]
+    partial class CreateReferenceMaterials
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -266,11 +269,6 @@ namespace Lims.Infrastructure.Persistence.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("archived_by_user_id");
 
-                    b.Property<decimal>("AvailableQuantity")
-                        .HasPrecision(18, 6)
-                        .HasColumnType("numeric(18,6)")
-                        .HasColumnName("available_quantity");
-
                     b.Property<string>("Brand")
                         .IsRequired()
                         .HasMaxLength(120)
@@ -298,10 +296,6 @@ namespace Lims.Infrastructure.Persistence.Migrations
                     b.Property<DateOnly>("ExpirationDate")
                         .HasColumnType("date")
                         .HasColumnName("expiration_date");
-
-                    b.Property<long?>("LegacyId")
-                        .HasColumnType("bigint")
-                        .HasColumnName("legacy_id");
 
                     b.Property<string>("Lot")
                         .IsRequired()
@@ -338,10 +332,6 @@ namespace Lims.Infrastructure.Persistence.Migrations
                     b.Property<DateOnly>("ReceivedDate")
                         .HasColumnType("date")
                         .HasColumnName("received_date");
-
-                    b.Property<Guid?>("ReplacedByMaterialId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("replaced_by_material_id");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -389,19 +379,11 @@ namespace Lims.Infrastructure.Persistence.Migrations
                     b.HasIndex("ExpirationDate")
                         .HasDatabaseName("ix_reference_materials_expiration_date");
 
-                    b.HasIndex("LegacyId")
-                        .IsUnique()
-                        .HasDatabaseName("ux_reference_materials_legacy_id")
-                        .HasFilter("legacy_id IS NOT NULL");
-
                     b.HasIndex("Method")
                         .HasDatabaseName("ix_reference_materials_method");
 
                     b.HasIndex("Name")
                         .HasDatabaseName("ix_reference_materials_name");
-
-                    b.HasIndex("ReplacedByMaterialId")
-                        .HasDatabaseName("ix_reference_materials_replaced_by");
 
                     b.HasIndex("Status")
                         .HasDatabaseName("ix_reference_materials_status");
@@ -413,8 +395,6 @@ namespace Lims.Infrastructure.Persistence.Migrations
 
                     b.ToTable("reference_materials", null, t =>
                         {
-                            t.HasCheckConstraint("ck_reference_materials_available_quantity", "available_quantity >= 0 AND available_quantity <= presentation_quantity * package_count");
-
                             t.HasCheckConstraint("ck_reference_materials_dates", "expiration_date >= received_date");
 
                             t.HasCheckConstraint("ck_reference_materials_package_count", "package_count > 0");
@@ -422,12 +402,6 @@ namespace Lims.Infrastructure.Persistence.Migrations
                             t.HasCheckConstraint("ck_reference_materials_presentation_quantity", "presentation_quantity > 0");
 
                             t.HasCheckConstraint("ck_reference_materials_purity", "purity_percent > 0 AND purity_percent <= 100");
-
-                            t.HasCheckConstraint("ck_reference_materials_replacement", "(status = 'Replaced' AND replaced_by_material_id IS NOT NULL) OR (status <> 'Replaced' AND replaced_by_material_id IS NULL)");
-
-                            t.HasCheckConstraint("ck_reference_materials_status", "status IN ('Active','Depleted','Expired','Blocked','Replaced','Archived','Retired')");
-
-                            t.HasCheckConstraint("ck_reference_materials_unit", "unit IN ('Microgram','Milligram','Gram','Kilogram','Milliliter','Liter')");
                         });
                 });
 
@@ -492,11 +466,6 @@ namespace Lims.Infrastructure.Persistence.Migrations
                         .HasForeignKey("CreatedByUserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
-
-                    b.HasOne("Lims.Domain.ReferenceMaterials.ReferenceMaterial", null)
-                        .WithMany()
-                        .HasForeignKey("ReplacedByMaterialId")
-                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("Lims.Domain.Identity.User", null)
                         .WithMany()

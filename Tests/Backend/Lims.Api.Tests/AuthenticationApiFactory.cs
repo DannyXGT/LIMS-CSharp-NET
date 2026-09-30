@@ -2,8 +2,10 @@ using Lims.Application.Authentication;
 using Lims.Application.Authentication.Ports;
 using Lims.Application.Authentication.Security;
 using Lims.Application.Common;
+using Lims.Application.ReferenceMaterials;
 using Lims.Contracts.Authentication;
 using Lims.Contracts.Errors;
+using Lims.Contracts.ReferenceMaterials;
 using Lims.Domain.Authentication;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -35,9 +37,54 @@ public sealed class AuthenticationApiFactory : WebApplicationFactory<Program>
         {
             services.RemoveAll<IAuthenticationService>();
             services.RemoveAll<IAuthenticationSessionStore>();
+            services.RemoveAll<IReferenceMaterialService>();
             services.AddSingleton<IAuthenticationService, FakeAuthenticationService>();
             services.AddSingleton<IAuthenticationSessionStore, FakeSessionStore>();
+            services.AddSingleton<IReferenceMaterialService, FakeReferenceMaterialService>();
         });
+    }
+
+    private sealed class FakeReferenceMaterialService : IReferenceMaterialService
+    {
+        public Task<OperationResult<ReferenceMaterialPage>> ListAsync(
+            string? search,
+            string? status,
+            string? method,
+            int page,
+            int pageSize,
+            CancellationToken cancellationToken) => Task.FromResult(OperationResult.Success(
+            new ReferenceMaterialPage([], page, pageSize, 0)));
+
+        public Task<OperationResult<ReferenceMaterialDetail>> GetAsync(Guid id, CancellationToken cancellationToken) =>
+            Task.FromResult(NotFound());
+
+        public Task<OperationResult<ReferenceMaterialDetail>> CreateAsync(
+            CreateReferenceMaterialRequest request,
+            int actorUserId,
+            CancellationToken cancellationToken) => Task.FromResult(NotFound());
+
+        public Task<OperationResult<ReferenceMaterialDetail>> UpdateAsync(
+            Guid id,
+            UpdateReferenceMaterialRequest request,
+            int actorUserId,
+            CancellationToken cancellationToken) => Task.FromResult(NotFound());
+
+        public Task<OperationResult<ReferenceMaterialDetail>> ArchiveAsync(
+            Guid id,
+            ArchiveReferenceMaterialRequest request,
+            int actorUserId,
+            CancellationToken cancellationToken) => Task.FromResult(NotFound());
+
+        public Task<OperationResult<ReferenceMaterialDetail>> ReplaceAsync(
+            Guid id,
+            ReplaceReferenceMaterialRequest request,
+            int actorUserId,
+            CancellationToken cancellationToken) => Task.FromResult(NotFound());
+
+        private static OperationResult<ReferenceMaterialDetail> NotFound() =>
+            OperationResult.Failure<ReferenceMaterialDetail>(new OperationError(
+                ErrorCodes.NotFound,
+                "No encontrado."));
     }
 
     private sealed class FakeAuthenticationService : IAuthenticationService

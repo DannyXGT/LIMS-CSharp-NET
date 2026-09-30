@@ -16,5 +16,7 @@ Cobertura útil actual:
 - Argon2, hashing de refresh y alcance del modelo EF;
 - 401, `/me`, policies, rate limit y correlation ID por HTTP;
 - doble submit, estados MVVM, navegación, sesión local y refresh single-flight.
+- dominio, saldo, reemplazo atómico, precisión/checks EF, permisos API, filtros y ViewModel de Estándares;
+- protección de navegación rápida para impedir que un detalle lento sobrescriba la selección vigente.
 
 Pendiente de aceptación: PostgreSQL real exclusivo de Testing, aplicar/revertir migración allí, login con usuario real anonimizado, refresh concurrente contra Npgsql y revisión visual en 1280×720/1366×768/1600×900/1920×1080 a 100/125/150 %.

@@ -11,4 +11,7 @@ public static class ErrorCodes
     public const string Timeout = "client.timeout";
     public const string ServerUnavailable = "server.unavailable";
     public const string UnexpectedError = "server.unexpected_error";
+    public const string NotFound = "resource.not_found";
+    public const string Conflict = "resource.conflict";
+    public const string InvalidState = "resource.invalid_state";
 }

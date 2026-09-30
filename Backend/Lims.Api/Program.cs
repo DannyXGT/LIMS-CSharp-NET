@@ -5,9 +5,13 @@ using System.Threading.RateLimiting;
 using Lims.Api.Authentication;
 using Lims.Api.Health;
 using Lims.Api.Http;
+using Lims.Api.ReferenceMaterials;
 using Lims.Application.Authentication;
 using Lims.Application.Authentication.Ports;
+using Lims.Application.ReferenceMaterials;
+using Lims.Application.ReferenceMaterials.Ports;
 using Lims.Contracts.Errors;
+using Lims.Contracts.ReferenceMaterials;
 using Lims.Infrastructure.Persistence;
 using Lims.Infrastructure.Security;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -65,6 +69,8 @@ try
     builder.Services.AddSingleton<IRefreshTokenService, RefreshTokenService>();
     builder.Services.AddSingleton<IAccessTokenService, JwtAccessTokenService>();
     builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
+    builder.Services.AddScoped<IReferenceMaterialRepository, ReferenceMaterialRepository>();
+    builder.Services.AddScoped<IReferenceMaterialService, ReferenceMaterialService>();
 
     builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
     {
@@ -91,7 +97,23 @@ try
         .AddPolicy(LimsPolicies.UsersManage, policy =>
             policy.RequireAuthenticatedUser().RequireClaim(JwtAccessTokenService.PermissionClaim, "users.manage"))
         .AddPolicy(LimsPolicies.ChemicalDepartment, policy =>
-            policy.RequireAuthenticatedUser().RequireClaim("department", "Laboratorio Químico"));
+            policy.RequireAuthenticatedUser().RequireClaim("department", "Laboratorio Químico"))
+        .AddPolicy(ReferenceMaterialPermissions.View, policy =>
+            policy.RequireAuthenticatedUser().RequireClaim(
+                JwtAccessTokenService.PermissionClaim,
+                ReferenceMaterialPermissions.View))
+        .AddPolicy(ReferenceMaterialPermissions.Create, policy =>
+            policy.RequireAuthenticatedUser().RequireClaim(
+                JwtAccessTokenService.PermissionClaim,
+                ReferenceMaterialPermissions.Create))
+        .AddPolicy(ReferenceMaterialPermissions.Edit, policy =>
+            policy.RequireAuthenticatedUser().RequireClaim(
+                JwtAccessTokenService.PermissionClaim,
+                ReferenceMaterialPermissions.Edit))
+        .AddPolicy(ReferenceMaterialPermissions.Archive, policy =>
+            policy.RequireAuthenticatedUser().RequireClaim(
+                JwtAccessTokenService.PermissionClaim,
+                ReferenceMaterialPermissions.Archive));
 
     builder.Services.AddRateLimiter(options =>
     {
@@ -156,6 +178,7 @@ try
     app.UseAuthorization();
     app.MapGet("/", () => Results.Ok(new { service = "Lims.Api", status = "running" }));
     app.MapAuthenticationEndpoints();
+    app.MapReferenceMaterialEndpoints();
     app.MapHealthChecks("/health/live", new HealthCheckOptions
     {
         Predicate = static _ => false,

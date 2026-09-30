@@ -1,6 +1,6 @@
-# LIMS .NET — checkpoint de autenticación
+# LIMS .NET
 
-Nueva base del LIMS como monolito modular en .NET 10, ASP.NET Core, PostgreSQL y WinUI 3 nativo. Este checkpoint implementa exclusivamente autenticación; no contiene módulos operativos.
+Base del LIMS como monolito modular en .NET 10, ASP.NET Core, PostgreSQL y WinUI 3 nativo. La autenticación aprobada se conserva y la primera vertical operativa es Materiales de Referencia / Estándares.
 
 ## Estructura
 
@@ -9,7 +9,8 @@ Nueva base del LIMS como monolito modular en .NET 10, ASP.NET Core, PostgreSQL y
 - `Shared`: contratos compartidos entre API y Desktop.
 - `Tests/Backend`: pruebas Application, Infrastructure y API.
 - `Tests/Frontend`: pruebas MVVM y HTTP del cliente Desktop.
-- `artifacts/sql/authentication.sql`: SQL idempotente generado; no aplicado.
+- `artifacts/sql/authentication.sql`: SQL de autenticación; no aplicado.
+- `artifacts/sql/materiales_referencia.sql`: DDL revisable del flujo Estándar → Stock → Intermedia → Curva/AQS; no aplicado.
 
 ## Inicio rápido
 
@@ -33,5 +34,6 @@ La API exige secretos al arrancar. Consulte [desarrollo](docs/development.md) an
 - Migración: generada y revisada, no aplicada.
 - PostgreSQL real y credenciales reales: pendientes hasta disponer de una conexión de Development/Testing autorizada.
 - Compatibilidad con un hash Argon2 extraído de producción: pendiente; la compatibilidad PHC/Argon2id está cubierta en tests, pero no se obtuvo una muestra real de DB.
+- MainShell y vertical de Estándares: implementados en código; la migración nueva no se aplicó y la aceptación contra PostgreSQL/WinUI real sigue pendiente.
 
-Más detalle: [arquitectura](docs/architecture.md), [autenticación](docs/authentication.md), [seguridad](docs/security.md), [pruebas](docs/testing.md) y [auditoría legacy](docs/legacy-audit.md).
+Más detalle: [arquitectura](docs/architecture.md), [modelo de Materiales de Referencia](docs/materiales-referencia-db.md), [autenticación](docs/authentication.md), [seguridad](docs/security.md), [pruebas](docs/testing.md) y [auditoría legacy](docs/legacy-audit.md).

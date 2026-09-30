@@ -16,10 +16,10 @@ No coloque esos valores en `appsettings*.json`. Production debe terminar TLS en 
 
 ```powershell
 dotnet tool restore
-dotnet tool run dotnet-ef migrations script --idempotent --project Backend/Lims.Infrastructure --startup-project Backend/Lims.Infrastructure --output artifacts/sql/authentication.sql
+dotnet tool run dotnet-ef migrations script --idempotent --project Backend/Lims.Infrastructure --startup-project Backend/Lims.Infrastructure --output artifacts/sql/lims.sql
 ```
 
-El script actual crea únicamente `__EFMigrationsHistory`, `auth_sessions` y `auth_refresh_tokens`; referencia `usuarios(id)` por FK. Revíselo y haga backup antes de aplicarlo. No se aplicó a ninguna DB durante este checkpoint.
+El historial incluye autenticación, `CreateReferenceMaterials` y `CompleteReferenceMaterials`. Las migraciones operativas administran `reference_materials`, referencian `usuarios(id)` por FK y no modifican login, sesiones ni refresh tokens. Revise el SQL generado, haga backup y pruebe primero en una base exclusiva de Testing. No se aplicó a ninguna DB durante este ciclo.
 
 ## WinUI 3 en esta máquina
 

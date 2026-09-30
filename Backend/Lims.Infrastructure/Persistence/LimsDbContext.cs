@@ -1,5 +1,6 @@
 using Lims.Domain.Authentication;
 using Lims.Domain.Identity;
+using Lims.Domain.ReferenceMaterials;
 using Microsoft.EntityFrameworkCore;
 
 namespace Lims.Infrastructure.Persistence;
@@ -18,12 +19,15 @@ public sealed class LimsDbContext(DbContextOptions<LimsDbContext> options) : DbC
 
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
 
+    public DbSet<ReferenceMaterial> ReferenceMaterials => Set<ReferenceMaterial>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         ArgumentNullException.ThrowIfNull(modelBuilder);
 
         ConfigureLegacyIdentity(modelBuilder);
         ConfigureAuthentication(modelBuilder);
+        ConfigureReferenceMaterials(modelBuilder);
     }
 
     private static void ConfigureLegacyIdentity(ModelBuilder modelBuilder)
@@ -148,6 +152,166 @@ public sealed class LimsDbContext(DbContextOptions<LimsDbContext> options) : DbC
             builder.HasOne<RefreshToken>()
                 .WithMany()
                 .HasForeignKey(token => token.ReplacedByTokenId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+    }
+
+    private static void ConfigureReferenceMaterials(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<ReferenceMaterial>(builder =>
+        {
+            builder.ToTable("reference_materials", table =>
+            {
+                table.HasCheckConstraint(
+                    "ck_reference_materials_purity",
+                    "purity_percent > 0 AND purity_percent <= 100");
+                table.HasCheckConstraint(
+                    "ck_reference_materials_presentation_quantity",
+                    "presentation_quantity > 0");
+                table.HasCheckConstraint(
+                    "ck_reference_materials_package_count",
+                    "package_count > 0");
+                table.HasCheckConstraint(
+                    "ck_reference_materials_dates",
+                    "expiration_date >= received_date");
+                table.HasCheckConstraint(
+                    "ck_reference_materials_available_quantity",
+                    "available_quantity >= 0 AND available_quantity <= presentation_quantity * package_count");
+                table.HasCheckConstraint(
+                    "ck_reference_materials_unit",
+                    "unit IN ('Microgram','Milligram','Gram','Kilogram','Milliliter','Liter')");
+                table.HasCheckConstraint(
+                    "ck_reference_materials_status",
+                    "status IN ('Active','Depleted','Expired','Blocked','Replaced','Archived','Retired')");
+                table.HasCheckConstraint(
+                    "ck_reference_materials_replacement",
+                    "(status = 'Replaced' AND replaced_by_material_id IS NOT NULL) OR (status <> 'Replaced' AND replaced_by_material_id IS NULL)");
+            });
+            builder.HasKey(material => material.Id);
+            builder.Property(material => material.Id).HasColumnName("id").ValueGeneratedNever();
+            builder.Property(material => material.LegacyId).HasColumnName("legacy_id");
+            builder.Property(material => material.Name)
+                .HasColumnName("name")
+                .HasMaxLength(ReferenceMaterial.NameMaximumLength)
+                .IsRequired();
+            builder.Property(material => material.CasNumber)
+                .HasColumnName("cas_number")
+                .HasMaxLength(ReferenceMaterial.IdentifierMaximumLength);
+            builder.Property(material => material.CatalogNumber)
+                .HasColumnName("catalog_number")
+                .HasMaxLength(ReferenceMaterial.IdentifierMaximumLength);
+            builder.Property(material => material.Method)
+                .HasColumnName("method")
+                .HasMaxLength(ReferenceMaterial.MethodMaximumLength)
+                .IsRequired();
+            builder.Property(material => material.PurityPercent)
+                .HasColumnName("purity_percent")
+                .HasPrecision(7, 4)
+                .IsRequired();
+            builder.Property(material => material.Lot)
+                .HasColumnName("lot")
+                .HasMaxLength(ReferenceMaterial.LotMaximumLength)
+                .IsRequired();
+            builder.Property(material => material.Brand)
+                .HasColumnName("brand")
+                .HasMaxLength(ReferenceMaterial.BrandMaximumLength)
+                .IsRequired();
+            builder.Property(material => material.ReceivedDate)
+                .HasColumnName("received_date")
+                .HasColumnType("date")
+                .IsRequired();
+            builder.Property(material => material.ExpirationDate)
+                .HasColumnName("expiration_date")
+                .HasColumnType("date")
+                .IsRequired();
+            builder.Property(material => material.PresentationQuantity)
+                .HasColumnName("presentation_quantity")
+                .HasPrecision(18, 6)
+                .IsRequired();
+            builder.Property(material => material.Unit)
+                .HasColumnName("unit")
+                .HasConversion<string>()
+                .HasMaxLength(24)
+                .IsRequired();
+            builder.Property(material => material.PackageCount)
+                .HasColumnName("package_count")
+                .IsRequired();
+            builder.Property(material => material.StorageConditions)
+                .HasColumnName("storage_conditions")
+                .HasMaxLength(ReferenceMaterial.StorageConditionsMaximumLength)
+                .IsRequired();
+            builder.Property(material => material.StorageLocation)
+                .HasColumnName("storage_location")
+                .HasMaxLength(ReferenceMaterial.StorageLocationMaximumLength)
+                .IsRequired();
+            builder.Property(material => material.AvailableQuantity)
+                .HasColumnName("available_quantity")
+                .HasPrecision(18, 6)
+                .IsRequired();
+            builder.Property(material => material.Status)
+                .HasColumnName("status")
+                .HasConversion<string>()
+                .HasMaxLength(24)
+                .IsRequired();
+            builder.Property(material => material.CreatedByUserId)
+                .HasColumnName("created_by_user_id")
+                .IsRequired();
+            builder.Property(material => material.CreatedAt)
+                .HasColumnName("created_at")
+                .IsRequired();
+            builder.Property(material => material.UpdatedByUserId)
+                .HasColumnName("updated_by_user_id")
+                .IsRequired();
+            builder.Property(material => material.UpdatedAt)
+                .HasColumnName("updated_at")
+                .IsRequired();
+            builder.Property(material => material.ArchivedByUserId)
+                .HasColumnName("archived_by_user_id");
+            builder.Property(material => material.ArchivedAt)
+                .HasColumnName("archived_at");
+            builder.Property(material => material.ArchiveReason)
+                .HasColumnName("archive_reason")
+                .HasMaxLength(ReferenceMaterial.ArchiveReasonMaximumLength);
+            builder.Property(material => material.ReplacedByMaterialId)
+                .HasColumnName("replaced_by_material_id");
+            builder.Property(material => material.Version)
+                .HasColumnName("version")
+                .ValueGeneratedNever()
+                .IsConcurrencyToken();
+            builder.Ignore(material => material.TotalQuantity);
+
+            builder.HasIndex(material => material.Name)
+                .HasDatabaseName("ix_reference_materials_name");
+            builder.HasIndex(material => material.LegacyId)
+                .IsUnique()
+                .HasFilter("legacy_id IS NOT NULL")
+                .HasDatabaseName("ux_reference_materials_legacy_id");
+            builder.HasIndex(material => material.Method)
+                .HasDatabaseName("ix_reference_materials_method");
+            builder.HasIndex(material => material.Status)
+                .HasDatabaseName("ix_reference_materials_status");
+            builder.HasIndex(material => material.ExpirationDate)
+                .HasDatabaseName("ix_reference_materials_expiration_date");
+            builder.HasIndex(material => new { material.CasNumber, material.CatalogNumber })
+                .HasDatabaseName("ix_reference_materials_cas_catalog");
+            builder.HasIndex(material => material.ReplacedByMaterialId)
+                .HasDatabaseName("ix_reference_materials_replaced_by");
+
+            builder.HasOne<User>()
+                .WithMany()
+                .HasForeignKey(material => material.CreatedByUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+            builder.HasOne<User>()
+                .WithMany()
+                .HasForeignKey(material => material.UpdatedByUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+            builder.HasOne<User>()
+                .WithMany()
+                .HasForeignKey(material => material.ArchivedByUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+            builder.HasOne<ReferenceMaterial>()
+                .WithMany()
+                .HasForeignKey(material => material.ReplacedByMaterialId)
                 .OnDelete(DeleteBehavior.Restrict);
         });
     }

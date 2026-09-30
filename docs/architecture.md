@@ -6,8 +6,8 @@ La solución es un monolito modular con dependencias hacia adentro:
 
 `User`, `Role`, `Department` y `Permission` son conceptos separados. Las políticas de ASP.NET Core centralizan rol, permiso y departamento; la UI puede adaptar visibilidad, pero el backend conserva la autoridad.
 
-La identidad legada se mapea a `usuarios`, `roles`, `departamentos` y `usuarios_permisos`. Esas tablas están excluidas de migraciones. Este checkpoint solo posee `auth_sessions` y `auth_refresh_tokens`.
+La identidad legada se mapea a `usuarios`, `roles`, `departamentos` y `usuarios_permisos`. Esas tablas están excluidas de migraciones. EF administra `auth_sessions`, `auth_refresh_tokens` y las tablas operativas nuevas como `reference_materials`.
 
-El cliente usa Host/DI, `IHttpClientFactory`, ViewModels de CommunityToolkit.Mvvm y navegación única Login → shell temporal. No usa WebView, HTML ni acceso directo a PostgreSQL.
+El cliente usa Host/DI, `IHttpClientFactory`, ViewModels de CommunityToolkit.Mvvm y navegación Login → MainShell. No usa WebView, HTML ni acceso directo a PostgreSQL. Materiales de Referencia sigue el mismo flujo Desktop → API → Application → Domain/Infrastructure.
 
 Serilog produce eventos estructurados y OpenTelemetry instrumenta ASP.NET Core, HTTP, runtime y `ActivitySource` de Npgsql. Correlation ID viaja en `X-Correlation-ID`.

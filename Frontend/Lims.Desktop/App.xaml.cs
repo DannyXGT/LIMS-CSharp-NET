@@ -53,6 +53,7 @@ public partial class App : Application
         builder.Services.AddSingleton<INavigationService, NavigationService>();
         builder.Services.AddSingleton<IAuthenticationGateway, AuthenticationGateway>();
         builder.Services.AddSingleton<IAuthenticationApiClient, AuthenticationApiClient>();
+        builder.Services.AddSingleton<IReferenceMaterialsApiClient, ReferenceMaterialsApiClient>();
         builder.Services.AddSingleton<ITokenRefreshCoordinator, TokenRefreshCoordinator>();
         builder.Services.AddTransient<CorrelationIdHandler>();
         builder.Services.AddTransient<AuthorizedApiHandler>();
@@ -73,7 +74,9 @@ public partial class App : Application
 
         builder.Services.AddSingleton<LoginViewModel>();
         builder.Services.AddSingleton<ShellViewModel>();
+        builder.Services.AddSingleton<ReferenceMaterialsViewModel>();
         builder.Services.AddSingleton<LoginPage>();
+        builder.Services.AddSingleton<ReferenceMaterialsPage>();
         builder.Services.AddSingleton<ShellPage>();
         builder.Services.AddSingleton<MainWindow>();
         _host = builder.Build();
