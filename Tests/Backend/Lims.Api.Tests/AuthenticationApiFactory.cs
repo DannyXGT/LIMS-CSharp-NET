@@ -46,6 +46,15 @@ public sealed class AuthenticationApiFactory : WebApplicationFactory<Program>
 
     private sealed class FakeReferenceMaterialService : IReferenceMaterialService
     {
+        public Task<IReadOnlyList<ReferenceMethodOption>> GetMethodsAsync(CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyList<ReferenceMethodOption>>([new(1, "APEOs")]);
+
+        public Task<IReadOnlyList<ReferenceUnitOption>> GetUnitsAsync(CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyList<ReferenceUnitOption>>([new(2, "Gramo", "g")]);
+
+        public Task<IReadOnlyList<ReferenceLocationOption>> GetLocationsAsync(CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyList<ReferenceLocationOption>>([new(1, "Laboratorio")]);
+
         public Task<OperationResult<ReferenceMaterialPage>> ListAsync(
             string? search,
             string? status,

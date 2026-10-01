@@ -8,6 +8,7 @@ namespace Lims.Desktop.Views;
 public sealed partial class ReferenceMaterialsPage : Page
 {
     private bool _loaded;
+    private bool _useSideBySideLayout = true;
 
     public ReferenceMaterialsPage(ReferenceMaterialsViewModel viewModel)
     {
@@ -19,6 +20,26 @@ public sealed partial class ReferenceMaterialsPage : Page
 
     public Task LoadAsync() => ViewModel.LoadAsync();
 
+    public async Task OpenCreateDialogAsync()
+    {
+        if (!ViewModel.CanCreate || !await EnsureCatalogsAsync())
+        {
+            return;
+        }
+
+        var dialog = new ReferenceMaterialEditorDialog(
+            ViewModel.Methods,
+            ViewModel.Units,
+            ViewModel.Locations) { XamlRoot = XamlRoot };
+        dialog.SaveAsync = async () =>
+        {
+            var saved = await ViewModel.CreateAsync(dialog.CreateRequest(), CancellationToken.None);
+            UpdateDetailVisibility();
+            return saved ? null : ViewModel.Message;
+        };
+        await dialog.ShowAsync();
+    }
+
     private async void OnLoaded(object sender, RoutedEventArgs e)
     {
         if (_loaded)
@@ -27,13 +48,14 @@ public sealed partial class ReferenceMaterialsPage : Page
         }
 
         _loaded = true;
-        await ViewModel.LoadAsync();
+        await Task.WhenAll(ViewModel.LoadAsync(), ViewModel.LoadCatalogsAsync());
     }
 
     private async void OnSearchSubmitted(AutoSuggestBox sender, AutoSuggestBoxQuerySubmittedEventArgs args) =>
         await ViewModel.ApplyFiltersAsync(CancellationToken.None);
 
-    private async void OnRefreshClick(object sender, RoutedEventArgs e) => await ViewModel.LoadAsync();
+    private async void OnRefreshClick(object sender, RoutedEventArgs e) =>
+        await Task.WhenAll(ViewModel.LoadAsync(), ViewModel.LoadCatalogsAsync());
 
     private async void OnFilterChanged(object sender, SelectionChangedEventArgs e)
     {
@@ -72,19 +94,10 @@ public sealed partial class ReferenceMaterialsPage : Page
     private async void OnMaterialSelected(object sender, SelectionChangedEventArgs e)
     {
         await ViewModel.SelectAsync(MaterialsList.SelectedItem as ReferenceMaterialSummary, CancellationToken.None);
-        var hasDetail = ViewModel.SelectedDetail is not null;
-        DetailPanel.Visibility = hasDetail ? Visibility.Visible : Visibility.Collapsed;
-        NoSelectionPanel.Visibility = hasDetail ? Visibility.Collapsed : Visibility.Visible;
+        UpdateDetailVisibility();
     }
 
-    private async void OnCreateClick(object sender, RoutedEventArgs e)
-    {
-        var dialog = new ReferenceMaterialEditorDialog { XamlRoot = XamlRoot };
-        if (await dialog.ShowAsync() == ContentDialogResult.Primary)
-        {
-            await ViewModel.CreateAsync(dialog.CreateRequest(), CancellationToken.None);
-        }
-    }
+    private async void OnCreateClick(object sender, RoutedEventArgs e) => await OpenCreateDialogAsync();
 
     private async void OnEditClick(object sender, RoutedEventArgs e)
     {
@@ -93,11 +106,24 @@ public sealed partial class ReferenceMaterialsPage : Page
             return;
         }
 
-        var dialog = new ReferenceMaterialEditorDialog(ViewModel.SelectedDetail) { XamlRoot = XamlRoot };
-        if (await dialog.ShowAsync() == ContentDialogResult.Primary)
+        if (!await EnsureCatalogsAsync())
         {
-            await ViewModel.UpdateAsync(dialog.UpdateRequest(ViewModel.SelectedDetail.Version), CancellationToken.None);
+            return;
         }
+
+        var selected = ViewModel.SelectedDetail;
+        var dialog = new ReferenceMaterialEditorDialog(
+            selected,
+            ViewModel.Methods,
+            ViewModel.Units,
+            ViewModel.Locations) { XamlRoot = XamlRoot };
+        dialog.SaveAsync = async () =>
+        {
+            var saved = await ViewModel.UpdateAsync(dialog.UpdateRequest(selected.Version), CancellationToken.None);
+            UpdateDetailVisibility();
+            return saved ? null : ViewModel.Message;
+        };
+        await dialog.ShowAsync();
     }
 
     private async void OnArchiveClick(object sender, RoutedEventArgs e)
@@ -125,9 +151,20 @@ public sealed partial class ReferenceMaterialsPage : Page
             return;
         }
 
+        if (!await EnsureCatalogsAsync())
+        {
+            return;
+        }
+
         var source = ViewModel.SelectedDetail;
-        var editor = new ReferenceMaterialEditorDialog(source, isReplacement: true) { XamlRoot = XamlRoot };
-        if (await editor.ShowAsync() != ContentDialogResult.Primary)
+        var editor = new ReferenceMaterialEditorDialog(
+            source,
+            isReplacement: true,
+            ViewModel.Methods,
+            ViewModel.Units,
+            ViewModel.Locations) { XamlRoot = XamlRoot };
+        await editor.ShowAsync();
+        if (!editor.WasAccepted)
         {
             return;
         }
@@ -149,6 +186,121 @@ public sealed partial class ReferenceMaterialsPage : Page
         if (await confirmation.ShowAsync() == ContentDialogResult.Primary)
         {
             await ViewModel.ReplaceAsync(editor.CreateRequest(), reason.Text, CancellationToken.None);
+            UpdateDetailVisibility();
         }
+    }
+
+    private async Task<bool> EnsureCatalogsAsync()
+    {
+        if (!ViewModel.CatalogsReady)
+        {
+            await ViewModel.LoadCatalogsAsync();
+        }
+
+        return ViewModel.CatalogsReady;
+    }
+
+    private void UpdateDetailVisibility()
+    {
+        var hasDetail = ViewModel.SelectedDetail is not null;
+        DetailPanel.Visibility = hasDetail ? Visibility.Visible : Visibility.Collapsed;
+        NoSelectionPanel.Visibility = hasDetail ? Visibility.Collapsed : Visibility.Visible;
+
+        if (_useSideBySideLayout)
+        {
+            DetailBorder.Visibility = Visibility.Visible;
+            WorkspaceTableRow.Height = new GridLength(1, GridUnitType.Star);
+            WorkspaceDetailRow.Height = new GridLength(0);
+            return;
+        }
+
+        DetailBorder.Visibility = hasDetail ? Visibility.Visible : Visibility.Collapsed;
+        WorkspaceTableRow.Height = hasDetail
+            ? new GridLength(3, GridUnitType.Star)
+            : new GridLength(1, GridUnitType.Star);
+        WorkspaceDetailRow.Height = hasDetail
+            ? new GridLength(2, GridUnitType.Star)
+            : new GridLength(0);
+    }
+
+    private void OnPageSizeChanged(object sender, SizeChangedEventArgs e)
+    {
+        UpdateFilterLayout(e.NewSize.Width < 800);
+
+        _useSideBySideLayout = e.NewSize.Width >= 960;
+        if (_useSideBySideLayout)
+        {
+            WorkspaceGrid.ColumnSpacing = 14;
+            WorkspaceGrid.RowSpacing = 0;
+            WorkspaceTableColumn.Width = new GridLength(7, GridUnitType.Star);
+            WorkspaceDetailColumn.Width = new GridLength(3, GridUnitType.Star);
+            WorkspaceTableRow.Height = new GridLength(1, GridUnitType.Star);
+            WorkspaceDetailRow.Height = new GridLength(0);
+            Grid.SetRow(TableBorder, 0);
+            Grid.SetColumn(TableBorder, 0);
+            Grid.SetRowSpan(TableBorder, 1);
+            Grid.SetRow(DetailBorder, 0);
+            Grid.SetColumn(DetailBorder, 1);
+            Grid.SetRowSpan(DetailBorder, 1);
+            UpdateDetailVisibility();
+            return;
+        }
+
+        WorkspaceGrid.ColumnSpacing = 0;
+        WorkspaceGrid.RowSpacing = 12;
+        WorkspaceTableColumn.Width = new GridLength(1, GridUnitType.Star);
+        WorkspaceDetailColumn.Width = new GridLength(0);
+        Grid.SetRow(TableBorder, 0);
+        Grid.SetColumn(TableBorder, 0);
+        Grid.SetRowSpan(TableBorder, 1);
+        Grid.SetRow(DetailBorder, 1);
+        Grid.SetColumn(DetailBorder, 0);
+        Grid.SetRowSpan(DetailBorder, 1);
+        UpdateDetailVisibility();
+    }
+
+    private void UpdateFilterLayout(bool useCompactLayout)
+    {
+        if (!useCompactLayout)
+        {
+            FilterGrid.RowSpacing = 0;
+            SearchFilterColumn.Width = new GridLength(2, GridUnitType.Star);
+            SearchFilterColumn.MinWidth = 240;
+            StatusFilterColumn.Width = new GridLength(150);
+            MethodFilterColumn.Width = new GridLength(170);
+            ApplyFilterColumn.Width = GridLength.Auto;
+            ClearFilterColumn.Width = GridLength.Auto;
+            Grid.SetRow(SearchBox, 0);
+            Grid.SetColumn(SearchBox, 0);
+            Grid.SetColumnSpan(SearchBox, 1);
+            Grid.SetRow(StatusCombo, 0);
+            Grid.SetColumn(StatusCombo, 1);
+            Grid.SetRow(MethodBox, 0);
+            Grid.SetColumn(MethodBox, 2);
+            Grid.SetRow(ApplyFiltersButton, 0);
+            Grid.SetColumn(ApplyFiltersButton, 3);
+            Grid.SetRow(ClearFiltersButton, 0);
+            Grid.SetColumn(ClearFiltersButton, 4);
+            return;
+        }
+
+        FilterGrid.RowSpacing = 10;
+        SearchFilterColumn.Width = new GridLength(150);
+        SearchFilterColumn.MinWidth = 0;
+        StatusFilterColumn.Width = new GridLength(1, GridUnitType.Star);
+        MethodFilterColumn.Width = GridLength.Auto;
+        ApplyFilterColumn.Width = GridLength.Auto;
+        ClearFilterColumn.Width = new GridLength(0);
+        Grid.SetRow(SearchBox, 0);
+        Grid.SetColumn(SearchBox, 0);
+        Grid.SetColumnSpan(SearchBox, 5);
+        Grid.SetRow(StatusCombo, 1);
+        Grid.SetColumn(StatusCombo, 0);
+        Grid.SetRow(MethodBox, 1);
+        Grid.SetColumn(MethodBox, 1);
+        Grid.SetRow(ApplyFiltersButton, 1);
+        Grid.SetColumn(ApplyFiltersButton, 2);
+        Grid.SetRow(ClearFiltersButton, 1);
+        Grid.SetColumn(ClearFiltersButton, 3);
     }
 }

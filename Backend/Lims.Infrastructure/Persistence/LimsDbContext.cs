@@ -21,12 +21,19 @@ public sealed class LimsDbContext(DbContextOptions<LimsDbContext> options) : DbC
 
     public DbSet<ReferenceMaterial> ReferenceMaterials => Set<ReferenceMaterial>();
 
+    public DbSet<ReferenceMethod> ReferenceMethods => Set<ReferenceMethod>();
+
+    public DbSet<ReferenceUnit> ReferenceUnits => Set<ReferenceUnit>();
+
+    public DbSet<ReferenceLocation> ReferenceLocations => Set<ReferenceLocation>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         ArgumentNullException.ThrowIfNull(modelBuilder);
 
         ConfigureLegacyIdentity(modelBuilder);
         ConfigureAuthentication(modelBuilder);
+        ConfigureReferenceMaterialCatalogs(modelBuilder);
         ConfigureReferenceMaterials(modelBuilder);
     }
 
@@ -156,6 +163,107 @@ public sealed class LimsDbContext(DbContextOptions<LimsDbContext> options) : DbC
         });
     }
 
+    private static void ConfigureReferenceMaterialCatalogs(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<ReferenceMethod>(builder =>
+        {
+            builder.ToTable("reference_methods", table => table.HasCheckConstraint(
+                "ck_reference_methods_name",
+                "name = btrim(name) AND name <> ''"));
+            builder.HasKey(method => method.Id);
+            builder.Property(method => method.Id).HasColumnName("id").ValueGeneratedOnAdd();
+            builder.Property(method => method.Name)
+                .HasColumnName("name")
+                .HasMaxLength(ReferenceMethod.NameMaximumLength)
+                .IsRequired();
+            builder.Property(method => method.IsActive).HasColumnName("is_active").IsRequired();
+            builder.HasIndex(method => method.Name)
+                .IsUnique()
+                .HasDatabaseName("uq_reference_methods_name");
+            builder.HasIndex(method => new { method.IsActive, method.Name })
+                .HasDatabaseName("ix_reference_methods_active_name");
+            builder.HasData(
+                new ReferenceMethod(1, "Azodyes", true),
+                new ReferenceMethod(2, "APEOs", true),
+                new ReferenceMethod(3, "Disperse dyes", true),
+                new ReferenceMethod(4, "Phtalatos", true),
+                new ReferenceMethod(5, "PCP", true),
+                new ReferenceMethod(6, "OPP", true),
+                new ReferenceMethod(7, "Organotin", true),
+                new ReferenceMethod(8, "PAHs", true),
+                new ReferenceMethod(9, "SCCP/MCCP", true),
+                new ReferenceMethod(10, "Retardantes de Flama", true),
+                new ReferenceMethod(11, "DMFA/DMFU", true),
+                new ReferenceMethod(12, "VOC", true),
+                new ReferenceMethod(13, "AEEA", true),
+                new ReferenceMethod(14, "Bisphenol", true),
+                new ReferenceMethod(15, "Halogenated", true),
+                new ReferenceMethod(16, "Tiourea", true),
+                new ReferenceMethod(17, "PFC", true),
+                new ReferenceMethod(18, "COC", true),
+                new ReferenceMethod(19, "Cresoles", true),
+                new ReferenceMethod(20, "UV", true),
+                new ReferenceMethod(21, "Glicoles", true),
+                new ReferenceMethod(22, "Metales", true),
+                new ReferenceMethod(23, "AMB", true));
+        });
+
+        modelBuilder.Entity<ReferenceUnit>(builder =>
+        {
+            builder.ToTable("reference_units", table =>
+            {
+                table.HasCheckConstraint("ck_reference_units_name", "name = btrim(name) AND name <> ''");
+                table.HasCheckConstraint("ck_reference_units_symbol", "symbol = btrim(symbol) AND symbol <> ''");
+            });
+            builder.HasKey(unit => unit.Id);
+            builder.Property(unit => unit.Id).HasColumnName("id").ValueGeneratedOnAdd();
+            builder.Property(unit => unit.Name)
+                .HasColumnName("name")
+                .HasMaxLength(ReferenceUnit.NameMaximumLength)
+                .IsRequired();
+            builder.Property(unit => unit.Symbol)
+                .HasColumnName("symbol")
+                .HasMaxLength(ReferenceUnit.SymbolMaximumLength)
+                .IsRequired();
+            builder.Property(unit => unit.IsActive).HasColumnName("is_active").IsRequired();
+            builder.HasIndex(unit => unit.Name)
+                .IsUnique()
+                .HasDatabaseName("uq_reference_units_name");
+            builder.HasIndex(unit => unit.Symbol)
+                .IsUnique()
+                .HasDatabaseName("uq_reference_units_symbol");
+            builder.HasIndex(unit => new { unit.IsActive, unit.Name })
+                .HasDatabaseName("ix_reference_units_active_name");
+            builder.HasData(
+                new ReferenceUnit(1, "Mililitro", "mL", true),
+                new ReferenceUnit(2, "Gramo", "g", true),
+                new ReferenceUnit(3, "Miligramo", "mg", true),
+                new ReferenceUnit(4, "Microgramo", "µg", true));
+        });
+
+        modelBuilder.Entity<ReferenceLocation>(builder =>
+        {
+            builder.ToTable("reference_locations", table => table.HasCheckConstraint(
+                "ck_reference_locations_name",
+                "name = btrim(name) AND name <> ''"));
+            builder.HasKey(location => location.Id);
+            builder.Property(location => location.Id).HasColumnName("id").ValueGeneratedOnAdd();
+            builder.Property(location => location.Name)
+                .HasColumnName("name")
+                .HasMaxLength(ReferenceLocation.NameMaximumLength)
+                .IsRequired();
+            builder.Property(location => location.IsActive).HasColumnName("is_active").IsRequired();
+            builder.HasIndex(location => location.Name)
+                .IsUnique()
+                .HasDatabaseName("uq_reference_locations_name");
+            builder.HasIndex(location => new { location.IsActive, location.Name })
+                .HasDatabaseName("ix_reference_locations_active_name");
+            builder.HasData(
+                new ReferenceLocation(1, "Laboratorio", true),
+                new ReferenceLocation(2, "Bodega", true));
+        });
+    }
+
     private static void ConfigureReferenceMaterials(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<ReferenceMaterial>(builder =>
@@ -178,9 +286,6 @@ public sealed class LimsDbContext(DbContextOptions<LimsDbContext> options) : DbC
                     "ck_reference_materials_available_quantity",
                     "available_quantity >= 0 AND available_quantity <= presentation_quantity * package_count");
                 table.HasCheckConstraint(
-                    "ck_reference_materials_unit",
-                    "unit IN ('Microgram','Milligram','Gram','Kilogram','Milliliter','Liter')");
-                table.HasCheckConstraint(
                     "ck_reference_materials_status",
                     "status IN ('Active','Depleted','Expired','Blocked','Replaced','Archived','Retired')");
                 table.HasCheckConstraint(
@@ -189,7 +294,6 @@ public sealed class LimsDbContext(DbContextOptions<LimsDbContext> options) : DbC
             });
             builder.HasKey(material => material.Id);
             builder.Property(material => material.Id).HasColumnName("id").ValueGeneratedNever();
-            builder.Property(material => material.LegacyId).HasColumnName("legacy_id");
             builder.Property(material => material.Name)
                 .HasColumnName("name")
                 .HasMaxLength(ReferenceMaterial.NameMaximumLength)
@@ -200,9 +304,8 @@ public sealed class LimsDbContext(DbContextOptions<LimsDbContext> options) : DbC
             builder.Property(material => material.CatalogNumber)
                 .HasColumnName("catalog_number")
                 .HasMaxLength(ReferenceMaterial.IdentifierMaximumLength);
-            builder.Property(material => material.Method)
-                .HasColumnName("method")
-                .HasMaxLength(ReferenceMaterial.MethodMaximumLength)
+            builder.Property(material => material.MethodId)
+                .HasColumnName("method_id")
                 .IsRequired();
             builder.Property(material => material.PurityPercent)
                 .HasColumnName("purity_percent")
@@ -228,21 +331,18 @@ public sealed class LimsDbContext(DbContextOptions<LimsDbContext> options) : DbC
                 .HasColumnName("presentation_quantity")
                 .HasPrecision(18, 6)
                 .IsRequired();
-            builder.Property(material => material.Unit)
-                .HasColumnName("unit")
-                .HasConversion<string>()
-                .HasMaxLength(24)
+            builder.Property(material => material.UnitId)
+                .HasColumnName("unit_id")
                 .IsRequired();
             builder.Property(material => material.PackageCount)
                 .HasColumnName("package_count")
                 .IsRequired();
-            builder.Property(material => material.StorageConditions)
-                .HasColumnName("storage_conditions")
-                .HasMaxLength(ReferenceMaterial.StorageConditionsMaximumLength)
+            builder.Property(material => material.StorageTemperature)
+                .HasColumnName("storage_temperature")
+                .HasMaxLength(ReferenceMaterial.StorageTemperatureMaximumLength)
                 .IsRequired();
-            builder.Property(material => material.StorageLocation)
-                .HasColumnName("storage_location")
-                .HasMaxLength(ReferenceMaterial.StorageLocationMaximumLength)
+            builder.Property(material => material.LocationId)
+                .HasColumnName("location_id")
                 .IsRequired();
             builder.Property(material => material.AvailableQuantity)
                 .HasColumnName("available_quantity")
@@ -279,15 +379,16 @@ public sealed class LimsDbContext(DbContextOptions<LimsDbContext> options) : DbC
                 .ValueGeneratedNever()
                 .IsConcurrencyToken();
             builder.Ignore(material => material.TotalQuantity);
+            builder.Ignore(material => material.RemainingPercentage);
 
             builder.HasIndex(material => material.Name)
                 .HasDatabaseName("ix_reference_materials_name");
-            builder.HasIndex(material => material.LegacyId)
-                .IsUnique()
-                .HasFilter("legacy_id IS NOT NULL")
-                .HasDatabaseName("ux_reference_materials_legacy_id");
-            builder.HasIndex(material => material.Method)
-                .HasDatabaseName("ix_reference_materials_method");
+            builder.HasIndex(material => material.MethodId)
+                .HasDatabaseName("ix_reference_materials_method_id");
+            builder.HasIndex(material => material.UnitId)
+                .HasDatabaseName("ix_reference_materials_unit_id");
+            builder.HasIndex(material => material.LocationId)
+                .HasDatabaseName("ix_reference_materials_location_id");
             builder.HasIndex(material => material.Status)
                 .HasDatabaseName("ix_reference_materials_status");
             builder.HasIndex(material => material.ExpirationDate)
@@ -312,6 +413,18 @@ public sealed class LimsDbContext(DbContextOptions<LimsDbContext> options) : DbC
             builder.HasOne<ReferenceMaterial>()
                 .WithMany()
                 .HasForeignKey(material => material.ReplacedByMaterialId)
+                .OnDelete(DeleteBehavior.Restrict);
+            builder.HasOne(material => material.Method)
+                .WithMany()
+                .HasForeignKey(material => material.MethodId)
+                .OnDelete(DeleteBehavior.Restrict);
+            builder.HasOne(material => material.Unit)
+                .WithMany()
+                .HasForeignKey(material => material.UnitId)
+                .OnDelete(DeleteBehavior.Restrict);
+            builder.HasOne(material => material.Location)
+                .WithMany()
+                .HasForeignKey(material => material.LocationId)
                 .OnDelete(DeleteBehavior.Restrict);
         });
     }

@@ -90,6 +90,22 @@ public sealed class ReferenceMaterialsViewModelTests
     }
 
     [Fact]
+    public async Task LoadCatalogsUsesApiOptionsAndReportsReady()
+    {
+        var viewModel = new ReferenceMaterialsViewModel(
+            new FakeApi(),
+            new FakeSession([ReferenceMaterialPermissions.View]));
+
+        await viewModel.LoadCatalogsAsync();
+
+        Assert.True(viewModel.CatalogsReady);
+        Assert.Single(viewModel.Methods);
+        Assert.Single(viewModel.Units);
+        Assert.Single(viewModel.Locations);
+        Assert.Equal("g", viewModel.Units[0].Symbol);
+    }
+
+    [Fact]
     public async Task RapidSelectionDoesNotLetSlowerPreviousRequestOverwriteDetail()
     {
         var first = Summary("Primero");
@@ -119,10 +135,10 @@ public sealed class ReferenceMaterialsViewModelTests
         new DateOnly(2027, 9, 30), "Active", 25m, "g", 25m, Guid.NewGuid());
 
     private static ReferenceMaterialDetail Detail(ReferenceMaterialSummary summary) => new(
-        summary.Id, summary.Name, summary.CasNumber, summary.CatalogNumber, summary.Method,
+        summary.Id, summary.Name, summary.CasNumber, summary.CatalogNumber, 1, summary.Method,
         summary.PurityPercent, summary.Lot, summary.Brand, new DateOnly(2026, 9, 30),
-        summary.ExpirationDate, 5m, summary.Unit, 5, summary.TotalQuantity, summary.AvailableQuantity,
-        "2–8 °C", "Laboratorio", summary.Status, 42, DateTimeOffset.UtcNow, 42,
+        summary.ExpirationDate, 5m, 2, summary.Unit, 5, summary.TotalQuantity, summary.AvailableQuantity,
+        "2–8 °C", 1, "Laboratorio", summary.Status, 42, DateTimeOffset.UtcNow, 42,
         DateTimeOffset.UtcNow, null, null, null, null, summary.Version);
 
     private sealed class FakeApi : IReferenceMaterialsApiClient
@@ -131,6 +147,18 @@ public sealed class ReferenceMaterialsViewModelTests
         public int LastRequestedPage { get; private set; }
         public ReferenceMaterialPage Page { get; set; } = new([], 1, 25, 0);
         public Func<Guid, Task<ApiCallResult<ReferenceMaterialDetail>>>? GetHandler { get; init; }
+
+        public Task<ApiCallResult<IReadOnlyList<ReferenceMethodOption>>> GetMethodsAsync(
+            CancellationToken cancellationToken) => Task.FromResult(
+            new ApiCallResult<IReadOnlyList<ReferenceMethodOption>>(true, [new(1, "APEOs")], null, 200));
+
+        public Task<ApiCallResult<IReadOnlyList<ReferenceUnitOption>>> GetUnitsAsync(
+            CancellationToken cancellationToken) => Task.FromResult(
+            new ApiCallResult<IReadOnlyList<ReferenceUnitOption>>(true, [new(2, "Gramo", "g")], null, 200));
+
+        public Task<ApiCallResult<IReadOnlyList<ReferenceLocationOption>>> GetLocationsAsync(
+            CancellationToken cancellationToken) => Task.FromResult(
+            new ApiCallResult<IReadOnlyList<ReferenceLocationOption>>(true, [new(1, "Laboratorio")], null, 200));
 
         public Task<ApiCallResult<ReferenceMaterialPage>> ListAsync(
             string? search,

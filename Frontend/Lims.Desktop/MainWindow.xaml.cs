@@ -11,7 +11,7 @@ public sealed partial class MainWindow : Window
     private const int InitialWidth = 1180;
     private const int InitialHeight = 720;
     private const int MinimumWidth = 920;
-    private const int MinimumHeight = 620;
+    private const int MinimumHeight = 560;
 
     public MainWindow(
         INavigationService navigation,

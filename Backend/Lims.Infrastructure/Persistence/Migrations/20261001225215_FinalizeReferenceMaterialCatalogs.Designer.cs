@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Lims.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(LimsDbContext))]
-    [Migration("20260930233232_CompleteReferenceMaterials")]
-    partial class CompleteReferenceMaterials
+    [Migration("20261001225215_FinalizeReferenceMaterialCatalogs")]
+    partial class FinalizeReferenceMaterialCatalogs
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -250,6 +250,54 @@ namespace Lims.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Lims.Domain.ReferenceMaterials.ReferenceLocation", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)")
+                        .HasColumnName("name");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Name")
+                        .IsUnique()
+                        .HasDatabaseName("uq_reference_locations_name");
+
+                    b.HasIndex("IsActive", "Name")
+                        .HasDatabaseName("ix_reference_locations_active_name");
+
+                    b.ToTable("reference_locations", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_reference_locations_name", "name = btrim(name) AND name <> ''");
+                        });
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            IsActive = true,
+                            Name = "Laboratorio"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            IsActive = true,
+                            Name = "Bodega"
+                        });
+                });
+
             modelBuilder.Entity("Lims.Domain.ReferenceMaterials.ReferenceMaterial", b =>
                 {
                     b.Property<Guid>("Id")
@@ -302,9 +350,9 @@ namespace Lims.Infrastructure.Persistence.Migrations
                         .HasColumnType("date")
                         .HasColumnName("expiration_date");
 
-                    b.Property<long?>("LegacyId")
-                        .HasColumnType("bigint")
-                        .HasColumnName("legacy_id");
+                    b.Property<int>("LocationId")
+                        .HasColumnType("integer")
+                        .HasColumnName("location_id");
 
                     b.Property<string>("Lot")
                         .IsRequired()
@@ -312,11 +360,9 @@ namespace Lims.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(120)")
                         .HasColumnName("lot");
 
-                    b.Property<string>("Method")
-                        .IsRequired()
-                        .HasMaxLength(120)
-                        .HasColumnType("character varying(120)")
-                        .HasColumnName("method");
+                    b.Property<int>("MethodId")
+                        .HasColumnType("integer")
+                        .HasColumnName("method_id");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -352,23 +398,15 @@ namespace Lims.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(24)")
                         .HasColumnName("status");
 
-                    b.Property<string>("StorageConditions")
-                        .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)")
-                        .HasColumnName("storage_conditions");
-
-                    b.Property<string>("StorageLocation")
+                    b.Property<string>("StorageTemperature")
                         .IsRequired()
                         .HasMaxLength(160)
                         .HasColumnType("character varying(160)")
-                        .HasColumnName("storage_location");
+                        .HasColumnName("storage_temperature");
 
-                    b.Property<string>("Unit")
-                        .IsRequired()
-                        .HasMaxLength(24)
-                        .HasColumnType("character varying(24)")
-                        .HasColumnName("unit");
+                    b.Property<int>("UnitId")
+                        .HasColumnType("integer")
+                        .HasColumnName("unit_id");
 
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .HasColumnType("timestamp with time zone")
@@ -392,13 +430,11 @@ namespace Lims.Infrastructure.Persistence.Migrations
                     b.HasIndex("ExpirationDate")
                         .HasDatabaseName("ix_reference_materials_expiration_date");
 
-                    b.HasIndex("LegacyId")
-                        .IsUnique()
-                        .HasDatabaseName("ux_reference_materials_legacy_id")
-                        .HasFilter("legacy_id IS NOT NULL");
+                    b.HasIndex("LocationId")
+                        .HasDatabaseName("ix_reference_materials_location_id");
 
-                    b.HasIndex("Method")
-                        .HasDatabaseName("ix_reference_materials_method");
+                    b.HasIndex("MethodId")
+                        .HasDatabaseName("ix_reference_materials_method_id");
 
                     b.HasIndex("Name")
                         .HasDatabaseName("ix_reference_materials_name");
@@ -408,6 +444,9 @@ namespace Lims.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("Status")
                         .HasDatabaseName("ix_reference_materials_status");
+
+                    b.HasIndex("UnitId")
+                        .HasDatabaseName("ix_reference_materials_unit_id");
 
                     b.HasIndex("UpdatedByUserId");
 
@@ -429,8 +468,256 @@ namespace Lims.Infrastructure.Persistence.Migrations
                             t.HasCheckConstraint("ck_reference_materials_replacement", "(status = 'Replaced' AND replaced_by_material_id IS NOT NULL) OR (status <> 'Replaced' AND replaced_by_material_id IS NULL)");
 
                             t.HasCheckConstraint("ck_reference_materials_status", "status IN ('Active','Depleted','Expired','Blocked','Replaced','Archived','Retired')");
+                        });
+                });
 
-                            t.HasCheckConstraint("ck_reference_materials_unit", "unit IN ('Microgram','Milligram','Gram','Kilogram','Milliliter','Liter')");
+            modelBuilder.Entity("Lims.Domain.ReferenceMaterials.ReferenceMethod", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)")
+                        .HasColumnName("name");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Name")
+                        .IsUnique()
+                        .HasDatabaseName("uq_reference_methods_name");
+
+                    b.HasIndex("IsActive", "Name")
+                        .HasDatabaseName("ix_reference_methods_active_name");
+
+                    b.ToTable("reference_methods", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_reference_methods_name", "name = btrim(name) AND name <> ''");
+                        });
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            IsActive = true,
+                            Name = "Azodyes"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            IsActive = true,
+                            Name = "APEOs"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            IsActive = true,
+                            Name = "Disperse dyes"
+                        },
+                        new
+                        {
+                            Id = 4,
+                            IsActive = true,
+                            Name = "Phtalatos"
+                        },
+                        new
+                        {
+                            Id = 5,
+                            IsActive = true,
+                            Name = "PCP"
+                        },
+                        new
+                        {
+                            Id = 6,
+                            IsActive = true,
+                            Name = "OPP"
+                        },
+                        new
+                        {
+                            Id = 7,
+                            IsActive = true,
+                            Name = "Organotin"
+                        },
+                        new
+                        {
+                            Id = 8,
+                            IsActive = true,
+                            Name = "PAHs"
+                        },
+                        new
+                        {
+                            Id = 9,
+                            IsActive = true,
+                            Name = "SCCP/MCCP"
+                        },
+                        new
+                        {
+                            Id = 10,
+                            IsActive = true,
+                            Name = "Retardantes de Flama"
+                        },
+                        new
+                        {
+                            Id = 11,
+                            IsActive = true,
+                            Name = "DMFA/DMFU"
+                        },
+                        new
+                        {
+                            Id = 12,
+                            IsActive = true,
+                            Name = "VOC"
+                        },
+                        new
+                        {
+                            Id = 13,
+                            IsActive = true,
+                            Name = "AEEA"
+                        },
+                        new
+                        {
+                            Id = 14,
+                            IsActive = true,
+                            Name = "Bisphenol"
+                        },
+                        new
+                        {
+                            Id = 15,
+                            IsActive = true,
+                            Name = "Halogenated"
+                        },
+                        new
+                        {
+                            Id = 16,
+                            IsActive = true,
+                            Name = "Tiourea"
+                        },
+                        new
+                        {
+                            Id = 17,
+                            IsActive = true,
+                            Name = "PFC"
+                        },
+                        new
+                        {
+                            Id = 18,
+                            IsActive = true,
+                            Name = "COC"
+                        },
+                        new
+                        {
+                            Id = 19,
+                            IsActive = true,
+                            Name = "Cresoles"
+                        },
+                        new
+                        {
+                            Id = 20,
+                            IsActive = true,
+                            Name = "UV"
+                        },
+                        new
+                        {
+                            Id = 21,
+                            IsActive = true,
+                            Name = "Glicoles"
+                        },
+                        new
+                        {
+                            Id = 22,
+                            IsActive = true,
+                            Name = "Metales"
+                        },
+                        new
+                        {
+                            Id = 23,
+                            IsActive = true,
+                            Name = "AMB"
+                        });
+                });
+
+            modelBuilder.Entity("Lims.Domain.ReferenceMaterials.ReferenceUnit", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("character varying(80)")
+                        .HasColumnName("name");
+
+                    b.Property<string>("Symbol")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("symbol");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Name")
+                        .IsUnique()
+                        .HasDatabaseName("uq_reference_units_name");
+
+                    b.HasIndex("Symbol")
+                        .IsUnique()
+                        .HasDatabaseName("uq_reference_units_symbol");
+
+                    b.HasIndex("IsActive", "Name")
+                        .HasDatabaseName("ix_reference_units_active_name");
+
+                    b.ToTable("reference_units", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_reference_units_name", "name = btrim(name) AND name <> ''");
+
+                            t.HasCheckConstraint("ck_reference_units_symbol", "symbol = btrim(symbol) AND symbol <> ''");
+                        });
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            IsActive = true,
+                            Name = "Mililitro",
+                            Symbol = "mL"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            IsActive = true,
+                            Name = "Gramo",
+                            Symbol = "g"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            IsActive = true,
+                            Name = "Miligramo",
+                            Symbol = "mg"
+                        },
+                        new
+                        {
+                            Id = 4,
+                            IsActive = true,
+                            Name = "Microgramo",
+                            Symbol = "µg"
                         });
                 });
 
@@ -496,16 +783,40 @@ namespace Lims.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("Lims.Domain.ReferenceMaterials.ReferenceLocation", "Location")
+                        .WithMany()
+                        .HasForeignKey("LocationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Lims.Domain.ReferenceMaterials.ReferenceMethod", "Method")
+                        .WithMany()
+                        .HasForeignKey("MethodId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("Lims.Domain.ReferenceMaterials.ReferenceMaterial", null)
                         .WithMany()
                         .HasForeignKey("ReplacedByMaterialId")
                         .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Lims.Domain.ReferenceMaterials.ReferenceUnit", "Unit")
+                        .WithMany()
+                        .HasForeignKey("UnitId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.HasOne("Lims.Domain.Identity.User", null)
                         .WithMany()
                         .HasForeignKey("UpdatedByUserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.Navigation("Location");
+
+                    b.Navigation("Method");
+
+                    b.Navigation("Unit");
                 });
 
             modelBuilder.Entity("Lims.Domain.Identity.User", b =>

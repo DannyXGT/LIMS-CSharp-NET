@@ -4,6 +4,18 @@ namespace Lims.Application.ReferenceMaterials.Ports;
 
 public interface IReferenceMaterialRepository
 {
+    Task<ReferenceMaterialCatalogSelection> ResolveCatalogsAsync(
+        int methodId,
+        int unitId,
+        int locationId,
+        CancellationToken cancellationToken);
+
+    Task<IReadOnlyList<ReferenceMethod>> ListActiveMethodsAsync(CancellationToken cancellationToken);
+
+    Task<IReadOnlyList<ReferenceUnit>> ListActiveUnitsAsync(CancellationToken cancellationToken);
+
+    Task<IReadOnlyList<ReferenceLocation>> ListActiveLocationsAsync(CancellationToken cancellationToken);
+
     Task<(IReadOnlyList<ReferenceMaterial> Items, int TotalCount)> SearchAsync(
         string? search,
         ReferenceMaterialStatus? status,
@@ -19,3 +31,8 @@ public interface IReferenceMaterialRepository
 
     Task<bool> SaveChangesAsync(CancellationToken cancellationToken);
 }
+
+public sealed record ReferenceMaterialCatalogSelection(
+    ReferenceMethod? Method,
+    ReferenceUnit? Unit,
+    ReferenceLocation? Location);

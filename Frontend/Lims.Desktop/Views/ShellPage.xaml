@@ -47,11 +47,19 @@
         </NavigationView.PaneFooter>
         <NavigationView.Header>
             <Grid Margin="0,0,24,0" ColumnSpacing="20">
-                <Grid.ColumnDefinitions><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
                 <StackPanel Spacing="2">
                     <TextBlock x:Name="SectionTitle" FontSize="22" FontWeight="SemiBold" Text="Inicio" />
                     <TextBlock x:Name="SectionSubtitle" Style="{StaticResource LimsCaptionStyle}" Text="Panel principal" />
                 </StackPanel>
+                <Button
+                    x:Name="StandardsNewButton"
+                    Grid.Column="1"
+                    VerticalAlignment="Center"
+                    Click="OnNewStandardClick"
+                    Content="Nuevo estándar"
+                    Style="{StaticResource AccentButtonStyle}"
+                    Visibility="Collapsed" />
             </Grid>
         </NavigationView.Header>
         <Grid Padding="24,8,24,24">
@@ -72,7 +80,11 @@
                 </Border>
                 <Border Grid.Row="1" Margin="0,20,0,0" Padding="22" Background="{ThemeResource LimsSurfaceBrush}" CornerRadius="12"><StackPanel Spacing="8"><FontIcon HorizontalAlignment="Left" Foreground="{ThemeResource LimsAccentBrush}" Glyph="&#xE8F1;" /><TextBlock Style="{StaticResource LimsSectionTitleStyle}" Text="Materiales de Referencia" /><TextBlock Style="{StaticResource LimsBodyStyle}" Text="Gestione estándares, su presentación, disponibilidad, estado y trazabilidad de cambios." /></StackPanel></Border>
             </Grid>
-            <ContentControl x:Name="StandardsHost" Visibility="Collapsed" />
+            <ContentControl
+                x:Name="StandardsHost"
+                HorizontalContentAlignment="Stretch"
+                VerticalContentAlignment="Stretch"
+                Visibility="Collapsed" />
         </Grid>
     </NavigationView>
 </Page>

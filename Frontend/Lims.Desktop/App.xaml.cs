@@ -18,6 +18,10 @@ public partial class App : Application
 
     public App()
     {
+        var uiCulture = CultureInfo.GetCultureInfo("es-GT");
+        CultureInfo.DefaultThreadCurrentCulture = uiCulture;
+        CultureInfo.DefaultThreadCurrentUICulture = uiCulture;
+        Windows.Globalization.ApplicationLanguages.PrimaryLanguageOverride = uiCulture.Name;
         InitializeComponent();
         var builder = Host.CreateApplicationBuilder(new HostApplicationBuilderSettings
         {

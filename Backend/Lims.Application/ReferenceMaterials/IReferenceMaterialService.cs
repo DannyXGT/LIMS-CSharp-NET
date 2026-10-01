@@ -5,6 +5,12 @@ namespace Lims.Application.ReferenceMaterials;
 
 public interface IReferenceMaterialService
 {
+    Task<IReadOnlyList<ReferenceMethodOption>> GetMethodsAsync(CancellationToken cancellationToken);
+
+    Task<IReadOnlyList<ReferenceUnitOption>> GetUnitsAsync(CancellationToken cancellationToken);
+
+    Task<IReadOnlyList<ReferenceLocationOption>> GetLocationsAsync(CancellationToken cancellationToken);
+
     Task<OperationResult<ReferenceMaterialPage>> ListAsync(
         string? search,
         string? status,

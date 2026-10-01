@@ -39,6 +39,31 @@ public sealed class ReferenceMaterialServiceTests
     }
 
     [Fact]
+    public async Task InactiveOrUnknownCatalogUnitReturnsFieldValidationError()
+    {
+        var service = new ReferenceMaterialService(new FakeRepository(), new FixedTimeProvider(Now));
+        var request = CreateRequest() with { UnitId = 6 };
+
+        var result = await service.CreateAsync(request, 42, CancellationToken.None);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(ErrorCodes.ValidationError, result.Error?.Code);
+        Assert.Contains("unitId", result.Error?.ValidationErrors?.Keys ?? []);
+    }
+
+    [Fact]
+    public async Task FreeFormStorageTemperatureIsPreserved()
+    {
+        var service = new ReferenceMaterialService(new FakeRepository(), new FixedTimeProvider(Now));
+        var request = CreateRequest() with { StorageTemperature = "2-8 °C" };
+
+        var result = await service.CreateAsync(request, 42, CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal("2-8 °C", result.Value?.StorageTemperature);
+    }
+
+    [Fact]
     public async Task StaleVersionCannotArchiveMaterial()
     {
         var repository = new FakeRepository();
@@ -112,17 +137,17 @@ public sealed class ReferenceMaterialServiceTests
                 request.Name,
                 request.CasNumber,
                 request.CatalogNumber,
-                request.Method,
+                request.MethodId,
                 request.PurityPercent,
                 request.Lot,
                 "Marca actualizada",
                 request.ReceivedDate,
                 request.ExpirationDate,
                 10m,
-                request.Unit,
+                request.UnitId,
                 4,
-                request.StorageConditions,
-                request.StorageLocation,
+                request.StorageTemperature,
+                request.LocationId,
                 created.Value.Version),
             84,
             CancellationToken.None);
@@ -159,12 +184,12 @@ public sealed class ReferenceMaterialServiceTests
         var repository = new FakeRepository();
         var service = new ReferenceMaterialService(repository, new FixedTimeProvider(Now));
 
-        var result = await service.ListAsync(" etanol ", "Active", " GC ", 2, 10, CancellationToken.None);
+        var result = await service.ListAsync(" etanol ", "Active", " APEOs ", 2, 10, CancellationToken.None);
 
         Assert.True(result.IsSuccess);
         Assert.Equal("etanol", repository.LastSearch);
         Assert.Equal(ReferenceMaterialStatus.Active, repository.LastStatus);
-        Assert.Equal("GC", repository.LastMethod);
+        Assert.Equal("APEOs", repository.LastMethod);
         Assert.Equal(new DateOnly(2026, 9, 30), repository.LastAsOfDate);
         Assert.Equal(2, repository.LastPage);
         Assert.Equal(10, repository.LastPageSize);
@@ -174,17 +199,17 @@ public sealed class ReferenceMaterialServiceTests
         "Etanol CRM",
         "64-17-5",
         "CAT-001",
-        "GC",
+        1,
         99.5m,
         "LOT-2026",
         "Proveedor",
         new DateOnly(2026, 9, 30),
         new DateOnly(2027, 9, 30),
         5m,
-        "g",
+        2,
         5,
-        "2–8 °C",
-        "Laboratorio");
+        "4 °C",
+        1);
 
     private sealed class FixedTimeProvider(DateTimeOffset value) : TimeProvider
     {
@@ -193,6 +218,10 @@ public sealed class ReferenceMaterialServiceTests
 
     private sealed class FakeRepository : IReferenceMaterialRepository
     {
+        private static readonly ReferenceMethod Method = new(1, "APEOs", true);
+        private static readonly ReferenceUnit Unit = new(2, "Gramo", "g", true);
+        private static readonly ReferenceLocation Location = new(1, "Laboratorio", true);
+
         public List<ReferenceMaterial> Items { get; } = [];
         public int SaveCalls { get; private set; }
         public string? LastSearch { get; private set; }
@@ -201,6 +230,25 @@ public sealed class ReferenceMaterialServiceTests
         public DateOnly LastAsOfDate { get; private set; }
         public int LastPage { get; private set; }
         public int LastPageSize { get; private set; }
+
+        public Task<ReferenceMaterialCatalogSelection> ResolveCatalogsAsync(
+            int methodId,
+            int unitId,
+            int locationId,
+            CancellationToken cancellationToken) =>
+            Task.FromResult(new ReferenceMaterialCatalogSelection(
+                methodId == Method.Id ? Method : null,
+                unitId == Unit.Id ? Unit : null,
+                locationId == Location.Id ? Location : null));
+
+        public Task<IReadOnlyList<ReferenceMethod>> ListActiveMethodsAsync(CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyList<ReferenceMethod>>([Method]);
+
+        public Task<IReadOnlyList<ReferenceUnit>> ListActiveUnitsAsync(CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyList<ReferenceUnit>>([Unit]);
+
+        public Task<IReadOnlyList<ReferenceLocation>> ListActiveLocationsAsync(CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyList<ReferenceLocation>>([Location]);
 
         public Task<(IReadOnlyList<ReferenceMaterial> Items, int TotalCount)> SearchAsync(
             string? search,

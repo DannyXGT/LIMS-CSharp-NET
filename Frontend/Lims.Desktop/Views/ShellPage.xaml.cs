@@ -29,9 +29,14 @@ public sealed partial class ShellPage : Page
         HideAllSections();
         switch (tag)
         {
-            case "home": Show(HomePanel, "Inicio", "Panel principal"); break;
+            case "home":
+                StandardsNewButton.Visibility = Visibility.Collapsed;
+                Show(HomePanel, "Inicio", "Panel principal");
+                break;
             case "standards":
                 Show(StandardsHost, "Estándares", "Materiales de Referencia");
+                StandardsNewButton.IsEnabled = _referenceMaterialsPage.ViewModel.CanCreate;
+                StandardsNewButton.Visibility = Visibility.Visible;
                 _ = _referenceMaterialsPage.LoadAsync();
                 break;
         }
@@ -49,5 +54,8 @@ public sealed partial class ShellPage : Page
         SectionTitle.Text = title;
         SectionSubtitle.Text = subtitle;
     }
+
+    private async void OnNewStandardClick(object sender, RoutedEventArgs e) =>
+        await _referenceMaterialsPage.OpenCreateDialogAsync();
 
 }

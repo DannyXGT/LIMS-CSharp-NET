@@ -17,6 +17,12 @@ public sealed partial class ReferenceMaterialsViewModel(
 
     public ObservableCollection<ReferenceMaterialSummary> Items { get; } = [];
 
+    public ObservableCollection<ReferenceMethodOption> Methods { get; } = [];
+
+    public ObservableCollection<ReferenceUnitOption> Units { get; } = [];
+
+    public ObservableCollection<ReferenceLocationOption> Locations { get; } = [];
+
     [ObservableProperty]
     public partial string SearchText { get; set; } = string.Empty;
 
@@ -34,6 +40,12 @@ public sealed partial class ReferenceMaterialsViewModel(
 
     [ObservableProperty]
     public partial bool IsBusy { get; set; }
+
+    [ObservableProperty]
+    public partial bool IsCatalogsLoading { get; set; }
+
+    [ObservableProperty]
+    public partial string CatalogMessage { get; set; } = string.Empty;
 
     [ObservableProperty]
     public partial string Message { get; set; } = string.Empty;
@@ -56,6 +68,8 @@ public sealed partial class ReferenceMaterialsViewModel(
     public bool HasNoItems => Items.Count == 0 && !IsBusy;
     public bool HasSelection => SelectedDetail is not null;
     public bool HasMessage => !string.IsNullOrWhiteSpace(Message);
+    public bool HasCatalogMessage => !string.IsNullOrWhiteSpace(CatalogMessage);
+    public bool CatalogsReady => Methods.Count > 0 && Units.Count > 0 && Locations.Count > 0;
     public int TotalPages => Math.Max(1, (int)Math.Ceiling(TotalCount / (double)PageSize));
     public bool CanGoToPreviousPage => CurrentPage > 1 && !IsBusy;
     public bool CanGoToNextPage => CurrentPage < TotalPages && !IsBusy;
@@ -71,6 +85,59 @@ public sealed partial class ReferenceMaterialsViewModel(
         OnPropertyChanged(nameof(CanEditSelected));
         OnPropertyChanged(nameof(CanArchiveSelected));
         OnPropertyChanged(nameof(CanReplaceSelected));
+    }
+
+    [RelayCommand(AllowConcurrentExecutions = false)]
+    public async Task LoadCatalogsAsync(CancellationToken cancellationToken = default)
+    {
+        if (!CanView)
+        {
+            CatalogMessage = "No tiene permiso para consultar los catálogos de Estándares.";
+            return;
+        }
+
+        IsCatalogsLoading = true;
+        CatalogMessage = string.Empty;
+        try
+        {
+            var methodsTask = api.GetMethodsAsync(cancellationToken);
+            var unitsTask = api.GetUnitsAsync(cancellationToken);
+            var locationsTask = api.GetLocationsAsync(cancellationToken);
+            await Task.WhenAll(methodsTask, unitsTask, locationsTask).ConfigureAwait(true);
+
+            var methods = await methodsTask.ConfigureAwait(true);
+            var units = await unitsTask.ConfigureAwait(true);
+            var locations = await locationsTask.ConfigureAwait(true);
+            if (!methods.IsSuccess || methods.Value is null ||
+                !units.IsSuccess || units.Value is null ||
+                !locations.IsSuccess || locations.Value is null)
+            {
+                CatalogMessage = "No se pudieron cargar los catálogos. Actualice la página antes de crear o editar.";
+                return;
+            }
+
+            Replace(Methods, methods.Value);
+            Replace(Units, units.Value);
+            Replace(Locations, locations.Value);
+            if (!CatalogsReady)
+            {
+                CatalogMessage = "Los catálogos activos de Estándares están incompletos.";
+            }
+
+            OnPropertyChanged(nameof(CatalogsReady));
+        }
+        catch (HttpRequestException)
+        {
+            CatalogMessage = "No se pudieron cargar los catálogos desde el servicio LIMS.";
+        }
+        catch (TaskCanceledException) when (!cancellationToken.IsCancellationRequested)
+        {
+            CatalogMessage = "La carga de catálogos tardó demasiado en responder.";
+        }
+        finally
+        {
+            IsCatalogsLoading = false;
+        }
     }
 
     [RelayCommand(AllowConcurrentExecutions = false)]
@@ -312,6 +379,8 @@ public sealed partial class ReferenceMaterialsViewModel(
 
     partial void OnMessageChanged(string value) => OnPropertyChanged(nameof(HasMessage));
 
+    partial void OnCatalogMessageChanged(string value) => OnPropertyChanged(nameof(HasCatalogMessage));
+
     partial void OnCurrentPageChanged(int value) => NotifyPaginationState();
 
     partial void OnTotalCountChanged(int value) => NotifyPaginationState();
@@ -358,5 +427,14 @@ public sealed partial class ReferenceMaterialsViewModel(
             ErrorCodes.InvalidState => error.Message,
             _ => error?.Message ?? "No se pudo completar la operación.",
         };
+    }
+
+    private static void Replace<T>(ObservableCollection<T> target, IEnumerable<T> values)
+    {
+        target.Clear();
+        foreach (var value in values)
+        {
+            target.Add(value);
+        }
     }
 }

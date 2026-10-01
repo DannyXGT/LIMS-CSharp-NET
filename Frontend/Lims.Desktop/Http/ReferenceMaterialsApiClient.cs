@@ -7,6 +7,21 @@ namespace Lims.Desktop.Http;
 
 internal sealed class ReferenceMaterialsApiClient(IHttpClientFactory clients) : IReferenceMaterialsApiClient
 {
+    public Task<ApiCallResult<IReadOnlyList<ReferenceMethodOption>>> GetMethodsAsync(
+        CancellationToken cancellationToken) => SendAsync<IReadOnlyList<ReferenceMethodOption>>(
+        new HttpRequestMessage(HttpMethod.Get, "api/reference-materials/methods"),
+        cancellationToken);
+
+    public Task<ApiCallResult<IReadOnlyList<ReferenceUnitOption>>> GetUnitsAsync(
+        CancellationToken cancellationToken) => SendAsync<IReadOnlyList<ReferenceUnitOption>>(
+        new HttpRequestMessage(HttpMethod.Get, "api/reference-materials/units"),
+        cancellationToken);
+
+    public Task<ApiCallResult<IReadOnlyList<ReferenceLocationOption>>> GetLocationsAsync(
+        CancellationToken cancellationToken) => SendAsync<IReadOnlyList<ReferenceLocationOption>>(
+        new HttpRequestMessage(HttpMethod.Get, "api/reference-materials/locations"),
+        cancellationToken);
+
     public Task<ApiCallResult<ReferenceMaterialPage>> ListAsync(
         string? search,
         string? status,

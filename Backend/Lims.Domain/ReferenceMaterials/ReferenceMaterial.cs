@@ -4,11 +4,9 @@ public sealed class ReferenceMaterial
 {
     public const int NameMaximumLength = 200;
     public const int IdentifierMaximumLength = 80;
-    public const int MethodMaximumLength = 120;
     public const int LotMaximumLength = 120;
     public const int BrandMaximumLength = 120;
-    public const int StorageConditionsMaximumLength = 500;
-    public const int StorageLocationMaximumLength = 160;
+    public const int StorageTemperatureMaximumLength = 160;
     public const int ArchiveReasonMaximumLength = 500;
 
     private ReferenceMaterial()
@@ -20,26 +18,24 @@ public sealed class ReferenceMaterial
         string name,
         string? casNumber,
         string? catalogNumber,
-        string method,
+        ReferenceMethod method,
         decimal purityPercent,
         string lot,
         string brand,
         DateOnly receivedDate,
         DateOnly expirationDate,
         decimal presentationQuantity,
-        MeasurementUnit unit,
+        ReferenceUnit unit,
         int packageCount,
-        string storageConditions,
-        string storageLocation,
+        string storageTemperature,
+        ReferenceLocation location,
         int actorUserId,
         DateTimeOffset now)
     {
-        if (id == Guid.Empty)
-        {
-            throw new ArgumentException("Reference material id cannot be empty.", nameof(id));
-        }
-
+        ValidateId(id);
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(actorUserId);
+        EnsureActiveCatalogs(method, unit, location);
+
         Id = id;
         ApplyDetails(
             name,
@@ -54,8 +50,8 @@ public sealed class ReferenceMaterial
             presentationQuantity,
             unit,
             packageCount,
-            storageConditions,
-            storageLocation);
+            storageTemperature,
+            location);
         AvailableQuantity = TotalQuantity;
         Status = ReferenceMaterialStatus.Active;
         CreatedByUserId = actorUserId;
@@ -66,22 +62,24 @@ public sealed class ReferenceMaterial
     }
 
     public Guid Id { get; private set; }
-    public long? LegacyId { get; private set; }
     public string Name { get; private set; } = string.Empty;
     public string? CasNumber { get; private set; }
     public string? CatalogNumber { get; private set; }
-    public string Method { get; private set; } = string.Empty;
+    public int MethodId { get; private set; }
+    public ReferenceMethod Method { get; private set; } = null!;
     public decimal PurityPercent { get; private set; }
     public string Lot { get; private set; } = string.Empty;
     public string Brand { get; private set; } = string.Empty;
     public DateOnly ReceivedDate { get; private set; }
     public DateOnly ExpirationDate { get; private set; }
     public decimal PresentationQuantity { get; private set; }
-    public MeasurementUnit Unit { get; private set; }
+    public int UnitId { get; private set; }
+    public ReferenceUnit Unit { get; private set; } = null!;
     public int PackageCount { get; private set; }
-    public string StorageConditions { get; private set; } = string.Empty;
-    public string StorageLocation { get; private set; } = string.Empty;
     public decimal AvailableQuantity { get; private set; }
+    public int LocationId { get; private set; }
+    public ReferenceLocation Location { get; private set; } = null!;
+    public string StorageTemperature { get; private set; } = string.Empty;
     public ReferenceMaterialStatus Status { get; private set; }
     public int CreatedByUserId { get; private set; }
     public DateTimeOffset CreatedAt { get; private set; }
@@ -93,29 +91,31 @@ public sealed class ReferenceMaterial
     public Guid? ReplacedByMaterialId { get; private set; }
     public Guid Version { get; private set; }
     public decimal TotalQuantity => PresentationQuantity * PackageCount;
+    public decimal RemainingPercentage => AvailableQuantity / TotalQuantity * 100m;
 
     public void Update(
         string name,
         string? casNumber,
         string? catalogNumber,
-        string method,
+        ReferenceMethod method,
         decimal purityPercent,
         string lot,
         string brand,
         DateOnly receivedDate,
         DateOnly expirationDate,
         decimal presentationQuantity,
-        MeasurementUnit unit,
+        ReferenceUnit unit,
         int packageCount,
-        string storageConditions,
-        string storageLocation,
+        string storageTemperature,
+        ReferenceLocation location,
         int actorUserId,
         DateTimeOffset now)
     {
         EnsureEditable();
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(actorUserId);
+        EnsureActiveCatalogs(method, unit, location);
         var consumedQuantity = TotalQuantity - AvailableQuantity;
-        if (consumedQuantity > 0 && unit != Unit)
+        if (consumedQuantity > 0 && unit.Id != UnitId)
         {
             throw new InvalidOperationException("The unit cannot change after the material has been consumed.");
         }
@@ -139,8 +139,8 @@ public sealed class ReferenceMaterial
             presentationQuantity,
             unit,
             packageCount,
-            storageConditions,
-            storageLocation);
+            storageTemperature,
+            location);
         AvailableQuantity = TotalQuantity - consumedQuantity;
         UpdatedByUserId = actorUserId;
         UpdatedAt = now;
@@ -200,18 +200,22 @@ public sealed class ReferenceMaterial
         string name,
         string? casNumber,
         string? catalogNumber,
-        string method,
+        ReferenceMethod method,
         decimal purityPercent,
         string lot,
         string brand,
         DateOnly receivedDate,
         DateOnly expirationDate,
         decimal presentationQuantity,
-        MeasurementUnit unit,
+        ReferenceUnit unit,
         int packageCount,
-        string storageConditions,
-        string storageLocation)
+        string storageTemperature,
+        ReferenceLocation location)
     {
+        ArgumentNullException.ThrowIfNull(method);
+        ArgumentNullException.ThrowIfNull(unit);
+        ArgumentNullException.ThrowIfNull(location);
+
         Name = RequireText(name, nameof(name), NameMaximumLength);
         CasNumber = NormalizeOptional(casNumber, nameof(casNumber), IdentifierMaximumLength);
         if (CasNumber is not null && !CasRegistryNumber.IsValid(CasNumber))
@@ -220,30 +224,19 @@ public sealed class ReferenceMaterial
         }
 
         CatalogNumber = NormalizeOptional(catalogNumber, nameof(catalogNumber), IdentifierMaximumLength);
-        Method = RequireText(method, nameof(method), MethodMaximumLength);
         if (purityPercent <= 0 || purityPercent > 100)
         {
             throw new ArgumentOutOfRangeException(nameof(purityPercent), "Purity must be greater than 0 and at most 100.");
         }
 
-        PurityPercent = purityPercent;
-        Lot = RequireText(lot, nameof(lot), LotMaximumLength);
-        Brand = RequireText(brand, nameof(brand), BrandMaximumLength);
         if (expirationDate < receivedDate)
         {
             throw new ArgumentException("Expiration date cannot be before received date.", nameof(expirationDate));
         }
 
-        ReceivedDate = receivedDate;
-        ExpirationDate = expirationDate;
         if (presentationQuantity <= 0)
         {
             throw new ArgumentOutOfRangeException(nameof(presentationQuantity), "Presentation quantity must be greater than 0.");
-        }
-
-        if (!Enum.IsDefined(unit))
-        {
-            throw new ArgumentOutOfRangeException(nameof(unit), "Measurement unit is invalid.");
         }
 
         if (packageCount <= 0)
@@ -251,11 +244,23 @@ public sealed class ReferenceMaterial
             throw new ArgumentOutOfRangeException(nameof(packageCount), "Package count must be greater than 0.");
         }
 
+        MethodId = method.Id;
+        Method = method;
+        PurityPercent = purityPercent;
+        Lot = RequireText(lot, nameof(lot), LotMaximumLength);
+        Brand = RequireText(brand, nameof(brand), BrandMaximumLength);
+        ReceivedDate = receivedDate;
+        ExpirationDate = expirationDate;
         PresentationQuantity = presentationQuantity;
+        UnitId = unit.Id;
         Unit = unit;
         PackageCount = packageCount;
-        StorageConditions = RequireText(storageConditions, nameof(storageConditions), StorageConditionsMaximumLength);
-        StorageLocation = RequireText(storageLocation, nameof(storageLocation), StorageLocationMaximumLength);
+        StorageTemperature = RequireText(
+            storageTemperature,
+            nameof(storageTemperature),
+            StorageTemperatureMaximumLength);
+        LocationId = location.Id;
+        Location = location;
     }
 
     private void EnsureEditable()
@@ -263,6 +268,28 @@ public sealed class ReferenceMaterial
         if (Status is ReferenceMaterialStatus.Archived or ReferenceMaterialStatus.Replaced or ReferenceMaterialStatus.Retired)
         {
             throw new InvalidOperationException("Reference material is not editable in its current state.");
+        }
+    }
+
+    private static void EnsureActiveCatalogs(
+        ReferenceMethod method,
+        ReferenceUnit unit,
+        ReferenceLocation location)
+    {
+        ArgumentNullException.ThrowIfNull(method);
+        ArgumentNullException.ThrowIfNull(unit);
+        ArgumentNullException.ThrowIfNull(location);
+        if (!method.IsActive || !unit.IsActive || !location.IsActive)
+        {
+            throw new InvalidOperationException("Native reference materials require active catalog values.");
+        }
+    }
+
+    private static void ValidateId(Guid id)
+    {
+        if (id == Guid.Empty)
+        {
+            throw new ArgumentException("Reference material id cannot be empty.", nameof(id));
         }
     }
 

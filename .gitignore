@@ -5,6 +5,7 @@ artifacts/*
 !artifacts/sql/
 artifacts/sql/*
 !artifacts/sql/authentication.sql
+!artifacts/sql/reference_material_catalogs.sql
 TestResults/
 
 ## Visual Studio and user-specific files

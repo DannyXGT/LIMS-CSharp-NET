@@ -2,6 +2,15 @@ using System.Globalization;
 
 namespace Lims.Contracts.ReferenceMaterials;
 
+public sealed record ReferenceMethodOption(int Id, string Name);
+
+public sealed record ReferenceUnitOption(int Id, string Name, string Symbol)
+{
+    public string DisplayName => $"{Symbol} — {Name}";
+}
+
+public sealed record ReferenceLocationOption(int Id, string Name);
+
 public sealed record ReferenceMaterialSummary(
     Guid Id,
     string Name,
@@ -27,6 +36,7 @@ public sealed record ReferenceMaterialDetail(
     string Name,
     string? CasNumber,
     string? CatalogNumber,
+    int MethodId,
     string Method,
     decimal PurityPercent,
     string Lot,
@@ -34,11 +44,13 @@ public sealed record ReferenceMaterialDetail(
     DateOnly ReceivedDate,
     DateOnly ExpirationDate,
     decimal PresentationQuantity,
+    int UnitId,
     string Unit,
     int PackageCount,
     decimal TotalQuantity,
     decimal? AvailableQuantity,
-    string StorageConditions,
+    string StorageTemperature,
+    int LocationId,
     string StorageLocation,
     string Status,
     int CreatedByUserId,
@@ -66,33 +78,33 @@ public sealed record CreateReferenceMaterialRequest(
     string Name,
     string? CasNumber,
     string? CatalogNumber,
-    string Method,
+    int MethodId,
     decimal PurityPercent,
     string Lot,
     string Brand,
     DateOnly ReceivedDate,
     DateOnly ExpirationDate,
     decimal PresentationQuantity,
-    string Unit,
+    int UnitId,
     int PackageCount,
-    string StorageConditions,
-    string StorageLocation);
+    string StorageTemperature,
+    int LocationId);
 
 public sealed record UpdateReferenceMaterialRequest(
     string Name,
     string? CasNumber,
     string? CatalogNumber,
-    string Method,
+    int MethodId,
     decimal PurityPercent,
     string Lot,
     string Brand,
     DateOnly ReceivedDate,
     DateOnly ExpirationDate,
     decimal PresentationQuantity,
-    string Unit,
+    int UnitId,
     int PackageCount,
-    string StorageConditions,
-    string StorageLocation,
+    string StorageTemperature,
+    int LocationId,
     Guid Version);
 
 public sealed record ArchiveReferenceMaterialRequest(string Reason, Guid Version);

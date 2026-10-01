@@ -13,6 +13,9 @@ internal static class ReferenceMaterialEndpoints
     {
         var group = endpoints.MapGroup("/api/reference-materials").WithTags("Reference Materials");
         group.MapGet("", ListAsync).RequireAuthorization(ReferenceMaterialPermissions.View);
+        group.MapGet("/methods", GetMethodsAsync).RequireAuthorization(ReferenceMaterialPermissions.View);
+        group.MapGet("/units", GetUnitsAsync).RequireAuthorization(ReferenceMaterialPermissions.View);
+        group.MapGet("/locations", GetLocationsAsync).RequireAuthorization(ReferenceMaterialPermissions.View);
         group.MapGet("/{id:guid}", GetAsync).RequireAuthorization(ReferenceMaterialPermissions.View);
         group.MapPost("", CreateAsync).RequireAuthorization(ReferenceMaterialPermissions.Create);
         group.MapPut("/{id:guid}", UpdateAsync).RequireAuthorization(ReferenceMaterialPermissions.Edit);
@@ -24,6 +27,21 @@ internal static class ReferenceMaterialEndpoints
                 ReferenceMaterialPermissions.Archive);
         return endpoints;
     }
+
+    private static async Task<IResult> GetMethodsAsync(
+        IReferenceMaterialService service,
+        CancellationToken cancellationToken) =>
+        Results.Ok(await service.GetMethodsAsync(cancellationToken).ConfigureAwait(false));
+
+    private static async Task<IResult> GetUnitsAsync(
+        IReferenceMaterialService service,
+        CancellationToken cancellationToken) =>
+        Results.Ok(await service.GetUnitsAsync(cancellationToken).ConfigureAwait(false));
+
+    private static async Task<IResult> GetLocationsAsync(
+        IReferenceMaterialService service,
+        CancellationToken cancellationToken) =>
+        Results.Ok(await service.GetLocationsAsync(cancellationToken).ConfigureAwait(false));
 
     private static async Task<IResult> ListAsync(
         string? search,

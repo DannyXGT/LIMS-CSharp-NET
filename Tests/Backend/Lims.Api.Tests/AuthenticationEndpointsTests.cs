@@ -172,6 +172,23 @@ public sealed class AuthenticationEndpointsTests : IClassFixture<AuthenticationA
         Assert.Empty(page.Items);
     }
 
+    [Theory]
+    [InlineData("methods", "APEOs")]
+    [InlineData("units", "Gramo")]
+    [InlineData("locations", "Laboratorio")]
+    public async Task ReferenceMaterialCatalogEndpointsReturnActiveOptions(string catalog, string expected)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Get, $"/api/reference-materials/{catalog}");
+        request.Headers.Authorization = new AuthenticationHeaderValue(
+            "Bearer",
+            CreateAccessTokenForRole("Usuario", ReferenceMaterialPermissions.View));
+
+        using var response = await _client.SendAsync(request);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Contains(expected, await response.Content.ReadAsStringAsync(), StringComparison.OrdinalIgnoreCase);
+    }
+
     [Fact]
     public async Task ReferenceMaterialReplacementRequiresCreateAndArchivePermissions()
     {
@@ -181,17 +198,17 @@ public sealed class AuthenticationEndpointsTests : IClassFixture<AuthenticationA
                 "Etanol CRM",
                 "64-17-5",
                 "CAT-001",
-                "GC",
+                1,
                 99.5m,
                 "LOT-2",
                 "Proveedor",
                 new DateOnly(2026, 9, 30),
                 new DateOnly(2027, 9, 30),
                 5m,
-                "g",
+                2,
                 1,
                 "2–8 °C",
-                "Laboratorio"),
+                1),
             "Nuevo lote",
             Guid.NewGuid());
 

@@ -1,20 +1,7 @@
-# Notas de migración
+# Notas de esquema de Estándares
 
-## EF Core
+La migración EF `FinalizeReferenceMaterialCatalogs` crea y siembra `reference_methods`, `reference_units` y `reference_locations`, agrega sus FKs a `reference_materials`, incorpora `available_quantity`, reemplazo y el campo textual `storage_temperature`, y retira los campos transitorios de texto.
 
-`CreateReferenceMaterials` crea `reference_materials`. `CompleteReferenceMaterials` agrega saldo, ID legacy, vínculo de reemplazo, vocabularios, checks e índices. Ambas referencian `usuarios(id)` y no modifican autenticación ni identidad. Las migraciones fueron generadas, no aplicadas a ninguna base.
+No se importan datos MySQL. Como protección, la migración falla si `reference_materials` contiene filas; no intenta transformar registros existentes ni continuar parcialmente. La migración inicial de Estándares constaba como no aplicada al preparar este cambio y ninguna migración fue ejecutada contra PostgreSQL en esta entrega.
 
-Antes de aplicar en un ambiente autorizado:
-
-1. confirmar que la migración de autenticación previa ya está registrada;
-2. revisar el SQL idempotente generado;
-3. verificar que `public.usuarios.id` sea `integer`;
-4. respaldar y probar restore;
-5. aplicar primero en una base exclusiva de Testing;
-6. ejecutar CRUD y concurrencia con usuarios que posean permisos explícitos.
-
-## Trazalab / MySQL
-
-No se migraron datos. La futura migración necesita `SHOW CREATE TABLE`, `SHOW INDEX`, `SHOW TRIGGERS` y datos reales para detectar duplicados, huérfanos, estados no canónicos y saldos inconsistentes. Los IDs y usuarios históricos deberán conservarse como metadata; las contraseñas del sistema antiguo no se migrarán.
-
-La tabla nueva no impone unicidad CAS + catálogo porque lote y múltiples activos siguen siendo una decisión abierta.
+El artefacto `artifacts/sql/reference_material_catalogs.sql` es idempotente y sirve para revisar los catálogos. No sustituye el historial EF ni fue ejecutado.

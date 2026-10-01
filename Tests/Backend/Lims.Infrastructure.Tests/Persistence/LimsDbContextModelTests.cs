@@ -90,14 +90,44 @@ public sealed class LimsDbContextModelTests
         var purity = Assert.IsAssignableFrom<IProperty>(material.FindProperty(nameof(ReferenceMaterial.PurityPercent)));
         var presentation = Assert.IsAssignableFrom<IProperty>(material.FindProperty(nameof(ReferenceMaterial.PresentationQuantity)));
         var available = Assert.IsAssignableFrom<IProperty>(material.FindProperty(nameof(ReferenceMaterial.AvailableQuantity)));
+        var createdBy = Assert.IsAssignableFrom<IProperty>(material.FindProperty(nameof(ReferenceMaterial.CreatedByUserId)));
+        var updatedBy = Assert.IsAssignableFrom<IProperty>(material.FindProperty(nameof(ReferenceMaterial.UpdatedByUserId)));
         var version = Assert.IsAssignableFrom<IProperty>(material.FindProperty(nameof(ReferenceMaterial.Version)));
 
         Assert.Equal("numeric(7,4)", purity.GetColumnType());
         Assert.Equal("numeric(18,6)", presentation.GetColumnType());
         Assert.Equal("numeric(18,6)", available.GetColumnType());
+        Assert.False(createdBy.IsNullable);
+        Assert.False(updatedBy.IsNullable);
         Assert.True(version.IsConcurrencyToken);
         Assert.Contains(material.GetCheckConstraints(), constraint => constraint.Name == "ck_reference_materials_dates");
         Assert.Contains(material.GetCheckConstraints(), constraint => constraint.Name == "ck_reference_materials_available_quantity");
+    }
+
+    [Fact]
+    public void ReferenceMaterialCatalogsHaveExpectedTablesSeedsAndRestrictedRelationships()
+    {
+        using var context = CreateContext();
+
+        var model = context.GetService<IDesignTimeModel>().Model;
+        var material = Assert.IsAssignableFrom<IEntityType>(model.FindEntityType(typeof(ReferenceMaterial)));
+        var method = Assert.IsAssignableFrom<IEntityType>(model.FindEntityType(typeof(ReferenceMethod)));
+        var unit = Assert.IsAssignableFrom<IEntityType>(model.FindEntityType(typeof(ReferenceUnit)));
+        var location = Assert.IsAssignableFrom<IEntityType>(model.FindEntityType(typeof(ReferenceLocation)));
+        var storageTemperature = Assert.IsAssignableFrom<IProperty>(
+            material.FindProperty(nameof(ReferenceMaterial.StorageTemperature)));
+
+        Assert.Equal("reference_methods", method.GetTableName());
+        Assert.Equal("reference_units", unit.GetTableName());
+        Assert.Equal("reference_locations", location.GetTableName());
+        Assert.Equal("character varying(160)", storageTemperature.GetColumnType());
+        Assert.Equal(23, method.GetSeedData().Count());
+        Assert.Equal(4, unit.GetSeedData().Count());
+        Assert.Equal(2, location.GetSeedData().Count());
+
+        AssertRequiredRestrictedForeignKey<ReferenceMethod>(material, nameof(ReferenceMaterial.MethodId));
+        AssertRequiredRestrictedForeignKey<ReferenceUnit>(material, nameof(ReferenceMaterial.UnitId));
+        AssertRequiredRestrictedForeignKey<ReferenceLocation>(material, nameof(ReferenceMaterial.LocationId));
     }
 
     private static LimsDbContext CreateContext()
@@ -117,5 +147,15 @@ public sealed class LimsDbContextModelTests
         Assert.NotNull(entity);
         Assert.Equal(tableName, entity.GetTableName());
         Assert.True(entity.IsTableExcludedFromMigrations());
+    }
+
+    private static void AssertRequiredRestrictedForeignKey<TPrincipal>(IEntityType material, string propertyName)
+    {
+        var property = Assert.IsAssignableFrom<IProperty>(material.FindProperty(propertyName));
+        var foreignKey = Assert.Single(material.GetForeignKeys(), candidate => candidate.Properties.Contains(property));
+
+        Assert.False(property.IsNullable);
+        Assert.Equal(typeof(TPrincipal), foreignKey.PrincipalEntityType.ClrType);
+        Assert.Equal(DeleteBehavior.Restrict, foreignKey.DeleteBehavior);
     }
 }

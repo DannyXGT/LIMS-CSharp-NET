@@ -12,6 +12,24 @@ public sealed class ReferenceMaterialService(
 {
     private const int MaximumPageSize = 100;
 
+    public async Task<IReadOnlyList<ReferenceMethodOption>> GetMethodsAsync(
+        CancellationToken cancellationToken) =>
+        (await repository.ListActiveMethodsAsync(cancellationToken).ConfigureAwait(false))
+        .Select(method => new ReferenceMethodOption(method.Id, method.Name))
+        .ToArray();
+
+    public async Task<IReadOnlyList<ReferenceUnitOption>> GetUnitsAsync(
+        CancellationToken cancellationToken) =>
+        (await repository.ListActiveUnitsAsync(cancellationToken).ConfigureAwait(false))
+        .Select(unit => new ReferenceUnitOption(unit.Id, unit.Name, unit.Symbol))
+        .ToArray();
+
+    public async Task<IReadOnlyList<ReferenceLocationOption>> GetLocationsAsync(
+        CancellationToken cancellationToken) =>
+        (await repository.ListActiveLocationsAsync(cancellationToken).ConfigureAwait(false))
+        .Select(location => new ReferenceLocationOption(location.Id, location.Name))
+        .ToArray();
+
     public async Task<OperationResult<ReferenceMaterialPage>> ListAsync(
         string? search,
         string? status,
@@ -38,7 +56,7 @@ public sealed class ReferenceMaterialService(
             parsedStatus = value;
         }
 
-        var today = DateOnly.FromDateTime(timeProvider.GetUtcNow().UtcDateTime);
+        var today = Today();
         var (items, totalCount) = await repository.SearchAsync(
                 NormalizeOptional(search),
                 parsedStatus,
@@ -65,10 +83,9 @@ public sealed class ReferenceMaterialService(
         }
 
         var material = await repository.FindByIdAsync(id, cancellationToken).ConfigureAwait(false);
-        var today = DateOnly.FromDateTime(timeProvider.GetUtcNow().UtcDateTime);
         return material is null
             ? NotFound()
-            : OperationResult.Success(ToDetail(material, today));
+            : OperationResult.Success(ToDetail(material, Today()));
     }
 
     public async Task<OperationResult<ReferenceMaterialDetail>> CreateAsync(
@@ -77,6 +94,18 @@ public sealed class ReferenceMaterialService(
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
+        var catalogResult = await ResolveCatalogsAsync(
+                request.MethodId,
+                request.UnitId,
+                request.LocationId,
+                cancellationToken)
+            .ConfigureAwait(false);
+        if (!catalogResult.IsSuccess)
+        {
+            return OperationResult.Failure<ReferenceMaterialDetail>(catalogResult.Error!);
+        }
+
+        var catalogs = catalogResult.Value!;
         try
         {
             var material = new ReferenceMaterial(
@@ -84,22 +113,20 @@ public sealed class ReferenceMaterialService(
                 request.Name,
                 request.CasNumber,
                 request.CatalogNumber,
-                request.Method,
+                catalogs.Method,
                 request.PurityPercent,
                 request.Lot,
                 request.Brand,
                 request.ReceivedDate,
                 request.ExpirationDate,
                 request.PresentationQuantity,
-                ParseUnit(request.Unit),
+                catalogs.Unit,
                 request.PackageCount,
-                request.StorageConditions,
-                request.StorageLocation,
+                request.StorageTemperature,
+                catalogs.Location,
                 actorUserId,
                 timeProvider.GetUtcNow());
 
-            // Automatic replacement is intentionally disabled until the laboratory confirms
-            // how CAS, catalog number, lot, and multiple active lots must interact.
             repository.Add(material);
             if (!await repository.SaveChangesAsync(cancellationToken).ConfigureAwait(false))
             {
@@ -134,23 +161,35 @@ public sealed class ReferenceMaterialService(
             return Conflict();
         }
 
+        var catalogResult = await ResolveCatalogsAsync(
+                request.MethodId,
+                request.UnitId,
+                request.LocationId,
+                cancellationToken)
+            .ConfigureAwait(false);
+        if (!catalogResult.IsSuccess)
+        {
+            return OperationResult.Failure<ReferenceMaterialDetail>(catalogResult.Error!);
+        }
+
+        var catalogs = catalogResult.Value!;
         try
         {
             material.Update(
                 request.Name,
                 request.CasNumber,
                 request.CatalogNumber,
-                request.Method,
+                catalogs.Method,
                 request.PurityPercent,
                 request.Lot,
                 request.Brand,
                 request.ReceivedDate,
                 request.ExpirationDate,
                 request.PresentationQuantity,
-                ParseUnit(request.Unit),
+                catalogs.Unit,
                 request.PackageCount,
-                request.StorageConditions,
-                request.StorageLocation,
+                request.StorageTemperature,
+                catalogs.Location,
                 actorUserId,
                 timeProvider.GetUtcNow());
         }
@@ -227,34 +266,43 @@ public sealed class ReferenceMaterialService(
             return Conflict();
         }
 
+        var replacementRequest = request.Replacement;
+        var catalogResult = await ResolveCatalogsAsync(
+                replacementRequest.MethodId,
+                replacementRequest.UnitId,
+                replacementRequest.LocationId,
+                cancellationToken)
+            .ConfigureAwait(false);
+        if (!catalogResult.IsSuccess)
+        {
+            return OperationResult.Failure<ReferenceMaterialDetail>(catalogResult.Error!);
+        }
+
+        var catalogs = catalogResult.Value!;
         try
         {
             var now = timeProvider.GetUtcNow();
-            var replacementRequest = request.Replacement;
             var replacement = new ReferenceMaterial(
                 Guid.NewGuid(),
                 replacementRequest.Name,
                 replacementRequest.CasNumber,
                 replacementRequest.CatalogNumber,
-                replacementRequest.Method,
+                catalogs.Method,
                 replacementRequest.PurityPercent,
                 replacementRequest.Lot,
                 replacementRequest.Brand,
                 replacementRequest.ReceivedDate,
                 replacementRequest.ExpirationDate,
                 replacementRequest.PresentationQuantity,
-                ParseUnit(replacementRequest.Unit),
+                catalogs.Unit,
                 replacementRequest.PackageCount,
-                replacementRequest.StorageConditions,
-                replacementRequest.StorageLocation,
+                replacementRequest.StorageTemperature,
+                catalogs.Location,
                 actorUserId,
                 now);
 
             source.ReplaceWith(replacement.Id, request.Reason, actorUserId, now);
             repository.Add(replacement);
-
-            // Both entity changes are committed by one SaveChanges call. Npgsql's configured
-            // execution strategy can retry it safely because no user transaction is opened here.
             if (!await repository.SaveChangesAsync(cancellationToken).ConfigureAwait(false))
             {
                 return Conflict();
@@ -274,45 +322,67 @@ public sealed class ReferenceMaterialService(
         }
     }
 
-    private static MeasurementUnit ParseUnit(string unit)
+    private async Task<OperationResult<ResolvedCatalogs>> ResolveCatalogsAsync(
+        int methodId,
+        int unitId,
+        int locationId,
+        CancellationToken cancellationToken)
     {
-        var normalized = unit?.Trim() ?? string.Empty;
-        return normalized.ToLowerInvariant() switch
+        if (methodId <= 0)
         {
-            "µg" or "ug" or "microgram" => MeasurementUnit.Microgram,
-            "mg" or "milligram" => MeasurementUnit.Milligram,
-            "g" or "gram" => MeasurementUnit.Gram,
-            "kg" or "kilogram" => MeasurementUnit.Kilogram,
-            "ml" or "milliliter" => MeasurementUnit.Milliliter,
-            "l" or "liter" => MeasurementUnit.Liter,
-            _ => throw new ArgumentException("Measurement unit is invalid.", nameof(unit)),
-        };
-    }
+            return ValidationFailure<ResolvedCatalogs>("methodId", "Reference method is required.");
+        }
 
-    private static string UnitSymbol(MeasurementUnit unit) => unit switch
-    {
-        MeasurementUnit.Microgram => "µg",
-        MeasurementUnit.Milligram => "mg",
-        MeasurementUnit.Gram => "g",
-        MeasurementUnit.Kilogram => "kg",
-        MeasurementUnit.Milliliter => "mL",
-        MeasurementUnit.Liter => "L",
-        _ => throw new ArgumentOutOfRangeException(nameof(unit)),
-    };
+        if (unitId <= 0)
+        {
+            return ValidationFailure<ResolvedCatalogs>("unitId", "Reference unit is required.");
+        }
+
+        if (locationId <= 0)
+        {
+            return ValidationFailure<ResolvedCatalogs>("locationId", "Reference location is required.");
+        }
+
+        var selection = await repository.ResolveCatalogsAsync(
+                methodId,
+                unitId,
+                locationId,
+                cancellationToken)
+            .ConfigureAwait(false);
+        if (selection.Method is null)
+        {
+            return ValidationFailure<ResolvedCatalogs>("methodId", "Reference method is not active or does not exist.");
+        }
+
+        if (selection.Unit is null)
+        {
+            return ValidationFailure<ResolvedCatalogs>("unitId", "Reference unit is not active or does not exist.");
+        }
+
+        if (selection.Location is null)
+        {
+            return ValidationFailure<ResolvedCatalogs>("locationId", "Reference location is not active or does not exist.");
+        }
+
+        return OperationResult.Success(new ResolvedCatalogs(
+            selection.Method,
+            selection.Unit,
+            selection.Location));
+    }
 
     private static ReferenceMaterialSummary ToSummary(ReferenceMaterial material, DateOnly today) => new(
         material.Id,
         material.Name,
         material.CasNumber,
         material.CatalogNumber,
-        material.Method,
+        material.Method.Name,
         material.Lot,
         material.Brand,
         material.PurityPercent,
         material.ExpirationDate,
         material.EffectiveStatus(today).ToString(),
         material.TotalQuantity,
-        UnitSymbol(material.Unit),
+        material.Unit.Symbol,
         material.AvailableQuantity,
         material.Version);
 
@@ -321,19 +391,22 @@ public sealed class ReferenceMaterialService(
         material.Name,
         material.CasNumber,
         material.CatalogNumber,
-        material.Method,
+        material.MethodId,
+        material.Method.Name,
         material.PurityPercent,
         material.Lot,
         material.Brand,
         material.ReceivedDate,
         material.ExpirationDate,
         material.PresentationQuantity,
-        UnitSymbol(material.Unit),
+        material.UnitId,
+        material.Unit.Symbol,
         material.PackageCount,
         material.TotalQuantity,
         material.AvailableQuantity,
-        material.StorageConditions,
-        material.StorageLocation,
+        material.StorageTemperature,
+        material.LocationId,
+        material.Location.Name,
         material.EffectiveStatus(today).ToString(),
         material.CreatedByUserId,
         material.CreatedAt,
@@ -353,7 +426,6 @@ public sealed class ReferenceMaterialService(
     private static string ToRequestField(string? parameterName) => parameterName switch
     {
         null or "" => "request",
-        "unit" => "unit",
         _ => parameterName,
     };
 
@@ -380,4 +452,9 @@ public sealed class ReferenceMaterialService(
         OperationResult.Failure<ReferenceMaterialDetail>(new OperationError(
             ErrorCodes.InvalidState,
             message));
+
+    private sealed record ResolvedCatalogs(
+        ReferenceMethod Method,
+        ReferenceUnit Unit,
+        ReferenceLocation Location);
 }

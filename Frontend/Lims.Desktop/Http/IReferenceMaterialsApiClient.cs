@@ -4,6 +4,15 @@ namespace Lims.Desktop.Http;
 
 public interface IReferenceMaterialsApiClient
 {
+    Task<ApiCallResult<IReadOnlyList<ReferenceMethodOption>>> GetMethodsAsync(
+        CancellationToken cancellationToken);
+
+    Task<ApiCallResult<IReadOnlyList<ReferenceUnitOption>>> GetUnitsAsync(
+        CancellationToken cancellationToken);
+
+    Task<ApiCallResult<IReadOnlyList<ReferenceLocationOption>>> GetLocationsAsync(
+        CancellationToken cancellationToken);
+
     Task<ApiCallResult<ReferenceMaterialPage>> ListAsync(
         string? search,
         string? status,
