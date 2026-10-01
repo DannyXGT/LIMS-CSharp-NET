@@ -144,21 +144,30 @@ public sealed class AuthenticationEndpointsTests : IClassFixture<AuthenticationA
     }
 
     [Fact]
-    public async Task ReferenceMaterialsListRequiresExplicitModulePermission()
+    public async Task ReferenceMaterialsListAllowsAdministratorOrExplicitModulePermission()
     {
         using var forbiddenRequest = new HttpRequestMessage(HttpMethod.Get, "/api/reference-materials");
-        forbiddenRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", CreateAccessToken());
+        forbiddenRequest.Headers.Authorization = new AuthenticationHeaderValue(
+            "Bearer",
+            CreateAccessTokenForRole("Usuario"));
         using var forbidden = await _client.SendAsync(forbiddenRequest);
 
         using var allowedRequest = new HttpRequestMessage(HttpMethod.Get, "/api/reference-materials");
         allowedRequest.Headers.Authorization = new AuthenticationHeaderValue(
             "Bearer",
-            CreateAccessToken(ReferenceMaterialPermissions.View));
+            CreateAccessTokenForRole("Usuario", ReferenceMaterialPermissions.View));
         using var allowed = await _client.SendAsync(allowedRequest);
         var page = await allowed.Content.ReadFromJsonAsync<ReferenceMaterialPage>();
 
+        using var administratorRequest = new HttpRequestMessage(HttpMethod.Get, "/api/reference-materials");
+        administratorRequest.Headers.Authorization = new AuthenticationHeaderValue(
+            "Bearer",
+            CreateAccessTokenForRole("Administrador"));
+        using var administrator = await _client.SendAsync(administratorRequest);
+
         Assert.Equal(HttpStatusCode.Forbidden, forbidden.StatusCode);
         Assert.Equal(HttpStatusCode.OK, allowed.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, administrator.StatusCode);
         Assert.NotNull(page);
         Assert.Empty(page.Items);
     }
@@ -192,7 +201,7 @@ public sealed class AuthenticationEndpointsTests : IClassFixture<AuthenticationA
         };
         partialRequest.Headers.Authorization = new AuthenticationHeaderValue(
             "Bearer",
-            CreateAccessToken(ReferenceMaterialPermissions.Create));
+            CreateAccessTokenForRole("Usuario", ReferenceMaterialPermissions.Create));
         using var partial = await _client.SendAsync(partialRequest);
 
         using var allowedRequest = new HttpRequestMessage(HttpMethod.Post, $"/api/reference-materials/{id:D}/replacement")
@@ -201,7 +210,8 @@ public sealed class AuthenticationEndpointsTests : IClassFixture<AuthenticationA
         };
         allowedRequest.Headers.Authorization = new AuthenticationHeaderValue(
             "Bearer",
-            CreateAccessToken(
+            CreateAccessTokenForRole(
+                "Usuario",
                 ReferenceMaterialPermissions.Create,
                 ReferenceMaterialPermissions.Archive));
         using var allowed = await _client.SendAsync(allowedRequest);
@@ -211,6 +221,9 @@ public sealed class AuthenticationEndpointsTests : IClassFixture<AuthenticationA
     }
 
     private static string CreateAccessToken(params string[] permissions)
+        => CreateAccessTokenForRole("Administrador", permissions);
+
+    private static string CreateAccessTokenForRole(string role, params string[] permissions)
     {
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(AuthenticationApiFactory.SigningKey));
         var claims = new List<Claim>
@@ -220,7 +233,7 @@ public sealed class AuthenticationEndpointsTests : IClassFixture<AuthenticationA
                 AuthenticationApiFactory.UserId.ToString(CultureInfo.InvariantCulture)),
             new(JwtAccessTokenService.SessionIdClaim, AuthenticationApiFactory.SessionId.ToString("D")),
             new(ClaimTypes.Name, "Test User"),
-            new(ClaimTypes.Role, "Administrador"),
+            new(ClaimTypes.Role, role),
         };
         claims.AddRange(permissions.Select(permission =>
             new Claim(JwtAccessTokenService.PermissionClaim, permission)));

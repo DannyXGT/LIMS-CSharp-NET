@@ -32,6 +32,7 @@ public sealed partial class ShellViewModel(
     }
 
     public bool CanViewReferenceMaterials =>
+        string.Equals(session.Profile?.Role, "Administrador", StringComparison.OrdinalIgnoreCase) ||
         session.Profile?.Permissions.Contains(ReferenceMaterialPermissions.View, StringComparer.Ordinal) == true;
 
     public void RefreshProfile()

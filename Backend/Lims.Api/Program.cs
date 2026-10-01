@@ -99,21 +99,29 @@ try
         .AddPolicy(LimsPolicies.ChemicalDepartment, policy =>
             policy.RequireAuthenticatedUser().RequireClaim("department", "Laboratorio Químico"))
         .AddPolicy(ReferenceMaterialPermissions.View, policy =>
-            policy.RequireAuthenticatedUser().RequireClaim(
-                JwtAccessTokenService.PermissionClaim,
-                ReferenceMaterialPermissions.View))
+            policy.RequireAuthenticatedUser().RequireAssertion(context =>
+                context.User.IsInRole("Administrador") ||
+                context.User.HasClaim(
+                    JwtAccessTokenService.PermissionClaim,
+                    ReferenceMaterialPermissions.View)))
         .AddPolicy(ReferenceMaterialPermissions.Create, policy =>
-            policy.RequireAuthenticatedUser().RequireClaim(
-                JwtAccessTokenService.PermissionClaim,
-                ReferenceMaterialPermissions.Create))
+            policy.RequireAuthenticatedUser().RequireAssertion(context =>
+                context.User.IsInRole("Administrador") ||
+                context.User.HasClaim(
+                    JwtAccessTokenService.PermissionClaim,
+                    ReferenceMaterialPermissions.Create)))
         .AddPolicy(ReferenceMaterialPermissions.Edit, policy =>
-            policy.RequireAuthenticatedUser().RequireClaim(
-                JwtAccessTokenService.PermissionClaim,
-                ReferenceMaterialPermissions.Edit))
+            policy.RequireAuthenticatedUser().RequireAssertion(context =>
+                context.User.IsInRole("Administrador") ||
+                context.User.HasClaim(
+                    JwtAccessTokenService.PermissionClaim,
+                    ReferenceMaterialPermissions.Edit)))
         .AddPolicy(ReferenceMaterialPermissions.Archive, policy =>
-            policy.RequireAuthenticatedUser().RequireClaim(
-                JwtAccessTokenService.PermissionClaim,
-                ReferenceMaterialPermissions.Archive));
+            policy.RequireAuthenticatedUser().RequireAssertion(context =>
+                context.User.IsInRole("Administrador") ||
+                context.User.HasClaim(
+                    JwtAccessTokenService.PermissionClaim,
+                    ReferenceMaterialPermissions.Archive)));
 
     builder.Services.AddRateLimiter(options =>
     {

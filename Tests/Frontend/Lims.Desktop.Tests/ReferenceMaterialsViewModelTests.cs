@@ -21,6 +21,23 @@ public sealed class ReferenceMaterialsViewModelTests
     }
 
     [Fact]
+    public async Task AdministratorCanUseReferenceMaterialsWithoutDuplicatedPermissionRows()
+    {
+        var api = new FakeApi();
+        var viewModel = new ReferenceMaterialsViewModel(
+            api,
+            new FakeSession([], "Administrador"));
+
+        await viewModel.LoadAsync();
+
+        Assert.Equal(1, api.ListCalls);
+        Assert.True(viewModel.CanView);
+        Assert.True(viewModel.CanCreate);
+        Assert.True(viewModel.CanEdit);
+        Assert.True(viewModel.CanArchive);
+    }
+
+    [Fact]
     public async Task LoadWithPermissionReturnsRealApiRowsAndKeepsActionsPermissionGated()
     {
         var api = new FakeApi
@@ -145,14 +162,16 @@ public sealed class ReferenceMaterialsViewModelTests
             throw new NotSupportedException();
     }
 
-    private sealed class FakeSession(IReadOnlyList<string> permissions) : ISessionService
+    private sealed class FakeSession(
+        IReadOnlyList<string> permissions,
+        string role = "Usuario") : ISessionService
     {
         public string? AccessToken => null;
         public UserProfile? Profile { get; } = new(
             42,
             "Test User",
             "test.user@intertek.com",
-            "Usuario",
+            role,
             "Laboratorio Químico",
             permissions);
 

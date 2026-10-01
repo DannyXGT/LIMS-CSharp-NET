@@ -323,6 +323,7 @@ public sealed partial class ReferenceMaterialsViewModel(
     }
 
     private bool HasPermission(string permission) =>
+        string.Equals(session.Profile?.Role, "Administrador", StringComparison.OrdinalIgnoreCase) ||
         session.Profile?.Permissions.Contains(permission, StringComparer.Ordinal) == true;
 
     private bool IsSelectedMutable => SelectedDetail?.Status is
