@@ -1,4 +1,5 @@
 using Lims.Contracts.Authentication;
+using Lims.Contracts.Errors;
 using Lims.Contracts.ReferenceMaterials;
 using Lims.Desktop.Http;
 using Lims.Desktop.Services;
@@ -130,6 +131,61 @@ public sealed class ReferenceMaterialsViewModelTests
         Assert.Equal(second.Id, viewModel.SelectedDetail?.Id);
     }
 
+    [Fact]
+    public async Task CreatePreservesSupportIdAndExplainsOutdatedDatabaseSchema()
+    {
+        var api = new FakeApi
+        {
+            CreateResult = new ApiCallResult<ReferenceMaterialDetail>(
+                false,
+                null,
+                new ApiError(
+                    ErrorCodes.DatabaseSchemaOutOfDate,
+                    "El esquema de base de datos requiere actualización.",
+                    "support-schema-123"),
+                503),
+        };
+        var viewModel = new ReferenceMaterialsViewModel(
+            api,
+            new FakeSession([ReferenceMaterialPermissions.Create]));
+
+        var saved = await viewModel.CreateAsync(CreateRequest(), CancellationToken.None);
+
+        Assert.False(saved);
+        Assert.Equal("El esquema de base de datos requiere actualización.", viewModel.LastSaveFailure?.Message);
+        Assert.Equal("support-schema-123", viewModel.LastSaveFailure?.SupportId);
+    }
+
+    [Fact]
+    public async Task CreateExplainsStaleMethodWithoutTreatingItAsInternalFailure()
+    {
+        var api = new FakeApi
+        {
+            CreateResult = new ApiCallResult<ReferenceMaterialDetail>(
+                false,
+                null,
+                new ApiError(
+                    ErrorCodes.ValidationError,
+                    "Los datos enviados no son válidos.",
+                    "validation-123",
+                    new Dictionary<string, string[]> { ["methodId"] = ["inactive"] }),
+                400),
+        };
+        var viewModel = new ReferenceMaterialsViewModel(
+            api,
+            new FakeSession([ReferenceMaterialPermissions.Create]));
+
+        var saved = await viewModel.CreateAsync(CreateRequest(), CancellationToken.None);
+
+        Assert.False(saved);
+        Assert.Contains("método seleccionado", viewModel.LastSaveFailure?.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Null(viewModel.LastSaveFailure?.SupportId);
+    }
+
+    private static CreateReferenceMaterialRequest CreateRequest() => new(
+        "Naphthol AS", "92-77-3", "DRE-C15431000", 13, 98.09m, "H1622997", "Dr. Ehrenstorfer",
+        new DateOnly(2026, 10, 1), new DateOnly(2029, 5, 6), 100m, 3, 1, "T ambiente", 1);
+
     private static ReferenceMaterialSummary Summary(string name) => new(
         Guid.NewGuid(), name, "64-17-5", "CAT-001", "GC", "LOT-1", "Proveedor", 99.5m,
         new DateOnly(2027, 9, 30), "Active", 25m, "g", 25m, Guid.NewGuid());
@@ -147,6 +203,7 @@ public sealed class ReferenceMaterialsViewModelTests
         public int LastRequestedPage { get; private set; }
         public ReferenceMaterialPage Page { get; set; } = new([], 1, 25, 0);
         public Func<Guid, Task<ApiCallResult<ReferenceMaterialDetail>>>? GetHandler { get; init; }
+        public ApiCallResult<ReferenceMaterialDetail>? CreateResult { get; init; }
 
         public Task<ApiCallResult<IReadOnlyList<ReferenceMethodOption>>> GetMethodsAsync(
             CancellationToken cancellationToken) => Task.FromResult(
@@ -178,7 +235,7 @@ public sealed class ReferenceMaterialsViewModelTests
             GetHandler?.Invoke(id) ?? throw new NotSupportedException();
 
         public Task<ApiCallResult<ReferenceMaterialDetail>> CreateAsync(CreateReferenceMaterialRequest request, CancellationToken cancellationToken) =>
-            throw new NotSupportedException();
+            Task.FromResult(CreateResult ?? throw new NotSupportedException());
 
         public Task<ApiCallResult<ReferenceMaterialDetail>> UpdateAsync(Guid id, UpdateReferenceMaterialRequest request, CancellationToken cancellationToken) =>
             throw new NotSupportedException();

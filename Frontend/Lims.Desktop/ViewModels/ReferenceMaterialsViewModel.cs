@@ -15,6 +15,8 @@ public sealed partial class ReferenceMaterialsViewModel(
     private const int PageSize = 25;
     private long _selectionVersion;
 
+    public ApiOperationFailure? LastSaveFailure { get; private set; }
+
     public ObservableCollection<ReferenceMaterialSummary> Items { get; } = [];
 
     public ObservableCollection<ReferenceMethodOption> Methods { get; } = [];
@@ -280,17 +282,35 @@ public sealed partial class ReferenceMaterialsViewModel(
             return false;
         }
 
-        var result = await api.CreateAsync(request, cancellationToken).ConfigureAwait(true);
-        if (!result.IsSuccess || result.Value is null)
+        LastSaveFailure = null;
+        Message = string.Empty;
+        try
         {
-            Message = MessageFor(result.Error);
+            var result = await api.CreateAsync(request, cancellationToken).ConfigureAwait(true);
+            if (!result.IsSuccess || result.Value is null)
+            {
+                LastSaveFailure = SaveFailureFor(result.Error, result.StatusCode);
+                Message = LastSaveFailure.Message;
+                return false;
+            }
+
+            await LoadAsync(cancellationToken).ConfigureAwait(true);
+            var created = Items.FirstOrDefault(item => item.Id == result.Value.Id);
+            await SelectAsync(created, cancellationToken).ConfigureAwait(true);
+            return true;
+        }
+        catch (HttpRequestException)
+        {
+            LastSaveFailure = new ApiOperationFailure("El servidor no está disponible.");
+            Message = LastSaveFailure.Message;
             return false;
         }
-
-        await LoadAsync(cancellationToken).ConfigureAwait(true);
-        var created = Items.FirstOrDefault(item => item.Id == result.Value.Id);
-        await SelectAsync(created, cancellationToken).ConfigureAwait(true);
-        return true;
+        catch (TaskCanceledException) when (!cancellationToken.IsCancellationRequested)
+        {
+            LastSaveFailure = new ApiOperationFailure("El servidor tardó demasiado en responder.");
+            Message = LastSaveFailure.Message;
+            return false;
+        }
     }
 
     public async Task<bool> UpdateAsync(
@@ -303,17 +323,35 @@ public sealed partial class ReferenceMaterialsViewModel(
             return false;
         }
 
-        var result = await api.UpdateAsync(SelectedDetail.Id, request, cancellationToken).ConfigureAwait(true);
-        if (!result.IsSuccess || result.Value is null)
+        LastSaveFailure = null;
+        Message = string.Empty;
+        try
         {
-            Message = MessageFor(result.Error);
+            var result = await api.UpdateAsync(SelectedDetail.Id, request, cancellationToken).ConfigureAwait(true);
+            if (!result.IsSuccess || result.Value is null)
+            {
+                LastSaveFailure = SaveFailureFor(result.Error, result.StatusCode);
+                Message = LastSaveFailure.Message;
+                return false;
+            }
+
+            await LoadAsync(cancellationToken).ConfigureAwait(true);
+            var updated = Items.FirstOrDefault(item => item.Id == result.Value.Id);
+            await SelectAsync(updated, cancellationToken).ConfigureAwait(true);
+            return true;
+        }
+        catch (HttpRequestException)
+        {
+            LastSaveFailure = new ApiOperationFailure("El servidor no está disponible.");
+            Message = LastSaveFailure.Message;
             return false;
         }
-
-        await LoadAsync(cancellationToken).ConfigureAwait(true);
-        var updated = Items.FirstOrDefault(item => item.Id == result.Value.Id);
-        await SelectAsync(updated, cancellationToken).ConfigureAwait(true);
-        return true;
+        catch (TaskCanceledException) when (!cancellationToken.IsCancellationRequested)
+        {
+            LastSaveFailure = new ApiOperationFailure("El servidor tardó demasiado en responder.");
+            Message = LastSaveFailure.Message;
+            return false;
+        }
     }
 
     public async Task<bool> ArchiveAsync(string reason, CancellationToken cancellationToken)
@@ -427,6 +465,33 @@ public sealed partial class ReferenceMaterialsViewModel(
             ErrorCodes.InvalidState => error.Message,
             _ => error?.Message ?? "No se pudo completar la operación.",
         };
+    }
+
+    private static ApiOperationFailure SaveFailureFor(ApiError? error, int statusCode)
+    {
+        var validationKeys = error?.ValidationErrors?.Keys ?? [];
+        var message = error?.Code switch
+        {
+            ErrorCodes.ValidationError when validationKeys.Contains("methodId", StringComparer.OrdinalIgnoreCase) =>
+                "El método seleccionado ya no está disponible. Actualice los catálogos e intente nuevamente.",
+            ErrorCodes.ValidationError when validationKeys.Contains("unitId", StringComparer.OrdinalIgnoreCase) =>
+                "La unidad seleccionada ya no está disponible. Actualice los catálogos e intente nuevamente.",
+            ErrorCodes.ValidationError when validationKeys.Contains("locationId", StringComparer.OrdinalIgnoreCase) =>
+                "La ubicación seleccionada ya no está disponible. Actualice los catálogos e intente nuevamente.",
+            ErrorCodes.ValidationError => "No se pudo guardar el estándar porque los datos enviados no son válidos.",
+            ErrorCodes.DatabaseSchemaOutOfDate => "El esquema de base de datos requiere actualización.",
+            ErrorCodes.ServerUnavailable => "El servidor no está disponible.",
+            ErrorCodes.Forbidden => "No tiene autorización para guardar estándares.",
+            ErrorCodes.NotFound => "El estándar solicitado ya no existe.",
+            ErrorCodes.Conflict => "El estándar cambió. Actualice la lista e intente nuevamente.",
+            ErrorCodes.InvalidState => error.Message,
+            _ when statusCode >= 500 => "No se pudo guardar el estándar.",
+            _ => error?.Message ?? "No se pudo guardar el estándar.",
+        };
+        var supportId = statusCode >= 500 && !string.IsNullOrWhiteSpace(error?.CorrelationId)
+            ? error.CorrelationId
+            : null;
+        return new ApiOperationFailure(message, supportId);
     }
 
     private static void Replace<T>(ObservableCollection<T> target, IEnumerable<T> values)

@@ -190,6 +190,43 @@ public sealed class AuthenticationEndpointsTests : IClassFixture<AuthenticationA
     }
 
     [Fact]
+    public async Task ReferenceMaterialCreateAcceptsNaphtholExampleWithExpectedContract()
+    {
+        var payload = new CreateReferenceMaterialRequest(
+            "Naphthol AS",
+            "92-77-3",
+            "DRE-C15431000",
+            13,
+            98.09m,
+            "H1622997",
+            "Dr. Ehrenstorfer",
+            new DateOnly(2026, 10, 1),
+            new DateOnly(2029, 5, 6),
+            100m,
+            3,
+            1,
+            "T ambiente",
+            1);
+        using var request = new HttpRequestMessage(HttpMethod.Post, "/api/reference-materials")
+        {
+            Content = JsonContent.Create(payload),
+        };
+        request.Headers.Authorization = new AuthenticationHeaderValue(
+            "Bearer",
+            CreateAccessTokenForRole("Usuario", ReferenceMaterialPermissions.Create));
+
+        using var response = await _client.SendAsync(request);
+        var responseBody = await response.Content.ReadFromJsonAsync<ReferenceMaterialDetail>();
+
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        Assert.Equal("/api/reference-materials/bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb", response.Headers.Location?.ToString());
+        Assert.Equal(payload, _factory.LastCreateRequest);
+        Assert.Equal("Naphthol AS", responseBody?.Name);
+        Assert.Equal(98.09m, responseBody?.PurityPercent);
+        Assert.Equal("mg", responseBody?.Unit);
+    }
+
+    [Fact]
     public async Task ReferenceMaterialReplacementRequiresCreateAndArchivePermissions()
     {
         var id = Guid.NewGuid();

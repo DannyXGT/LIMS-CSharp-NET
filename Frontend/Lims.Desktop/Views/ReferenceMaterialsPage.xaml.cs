@@ -35,7 +35,7 @@ public sealed partial class ReferenceMaterialsPage : Page
         {
             var saved = await ViewModel.CreateAsync(dialog.CreateRequest(), CancellationToken.None);
             UpdateDetailVisibility();
-            return saved ? null : ViewModel.Message;
+            return saved ? null : ViewModel.LastSaveFailure;
         };
         await dialog.ShowAsync();
     }
@@ -121,7 +121,7 @@ public sealed partial class ReferenceMaterialsPage : Page
         {
             var saved = await ViewModel.UpdateAsync(dialog.UpdateRequest(selected.Version), CancellationToken.None);
             UpdateDetailVisibility();
-            return saved ? null : ViewModel.Message;
+            return saved ? null : ViewModel.LastSaveFailure;
         };
         await dialog.ShowAsync();
     }

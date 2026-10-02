@@ -17,6 +17,8 @@ namespace Lims.Api.Tests;
 
 public sealed class AuthenticationApiFactory : WebApplicationFactory<Program>
 {
+    private readonly FakeReferenceMaterialService _referenceMaterials = new();
+
     public const string SigningKey = "testing-only-signing-key-32-characters-minimum";
     public static readonly Guid SessionId = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
     public const int UserId = 42;
@@ -40,12 +42,16 @@ public sealed class AuthenticationApiFactory : WebApplicationFactory<Program>
             services.RemoveAll<IReferenceMaterialService>();
             services.AddSingleton<IAuthenticationService, FakeAuthenticationService>();
             services.AddSingleton<IAuthenticationSessionStore, FakeSessionStore>();
-            services.AddSingleton<IReferenceMaterialService, FakeReferenceMaterialService>();
+            services.AddSingleton<IReferenceMaterialService>(_referenceMaterials);
         });
     }
 
+    public CreateReferenceMaterialRequest? LastCreateRequest => _referenceMaterials.LastCreateRequest;
+
     private sealed class FakeReferenceMaterialService : IReferenceMaterialService
     {
+        public CreateReferenceMaterialRequest? LastCreateRequest { get; private set; }
+
         public Task<IReadOnlyList<ReferenceMethodOption>> GetMethodsAsync(CancellationToken cancellationToken) =>
             Task.FromResult<IReadOnlyList<ReferenceMethodOption>>([new(1, "APEOs")]);
 
@@ -70,7 +76,42 @@ public sealed class AuthenticationApiFactory : WebApplicationFactory<Program>
         public Task<OperationResult<ReferenceMaterialDetail>> CreateAsync(
             CreateReferenceMaterialRequest request,
             int actorUserId,
-            CancellationToken cancellationToken) => Task.FromResult(NotFound());
+            CancellationToken cancellationToken)
+        {
+            LastCreateRequest = request;
+            var now = DateTimeOffset.UtcNow;
+            return Task.FromResult(OperationResult.Success(new ReferenceMaterialDetail(
+                Guid.Parse("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"),
+                request.Name,
+                request.CasNumber,
+                request.CatalogNumber,
+                request.MethodId,
+                "AEEA",
+                request.PurityPercent,
+                request.Lot,
+                request.Brand,
+                request.ReceivedDate,
+                request.ExpirationDate,
+                request.PresentationQuantity,
+                request.UnitId,
+                "mg",
+                request.PackageCount,
+                request.PresentationQuantity * request.PackageCount,
+                request.PresentationQuantity * request.PackageCount,
+                request.StorageTemperature,
+                request.LocationId,
+                "Laboratorio",
+                "Active",
+                actorUserId,
+                now,
+                actorUserId,
+                now,
+                null,
+                null,
+                null,
+                null,
+                Guid.Parse("cccccccc-cccc-cccc-cccc-cccccccccccc"))));
+        }
 
         public Task<OperationResult<ReferenceMaterialDetail>> UpdateAsync(
             Guid id,

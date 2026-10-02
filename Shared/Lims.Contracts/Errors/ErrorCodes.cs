@@ -10,6 +10,7 @@ public static class ErrorCodes
     public const string NetworkUnavailable = "client.network_unavailable";
     public const string Timeout = "client.timeout";
     public const string ServerUnavailable = "server.unavailable";
+    public const string DatabaseSchemaOutOfDate = "database.schema_out_of_date";
     public const string UnexpectedError = "server.unexpected_error";
     public const string NotFound = "resource.not_found";
     public const string Conflict = "resource.conflict";
