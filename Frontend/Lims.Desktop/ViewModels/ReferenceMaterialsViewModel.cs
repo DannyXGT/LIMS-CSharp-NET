@@ -4,6 +4,7 @@ using CommunityToolkit.Mvvm.Input;
 using Lims.Contracts.Errors;
 using Lims.Contracts.ReferenceMaterials;
 using Lims.Desktop.Http;
+using Lims.Desktop.Presentation;
 using Lims.Desktop.Services;
 
 namespace Lims.Desktop.ViewModels;
@@ -75,7 +76,7 @@ public sealed partial class ReferenceMaterialsViewModel(
     public int TotalPages => Math.Max(1, (int)Math.Ceiling(TotalCount / (double)PageSize));
     public bool CanGoToPreviousPage => CurrentPage > 1 && !IsBusy;
     public bool CanGoToNextPage => CurrentPage < TotalPages && !IsBusy;
-    public string PaginationText => $"Página {CurrentPage} de {TotalPages} · {TotalCount} registros";
+    public string PaginationText => $"Página {CurrentPage} de {TotalPages} · {TotalCount} {(TotalCount == 1 ? "registro" : "registros")}";
 
     public void RefreshPermissions()
     {
@@ -362,8 +363,9 @@ public sealed partial class ReferenceMaterialsViewModel(
             return false;
         }
 
+        var archivedId = SelectedDetail.Id;
         var result = await api.ArchiveAsync(
-                SelectedDetail.Id,
+                archivedId,
                 new ArchiveReferenceMaterialRequest(reason, SelectedDetail.Version),
                 cancellationToken)
             .ConfigureAwait(true);
@@ -374,7 +376,7 @@ public sealed partial class ReferenceMaterialsViewModel(
         }
 
         await LoadAsync(cancellationToken).ConfigureAwait(true);
-        var archived = Items.FirstOrDefault(item => item.Id == SelectedDetail?.Id);
+        var archived = Items.FirstOrDefault(item => item.Id == archivedId);
         await SelectAsync(archived, cancellationToken).ConfigureAwait(true);
         return true;
     }
@@ -450,48 +452,14 @@ public sealed partial class ReferenceMaterialsViewModel(
         OnPropertyChanged(nameof(PaginationText));
     }
 
-    private static string MessageFor(ApiError? error)
-    {
-        if (error?.ValidationErrors is { Count: > 0 })
-        {
-            return string.Join(" ", error.ValidationErrors.Values.SelectMany(value => value));
-        }
-
-        return error?.Code switch
-        {
-            ErrorCodes.Forbidden => "No tiene autorización para realizar esta operación.",
-            ErrorCodes.NotFound => "El estándar solicitado ya no existe.",
-            ErrorCodes.Conflict => "El estándar cambió. Actualice la lista e intente nuevamente.",
-            ErrorCodes.InvalidState => error.Message,
-            _ => error?.Message ?? "No se pudo completar la operación.",
-        };
-    }
+    private static string MessageFor(ApiError? error) => ReferenceMaterialErrors.Message(error);
 
     private static ApiOperationFailure SaveFailureFor(ApiError? error, int statusCode)
     {
-        var validationKeys = error?.ValidationErrors?.Keys ?? [];
-        var message = error?.Code switch
-        {
-            ErrorCodes.ValidationError when validationKeys.Contains("methodId", StringComparer.OrdinalIgnoreCase) =>
-                "El método seleccionado ya no está disponible. Actualice los catálogos e intente nuevamente.",
-            ErrorCodes.ValidationError when validationKeys.Contains("unitId", StringComparer.OrdinalIgnoreCase) =>
-                "La unidad seleccionada ya no está disponible. Actualice los catálogos e intente nuevamente.",
-            ErrorCodes.ValidationError when validationKeys.Contains("locationId", StringComparer.OrdinalIgnoreCase) =>
-                "La ubicación seleccionada ya no está disponible. Actualice los catálogos e intente nuevamente.",
-            ErrorCodes.ValidationError => "No se pudo guardar el estándar porque los datos enviados no son válidos.",
-            ErrorCodes.DatabaseSchemaOutOfDate => "El esquema de base de datos requiere actualización.",
-            ErrorCodes.ServerUnavailable => "El servidor no está disponible.",
-            ErrorCodes.Forbidden => "No tiene autorización para guardar estándares.",
-            ErrorCodes.NotFound => "El estándar solicitado ya no existe.",
-            ErrorCodes.Conflict => "El estándar cambió. Actualice la lista e intente nuevamente.",
-            ErrorCodes.InvalidState => error.Message,
-            _ when statusCode >= 500 => "No se pudo guardar el estándar.",
-            _ => error?.Message ?? "No se pudo guardar el estándar.",
-        };
         var supportId = statusCode >= 500 && !string.IsNullOrWhiteSpace(error?.CorrelationId)
             ? error.CorrelationId
             : null;
-        return new ApiOperationFailure(message, supportId);
+        return new ApiOperationFailure(ReferenceMaterialErrors.Message(error), supportId);
     }
 
     private static void Replace<T>(ObservableCollection<T> target, IEnumerable<T> values)

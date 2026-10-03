@@ -85,7 +85,7 @@ public sealed class ReferenceMaterialService(
         var material = await repository.FindByIdAsync(id, cancellationToken).ConfigureAwait(false);
         return material is null
             ? NotFound()
-            : OperationResult.Success(ToDetail(material, Today()));
+            : OperationResult.Success(await ToDetailAsync(material, cancellationToken).ConfigureAwait(false));
     }
 
     public async Task<OperationResult<ReferenceMaterialDetail>> CreateAsync(
@@ -133,7 +133,7 @@ public sealed class ReferenceMaterialService(
                 return Conflict();
             }
 
-            return OperationResult.Success(ToDetail(material, Today()));
+            return OperationResult.Success(await ToDetailAsync(material, cancellationToken).ConfigureAwait(false));
         }
         catch (ArgumentException exception)
         {
@@ -205,7 +205,7 @@ public sealed class ReferenceMaterialService(
         }
 
         return await repository.SaveChangesAsync(cancellationToken).ConfigureAwait(false)
-            ? OperationResult.Success(ToDetail(material, Today()))
+            ? OperationResult.Success(await ToDetailAsync(material, cancellationToken).ConfigureAwait(false))
             : Conflict();
     }
 
@@ -243,7 +243,7 @@ public sealed class ReferenceMaterialService(
         }
 
         return await repository.SaveChangesAsync(cancellationToken).ConfigureAwait(false)
-            ? OperationResult.Success(ToDetail(material, Today()))
+            ? OperationResult.Success(await ToDetailAsync(material, cancellationToken).ConfigureAwait(false))
             : Conflict();
     }
 
@@ -308,7 +308,7 @@ public sealed class ReferenceMaterialService(
                 return Conflict();
             }
 
-            return OperationResult.Success(ToDetail(replacement, Today()));
+            return OperationResult.Success(await ToDetailAsync(replacement, cancellationToken).ConfigureAwait(false));
         }
         catch (InvalidOperationException exception)
         {
@@ -386,37 +386,45 @@ public sealed class ReferenceMaterialService(
         material.AvailableQuantity,
         material.Version);
 
-    private static ReferenceMaterialDetail ToDetail(ReferenceMaterial material, DateOnly today) => new(
-        material.Id,
-        material.Name,
-        material.CasNumber,
-        material.CatalogNumber,
-        material.MethodId,
-        material.Method.Name,
-        material.PurityPercent,
-        material.Lot,
-        material.Brand,
-        material.ReceivedDate,
-        material.ExpirationDate,
-        material.PresentationQuantity,
-        material.UnitId,
-        material.Unit.Symbol,
-        material.PackageCount,
-        material.TotalQuantity,
-        material.AvailableQuantity,
-        material.StorageTemperature,
-        material.LocationId,
-        material.Location.Name,
-        material.EffectiveStatus(today).ToString(),
-        material.CreatedByUserId,
-        material.CreatedAt,
-        material.UpdatedByUserId,
-        material.UpdatedAt,
-        material.ArchivedByUserId,
-        material.ArchivedAt,
-        material.ArchiveReason,
-        material.ReplacedByMaterialId,
-        material.Version);
+    private async Task<ReferenceMaterialDetail> ToDetailAsync(ReferenceMaterial material, CancellationToken cancellationToken)
+    {
+        var display = await repository.ResolveDisplayContextAsync(material, cancellationToken).ConfigureAwait(false);
+        return new ReferenceMaterialDetail(
+            material.Id,
+            material.Name,
+            material.CasNumber,
+            material.CatalogNumber,
+            material.MethodId,
+            material.Method.Name,
+            material.PurityPercent,
+            material.Lot,
+            material.Brand,
+            material.ReceivedDate,
+            material.ExpirationDate,
+            material.PresentationQuantity,
+            material.UnitId,
+            material.Unit.Symbol,
+            material.PackageCount,
+            material.TotalQuantity,
+            material.AvailableQuantity,
+            material.StorageTemperature,
+            material.LocationId,
+            material.Location.Name,
+            material.EffectiveStatus(Today()).ToString(),
+            material.CreatedByUserId,
+            material.CreatedAt,
+            material.UpdatedByUserId,
+            material.UpdatedAt,
+            material.ArchivedByUserId,
+            material.ArchivedAt,
+            material.ArchiveReason,
+            material.ReplacedByMaterialId,
+            material.Version,
+            display.CreatedByName,
+            display.UpdatedByName,
+            display.ArchivedByName,
+            display.ReplacedByMaterialName);
+    }
 
     private DateOnly Today() => DateOnly.FromDateTime(timeProvider.GetUtcNow().UtcDateTime);
 

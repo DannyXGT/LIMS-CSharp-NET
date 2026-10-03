@@ -14,6 +14,13 @@ public sealed partial class ReferenceMaterialsPage : Page
     {
         ViewModel = viewModel;
         InitializeComponent();
+        ViewModel.PropertyChanged += (_, args) =>
+        {
+            if (args.PropertyName == nameof(ReferenceMaterialsViewModel.SelectedDetail))
+            {
+                UpdateDetailVisibility();
+            }
+        };
     }
 
     public ReferenceMaterialsViewModel ViewModel { get; }
@@ -128,20 +135,13 @@ public sealed partial class ReferenceMaterialsPage : Page
 
     private async void OnArchiveClick(object sender, RoutedEventArgs e)
     {
-        var reason = new TextBox { PlaceholderText = "Motivo obligatorio", TextWrapping = TextWrapping.Wrap };
-        var dialog = new ContentDialog
+        if (!ViewModel.CanArchiveSelected)
         {
-            XamlRoot = XamlRoot,
-            Title = "Archivar estándar",
-            Content = reason,
-            PrimaryButtonText = "Archivar",
-            CloseButtonText = "Cancelar",
-            DefaultButton = ContentDialogButton.Close,
-        };
-        if (await dialog.ShowAsync() == ContentDialogResult.Primary)
-        {
-            await ViewModel.ArchiveAsync(reason.Text, CancellationToken.None);
+            return;
         }
+        await ShowReasonDialogAsync("Archivar estándar", "Archivar",
+            "El estándar quedará archivado y conservará su historial.",
+            reason => ViewModel.ArchiveAsync(reason, CancellationToken.None));
     }
 
     private async void OnReplaceClick(object sender, RoutedEventArgs e)
@@ -169,25 +169,74 @@ public sealed partial class ReferenceMaterialsPage : Page
             return;
         }
 
+        await ShowReasonDialogAsync("Confirmar reemplazo", "Reemplazar",
+            "Se creará el nuevo estándar y el anterior quedará identificado como reemplazado.",
+            reason => ViewModel.ReplaceAsync(editor.CreateRequest(), reason, CancellationToken.None));
+    }
+
+    private async Task ShowReasonDialogAsync(string title, string action, string description, Func<string, Task<bool>> saveAsync)
+    {
         var reason = new TextBox
         {
-            PlaceholderText = "Ej. cambio de lote o certificado",
+            Header = "Motivo",
+            PlaceholderText = "Indique el motivo de esta acción",
             TextWrapping = TextWrapping.Wrap,
+            AcceptsReturn = true,
+            MaxLength = 500,
+            MinHeight = 100,
         };
-        var confirmation = new ContentDialog
+        var error = new InfoBar { IsOpen = false, IsClosable = false, Severity = InfoBarSeverity.Error };
+        var content = new StackPanel { Spacing = 12 };
+        content.Children.Add(new TextBlock { Text = description, TextWrapping = TextWrapping.Wrap });
+        content.Children.Add(reason);
+        content.Children.Add(error);
+        var dialog = new ContentDialog
         {
             XamlRoot = XamlRoot,
-            Title = "Confirmar reemplazo",
-            Content = reason,
-            PrimaryButtonText = "Reemplazar",
+            Title = title,
+            Content = content,
+            PrimaryButtonText = action,
             CloseButtonText = "Cancelar",
             DefaultButton = ContentDialogButton.Close,
         };
-        if (await confirmation.ShowAsync() == ContentDialogResult.Primary)
+        dialog.PrimaryButtonClick += async (sender, args) =>
         {
-            await ViewModel.ReplaceAsync(editor.CreateRequest(), reason.Text, CancellationToken.None);
-            UpdateDetailVisibility();
-        }
+            if (string.IsNullOrWhiteSpace(reason.Text))
+            {
+                args.Cancel = true;
+                error.Message = "Indique el motivo antes de continuar.";
+                error.IsOpen = true;
+                reason.Focus(FocusState.Programmatic);
+                return;
+            }
+            var deferral = args.GetDeferral();
+            sender.IsPrimaryButtonEnabled = false;
+            reason.IsEnabled = false;
+            error.IsOpen = false;
+            try
+            {
+                args.Cancel = !await saveAsync(reason.Text.Trim());
+                if (args.Cancel)
+                {
+                    error.Message = ViewModel.Message;
+                    error.IsOpen = true;
+                }
+                UpdateDetailVisibility();
+            }
+            catch (Exception exception) when (exception is HttpRequestException or TaskCanceledException)
+            {
+                args.Cancel = true;
+                error.Message = "No se pudo conectar con el servicio LIMS. Intente nuevamente.";
+                error.IsOpen = true;
+            }
+            finally
+            {
+                sender.IsPrimaryButtonEnabled = true;
+                reason.IsEnabled = true;
+                deferral.Complete();
+            }
+        };
+        await dialog.ShowAsync();
     }
 
     private async Task<bool> EnsureCatalogsAsync()

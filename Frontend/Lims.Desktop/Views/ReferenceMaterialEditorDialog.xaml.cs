@@ -38,7 +38,7 @@ public sealed partial class ReferenceMaterialEditorDialog : ContentDialog
 
         PurityBox.Text = "100";
         PackageCountBox.Text = "1";
-        var today = DateTimeOffset.Now.Date;
+        var today = ReferenceMaterialPresentation.ApplicationToday().ToDateTime(TimeOnly.MinValue);
         ReceivedDatePicker.Date = today;
         ExpirationDatePicker.Date = today.AddDays(366);
     }
@@ -50,18 +50,18 @@ public sealed partial class ReferenceMaterialEditorDialog : ContentDialog
         IReadOnlyList<ReferenceLocationOption> locations) : this(methods, units, locations)
     {
         Title = "Editar estándar";
-        NameBox.Text = detail.Name;
-        CasBox.Text = detail.CasNumber ?? string.Empty;
-        CatalogBox.Text = detail.CatalogNumber ?? string.Empty;
+        NameBox.Text = ReferenceMaterialPresentation.Optional(detail.Name, string.Empty);
+        CasBox.Text = ReferenceMaterialPresentation.Optional(detail.CasNumber, string.Empty);
+        CatalogBox.Text = ReferenceMaterialPresentation.Optional(detail.CatalogNumber, string.Empty);
         MethodBox.SelectedItem = methods.FirstOrDefault(method => method.Id == detail.MethodId);
         PurityBox.Text = ReferenceMaterialInput.FormatDecimal(detail.PurityPercent);
-        LotBox.Text = detail.Lot;
-        BrandBox.Text = detail.Brand;
+        LotBox.Text = ReferenceMaterialPresentation.Optional(detail.Lot, string.Empty);
+        BrandBox.Text = ReferenceMaterialPresentation.Optional(detail.Brand, string.Empty);
         ReceivedDatePicker.Date = ToDateTimeOffset(detail.ReceivedDate);
         ExpirationDatePicker.Date = ToDateTimeOffset(detail.ExpirationDate);
         PresentationBox.Text = ReferenceMaterialInput.FormatDecimal(detail.PresentationQuantity);
         PackageCountBox.Text = detail.PackageCount.ToString(CultureInfo.InvariantCulture);
-        StorageTemperatureBox.Text = detail.StorageTemperature;
+        StorageTemperatureBox.Text = ReferenceMaterialPresentation.Optional(detail.StorageTemperature, string.Empty);
         StorageLocationBox.SelectedItem = locations.FirstOrDefault(location => location.Id == detail.LocationId);
         UnitCombo.SelectedItem = units.FirstOrDefault(unit => unit.Id == detail.UnitId);
     }
@@ -79,8 +79,8 @@ public sealed partial class ReferenceMaterialEditorDialog : ContentDialog
             _idleSaveText = "Continuar";
             SaveButtonText.Text = _idleSaveText;
             LotBox.Text = string.Empty;
-            ReceivedDatePicker.Date = DateTimeOffset.Now.Date;
-            ExpirationDatePicker.Date = DateTimeOffset.Now.Date.AddDays(366);
+            ReceivedDatePicker.Date = ReferenceMaterialPresentation.ApplicationToday().ToDateTime(TimeOnly.MinValue);
+            ExpirationDatePicker.Date = ReferenceMaterialPresentation.ApplicationToday().ToDateTime(TimeOnly.MinValue).AddDays(366);
         }
     }
 
@@ -382,8 +382,8 @@ public sealed partial class ReferenceMaterialEditorDialog : ContentDialog
         SaveError.Text = error.Message;
         SaveError.Visibility = Visibility.Visible;
         _supportId = string.IsNullOrWhiteSpace(error.SupportId) ? null : error.SupportId.Trim();
-        SupportIdText.Text = _supportId is null ? string.Empty : $"ID de soporte: {_supportId}";
-        CopySupportIdButton.Content = "Copiar ID";
+        SupportIdText.Text = _supportId is null ? string.Empty : "Referencia disponible para soporte";
+        CopySupportIdButton.Content = "Copiar referencia";
         SupportIdPanel.Visibility = _supportId is null ? Visibility.Collapsed : Visibility.Visible;
     }
 

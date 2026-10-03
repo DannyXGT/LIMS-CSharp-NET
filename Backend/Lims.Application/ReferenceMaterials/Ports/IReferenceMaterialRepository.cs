@@ -27,6 +27,9 @@ public interface IReferenceMaterialRepository
 
     Task<ReferenceMaterial?> FindByIdAsync(Guid id, CancellationToken cancellationToken);
 
+    Task<ReferenceMaterialDisplayContext> ResolveDisplayContextAsync(
+        ReferenceMaterial material, CancellationToken cancellationToken);
+
     void Add(ReferenceMaterial material);
 
     Task<bool> SaveChangesAsync(CancellationToken cancellationToken);
@@ -36,3 +39,9 @@ public sealed record ReferenceMaterialCatalogSelection(
     ReferenceMethod? Method,
     ReferenceUnit? Unit,
     ReferenceLocation? Location);
+
+public sealed record ReferenceMaterialDisplayContext(
+    string? CreatedByName,
+    string? UpdatedByName,
+    string? ArchivedByName,
+    string? ReplacedByMaterialName);

@@ -132,6 +132,38 @@ public sealed class ReferenceMaterialsViewModelTests
     }
 
     [Fact]
+    public async Task ArchiveRestoresSelectionAfterListRefreshClearsTheDetail()
+    {
+        var summary = Summary("Naphthol AS");
+        var archived = Detail(summary) with { Status = "Archived", ArchiveReason = "Fin de uso" };
+        var api = new FakeApi
+        {
+            Page = new ReferenceMaterialPage([summary with { Status = "Archived" }], 1, 25, 1),
+            GetHandler = _ => Task.FromResult(new ApiCallResult<ReferenceMaterialDetail>(true, archived, null, 200)),
+            ArchiveResult = new ApiCallResult<ReferenceMaterialDetail>(true, archived, null, 200),
+        };
+        var viewModel = new ReferenceMaterialsViewModel(api,
+            new FakeSession([ReferenceMaterialPermissions.View, ReferenceMaterialPermissions.Archive]))
+        {
+            SelectedDetail = Detail(summary),
+        };
+        // ListView clears its current selection when the Items collection is reset.
+        viewModel.Items.CollectionChanged += (_, args) =>
+        {
+            if (args.Action == System.Collections.Specialized.NotifyCollectionChangedAction.Reset)
+            {
+                viewModel.SelectedDetail = null;
+            }
+        };
+
+        var saved = await viewModel.ArchiveAsync("Fin de uso", CancellationToken.None);
+
+        Assert.True(saved);
+        Assert.Equal(summary.Id, viewModel.SelectedDetail?.Id);
+        Assert.True(viewModel.SelectedDetail?.HasArchiveReason);
+    }
+
+    [Fact]
     public async Task CreatePreservesSupportIdAndExplainsOutdatedDatabaseSchema()
     {
         var api = new FakeApi
@@ -152,7 +184,7 @@ public sealed class ReferenceMaterialsViewModelTests
         var saved = await viewModel.CreateAsync(CreateRequest(), CancellationToken.None);
 
         Assert.False(saved);
-        Assert.Equal("El esquema de base de datos requiere actualización.", viewModel.LastSaveFailure?.Message);
+        Assert.Equal("El servicio necesita una actualización. Contacte al administrador.", viewModel.LastSaveFailure?.Message);
         Assert.Equal("support-schema-123", viewModel.LastSaveFailure?.SupportId);
     }
 
@@ -204,6 +236,7 @@ public sealed class ReferenceMaterialsViewModelTests
         public ReferenceMaterialPage Page { get; set; } = new([], 1, 25, 0);
         public Func<Guid, Task<ApiCallResult<ReferenceMaterialDetail>>>? GetHandler { get; init; }
         public ApiCallResult<ReferenceMaterialDetail>? CreateResult { get; init; }
+        public ApiCallResult<ReferenceMaterialDetail>? ArchiveResult { get; init; }
 
         public Task<ApiCallResult<IReadOnlyList<ReferenceMethodOption>>> GetMethodsAsync(
             CancellationToken cancellationToken) => Task.FromResult(
@@ -241,7 +274,7 @@ public sealed class ReferenceMaterialsViewModelTests
             throw new NotSupportedException();
 
         public Task<ApiCallResult<ReferenceMaterialDetail>> ArchiveAsync(Guid id, ArchiveReferenceMaterialRequest request, CancellationToken cancellationToken) =>
-            throw new NotSupportedException();
+            Task.FromResult(ArchiveResult ?? throw new NotSupportedException());
 
         public Task<ApiCallResult<ReferenceMaterialDetail>> ReplaceAsync(Guid id, ReplaceReferenceMaterialRequest request, CancellationToken cancellationToken) =>
             throw new NotSupportedException();

@@ -94,38 +94,38 @@
 
                 <StackPanel Grid.ColumnSpan="3" Spacing="3">
                     <TextBlock Style="{StaticResource EditorFieldLabelStyle}" Text="Nombre del estándar *" />
-                    <TextBox x:Name="NameBox" MaxLength="200" Style="{StaticResource EditorTextBoxStyle}" TabIndex="1" />
+                    <TextBox x:Name="NameBox" AutomationProperties.Name="Nombre del estándar" MaxLength="200" Style="{StaticResource EditorTextBoxStyle}" TabIndex="1" />
                     <TextBlock x:Name="NameError" Style="{StaticResource EditorErrorStyle}" />
                 </StackPanel>
 
                 <StackPanel Grid.Row="1" Spacing="3">
                     <TextBlock Style="{StaticResource EditorFieldLabelStyle}" Text="CAS" />
-                    <TextBox x:Name="CasBox" MaxLength="80" PlaceholderText="Ej. 64-17-5" Style="{StaticResource EditorTextBoxStyle}" TabIndex="2" LostFocus="OnCasLostFocus" />
+                    <TextBox x:Name="CasBox" AutomationProperties.Name="Número CAS" MaxLength="80" PlaceholderText="Ej. 64-17-5" Style="{StaticResource EditorTextBoxStyle}" TabIndex="2" LostFocus="OnCasLostFocus" />
                     <TextBlock x:Name="CasError" Style="{StaticResource EditorErrorStyle}" />
                 </StackPanel>
                 <StackPanel Grid.Row="1" Grid.Column="1" Spacing="3">
                     <TextBlock Style="{StaticResource EditorFieldLabelStyle}" Text="Número de catálogo" />
-                    <TextBox x:Name="CatalogBox" MaxLength="80" Style="{StaticResource EditorTextBoxStyle}" TabIndex="3" />
+                    <TextBox x:Name="CatalogBox" AutomationProperties.Name="Número de catálogo" MaxLength="80" Style="{StaticResource EditorTextBoxStyle}" TabIndex="3" />
                 </StackPanel>
                 <StackPanel Grid.Row="1" Grid.Column="2" Spacing="3">
                     <TextBlock Style="{StaticResource EditorFieldLabelStyle}" Text="Método *" />
-                    <ComboBox x:Name="MethodBox" DisplayMemberPath="Name" IsTextSearchEnabled="True" PlaceholderText="Seleccione un método" Style="{StaticResource EditorComboBoxStyle}" TabIndex="4" />
+                    <ComboBox x:Name="MethodBox" AutomationProperties.Name="Método" DisplayMemberPath="Name" IsTextSearchEnabled="True" PlaceholderText="Seleccione un método" Style="{StaticResource EditorComboBoxStyle}" TabIndex="4" />
                     <TextBlock x:Name="MethodError" Style="{StaticResource EditorErrorStyle}" />
                 </StackPanel>
 
                 <StackPanel Grid.Row="2" Spacing="3">
                     <TextBlock Style="{StaticResource EditorFieldLabelStyle}" Text="Lote *" />
-                    <TextBox x:Name="LotBox" MaxLength="120" Style="{StaticResource EditorTextBoxStyle}" TabIndex="5" />
+                    <TextBox x:Name="LotBox" AutomationProperties.Name="Lote" MaxLength="120" Style="{StaticResource EditorTextBoxStyle}" TabIndex="5" />
                     <TextBlock x:Name="LotError" Style="{StaticResource EditorErrorStyle}" />
                 </StackPanel>
                 <StackPanel Grid.Row="2" Grid.Column="1" Spacing="3">
                     <TextBlock Style="{StaticResource EditorFieldLabelStyle}" Text="Marca *" />
-                    <TextBox x:Name="BrandBox" MaxLength="120" Style="{StaticResource EditorTextBoxStyle}" TabIndex="6" />
+                    <TextBox x:Name="BrandBox" AutomationProperties.Name="Marca" MaxLength="120" Style="{StaticResource EditorTextBoxStyle}" TabIndex="6" />
                     <TextBlock x:Name="BrandError" Style="{StaticResource EditorErrorStyle}" />
                 </StackPanel>
                 <StackPanel Grid.Row="2" Grid.Column="2" Spacing="3">
                     <TextBlock Style="{StaticResource EditorFieldLabelStyle}" Text="Pureza (%) *" />
-                    <TextBox x:Name="PurityBox" InputScope="Number" MaxLength="8" PlaceholderText="Ej. 98.09" Style="{StaticResource EditorTextBoxStyle}" TabIndex="7" LostFocus="OnPurityLostFocus" />
+                    <TextBox x:Name="PurityBox" AutomationProperties.Name="Pureza en porcentaje" InputScope="Number" MaxLength="8" PlaceholderText="Ej. 98.09" Style="{StaticResource EditorTextBoxStyle}" TabIndex="7" LostFocus="OnPurityLostFocus" />
                     <TextBlock x:Name="PurityError" Style="{StaticResource EditorErrorStyle}" />
                 </StackPanel>
 
@@ -136,29 +136,29 @@
                     </Grid.ColumnDefinitions>
                     <StackPanel Spacing="3">
                         <TextBlock Style="{StaticResource EditorFieldLabelStyle}" Text="Fecha de ingreso *" />
-                        <CalendarDatePicker x:Name="ReceivedDatePicker" CalendarIdentifier="GregorianCalendar" DateFormat="{}{day.integer(2)}/{month.integer(2)}/{year.full}" Language="es-GT" PlaceholderText="dd/MM/yyyy" Style="{StaticResource EditorCalendarStyle}" TabIndex="8" DateChanged="OnDateChanged" />
+                        <CalendarDatePicker x:Name="ReceivedDatePicker" AutomationProperties.Name="Fecha de ingreso" CalendarIdentifier="GregorianCalendar" DateFormat="{}{day.integer(2)}/{month.integer(2)}/{year.full}" Language="es-GT" PlaceholderText="dd/MM/yyyy" Style="{StaticResource EditorCalendarStyle}" TabIndex="8" DateChanged="OnDateChanged" />
                         <TextBlock x:Name="ReceivedDateError" Style="{StaticResource EditorErrorStyle}" />
                     </StackPanel>
                     <StackPanel Grid.Column="1" Spacing="3">
                         <TextBlock Style="{StaticResource EditorFieldLabelStyle}" Text="Fecha de expiración *" />
-                        <CalendarDatePicker x:Name="ExpirationDatePicker" CalendarIdentifier="GregorianCalendar" DateFormat="{}{day.integer(2)}/{month.integer(2)}/{year.full}" Language="es-GT" PlaceholderText="dd/MM/yyyy" Style="{StaticResource EditorCalendarStyle}" TabIndex="9" DateChanged="OnDateChanged" />
+                        <CalendarDatePicker x:Name="ExpirationDatePicker" AutomationProperties.Name="Fecha de expiración" CalendarIdentifier="GregorianCalendar" DateFormat="{}{day.integer(2)}/{month.integer(2)}/{year.full}" Language="es-GT" PlaceholderText="dd/MM/yyyy" Style="{StaticResource EditorCalendarStyle}" TabIndex="9" DateChanged="OnDateChanged" />
                         <TextBlock x:Name="ExpirationError" Style="{StaticResource EditorErrorStyle}" />
                     </StackPanel>
                 </Grid>
 
                 <StackPanel Grid.Row="4" Spacing="3">
                     <TextBlock Style="{StaticResource EditorFieldLabelStyle}" Text="Presentación por unidad *" />
-                    <TextBox x:Name="PresentationBox" InputScope="Number" MaxLength="20" PlaceholderText="Ej. 100" Style="{StaticResource EditorTextBoxStyle}" TabIndex="10" LostFocus="OnPresentationLostFocus" />
+                    <TextBox x:Name="PresentationBox" AutomationProperties.Name="Cantidad por unidad" InputScope="Number" MaxLength="20" PlaceholderText="Ej. 100" Style="{StaticResource EditorTextBoxStyle}" TabIndex="10" LostFocus="OnPresentationLostFocus" />
                     <TextBlock x:Name="PresentationError" Style="{StaticResource EditorErrorStyle}" />
                 </StackPanel>
                 <StackPanel Grid.Row="4" Grid.Column="1" Spacing="3">
                     <TextBlock Style="{StaticResource EditorFieldLabelStyle}" Text="Unidad *" />
-                    <ComboBox x:Name="UnitCombo" DisplayMemberPath="DisplayName" PlaceholderText="Seleccione una unidad" Style="{StaticResource EditorComboBoxStyle}" TabIndex="11" />
+                    <ComboBox x:Name="UnitCombo" AutomationProperties.Name="Unidad de medida" DisplayMemberPath="DisplayName" PlaceholderText="Seleccione una unidad" Style="{StaticResource EditorComboBoxStyle}" TabIndex="11" />
                     <TextBlock x:Name="UnitError" Style="{StaticResource EditorErrorStyle}" />
                 </StackPanel>
                 <StackPanel Grid.Row="4" Grid.Column="2" Spacing="3">
                     <TextBlock Style="{StaticResource EditorFieldLabelStyle}" Text="Nº unidades *" />
-                    <TextBox x:Name="PackageCountBox" InputScope="Digits" MaxLength="9" PlaceholderText="Ej. 1" Style="{StaticResource EditorTextBoxStyle}" TabIndex="12" LostFocus="OnPackageCountLostFocus" />
+                    <TextBox x:Name="PackageCountBox" AutomationProperties.Name="Número de unidades" InputScope="Digits" MaxLength="9" PlaceholderText="Ej. 1" Style="{StaticResource EditorTextBoxStyle}" TabIndex="12" LostFocus="OnPackageCountLostFocus" />
                     <TextBlock x:Name="PackageCountError" Style="{StaticResource EditorErrorStyle}" />
                 </StackPanel>
 
@@ -169,12 +169,12 @@
                     </Grid.ColumnDefinitions>
                     <StackPanel Spacing="3">
                         <TextBlock Style="{StaticResource EditorFieldLabelStyle}" Text="Ubicación física *" />
-                        <ComboBox x:Name="StorageLocationBox" DisplayMemberPath="Name" PlaceholderText="Seleccione una ubicación" Style="{StaticResource EditorComboBoxStyle}" TabIndex="13" />
+                        <ComboBox x:Name="StorageLocationBox" AutomationProperties.Name="Ubicación física" DisplayMemberPath="Name" PlaceholderText="Seleccione una ubicación" Style="{StaticResource EditorComboBoxStyle}" TabIndex="13" />
                         <TextBlock x:Name="StorageLocationError" Style="{StaticResource EditorErrorStyle}" />
                     </StackPanel>
                     <StackPanel Grid.Column="1" Spacing="3">
                         <TextBlock Style="{StaticResource EditorFieldLabelStyle}" Text="Temperatura de almacenamiento *" />
-                        <TextBox x:Name="StorageTemperatureBox" MaxLength="160" PlaceholderText="Ej. 4 °C, -20 °C, T ambiente o 2–8 °C" Style="{StaticResource EditorTextBoxStyle}" TabIndex="14" />
+                        <TextBox x:Name="StorageTemperatureBox" AutomationProperties.Name="Temperatura de almacenamiento" MaxLength="160" PlaceholderText="Ej. 4 °C, -20 °C, T ambiente o 2–8 °C" Style="{StaticResource EditorTextBoxStyle}" TabIndex="14" />
                         <TextBlock x:Name="StorageTemperatureError" Style="{StaticResource EditorErrorStyle}" />
                     </StackPanel>
                 </Grid>
@@ -192,14 +192,14 @@
                     <TextBlock x:Name="SaveError" MaxWidth="520" Foreground="{ThemeResource LimsErrorTextBrush}" TextWrapping="Wrap" Visibility="Collapsed" />
                     <StackPanel x:Name="SupportIdPanel" Orientation="Horizontal" Spacing="8" Visibility="Collapsed">
                         <TextBlock x:Name="SupportIdText" VerticalAlignment="Center" Style="{StaticResource LimsCaptionStyle}" />
-                        <Button x:Name="CopySupportIdButton" Padding="8,3" Click="OnCopySupportIdClick" Content="Copiar ID" TabIndex="17" />
+                        <Button x:Name="CopySupportIdButton" Padding="8,3" Click="OnCopySupportIdClick" Content="Copiar referencia" TabIndex="17" />
                     </StackPanel>
                 </StackPanel>
-                <Button x:Name="CancelButton" Grid.Column="1" MinWidth="92" Click="OnCancelClick" PointerPressed="OnActionButtonPointerPressed" PointerReleased="OnActionButtonPointerReleased" PointerExited="OnActionButtonPointerReleased" Style="{StaticResource EditorSecondaryButtonStyle}" TabIndex="15">
+                <Button x:Name="CancelButton" AutomationProperties.Name="Cancelar" Grid.Column="1" MinWidth="92" Click="OnCancelClick" PointerPressed="OnActionButtonPointerPressed" PointerReleased="OnActionButtonPointerReleased" PointerExited="OnActionButtonPointerReleased" Style="{StaticResource EditorSecondaryButtonStyle}" TabIndex="15">
                     <Button.RenderTransform><CompositeTransform /></Button.RenderTransform>
                     Cancelar
                 </Button>
-                <Button x:Name="SaveButton" Grid.Column="2" MinWidth="164" Click="OnSaveClick" PointerPressed="OnActionButtonPointerPressed" PointerReleased="OnActionButtonPointerReleased" PointerExited="OnActionButtonPointerReleased" Style="{StaticResource EditorPrimaryButtonStyle}" TabIndex="16">
+                <Button x:Name="SaveButton" AutomationProperties.Name="{Binding Text, ElementName=SaveButtonText}" Grid.Column="2" MinWidth="164" Click="OnSaveClick" PointerPressed="OnActionButtonPointerPressed" PointerReleased="OnActionButtonPointerReleased" PointerExited="OnActionButtonPointerReleased" Style="{StaticResource EditorPrimaryButtonStyle}" TabIndex="16">
                     <Button.RenderTransform><CompositeTransform /></Button.RenderTransform>
                     <StackPanel Orientation="Horizontal" Spacing="8">
                         <ProgressRing x:Name="SaveProgressRing" Width="16" Height="16" IsActive="False" Visibility="Collapsed" />

@@ -224,6 +224,9 @@ public sealed class AuthenticationEndpointsTests : IClassFixture<AuthenticationA
         Assert.Equal("Naphthol AS", responseBody?.Name);
         Assert.Equal(98.09m, responseBody?.PurityPercent);
         Assert.Equal("mg", responseBody?.Unit);
+        Assert.Equal("Danny Jimenez", responseBody?.CreatedByName);
+        Assert.Equal("Danny Jimenez", responseBody?.UpdatedByName);
+        Assert.Equal(AuthenticationApiFactory.UserId, responseBody?.CreatedByUserId);
     }
 
     [Fact]

@@ -23,6 +23,9 @@ public sealed class ReferenceMaterialServiceTests
         Assert.Equal("Active", result.Value?.Status);
         Assert.Equal(25m, result.Value?.TotalQuantity);
         Assert.Equal(25m, result.Value?.AvailableQuantity);
+        Assert.Equal("Danny Jimenez", result.Value?.CreatedByName);
+        Assert.Equal("Danny Jimenez", result.Value?.UpdatedByName);
+        Assert.Equal(Now, result.Value?.CreatedAt);
     }
 
     [Fact]
@@ -121,6 +124,11 @@ public sealed class ReferenceMaterialServiceTests
         Assert.Equal(result.Value!.Id, source.ReplacedByMaterialId);
         Assert.Equal("Nuevo lote certificado", source.ArchiveReason);
         Assert.Equal(saveCallsBeforeReplacement + 1, repository.SaveCalls);
+        var detail = await service.GetAsync(source.Id, CancellationToken.None);
+        Assert.Equal(result.Value.Name, detail.Value?.ReplacedByMaterialName);
+        Assert.True(detail.Value?.HasReplacement);
+        Assert.False(detail.Value?.HasArchiveReason);
+        Assert.True(detail.Value?.HasReplacementReason);
     }
 
     [Fact]
@@ -157,6 +165,9 @@ public sealed class ReferenceMaterialServiceTests
         Assert.Equal(40m, result.Value?.TotalQuantity);
         Assert.Equal(40m, result.Value?.AvailableQuantity);
         Assert.Equal(84, result.Value?.UpdatedByUserId);
+        Assert.Equal("Danny Jimenez", result.Value?.CreatedByName);
+        Assert.Equal("Ana López", result.Value?.UpdatedByName);
+        Assert.Equal(Now, result.Value?.UpdatedAt);
     }
 
     [Fact]
@@ -176,6 +187,9 @@ public sealed class ReferenceMaterialServiceTests
         Assert.Equal("Archived", result.Value?.Status);
         Assert.Equal("Certificado retirado", result.Value?.ArchiveReason);
         Assert.Equal(84, result.Value?.ArchivedByUserId);
+        Assert.Equal("Ana López", result.Value?.ArchivedByName);
+        Assert.True(result.Value?.HasArchiveReason);
+        Assert.Equal(Now, result.Value?.ArchivedAt);
     }
 
     [Fact]
@@ -270,6 +284,13 @@ public sealed class ReferenceMaterialServiceTests
 
         public Task<ReferenceMaterial?> FindByIdAsync(Guid id, CancellationToken cancellationToken) =>
             Task.FromResult(Items.SingleOrDefault(item => item.Id == id));
+
+        public Task<ReferenceMaterialDisplayContext> ResolveDisplayContextAsync(
+            ReferenceMaterial material, CancellationToken cancellationToken) => Task.FromResult(new ReferenceMaterialDisplayContext(
+                material.CreatedByUserId == 42 ? "Danny Jimenez" : null,
+                material.UpdatedByUserId == 84 ? "Ana López" : "Danny Jimenez",
+                material.ArchivedByUserId == 84 ? "Ana López" : null,
+                Items.FirstOrDefault(item => item.Id == material.ReplacedByMaterialId)?.Name));
 
         public void Add(ReferenceMaterial material) => Items.Add(material);
 

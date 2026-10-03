@@ -1,4 +1,5 @@
 using System.Globalization;
+using Lims.Contracts.ReferenceMaterials;
 
 namespace Lims.Desktop.Validation;
 
@@ -48,5 +49,5 @@ internal static class ReferenceMaterialInput
         TryParsePackageCount(value, out var result) ? result : 0;
 
     public static string FormatDecimal(decimal value) =>
-        value.ToString("0.############################", CultureInfo.InvariantCulture);
+        ReferenceMaterialPresentation.Number(value);
 }

@@ -110,7 +110,9 @@ public sealed class AuthenticationApiFactory : WebApplicationFactory<Program>
                 null,
                 null,
                 null,
-                Guid.Parse("cccccccc-cccc-cccc-cccc-cccccccccccc"))));
+                Guid.Parse("cccccccc-cccc-cccc-cccc-cccccccccccc"),
+                "Danny Jimenez",
+                "Danny Jimenez")));
         }
 
         public Task<OperationResult<ReferenceMaterialDetail>> UpdateAsync(

@@ -130,6 +130,29 @@ public sealed class ReferenceMaterialRepository(LimsDbContext dbContext) : IRefe
 
     public void Add(ReferenceMaterial material) => dbContext.ReferenceMaterials.Add(material);
 
+    public async Task<ReferenceMaterialDisplayContext> ResolveDisplayContextAsync(
+        ReferenceMaterial material, CancellationToken cancellationToken)
+    {
+        var actorIds = new[] { material.CreatedByUserId, material.UpdatedByUserId, material.ArchivedByUserId }
+            .Where(id => id.HasValue).Select(id => id!.Value).Distinct().ToArray();
+        // Include inactive historical actors; project only the existing user's ID and name.
+        var names = await dbContext.Users.AsNoTracking()
+            .Where(user => actorIds.Contains(user.Id))
+            .Select(user => new { user.Id, user.Name })
+            .ToDictionaryAsync(user => user.Id, user => user.Name, cancellationToken)
+            .ConfigureAwait(false);
+        var replacementName = material.ReplacedByMaterialId.HasValue
+            ? await dbContext.ReferenceMaterials.AsNoTracking()
+                .Where(item => item.Id == material.ReplacedByMaterialId.Value)
+                .Select(item => item.Name).SingleOrDefaultAsync(cancellationToken).ConfigureAwait(false)
+            : null;
+        return new ReferenceMaterialDisplayContext(
+            names.GetValueOrDefault(material.CreatedByUserId),
+            names.GetValueOrDefault(material.UpdatedByUserId),
+            material.ArchivedByUserId.HasValue ? names.GetValueOrDefault(material.ArchivedByUserId.Value) : null,
+            replacementName);
+    }
+
     public async Task<bool> SaveChangesAsync(CancellationToken cancellationToken)
     {
         try
