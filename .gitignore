@@ -6,6 +6,13 @@ artifacts/*
 artifacts/sql/*
 !artifacts/sql/authentication.sql
 !artifacts/sql/reference_material_catalogs.sql
+!artifacts/sql/reference_stock.sql
+!artifacts/validation/
+artifacts/validation/*
+!artifacts/validation/stock/
+artifacts/validation/stock/*
+!artifacts/validation/stock/*.png
+!artifacts/validation/stock/interaction.json
 TestResults/
 
 ## Visual Studio and user-specific files

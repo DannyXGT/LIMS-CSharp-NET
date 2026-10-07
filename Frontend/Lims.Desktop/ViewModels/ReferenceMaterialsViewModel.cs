@@ -238,9 +238,9 @@ public sealed partial class ReferenceMaterialsViewModel(
     {
         var selectionVersion = Interlocked.Increment(ref _selectionVersion);
         SelectedMaterial = material;
-        SelectedDetail = null;
         if (material is null)
         {
+            SelectedDetail = null;
             IsBusy = false;
             return;
         }
@@ -261,6 +261,7 @@ public sealed partial class ReferenceMaterialsViewModel(
             }
             else
             {
+                SelectedDetail = null;
                 Message = MessageFor(result.Error);
             }
         }
@@ -417,6 +418,13 @@ public sealed partial class ReferenceMaterialsViewModel(
         OnPropertyChanged(nameof(CanReplaceSelected));
     }
 
+    partial void OnSelectedMaterialChanged(ReferenceMaterialSummary? value)
+    {
+        OnPropertyChanged(nameof(CanEditSelected));
+        OnPropertyChanged(nameof(CanArchiveSelected));
+        OnPropertyChanged(nameof(CanReplaceSelected));
+    }
+
     partial void OnMessageChanged(string value) => OnPropertyChanged(nameof(HasMessage));
 
     partial void OnCatalogMessageChanged(string value) => OnPropertyChanged(nameof(HasCatalogMessage));
@@ -429,14 +437,17 @@ public sealed partial class ReferenceMaterialsViewModel(
     {
         NotifyPaginationState();
         OnPropertyChanged(nameof(HasNoItems));
+        OnPropertyChanged(nameof(CanEditSelected));
+        OnPropertyChanged(nameof(CanArchiveSelected));
+        OnPropertyChanged(nameof(CanReplaceSelected));
     }
 
     private bool HasPermission(string permission) =>
         string.Equals(session.Profile?.Role, "Administrador", StringComparison.OrdinalIgnoreCase) ||
         session.Profile?.Permissions.Contains(permission, StringComparer.Ordinal) == true;
 
-    private bool IsSelectedMutable => SelectedDetail?.Status is
-        "Active" or "Expired" or "Depleted" or "Blocked";
+    private bool IsSelectedMutable => !IsBusy && SelectedDetail?.Id == SelectedMaterial?.Id &&
+        SelectedDetail?.Status is "Active" or "Expired" or "Depleted" or "Blocked";
 
     private void NotifyCollectionState()
     {

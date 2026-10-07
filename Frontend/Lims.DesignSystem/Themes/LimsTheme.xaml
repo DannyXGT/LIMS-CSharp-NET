@@ -36,6 +36,12 @@
             <Color x:Key="LimsShadowColor">#260A1017</Color>
             <Color x:Key="LimsAccentSoftColor">#1A176FC1</Color>
 
+            <SolidColorBrush x:Key="LimsIconNormalBrush" Color="{StaticResource LimsTextSecondaryColor}" />
+            <SolidColorBrush x:Key="LimsIconHoverBrush" Color="{StaticResource LimsTextPrimaryColor}" />
+            <SolidColorBrush x:Key="LimsIconSelectedBrush" Color="{StaticResource LimsAccentColor}" />
+            <SolidColorBrush x:Key="LimsIconDisabledBrush" Color="{StaticResource LimsDisabledTextColor}" />
+            <SolidColorBrush x:Key="LimsIconDangerBrush" Color="{StaticResource LimsDangerColor}" />
+
             <SolidColorBrush x:Key="LimsBackgroundBrush" Color="{StaticResource LimsBackgroundColor}" />
             <SolidColorBrush x:Key="LimsSurfaceBrush" Color="{StaticResource LimsSurfaceColor}" />
             <SolidColorBrush x:Key="LimsSurfaceElevatedBrush" Color="{StaticResource LimsSurfaceElevatedColor}" />
@@ -127,6 +133,12 @@
             <Color x:Key="LimsShadowColor">#8F000000</Color>
             <Color x:Key="LimsAccentSoftColor">#262A8BF2</Color>
 
+            <SolidColorBrush x:Key="LimsIconNormalBrush" Color="{StaticResource LimsTextSecondaryColor}" />
+            <SolidColorBrush x:Key="LimsIconHoverBrush" Color="{StaticResource LimsTextPrimaryColor}" />
+            <SolidColorBrush x:Key="LimsIconSelectedBrush" Color="{StaticResource LimsAccentColor}" />
+            <SolidColorBrush x:Key="LimsIconDisabledBrush" Color="{StaticResource LimsDisabledTextColor}" />
+            <SolidColorBrush x:Key="LimsIconDangerBrush" Color="{StaticResource LimsDangerColor}" />
+
             <SolidColorBrush x:Key="LimsBackgroundBrush" Color="{StaticResource LimsBackgroundColor}" />
             <SolidColorBrush x:Key="LimsSurfaceBrush" Color="{StaticResource LimsSurfaceColor}" />
             <SolidColorBrush x:Key="LimsSurfaceElevatedBrush" Color="{StaticResource LimsSurfaceElevatedColor}" />
@@ -186,6 +198,12 @@
             <SolidColorBrush x:Key="TextControlBorderBrushFocused" Color="{StaticResource LimsFocusColor}" />
         </ResourceDictionary>
     </ResourceDictionary.ThemeDictionaries>
+
+    <x:Double x:Key="IconSizeSmall">16</x:Double>
+    <x:Double x:Key="IconSizeMedium">20</x:Double>
+    <x:Double x:Key="IconSizeLarge">24</x:Double>
+    <x:Double x:Key="IconSizeExtraLarge">28</x:Double>
+    <x:Double x:Key="IconSizeHero">32</x:Double>
 
     <FontFamily x:Key="LimsFontFamily">Segoe UI Variable Text</FontFamily>
     <FontFamily x:Key="LimsDisplayFontFamily">Segoe UI Variable Display</FontFamily>

@@ -1,12 +1,13 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Lims.DesignSystem.Presentation;
 
 namespace Lims.DesignSystem.Controls;
 
 public sealed partial class StatusBadge : UserControl
 {
     public static readonly DependencyProperty TextProperty = DependencyProperty.Register(
-        nameof(Text), typeof(string), typeof(StatusBadge), new PropertyMetadata(string.Empty));
+        nameof(Text), typeof(string), typeof(StatusBadge), new PropertyMetadata(string.Empty, OnTextChanged));
     public static readonly DependencyProperty ToneProperty = DependencyProperty.Register(
         nameof(Tone), typeof(string), typeof(StatusBadge), new PropertyMetadata("Neutral", OnToneChanged));
 
@@ -29,6 +30,12 @@ public sealed partial class StatusBadge : UserControl
 
     private static void OnToneChanged(DependencyObject sender, DependencyPropertyChangedEventArgs args) =>
         ((StatusBadge)sender).UpdateTone();
+
+    private static void OnTextChanged(DependencyObject sender, DependencyPropertyChangedEventArgs args)
+    {
+        var badge = (StatusBadge)sender;
+        if (badge.IsLoaded) Motion.Enter(badge, milliseconds: 100, scale: 0.97f);
+    }
 
     private void UpdateTone() => VisualStateManager.GoToState(this,
         Tone is "Success" or "Warning" or "Danger" or "Information" ? Tone : "Neutral", false);

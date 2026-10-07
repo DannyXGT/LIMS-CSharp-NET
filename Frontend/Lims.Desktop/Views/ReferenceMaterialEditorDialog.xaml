@@ -3,63 +3,19 @@
     x:Class="Lims.Desktop.Views.ReferenceMaterialEditorDialog"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:design="using:Lims.DesignSystem.Controls"
     Language="es-GT"
+    CornerRadius="12"
+    Style="{StaticResource LimsEditorDialogStyle}"
     Opened="OnOpened"
     Closing="OnClosing"
     Title="Nuevo estándar">
     <ContentDialog.Resources>
         <x:Double x:Key="ContentDialogMaxWidth">1040</x:Double>
         <x:Double x:Key="ContentDialogMaxHeight">860</x:Double>
-        <Style x:Key="EditorFieldLabelStyle" TargetType="TextBlock">
-            <Setter Property="Margin" Value="1,0,0,0" />
-            <Setter Property="FontFamily" Value="{StaticResource LimsFontFamily}" />
-            <Setter Property="FontSize" Value="12" />
-            <Setter Property="FontWeight" Value="SemiBold" />
-            <Setter Property="Foreground" Value="{ThemeResource LimsTextSecondaryBrush}" />
-        </Style>
-        <Style x:Key="EditorErrorStyle" TargetType="TextBlock">
-            <Setter Property="Margin" Value="1,1,0,0" />
-            <Setter Property="FontSize" Value="11" />
-            <Setter Property="Foreground" Value="{ThemeResource LimsErrorTextBrush}" />
-            <Setter Property="TextWrapping" Value="Wrap" />
-            <Setter Property="Visibility" Value="Collapsed" />
-        </Style>
-        <Style x:Key="EditorTextBoxStyle" TargetType="TextBox">
-            <Setter Property="MinHeight" Value="38" />
-            <Setter Property="CornerRadius" Value="{StaticResource LimsControlCornerRadius}" />
-            <Setter Property="VerticalContentAlignment" Value="Center" />
-        </Style>
-        <Style x:Key="EditorComboBoxStyle" TargetType="ComboBox">
-            <Setter Property="MinHeight" Value="38" />
-            <Setter Property="CornerRadius" Value="{StaticResource LimsControlCornerRadius}" />
-            <Setter Property="HorizontalAlignment" Value="Stretch" />
-        </Style>
-        <Style x:Key="EditorCalendarStyle" TargetType="CalendarDatePicker">
-            <Setter Property="MinHeight" Value="38" />
-            <Setter Property="CornerRadius" Value="{StaticResource LimsControlCornerRadius}" />
-            <Setter Property="HorizontalAlignment" Value="Stretch" />
-        </Style>
-        <Style x:Key="EditorSecondaryButtonStyle" TargetType="Button">
-            <Setter Property="MinHeight" Value="38" />
-            <Setter Property="Padding" Value="16,8" />
-            <Setter Property="CornerRadius" Value="{StaticResource LimsControlCornerRadius}" />
-            <Setter Property="Background" Value="{ThemeResource LimsSurfaceSecondaryBrush}" />
-            <Setter Property="BorderBrush" Value="{ThemeResource LimsBorderStrongBrush}" />
-            <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="Foreground" Value="{ThemeResource LimsTextPrimaryBrush}" />
-            <Setter Property="FontWeight" Value="SemiBold" />
-        </Style>
-        <Style x:Key="EditorPrimaryButtonStyle" TargetType="Button" BasedOn="{StaticResource AccentButtonStyle}">
-            <Setter Property="MinHeight" Value="38" />
-            <Setter Property="Padding" Value="16,8" />
-            <Setter Property="CornerRadius" Value="{StaticResource LimsControlCornerRadius}" />
-            <Setter Property="BorderBrush" Value="{ThemeResource LimsAccentHoverBrush}" />
-            <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="FontWeight" Value="SemiBold" />
-        </Style>
     </ContentDialog.Resources>
 
-    <Grid x:Name="EditorRoot" MinWidth="420">
+    <Grid x:Name="EditorRoot">
         <Grid.RowDefinitions>
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
@@ -68,15 +24,16 @@
         <ScrollViewer
             x:Name="EditorScrollViewer"
             HorizontalScrollBarVisibility="Disabled"
-            VerticalScrollBarVisibility="Auto">
+            VerticalScrollBarVisibility="Auto"
+            VerticalScrollMode="Auto">
             <Grid
                 x:Name="EditorSurface"
                 Padding="2,2,10,12"
                 ColumnSpacing="16"
                 RowSpacing="10"
-                Opacity="0">
+                Opacity="1">
                 <Grid.RenderTransform>
-                    <CompositeTransform ScaleX="0.985" ScaleY="0.985" />
+                    <CompositeTransform />
                 </Grid.RenderTransform>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
@@ -93,40 +50,40 @@
                 </Grid.RowDefinitions>
 
                 <StackPanel Grid.ColumnSpan="3" Spacing="3">
-                    <TextBlock Style="{StaticResource EditorFieldLabelStyle}" Text="Nombre del estándar *" />
-                    <TextBox x:Name="NameBox" AutomationProperties.Name="Nombre del estándar" MaxLength="200" Style="{StaticResource EditorTextBoxStyle}" TabIndex="1" />
-                    <TextBlock x:Name="NameError" Style="{StaticResource EditorErrorStyle}" />
+                    <TextBlock Style="{StaticResource LimsFormLabelStyle}" Text="Nombre del estándar *" />
+                    <TextBox x:Name="NameBox" AutomationProperties.Name="Nombre del estándar" MaxLength="200" Style="{StaticResource LimsCompactTextBoxStyle}" TabIndex="1" />
+                    <TextBlock x:Name="NameError" Style="{StaticResource LimsInlineErrorStyle}" />
                 </StackPanel>
 
                 <StackPanel Grid.Row="1" Spacing="3">
-                    <TextBlock Style="{StaticResource EditorFieldLabelStyle}" Text="CAS" />
-                    <TextBox x:Name="CasBox" AutomationProperties.Name="Número CAS" MaxLength="80" PlaceholderText="Ej. 64-17-5" Style="{StaticResource EditorTextBoxStyle}" TabIndex="2" LostFocus="OnCasLostFocus" />
-                    <TextBlock x:Name="CasError" Style="{StaticResource EditorErrorStyle}" />
+                    <TextBlock Style="{StaticResource LimsFormLabelStyle}" Text="CAS" />
+                    <TextBox x:Name="CasBox" AutomationProperties.Name="Número CAS" MaxLength="80" PlaceholderText="Ej. 64-17-5" Style="{StaticResource LimsCompactTextBoxStyle}" TabIndex="2" LostFocus="OnCasLostFocus" />
+                    <TextBlock x:Name="CasError" Style="{StaticResource LimsInlineErrorStyle}" />
                 </StackPanel>
                 <StackPanel Grid.Row="1" Grid.Column="1" Spacing="3">
-                    <TextBlock Style="{StaticResource EditorFieldLabelStyle}" Text="Número de catálogo" />
-                    <TextBox x:Name="CatalogBox" AutomationProperties.Name="Número de catálogo" MaxLength="80" Style="{StaticResource EditorTextBoxStyle}" TabIndex="3" />
+                    <TextBlock Style="{StaticResource LimsFormLabelStyle}" Text="Número de catálogo" />
+                    <TextBox x:Name="CatalogBox" AutomationProperties.Name="Número de catálogo" MaxLength="80" Style="{StaticResource LimsCompactTextBoxStyle}" TabIndex="3" />
                 </StackPanel>
                 <StackPanel Grid.Row="1" Grid.Column="2" Spacing="3">
-                    <TextBlock Style="{StaticResource EditorFieldLabelStyle}" Text="Método *" />
-                    <ComboBox x:Name="MethodBox" AutomationProperties.Name="Método" DisplayMemberPath="Name" IsTextSearchEnabled="True" PlaceholderText="Seleccione un método" Style="{StaticResource EditorComboBoxStyle}" TabIndex="4" />
-                    <TextBlock x:Name="MethodError" Style="{StaticResource EditorErrorStyle}" />
+                    <TextBlock Style="{StaticResource LimsFormLabelStyle}" Text="Método *" />
+                    <design:LimsSearchSelect x:Name="MethodBox" AutomationProperties.Name="Método" DisplayMemberPath="Name" PlaceholderText="Seleccione un método" SearchPlaceholder="Buscar método..." TabIndex="4" />
+                    <TextBlock x:Name="MethodError" Style="{StaticResource LimsInlineErrorStyle}" />
                 </StackPanel>
 
                 <StackPanel Grid.Row="2" Spacing="3">
-                    <TextBlock Style="{StaticResource EditorFieldLabelStyle}" Text="Lote *" />
-                    <TextBox x:Name="LotBox" AutomationProperties.Name="Lote" MaxLength="120" Style="{StaticResource EditorTextBoxStyle}" TabIndex="5" />
-                    <TextBlock x:Name="LotError" Style="{StaticResource EditorErrorStyle}" />
+                    <TextBlock Style="{StaticResource LimsFormLabelStyle}" Text="Lote *" />
+                    <TextBox x:Name="LotBox" AutomationProperties.Name="Lote" MaxLength="120" Style="{StaticResource LimsCompactTextBoxStyle}" TabIndex="5" />
+                    <TextBlock x:Name="LotError" Style="{StaticResource LimsInlineErrorStyle}" />
                 </StackPanel>
                 <StackPanel Grid.Row="2" Grid.Column="1" Spacing="3">
-                    <TextBlock Style="{StaticResource EditorFieldLabelStyle}" Text="Marca *" />
-                    <TextBox x:Name="BrandBox" AutomationProperties.Name="Marca" MaxLength="120" Style="{StaticResource EditorTextBoxStyle}" TabIndex="6" />
-                    <TextBlock x:Name="BrandError" Style="{StaticResource EditorErrorStyle}" />
+                    <TextBlock Style="{StaticResource LimsFormLabelStyle}" Text="Marca *" />
+                    <TextBox x:Name="BrandBox" AutomationProperties.Name="Marca" MaxLength="120" Style="{StaticResource LimsCompactTextBoxStyle}" TabIndex="6" />
+                    <TextBlock x:Name="BrandError" Style="{StaticResource LimsInlineErrorStyle}" />
                 </StackPanel>
                 <StackPanel Grid.Row="2" Grid.Column="2" Spacing="3">
-                    <TextBlock Style="{StaticResource EditorFieldLabelStyle}" Text="Pureza (%) *" />
-                    <TextBox x:Name="PurityBox" AutomationProperties.Name="Pureza en porcentaje" InputScope="Number" MaxLength="8" PlaceholderText="Ej. 98.09" Style="{StaticResource EditorTextBoxStyle}" TabIndex="7" LostFocus="OnPurityLostFocus" />
-                    <TextBlock x:Name="PurityError" Style="{StaticResource EditorErrorStyle}" />
+                    <TextBlock Style="{StaticResource LimsFormLabelStyle}" Text="Pureza (%) *" />
+                    <TextBox x:Name="PurityBox" AutomationProperties.Name="Pureza en porcentaje" InputScope="Number" MaxLength="8" PlaceholderText="Ej. 98.09" Style="{StaticResource LimsCompactTextBoxStyle}" TabIndex="7" LostFocus="OnPurityLostFocus" />
+                    <TextBlock x:Name="PurityError" Style="{StaticResource LimsInlineErrorStyle}" />
                 </StackPanel>
 
                 <Grid Grid.Row="3" Grid.ColumnSpan="3" ColumnSpacing="16">
@@ -135,31 +92,31 @@
                         <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
                     <StackPanel Spacing="3">
-                        <TextBlock Style="{StaticResource EditorFieldLabelStyle}" Text="Fecha de ingreso *" />
-                        <CalendarDatePicker x:Name="ReceivedDatePicker" AutomationProperties.Name="Fecha de ingreso" CalendarIdentifier="GregorianCalendar" DateFormat="{}{day.integer(2)}/{month.integer(2)}/{year.full}" Language="es-GT" PlaceholderText="dd/MM/yyyy" Style="{StaticResource EditorCalendarStyle}" TabIndex="8" DateChanged="OnDateChanged" />
-                        <TextBlock x:Name="ReceivedDateError" Style="{StaticResource EditorErrorStyle}" />
+                        <TextBlock Style="{StaticResource LimsFormLabelStyle}" Text="Fecha de ingreso *" />
+                        <design:LimsDatePicker x:Name="ReceivedDatePicker" AutomationProperties.Name="Fecha de ingreso" Language="es-GT" PlaceholderText="dd/MM/yyyy" TabIndex="8" DateChanged="OnDateChanged" />
+                        <TextBlock x:Name="ReceivedDateError" Style="{StaticResource LimsInlineErrorStyle}" />
                     </StackPanel>
                     <StackPanel Grid.Column="1" Spacing="3">
-                        <TextBlock Style="{StaticResource EditorFieldLabelStyle}" Text="Fecha de expiración *" />
-                        <CalendarDatePicker x:Name="ExpirationDatePicker" AutomationProperties.Name="Fecha de expiración" CalendarIdentifier="GregorianCalendar" DateFormat="{}{day.integer(2)}/{month.integer(2)}/{year.full}" Language="es-GT" PlaceholderText="dd/MM/yyyy" Style="{StaticResource EditorCalendarStyle}" TabIndex="9" DateChanged="OnDateChanged" />
-                        <TextBlock x:Name="ExpirationError" Style="{StaticResource EditorErrorStyle}" />
+                        <TextBlock Style="{StaticResource LimsFormLabelStyle}" Text="Fecha de expiración *" />
+                        <design:LimsDatePicker x:Name="ExpirationDatePicker" AutomationProperties.Name="Fecha de expiración" Language="es-GT" PlaceholderText="dd/MM/yyyy" TabIndex="9" DateChanged="OnDateChanged" />
+                        <TextBlock x:Name="ExpirationError" Style="{StaticResource LimsInlineErrorStyle}" />
                     </StackPanel>
                 </Grid>
 
                 <StackPanel Grid.Row="4" Spacing="3">
-                    <TextBlock Style="{StaticResource EditorFieldLabelStyle}" Text="Presentación por unidad *" />
-                    <TextBox x:Name="PresentationBox" AutomationProperties.Name="Cantidad por unidad" InputScope="Number" MaxLength="20" PlaceholderText="Ej. 100" Style="{StaticResource EditorTextBoxStyle}" TabIndex="10" LostFocus="OnPresentationLostFocus" />
-                    <TextBlock x:Name="PresentationError" Style="{StaticResource EditorErrorStyle}" />
+                    <TextBlock Style="{StaticResource LimsFormLabelStyle}" Text="Presentación por unidad *" />
+                    <TextBox x:Name="PresentationBox" AutomationProperties.Name="Cantidad por unidad" InputScope="Number" MaxLength="20" PlaceholderText="Ej. 100" Style="{StaticResource LimsCompactTextBoxStyle}" TabIndex="10" LostFocus="OnPresentationLostFocus" />
+                    <TextBlock x:Name="PresentationError" Style="{StaticResource LimsInlineErrorStyle}" />
                 </StackPanel>
                 <StackPanel Grid.Row="4" Grid.Column="1" Spacing="3">
-                    <TextBlock Style="{StaticResource EditorFieldLabelStyle}" Text="Unidad *" />
-                    <ComboBox x:Name="UnitCombo" AutomationProperties.Name="Unidad de medida" DisplayMemberPath="DisplayName" PlaceholderText="Seleccione una unidad" Style="{StaticResource EditorComboBoxStyle}" TabIndex="11" />
-                    <TextBlock x:Name="UnitError" Style="{StaticResource EditorErrorStyle}" />
+                    <TextBlock Style="{StaticResource LimsFormLabelStyle}" Text="Unidad *" />
+                    <design:LimsSelect x:Name="UnitCombo" AutomationProperties.Name="Unidad de medida" DisplayMemberPath="DisplayName" PlaceholderText="Seleccione una unidad" TabIndex="11" />
+                    <TextBlock x:Name="UnitError" Style="{StaticResource LimsInlineErrorStyle}" />
                 </StackPanel>
                 <StackPanel Grid.Row="4" Grid.Column="2" Spacing="3">
-                    <TextBlock Style="{StaticResource EditorFieldLabelStyle}" Text="Nº unidades *" />
-                    <TextBox x:Name="PackageCountBox" AutomationProperties.Name="Número de unidades" InputScope="Digits" MaxLength="9" PlaceholderText="Ej. 1" Style="{StaticResource EditorTextBoxStyle}" TabIndex="12" LostFocus="OnPackageCountLostFocus" />
-                    <TextBlock x:Name="PackageCountError" Style="{StaticResource EditorErrorStyle}" />
+                    <TextBlock Style="{StaticResource LimsFormLabelStyle}" Text="Nº unidades *" />
+                    <TextBox x:Name="PackageCountBox" AutomationProperties.Name="Número de unidades" InputScope="Digits" MaxLength="9" PlaceholderText="Ej. 1" Style="{StaticResource LimsCompactTextBoxStyle}" TabIndex="12" LostFocus="OnPackageCountLostFocus" />
+                    <TextBlock x:Name="PackageCountError" Style="{StaticResource LimsInlineErrorStyle}" />
                 </StackPanel>
 
                 <Grid Grid.Row="5" Grid.ColumnSpan="3" ColumnSpacing="16">
@@ -168,21 +125,21 @@
                         <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
                     <StackPanel Spacing="3">
-                        <TextBlock Style="{StaticResource EditorFieldLabelStyle}" Text="Ubicación física *" />
-                        <ComboBox x:Name="StorageLocationBox" AutomationProperties.Name="Ubicación física" DisplayMemberPath="Name" PlaceholderText="Seleccione una ubicación" Style="{StaticResource EditorComboBoxStyle}" TabIndex="13" />
-                        <TextBlock x:Name="StorageLocationError" Style="{StaticResource EditorErrorStyle}" />
+                        <TextBlock Style="{StaticResource LimsFormLabelStyle}" Text="Ubicación física *" />
+                        <design:LimsSelect x:Name="StorageLocationBox" AutomationProperties.Name="Ubicación física" DisplayMemberPath="Name" PlaceholderText="Seleccione una ubicación" TabIndex="13" />
+                        <TextBlock x:Name="StorageLocationError" Style="{StaticResource LimsInlineErrorStyle}" />
                     </StackPanel>
                     <StackPanel Grid.Column="1" Spacing="3">
-                        <TextBlock Style="{StaticResource EditorFieldLabelStyle}" Text="Temperatura de almacenamiento *" />
-                        <TextBox x:Name="StorageTemperatureBox" AutomationProperties.Name="Temperatura de almacenamiento" MaxLength="160" PlaceholderText="Ej. 4 °C, -20 °C, T ambiente o 2–8 °C" Style="{StaticResource EditorTextBoxStyle}" TabIndex="14" />
-                        <TextBlock x:Name="StorageTemperatureError" Style="{StaticResource EditorErrorStyle}" />
+                        <TextBlock Style="{StaticResource LimsFormLabelStyle}" Text="Temperatura de almacenamiento" />
+                        <TextBox x:Name="StorageTemperatureBox" AutomationProperties.Name="Temperatura de almacenamiento" MaxLength="160" PlaceholderText="Ej. 4 °C, -20 °C, T ambiente o 2–8 °C" Style="{StaticResource LimsCompactTextBoxStyle}" TabIndex="14" />
+                        <TextBlock x:Name="StorageTemperatureError" Style="{StaticResource LimsInlineErrorStyle}" />
                     </StackPanel>
                 </Grid>
             </Grid>
         </ScrollViewer>
 
-        <Border Grid.Row="1" Padding="0,12,0,0" BorderBrush="{ThemeResource LimsBorderBrush}" BorderThickness="0,1,0,0">
-            <Grid ColumnSpacing="12">
+        <Border Grid.Row="1" Padding="0,10,0,0" BorderBrush="{ThemeResource LimsBorderBrush}" BorderThickness="0,1,0,0">
+            <Grid ColumnSpacing="10">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
@@ -195,15 +152,12 @@
                         <Button x:Name="CopySupportIdButton" Padding="8,3" Click="OnCopySupportIdClick" Content="Copiar referencia" TabIndex="17" />
                     </StackPanel>
                 </StackPanel>
-                <Button x:Name="CancelButton" AutomationProperties.Name="Cancelar" Grid.Column="1" MinWidth="92" Click="OnCancelClick" PointerPressed="OnActionButtonPointerPressed" PointerReleased="OnActionButtonPointerReleased" PointerExited="OnActionButtonPointerReleased" Style="{StaticResource EditorSecondaryButtonStyle}" TabIndex="15">
-                    <Button.RenderTransform><CompositeTransform /></Button.RenderTransform>
+                <Button x:Name="CancelButton" AutomationProperties.Name="Cancelar" Grid.Column="1" MinWidth="92" Click="OnCancelClick" Style="{StaticResource LimsStandardsSecondaryButtonStyle}" TabIndex="15">
                     Cancelar
                 </Button>
-                <Button x:Name="SaveButton" AutomationProperties.Name="{Binding Text, ElementName=SaveButtonText}" Grid.Column="2" MinWidth="164" Click="OnSaveClick" PointerPressed="OnActionButtonPointerPressed" PointerReleased="OnActionButtonPointerReleased" PointerExited="OnActionButtonPointerReleased" Style="{StaticResource EditorPrimaryButtonStyle}" TabIndex="16">
-                    <Button.RenderTransform><CompositeTransform /></Button.RenderTransform>
+                <Button x:Name="SaveButton" AutomationProperties.Name="{Binding Text, ElementName=SaveButtonText}" Grid.Column="2" MinWidth="164" Click="OnSaveClick" Style="{StaticResource LimsPrimaryButtonStyle}" TabIndex="16">
                     <StackPanel Orientation="Horizontal" Spacing="8">
                         <ProgressRing x:Name="SaveProgressRing" Width="16" Height="16" IsActive="False" Visibility="Collapsed" />
-                        <FontIcon x:Name="SaveIcon" FontSize="13" Glyph="&#xE73E;" />
                         <TextBlock x:Name="SaveButtonText" Text="Guardar estándar" />
                     </StackPanel>
                 </Button>

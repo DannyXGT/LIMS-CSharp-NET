@@ -1,6 +1,7 @@
 using Lims.Domain.Authentication;
 using Lims.Domain.Identity;
 using Lims.Domain.ReferenceMaterials;
+using Lims.Domain.ReferencePreparations;
 using Microsoft.EntityFrameworkCore;
 
 namespace Lims.Infrastructure.Persistence;
@@ -27,6 +28,9 @@ public sealed class LimsDbContext(DbContextOptions<LimsDbContext> options) : DbC
 
     public DbSet<ReferenceLocation> ReferenceLocations => Set<ReferenceLocation>();
 
+    public DbSet<ReferencePreparation> ReferencePreparations => Set<ReferencePreparation>();
+    public DbSet<ReferenceMaterialMovement> ReferenceMaterialMovements => Set<ReferenceMaterialMovement>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         ArgumentNullException.ThrowIfNull(modelBuilder);
@@ -35,6 +39,7 @@ public sealed class LimsDbContext(DbContextOptions<LimsDbContext> options) : DbC
         ConfigureAuthentication(modelBuilder);
         ConfigureReferenceMaterialCatalogs(modelBuilder);
         ConfigureReferenceMaterials(modelBuilder);
+        StockModel.Configure(modelBuilder);
     }
 
     private static void ConfigureLegacyIdentity(ModelBuilder modelBuilder)

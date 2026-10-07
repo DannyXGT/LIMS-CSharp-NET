@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UserControl x:Class="Lims.Desktop.Views.ReferenceMaterialDetailDialog"
+ xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+ xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+ xmlns:design="using:Lims.DesignSystem.Controls" KeyDown="OnKeyDown">
+ <UserControl.Resources>
+  <Style x:Key="DetailValueStyle" TargetType="TextBlock"><Setter Property="FontSize" Value="14" /><Setter Property="TextWrapping" Value="Wrap" /></Style>
+  <Style x:Key="DetailPanelStyle" TargetType="Border"><Setter Property="Background" Value="{ThemeResource LimsSurfaceBrush}" /><Setter Property="BorderBrush" Value="{ThemeResource LimsBorderBrush}" /><Setter Property="BorderThickness" Value="1" /><Setter Property="CornerRadius" Value="{StaticResource LimsCornerRadiusMedium}" /><Setter Property="Padding" Value="20" /></Style>
+ </UserControl.Resources>
+ <Grid x:Name="OverlayRoot">
+  <Border x:Name="Scrim" Background="{ThemeResource LimsOverlayBrush}" />
+  <Border x:Name="DetailSurface" HorizontalAlignment="Center" VerticalAlignment="Center" Background="{ThemeResource LimsBackgroundBrush}" BorderBrush="{ThemeResource LimsBorderBrush}" BorderThickness="1" CornerRadius="{StaticResource LimsCornerRadiusLarge}">
+   <Grid TabFocusNavigation="Cycle">
+    <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /></Grid.RowDefinitions>
+    <Grid x:Name="HeaderGrid" Background="{ThemeResource LimsSurfaceBrush}" Padding="24,12,24,0" RowSpacing="12">
+     <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+     <Grid ColumnSpacing="12"><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+      <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center"><TextBlock Style="{StaticResource LimsCaptionStyle}" Text="Estándares" /><design:LimsIcon Icon="ChevronRight" Size="12" Foreground="{ThemeResource LimsTextTertiaryBrush}" /><TextBlock x:Name="BreadcrumbName" Style="{StaticResource LimsCaptionStyle}" Text="{x:Bind Detail.NameDisplay, Mode=OneTime}" TextTrimming="CharacterEllipsis" /></StackPanel>
+      <Button x:Name="CloseIconButton" Grid.Column="1" Click="OnClose" Style="{StaticResource LimsIconButtonStyle}" AutomationProperties.Name="Cerrar ficha" ToolTipService.ToolTip="Cerrar (Escape)"><design:LimsIcon Icon="Cancel" Size="{StaticResource IconSizeSmall}" /></Button>
+     </Grid>
+     <Grid x:Name="HeroGrid" Grid.Row="1" ColumnSpacing="24" RowSpacing="12">
+      <Grid.ColumnDefinitions><ColumnDefinition Width="136" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+      <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+      <Border x:Name="IdentityVisual" Width="136" MinHeight="136" Background="{ThemeResource LimsSurfaceSecondaryBrush}" CornerRadius="{StaticResource LimsCornerRadiusMedium}" Padding="16">
+       <StackPanel Spacing="16" VerticalAlignment="Center" HorizontalAlignment="Center"><design:LimsIcon Icon="ReferenceMaterials" Size="56" Foreground="{ThemeResource LimsAccentBrush}" /><design:StatusBadge Text="{x:Bind Detail.StatusLabel, Mode=OneTime}" Tone="{x:Bind Detail.StatusTone, Mode=OneTime}" HorizontalAlignment="Center" /></StackPanel>
+      </Border>
+      <StackPanel x:Name="IdentityHeader" Grid.Column="1" Spacing="6" VerticalAlignment="Center">
+       <TextBlock FontSize="28" FontWeight="SemiBold" Text="{x:Bind Detail.NameDisplay, Mode=OneTime}" TextWrapping="Wrap" />
+       <TextBlock Style="{StaticResource LimsCaptionStyle}" Text="{x:Bind Detail.CasDisplay, Mode=OneTime}" Visibility="{x:Bind Detail.HasCas, Mode=OneTime}" />
+       <TextBlock x:Name="IdentityCatalog" Style="{StaticResource LimsCaptionStyle}" TextWrapping="Wrap" />
+       <Grid x:Name="IdentityChips" ColumnSpacing="8" HorizontalAlignment="Left" Margin="0,4,0,0"><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+        <Border Background="{ThemeResource LimsSurfaceSecondaryBrush}" CornerRadius="4" Padding="8,4"><TextBlock Style="{StaticResource LimsCaptionStyle}" Text="{x:Bind Detail.BrandDisplay, Mode=OneTime}" ToolTipService.ToolTip="Marca" /></Border>
+        <Border Grid.Column="1" Background="{ThemeResource LimsSurfaceSecondaryBrush}" CornerRadius="4" Padding="8,4"><TextBlock Style="{StaticResource LimsCaptionStyle}" Text="{x:Bind Detail.MethodDisplay, Mode=OneTime}" ToolTipService.ToolTip="Método" /></Border>
+       </Grid>
+      </StackPanel>
+      <StackPanel x:Name="HeaderActions" Grid.Column="2" Orientation="Horizontal" Spacing="8" VerticalAlignment="Top" Margin="0,8,0,0">
+       <Button x:Name="EditButton" Click="OnEdit" Style="{StaticResource LimsPrimaryButtonStyle}" AutomationProperties.Name="Editar"><StackPanel Orientation="Horizontal" Spacing="8"><design:LimsIcon Icon="Edit" Size="{StaticResource IconSizeSmall}" /><TextBlock Text="Editar" /></StackPanel></Button>
+       <Button x:Name="ReplaceButton" Click="OnReplace" Style="{StaticResource LimsStandardsSecondaryButtonStyle}" AutomationProperties.Name="Reemplazar"><StackPanel Orientation="Horizontal" Spacing="8"><design:LimsIcon Icon="Replace" Size="{StaticResource IconSizeSmall}" /><TextBlock Text="Reemplazar" /></StackPanel></Button>
+       <Button x:Name="ArchiveButton" Click="OnArchive" Style="{StaticResource LimsDangerButtonStyle}" AutomationProperties.Name="Archivar"><StackPanel Orientation="Horizontal" Spacing="8"><design:LimsIcon Icon="Archive" Size="{StaticResource IconSizeSmall}" IsDanger="True" /><TextBlock Text="Archivar" /></StackPanel></Button>
+      </StackPanel>
+     </Grid>
+     <!-- Only the implemented summary occupies this extensible navigation container. -->
+     <Grid Grid.Row="2" BorderBrush="{ThemeResource LimsBorderBrush}" BorderThickness="0,0,0,1"><StackPanel Orientation="Horizontal"><Grid Padding="12,12,12,0"><Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /></Grid.RowDefinitions><TextBlock Text="Resumen" FontSize="14" FontWeight="SemiBold" /><Border Grid.Row="1" Height="2" Background="{ThemeResource LimsAccentBrush}" Margin="0,12,0,0" /></Grid></StackPanel></Grid>
+    </Grid>
+    <ScrollViewer x:Name="DetailScroll" Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="24">
+     <StackPanel x:Name="DetailContent" Spacing="16">
+      <InfoBar x:Name="ActionError" IsClosable="False" Severity="Error" IsOpen="False" Visibility="Collapsed" />
+      <Grid x:Name="BodyColumns" ColumnSpacing="24" RowSpacing="24">
+       <Grid.ColumnDefinitions><ColumnDefinition x:Name="GeneralColumn" Width="38*" /><ColumnDefinition x:Name="WorkspaceColumn" Width="62*" /></Grid.ColumnDefinitions>
+       <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+       <Border x:Name="GeneralSection" Style="{StaticResource DetailPanelStyle}" VerticalAlignment="Top"><StackPanel Spacing="20"><TextBlock Style="{StaticResource LimsDetailHeadingStyle}" Text="INFORMACIÓN GENERAL" /><Grid ColumnSpacing="12" RowSpacing="12"><Grid.ColumnDefinitions><ColumnDefinition Width="112" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions><Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /></Grid.RowDefinitions><TextBlock Grid.Row="0" Style="{StaticResource LimsCaptionStyle}" Text="Nombre" /><TextBlock Grid.Row="0" Grid.Column="1" Style="{StaticResource DetailValueStyle}" Text="{x:Bind Detail.NameDisplay, Mode=OneTime}" />
+<TextBlock Grid.Row="1" Style="{StaticResource LimsCaptionStyle}" Text="Marca" /><TextBlock Grid.Row="1" Grid.Column="1" Style="{StaticResource DetailValueStyle}" Text="{x:Bind Detail.BrandDisplay, Mode=OneTime}" />
+<TextBlock Grid.Row="2" Style="{StaticResource LimsCaptionStyle}" Text="Catálogo" /><TextBlock Grid.Row="2" Grid.Column="1" Style="{StaticResource DetailValueStyle}" Text="{x:Bind CatalogValue, Mode=OneTime}" />
+<TextBlock Grid.Row="3" Style="{StaticResource LimsCaptionStyle}" Text="CAS" /><TextBlock Grid.Row="3" Grid.Column="1" Style="{StaticResource DetailValueStyle}" Text="{x:Bind CasValue, Mode=OneTime}" />
+<TextBlock Grid.Row="4" Style="{StaticResource LimsCaptionStyle}" Text="Lote" /><TextBlock Grid.Row="4" Grid.Column="1" Style="{StaticResource DetailValueStyle}" Text="{x:Bind Detail.LotDisplay, Mode=OneTime}" />
+<TextBlock Grid.Row="5" Style="{StaticResource LimsCaptionStyle}" Text="Pureza" /><TextBlock Grid.Row="5" Grid.Column="1" Style="{StaticResource DetailValueStyle}" Text="{x:Bind Detail.PurityDisplay, Mode=OneTime}" />
+<TextBlock Grid.Row="6" Style="{StaticResource LimsCaptionStyle}" Text="Método" /><TextBlock Grid.Row="6" Grid.Column="1" Style="{StaticResource DetailValueStyle}" Text="{x:Bind Detail.MethodDisplay, Mode=OneTime}" />
+<TextBlock Grid.Row="7" Style="{StaticResource LimsCaptionStyle}" Text="Presentación" /><TextBlock Grid.Row="7" Grid.Column="1" Style="{StaticResource DetailValueStyle}" Text="{x:Bind PresentationValue, Mode=OneTime}" />
+<TextBlock Grid.Row="8" Style="{StaticResource LimsCaptionStyle}" Text="Almacenamiento" /><TextBlock Grid.Row="8" Grid.Column="1" Style="{StaticResource DetailValueStyle}" Text="{x:Bind Detail.TemperatureDisplay, Mode=OneTime}" />
+<TextBlock Grid.Row="9" Style="{StaticResource LimsCaptionStyle}" Text="Ubicación" /><TextBlock Grid.Row="9" Grid.Column="1" Style="{StaticResource DetailValueStyle}" Text="{x:Bind Detail.LocationDisplay, Mode=OneTime}" /></Grid></StackPanel></Border>
+       <StackPanel x:Name="RightWorkspace" Grid.Column="1" Spacing="20">
+        <Grid x:Name="KpiGrid" ColumnSpacing="16" RowSpacing="16">
+         <Grid.ColumnDefinitions><ColumnDefinition x:Name="AvailabilityColumn" Width="1.3*" /><ColumnDefinition x:Name="ExpiryColumn" Width="1.1*" /><ColumnDefinition x:Name="StateColumn" Width="0.8*" /></Grid.ColumnDefinitions>
+         <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+         <Border x:Name="AvailabilityCard" Style="{StaticResource DetailPanelStyle}" Background="{ThemeResource LimsSurfaceSecondaryBrush}" SizeChanged="OnAvailabilitySizeChanged">
+          <StackPanel Spacing="10">
+           <TextBlock Style="{StaticResource LimsDetailHeadingStyle}" Text="DISPONIBILIDAD" />
+           <Grid ColumnSpacing="12">
+            <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+            <StackPanel Spacing="2"><TextBlock x:Name="AvailabilityQuantity" FontSize="26" FontWeight="SemiBold" TextWrapping="Wrap" /><TextBlock x:Name="AvailabilityQualifier" Style="{StaticResource LimsCaptionStyle}" /></StackPanel>
+            <design:LimsIcon x:Name="AvailabilityVial" Grid.Column="1" Icon="ReferenceMaterials" Size="40" Foreground="{ThemeResource LimsTextSecondaryBrush}" VerticalAlignment="Center" />
+           </Grid>
+           <Grid x:Name="AvailabilityMeter" ColumnSpacing="8">
+            <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+            <ProgressBar x:Name="AvailabilityProgress" Height="8" MinHeight="8" CornerRadius="4" VerticalAlignment="Center" Minimum="0" Maximum="100" Background="{ThemeResource LimsBorderBrush}" Foreground="{ThemeResource LimsSuccessBrush}" AutomationProperties.Name="Porcentaje disponible" Loaded="OnAvailabilityLoaded">
+             <ProgressBar.Resources><x:Double x:Key="ProgressBarTrackHeight">8</x:Double><CornerRadius x:Key="ProgressBarTrackCornerRadius">4</CornerRadius></ProgressBar.Resources>
+            </ProgressBar>
+            <TextBlock Grid.Column="1" x:Name="AvailabilityPercent" Style="{StaticResource LimsCaptionStyle}" />
+           </Grid>
+           <TextBlock x:Name="AvailabilityTotals" Style="{StaticResource LimsCaptionStyle}" />
+           <TextBlock x:Name="AvailabilityPresentation" Style="{StaticResource LimsCaptionStyle}" Foreground="{ThemeResource LimsTextTertiaryBrush}" />
+          </StackPanel>
+         </Border>
+         <Border x:Name="ExpiryCard" Grid.Column="1" Style="{StaticResource DetailPanelStyle}"><StackPanel Spacing="12"><TextBlock Style="{StaticResource LimsDetailHeadingStyle}" Text="VENCIMIENTO" /><TextBlock x:Name="ExpiryHeadline" FontSize="22" FontWeight="SemiBold" TextWrapping="Wrap" /><StackPanel Spacing="4"><TextBlock Style="{StaticResource LimsCaptionStyle}" Text="Ingreso" /><TextBlock x:Name="ReceivedValue" Style="{StaticResource DetailValueStyle}" /></StackPanel></StackPanel></Border>
+         <Border x:Name="StateCard" Grid.Column="2" Style="{StaticResource DetailPanelStyle}" VerticalAlignment="Top"><StackPanel Spacing="12"><TextBlock Style="{StaticResource LimsDetailHeadingStyle}" Text="ESTADO" /><design:StatusBadge HorizontalAlignment="Left" Text="{x:Bind Detail.StatusLabel, Mode=OneTime}" Tone="{x:Bind Detail.StatusTone, Mode=OneTime}" /></StackPanel></Border>
+        </Grid>
+        <Border x:Name="AuditSection" Style="{StaticResource DetailPanelStyle}" Padding="16"><StackPanel Spacing="16">
+         <TextBlock Style="{StaticResource LimsDetailHeadingStyle}" Text="AUDITORÍA / ACTIVIDAD DEL REGISTRO" />
+         <Grid x:Name="AuditTable" ColumnSpacing="16" RowSpacing="12"><Grid.ColumnDefinitions><ColumnDefinition Width="152" /><ColumnDefinition Width="1.15*" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions><Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="1" /><RowDefinition Height="Auto" /><RowDefinition Height="1" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+          <TextBlock Style="{StaticResource LimsCaptionStyle}" Text="Fecha" /><TextBlock Grid.Column="1" Style="{StaticResource LimsCaptionStyle}" Text="Acción" /><TextBlock Grid.Column="2" Style="{StaticResource LimsCaptionStyle}" Text="Usuario" />
+          <Border Grid.Row="1" Grid.ColumnSpan="3" Background="{ThemeResource LimsBorderBrush}" />
+          <TextBlock Grid.Row="2" Style="{StaticResource DetailValueStyle}" Text="{x:Bind Detail.CreatedAtDisplay, Mode=OneTime}" /><TextBlock Grid.Row="2" Grid.Column="1" Style="{StaticResource DetailValueStyle}" Text="Creación" /><TextBlock Grid.Row="2" Grid.Column="2" Style="{StaticResource DetailValueStyle}" Text="{x:Bind Detail.CreatedByDisplay, Mode=OneTime}" />
+          <Border Grid.Row="3" Grid.ColumnSpan="3" Background="{ThemeResource LimsBorderBrush}" />
+          <TextBlock Grid.Row="4" Style="{StaticResource DetailValueStyle}" Text="{x:Bind Detail.UpdatedAtDisplay, Mode=OneTime}" /><TextBlock Grid.Row="4" Grid.Column="1" Style="{StaticResource DetailValueStyle}" Text="Última modificación" /><TextBlock Grid.Row="4" Grid.Column="2" Style="{StaticResource DetailValueStyle}" Text="{x:Bind Detail.UpdatedByDisplay, Mode=OneTime}" />
+          <TextBlock Grid.Row="5" Style="{StaticResource DetailValueStyle}" Text="{x:Bind Detail.ArchivedAtDisplay, Mode=OneTime}" Visibility="{x:Bind Detail.HasArchiveTimestamp, Mode=OneTime}" /><TextBlock Grid.Row="5" Grid.Column="1" Style="{StaticResource DetailValueStyle}" Text="Archivo" Visibility="{x:Bind Detail.HasArchiveTimestamp, Mode=OneTime}" /><TextBlock Grid.Row="5" Grid.Column="2" Style="{StaticResource DetailValueStyle}" Text="{x:Bind Detail.ArchivedByDisplay, Mode=OneTime}" Visibility="{x:Bind Detail.HasArchiveTimestamp, Mode=OneTime}" />
+         </Grid>
+         <StackPanel Spacing="4" Visibility="{x:Bind Detail.HasArchiveReason, Mode=OneTime}"><TextBlock Style="{StaticResource LimsCaptionStyle}" Text="Motivo de archivo" /><TextBlock Style="{StaticResource DetailValueStyle}" Text="{x:Bind Detail.ArchiveReason, Mode=OneTime}" /></StackPanel>
+         <StackPanel Spacing="4" Visibility="{x:Bind Detail.HasReplacement, Mode=OneTime}"><TextBlock Style="{StaticResource LimsCaptionStyle}" Text="Reemplazado por" /><TextBlock Style="{StaticResource DetailValueStyle}" Text="{x:Bind Detail.ReplacementDisplay, Mode=OneTime}" /></StackPanel>
+         <StackPanel Spacing="4" Visibility="{x:Bind Detail.HasReplacementReason, Mode=OneTime}"><TextBlock Style="{StaticResource LimsCaptionStyle}" Text="Motivo del reemplazo" /><TextBlock Style="{StaticResource DetailValueStyle}" Text="{x:Bind Detail.ArchiveReason, Mode=OneTime}" /></StackPanel>
+        </StackPanel></Border>
+       </StackPanel>
+      </Grid>
+     </StackPanel>
+    </ScrollViewer>
+   </Grid>
+  </Border>
+ </Grid>
+</UserControl>

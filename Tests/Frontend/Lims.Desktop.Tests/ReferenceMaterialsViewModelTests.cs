@@ -132,6 +132,44 @@ public sealed class ReferenceMaterialsViewModelTests
     }
 
     [Fact]
+    public async Task SelectingAnotherRowKeepsDetailVisibleAndDisablesActionsUntilItArrives()
+    {
+        var first = Summary("Primero");
+        var second = Summary("Segundo");
+        var completion = new TaskCompletionSource<ApiCallResult<ReferenceMaterialDetail>>();
+        var viewModel = new ReferenceMaterialsViewModel(
+            new FakeApi { GetHandler = _ => completion.Task }, new FakeSession([], "Administrador"))
+        { SelectedMaterial = first, SelectedDetail = Detail(first) };
+
+        var load = viewModel.SelectAsync(second, CancellationToken.None);
+
+        Assert.Equal(first.Id, viewModel.SelectedDetail?.Id);
+        Assert.False(viewModel.CanEditSelected);
+        Assert.False(viewModel.CanArchiveSelected);
+        Assert.False(viewModel.CanReplaceSelected);
+        completion.SetResult(new ApiCallResult<ReferenceMaterialDetail>(true, Detail(second), null, 200));
+        await load;
+        Assert.Equal(second.Id, viewModel.SelectedDetail?.Id);
+        Assert.True(viewModel.CanEditSelected);
+    }
+
+    [Fact]
+    public async Task FailedSelectionClearsRetainedDetailAndLeavesActionsDisabled()
+    {
+        var first = Summary("Primero");
+        var viewModel = new ReferenceMaterialsViewModel(
+            new FakeApi { GetHandler = _ => Task.FromResult(new ApiCallResult<ReferenceMaterialDetail>(false, null, null, 503)) },
+            new FakeSession([], "Administrador")) { SelectedMaterial = first, SelectedDetail = Detail(first) };
+
+        await viewModel.SelectAsync(Summary("Segundo"), CancellationToken.None);
+
+        Assert.Null(viewModel.SelectedDetail);
+        Assert.False(viewModel.CanEditSelected);
+        Assert.False(viewModel.CanArchiveSelected);
+        Assert.False(viewModel.CanReplaceSelected);
+    }
+
+    [Fact]
     public async Task ArchiveRestoresSelectionAfterListRefreshClearsTheDetail()
     {
         var summary = Summary("Naphthol AS");

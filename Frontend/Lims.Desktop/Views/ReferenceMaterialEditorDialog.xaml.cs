@@ -4,22 +4,20 @@ using Lims.Desktop.Http;
 using Lims.Desktop.Validation;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Input;
-using Microsoft.UI.Xaml.Media;
-using Microsoft.UI.Xaml.Media.Animation;
+using Lims.DesignSystem.Presentation;
+using Lims.DesignSystem.Controls;
 using Windows.ApplicationModel.DataTransfer;
 
 namespace Lims.Desktop.Views;
 
 public sealed partial class ReferenceMaterialEditorDialog : ContentDialog
 {
-    private const int OpenAnimationMilliseconds = 140;
-    private const int CloseAnimationMilliseconds = 100;
     private bool _isSaving;
     private bool _allowImmediateClose;
     private bool _closeAnimationStarted;
     private string? _supportId;
     private readonly string _idleSaveText;
+    private readonly List<(FrameworkElement Field, int Row, int Column, int Span)> _formLayout = [];
 
     public ReferenceMaterialEditorDialog(
         IReadOnlyList<ReferenceMethodOption> methods,
@@ -27,6 +25,16 @@ public sealed partial class ReferenceMaterialEditorDialog : ContentDialog
         IReadOnlyList<ReferenceLocationOption> locations)
     {
         InitializeComponent();
+        foreach (var child in EditorSurface.Children.OfType<FrameworkElement>())
+            _formLayout.Add((child, Grid.GetRow(child), Grid.GetColumn(child), Grid.GetColumnSpan(child)));
+        foreach (var field in new LimsPopupField[] { MethodBox, UnitCombo, StorageLocationBox, ReceivedDatePicker, ExpirationDatePicker })
+            field.PopupBoundary = EditorScrollViewer;
+        EditorScrollViewer.ViewChanged += (_, _) => LimsPopupField.CloseForRoot(XamlRoot);
+        Closed += (_, _) =>
+        {
+            LimsPopupField.CloseForRoot(XamlRoot);
+            if (XamlRoot is not null) XamlRoot.Changed -= OnRootChanged;
+        };
         MethodBox.ItemsSource = methods;
         UnitCombo.ItemsSource = units;
         StorageLocationBox.ItemsSource = locations;
@@ -110,19 +118,37 @@ public sealed partial class ReferenceMaterialEditorDialog : ContentDialog
             return;
         }
 
-        var dialogHeight = Math.Min(700, Math.Max(520, XamlRoot.Size.Height * 0.82));
-        var contentHeight = Math.Max(440, dialogHeight - 82);
-        MaxHeight = dialogHeight;
-        EditorRoot.Width = Math.Min(960, Math.Max(420, XamlRoot.Size.Width - 80));
-        EditorRoot.MaxHeight = contentHeight;
-        EditorScrollViewer.MaxHeight = Math.Max(360, contentHeight - 58);
-
+        UpdateDialogBounds();
+        XamlRoot.Changed += OnRootChanged;
         PlayOpenAnimation();
         DispatcherQueue.TryEnqueue(() =>
         {
             NameBox.Focus(FocusState.Programmatic);
             EditorScrollViewer.ChangeView(null, 0, null, true);
         });
+    }
+
+    private void OnRootChanged(XamlRoot sender, XamlRootChangedEventArgs args) => UpdateDialogBounds();
+
+    private void UpdateDialogBounds()
+    {
+        if (XamlRoot is null) return;
+        // WinUI owns the modal template, positioning and transitions. Resize only our content.
+        var contentHeight = Math.Max(0, XamlRoot.Size.Height - 134);
+        EditorRoot.Width = Math.Min(960, Math.Max(0, XamlRoot.Size.Width - 98));
+        EditorRoot.MaxHeight = contentHeight;
+        EditorScrollViewer.MaxHeight = Math.Max(0, contentHeight - 56);
+        var narrow = EditorRoot.Width < 600;
+        EditorSurface.RowDefinitions.Clear();
+        for (var i = 0; i < (narrow ? _formLayout.Count : 6); i++)
+            EditorSurface.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+        for (var i = 0; i < _formLayout.Count; i++)
+        {
+            var item = _formLayout[i];
+            Grid.SetRow(item.Field, narrow ? i : item.Row);
+            Grid.SetColumn(item.Field, narrow ? 0 : item.Column);
+            Grid.SetColumnSpan(item.Field, narrow ? 3 : item.Span);
+        }
     }
 
     private async void OnSaveClick(object sender, RoutedEventArgs e)
@@ -132,6 +158,7 @@ public sealed partial class ReferenceMaterialEditorDialog : ContentDialog
             return;
         }
 
+        LimsPopupField.CloseForRoot(XamlRoot);
         if (!ValidateForm())
         {
             FocusFirstInvalidField();
@@ -203,65 +230,16 @@ public sealed partial class ReferenceMaterialEditorDialog : ContentDialog
             return;
         }
 
+        LimsPopupField.CloseForRoot(XamlRoot);
         _closeAnimationStarted = true;
-        await AnimateAsync(EditorSurface, nameof(Opacity), 0, CloseAnimationMilliseconds);
+        var animation = Motion.ExitAsync(EditorSurface, 100);
+        // Closing must still release the modal if the compositor is suspended/minimized.
+        await Task.WhenAny(animation, Task.Delay(350));
         _allowImmediateClose = true;
         Hide();
     }
 
-    private void PlayOpenAnimation()
-    {
-        EditorSurface.Opacity = 0;
-        if (EditorSurface.RenderTransform is CompositeTransform transform)
-        {
-            transform.ScaleX = 0.985;
-            transform.ScaleY = 0.985;
-            _ = AnimateAsync(transform, nameof(CompositeTransform.ScaleX), 1, OpenAnimationMilliseconds);
-            _ = AnimateAsync(transform, nameof(CompositeTransform.ScaleY), 1, OpenAnimationMilliseconds);
-        }
-
-        _ = AnimateAsync(EditorSurface, nameof(Opacity), 1, OpenAnimationMilliseconds);
-    }
-
-    private static Task AnimateAsync(
-        DependencyObject target,
-        string property,
-        double value,
-        int durationMilliseconds)
-    {
-        var completion = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-        var animation = new DoubleAnimation
-        {
-            To = value,
-            Duration = TimeSpan.FromMilliseconds(durationMilliseconds),
-            EnableDependentAnimation = true,
-            EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut },
-        };
-        Storyboard.SetTarget(animation, target);
-        Storyboard.SetTargetProperty(animation, property);
-        var storyboard = new Storyboard();
-        storyboard.Children.Add(animation);
-        storyboard.Completed += (_, _) => completion.TrySetResult();
-        storyboard.Begin();
-        return completion.Task;
-    }
-
-    private void OnActionButtonPointerPressed(object sender, PointerRoutedEventArgs e) =>
-        AnimateButton(sender as Button, 0.985);
-
-    private void OnActionButtonPointerReleased(object sender, PointerRoutedEventArgs e) =>
-        AnimateButton(sender as Button, 1);
-
-    private static void AnimateButton(Button? button, double scale)
-    {
-        if (button?.RenderTransform is not CompositeTransform transform)
-        {
-            return;
-        }
-
-        _ = AnimateAsync(transform, nameof(CompositeTransform.ScaleX), scale, 90);
-        _ = AnimateAsync(transform, nameof(CompositeTransform.ScaleY), scale, 90);
-    }
+    private void PlayOpenAnimation() => Motion.Enter(EditorSurface, milliseconds: 140, scale: 0.985f);
 
     private bool ValidateForm()
     {
@@ -342,7 +320,7 @@ public sealed partial class ReferenceMaterialEditorDialog : ContentDialog
     private void OnPresentationLostFocus(object sender, RoutedEventArgs e) => ValidatePresentation();
     private void OnPackageCountLostFocus(object sender, RoutedEventArgs e) => ValidatePackageCount();
     private void OnCasLostFocus(object sender, RoutedEventArgs e) => ValidateCas();
-    private void OnDateChanged(CalendarDatePicker sender, CalendarDatePickerDateChangedEventArgs args) => ValidateDates();
+    private void OnDateChanged(object? sender, EventArgs args) => ValidateDates();
 
     private void FocusFirstInvalidField()
     {
@@ -369,11 +347,22 @@ public sealed partial class ReferenceMaterialEditorDialog : ContentDialog
     private void SetSavingState(bool isSaving)
     {
         _isSaving = isSaving;
+        if (isSaving)
+        {
+            MethodBox.IsDropDownOpen = false;
+            UnitCombo.IsDropDownOpen = false;
+            StorageLocationBox.IsDropDownOpen = false;
+            ReceivedDatePicker.IsCalendarOpen = false;
+            ExpirationDatePicker.IsCalendarOpen = false;
+        }
         SaveButton.IsEnabled = !isSaving;
         CancelButton.IsEnabled = !isSaving;
         SaveProgressRing.IsActive = isSaving;
         SaveProgressRing.Visibility = isSaving ? Visibility.Visible : Visibility.Collapsed;
-        SaveIcon.Visibility = isSaving ? Visibility.Collapsed : Visibility.Visible;
+        EditorSurface.IsHitTestVisible = !isSaving;
+        foreach (var field in new Control[] { NameBox, CasBox, CatalogBox, MethodBox, LotBox, BrandBox,
+            PurityBox, ReceivedDatePicker, ExpirationDatePicker, PresentationBox, UnitCombo,
+            PackageCountBox, StorageLocationBox, StorageTemperatureBox }) field.IsEnabled = !isSaving;
         SaveButtonText.Text = isSaving ? "Guardando..." : _idleSaveText;
     }
 
@@ -381,6 +370,7 @@ public sealed partial class ReferenceMaterialEditorDialog : ContentDialog
     {
         SaveError.Text = error.Message;
         SaveError.Visibility = Visibility.Visible;
+        Motion.Enter(SaveError, y: 2, milliseconds: 110);
         _supportId = string.IsNullOrWhiteSpace(error.SupportId) ? null : error.SupportId.Trim();
         SupportIdText.Text = _supportId is null ? string.Empty : "Referencia disponible para soporte";
         CopySupportIdButton.Content = "Copiar referencia";
@@ -418,8 +408,10 @@ public sealed partial class ReferenceMaterialEditorDialog : ContentDialog
 
     private static bool SetError(TextBlock target, bool isValid, string message)
     {
+        var appearing = !isValid && target.Visibility != Visibility.Visible;
         target.Text = isValid ? string.Empty : message;
         target.Visibility = isValid ? Visibility.Collapsed : Visibility.Visible;
+        if (appearing) Motion.Enter(target, y: 2, milliseconds: 110);
         return isValid;
     }
 

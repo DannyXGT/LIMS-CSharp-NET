@@ -1,0 +1,39 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows10.0.26100.0</TargetFramework>
+    <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
+    <Platforms>x64</Platforms>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <UseWinUI>true</UseWinUI>
+    <WinUISDKReferences>false</WinUISDKReferences>
+    <EnableMsixTooling>true</EnableMsixTooling>
+    <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
+    <WindowsAppSdkBootstrapInitialize>false</WindowsAppSdkBootstrapInitialize>
+    <WindowsAppSdkDeploymentManagerInitialize>false</WindowsAppSdkDeploymentManagerInitialize>
+    <ApplicationManifest>../../../Frontend/Lims.Desktop/app.manifest</ApplicationManifest>
+  </PropertyGroup>
+  <ItemGroup>
+    <ApplicationDefinition Include="ValidationApp.xaml" />
+    <Page Remove="ValidationApp.xaml" />
+    <ProjectReference Include="../../../Frontend/Lims.DesignSystem/Lims.DesignSystem.csproj" />
+    <ProjectReference Include="../../../Shared/Lims.Contracts/Lims.Contracts.csproj" />
+    <ProjectReference Include="../../../Backend/Lims.Application/Lims.Application.csproj" Aliases="StockEngine" />
+    <ProjectReference Include="../../../Backend/Lims.Domain/Lims.Domain.csproj" />
+    <PackageReference Include="CommunityToolkit.Mvvm" />
+    <PackageReference Include="Microsoft.Windows.SDK.BuildTools" />
+    <PackageReference Include="Microsoft.WindowsAppSDK" />
+  </ItemGroup>
+  <!-- Compile the real presentation sources. No production startup/auth/HTTP is included. -->
+  <ItemGroup>
+    <Page Include="../../../Frontend/Lims.Desktop/Views/StockPage.xaml;../../../Frontend/Lims.Desktop/Views/StockEditorDialog.xaml;../../../Frontend/Lims.Desktop/Views/StockDetailDialog.xaml" Link="Views/%(Filename)%(Extension)" />
+    <Compile Include="../../../Frontend/Lims.Desktop/Views/StockPage.xaml.cs;../../../Frontend/Lims.Desktop/Views/StockEditorDialog.xaml.cs;../../../Frontend/Lims.Desktop/Views/StockDetailDialog.xaml.cs;../../../Frontend/Lims.Desktop/ViewModels/StockViewModel.cs;../../../Frontend/Lims.Desktop/Http/IStockApiClient.cs" Link="Stock/%(Filename)%(Extension)" />
+    <Page Include="../../../Frontend/Lims.Desktop/Views/ShellPage.xaml;../../../Frontend/Lims.Desktop/Views/ReferenceMaterialsPage.xaml;../../../Frontend/Lims.Desktop/Views/ReferenceMaterialEditorDialog.xaml;../../../Frontend/Lims.Desktop/Views/ReferenceMaterialDetailDialog.xaml" Link="Views/%(Filename)%(Extension)" />
+    <Compile Include="../../../Frontend/Lims.Desktop/Views/ShellPage.xaml.cs;../../../Frontend/Lims.Desktop/Views/ReferenceMaterialsPage.xaml.cs;../../../Frontend/Lims.Desktop/Views/ReferenceMaterialEditorDialog.xaml.cs;../../../Frontend/Lims.Desktop/Views/ReferenceMaterialDetailDialog.xaml.cs" Link="Views/%(Filename)%(Extension)" />
+    <Compile Include="../../../Frontend/Lims.Desktop/ViewModels/ShellViewModel.cs;../../../Frontend/Lims.Desktop/ViewModels/ReferenceMaterialsViewModel.cs" Link="ViewModels/%(Filename)%(Extension)" />
+    <Compile Include="../../../Frontend/Lims.Desktop/Http/ApiCallResult.cs;../../../Frontend/Lims.Desktop/Http/ApiOperationFailure.cs;../../../Frontend/Lims.Desktop/Http/IReferenceMaterialsApiClient.cs" Link="Http/%(Filename)%(Extension)" />
+    <Compile Include="../../../Frontend/Lims.Desktop/Services/ISessionService.cs;../../../Frontend/Lims.Desktop/Services/IAuthenticationGateway.cs;../../../Frontend/Lims.Desktop/Services/INavigationService.cs;../../../Frontend/Lims.Desktop/Services/AuthenticationOutcome.cs" Link="Services/%(Filename)%(Extension)" />
+    <Compile Include="../../../Frontend/Lims.Desktop/Validation/ReferenceMaterialInput.cs;../../../Frontend/Lims.Desktop/Presentation/ReferenceMaterialErrors.cs;../../../Frontend/Lims.Desktop/Presentation/ReferenceMaterialVisuals.cs" Link="Presentation/%(Filename)%(Extension)" />
+    <Content Include="../../../Frontend/Lims.Desktop/Assets/**/*" Link="Assets/%(RecursiveDir)%(Filename)%(Extension)" />
+  </ItemGroup>
+</Project>

@@ -8,7 +8,7 @@
     Background="Transparent"
     Loaded="OnLoaded"
     SizeChanged="OnPageSizeChanged">
-    <Grid RowSpacing="12">
+    <Grid RowSpacing="8">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
@@ -30,12 +30,15 @@
                 </Grid.RowDefinitions>
                 <AutoSuggestBox
                     x:Name="SearchBox"
+                    design:LimsIcon.NavigationIcon="Search"
+                    Style="{StaticResource LimsCompactSearchStyle}"
+                    MinHeight="36"
                     VerticalAlignment="Bottom"
                     PlaceholderText="Buscar por nombre, CAS, catálogo, lote o marca"
-                    QueryIcon="Find"
+                    AutomationProperties.Name="Buscar estándares"
                     QuerySubmitted="OnSearchSubmitted"
                     Text="{x:Bind ViewModel.SearchText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-                <ComboBox x:Name="StatusCombo" Grid.Column="1" Header="Estado" SelectionChanged="OnFilterChanged">
+                <ComboBox x:Name="StatusCombo" Grid.Column="1" Header="Estado" Style="{StaticResource LimsCompactComboBoxStyle}" AutomationProperties.Name="Estado" SelectionChanged="OnFilterChanged">
                     <ComboBoxItem Content="Todos" Tag="" IsSelected="True" />
                     <ComboBoxItem Content="Activo" Tag="Active" />
                     <ComboBoxItem Content="Agotado" Tag="Depleted" />
@@ -45,18 +48,22 @@
                     <ComboBoxItem Content="Archivado" Tag="Archived" />
                     <ComboBoxItem Content="Retirado" Tag="Retired" />
                 </ComboBox>
-                <TextBox x:Name="MethodBox" Grid.Column="2" Header="Método" PlaceholderText="Todos" TextChanged="OnMethodChanged" />
-                <Button x:Name="ApplyFiltersButton" Grid.Column="3" VerticalAlignment="Bottom" Click="OnApplyFiltersClick" Content="Aplicar" />
-                <Button x:Name="ClearFiltersButton" Grid.Column="4" VerticalAlignment="Bottom" AutomationProperties.Name="Limpiar filtros" Click="OnClearFiltersClick" ToolTipService.ToolTip="Limpiar filtros">
-                    <FontIcon Glyph="&#xE894;" />
+                <StackPanel x:Name="MethodFilterField" Grid.Column="2" Spacing="4">
+                    <TextBlock Text="Método" FontSize="14" />
+                    <design:LimsSearchSelect x:Name="MethodBox" PlaceholderText="Todos" SearchPlaceholder="Buscar método..." ItemsSource="{x:Bind ViewModel.Methods}" DisplayMemberPath="Name" AutomationProperties.Name="Filtrar por método" SelectionChanged="OnMethodChanged" />
+                </StackPanel>
+                <Button x:Name="ApplyFiltersButton" Grid.Column="3" VerticalAlignment="Bottom" Click="OnApplyFiltersClick" Content="Aplicar" Style="{StaticResource LimsStandardsSecondaryButtonStyle}" AutomationProperties.Name="Aplicar filtros" />
+                <Button x:Name="ClearFiltersButton" Grid.Column="4" VerticalAlignment="Bottom" AutomationProperties.Name="Limpiar filtros" Style="{StaticResource LimsIconButtonStyle}" Click="OnClearFiltersClick" ToolTipService.ToolTip="Limpiar filtros">
+                    <design:LimsIcon Icon="ClearFilters" Size="{StaticResource IconSizeSmall}" />
                 </Button>
             </Grid>
         </Border>
 
         <StackPanel Grid.Row="1" Spacing="6">
             <InfoBar
+                x:Name="CatalogLoadingBar"
                 IsClosable="False"
-                IsOpen="{x:Bind ViewModel.IsCatalogsLoading, Mode=OneWay}"
+                IsOpen="False"
                 Message="Cargando métodos, unidades y ubicaciones..."
                 Severity="Informational" />
             <InfoBar
@@ -72,47 +79,42 @@
         </StackPanel>
 
         <Grid x:Name="WorkspaceGrid" Grid.Row="2" ColumnSpacing="14" RowSpacing="0">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition x:Name="WorkspaceTableColumn" Width="7*" />
-                <ColumnDefinition x:Name="WorkspaceDetailColumn" Width="3*" />
-            </Grid.ColumnDefinitions>
-            <Grid.RowDefinitions>
-                <RowDefinition x:Name="WorkspaceTableRow" Height="*" />
-                <RowDefinition x:Name="WorkspaceDetailRow" Height="0" />
-            </Grid.RowDefinitions>
-
             <Border
                 x:Name="TableBorder"
+                SizeChanged="OnTableSizeChanged"
                 Background="{ThemeResource LimsSurfaceBrush}"
                 BorderBrush="{ThemeResource LimsBorderBrush}"
                 BorderThickness="1"
                 CornerRadius="8">
+                <Grid>
+                    <Grid.RowDefinitions><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
                 <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch">
-                <Grid MinWidth="1120">
+                <Grid x:Name="TableGrid" MinWidth="1080">
                     <Grid.RowDefinitions>
-                        <RowDefinition Height="40" />
+                        <RowDefinition Height="36" />
                         <RowDefinition Height="*" />
-                        <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
                     <Grid Padding="12,0" Background="{ThemeResource LimsSurfaceSecondaryBrush}" ColumnSpacing="8">
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="2*" MinWidth="190" />
-                            <ColumnDefinition Width="*" MinWidth="130" />
-                            <ColumnDefinition Width="*" MinWidth="130" />
-                            <ColumnDefinition Width="*" MinWidth="130" />
-                            <ColumnDefinition Width="82" />
-                            <ColumnDefinition Width="100" />
-                            <ColumnDefinition Width="126" />
+                            <ColumnDefinition Width="2*" MinWidth="150" />
+                            <ColumnDefinition Width="*" MinWidth="85" />
+                            <ColumnDefinition Width="*" MinWidth="85" />
+                            <ColumnDefinition Width="*" MinWidth="85" />
+                            <ColumnDefinition Width="*" MinWidth="110" />
+                            <ColumnDefinition Width="74" />
+                            <ColumnDefinition Width="94" />
+                            <ColumnDefinition Width="98" />
                             <ColumnDefinition Width="120" />
                         </Grid.ColumnDefinitions>
-                        <TextBlock VerticalAlignment="Center" FontWeight="SemiBold" Text="Nombre / CAS" />
-                        <TextBlock Grid.Column="1" VerticalAlignment="Center" FontWeight="SemiBold" Text="Catálogo" />
-                        <TextBlock Grid.Column="2" VerticalAlignment="Center" FontWeight="SemiBold" Text="Lote" />
-                        <TextBlock Grid.Column="3" VerticalAlignment="Center" FontWeight="SemiBold" Text="Marca" />
-                        <TextBlock Grid.Column="4" VerticalAlignment="Center" FontWeight="SemiBold" Text="Pureza" />
-                        <TextBlock Grid.Column="5" VerticalAlignment="Center" FontWeight="SemiBold" Text="Expiración" />
-                        <TextBlock Grid.Column="6" VerticalAlignment="Center" FontWeight="SemiBold" Text="Estado" />
-                        <TextBlock Grid.Column="7" VerticalAlignment="Center" FontWeight="SemiBold" Text="Disponible" />
+                        <TextBlock Style="{StaticResource LimsTableHeadingStyle}" Text="Nombre / CAS" />
+                        <TextBlock Grid.Column="1" Style="{StaticResource LimsTableHeadingStyle}" Text="Catálogo" />
+                        <TextBlock Grid.Column="2" Style="{StaticResource LimsTableHeadingStyle}" Text="Lote" />
+                        <TextBlock Grid.Column="3" Style="{StaticResource LimsTableHeadingStyle}" Text="Marca" />
+                        <TextBlock Grid.Column="4" Style="{StaticResource LimsTableHeadingStyle}" Text="Método" />
+                        <TextBlock Grid.Column="5" Style="{StaticResource LimsTableHeadingStyle}" Text="Pureza" />
+                        <TextBlock Grid.Column="6" Style="{StaticResource LimsTableHeadingStyle}" Text="Expiración" />
+                        <TextBlock Grid.Column="7" Style="{StaticResource LimsTableHeadingStyle}" Text="Estado" />
+                        <TextBlock Grid.Column="8" Style="{StaticResource LimsTableHeadingStyle}" Text="Disponible" />
                     </Grid>
 
                     <ListView
@@ -120,27 +122,22 @@
                         Grid.Row="1"
                         ItemsSource="{x:Bind ViewModel.Items}"
                         SelectedItem="{x:Bind ViewModel.SelectedMaterial, Mode=TwoWay}"
-                        SelectionChanged="OnMaterialSelected">
-                        <ListView.ItemContainerStyle>
-                            <Style TargetType="ListViewItem">
-                                <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-                                <Setter Property="MinHeight" Value="54" />
-                                <Setter Property="Padding" Value="4,2" />
-                            </Style>
-                        </ListView.ItemContainerStyle>
+                        ItemContainerStyle="{StaticResource LimsDataRowStyle}" AutomationProperties.Name="Estándares" SelectionChanged="OnMaterialSelected" ContainerContentChanging="OnRowContainerChanging">
                         <ListView.ItemTemplate>
                             <DataTemplate x:DataType="contracts:ReferenceMaterialSummary">
-                                <Grid MinHeight="52" Padding="8,5" ColumnSpacing="8">
+                                <Grid MinHeight="56" Padding="8,5" ColumnSpacing="8" DoubleTapped="OnRowDoubleTapped" Loaded="OnRowLoaded" SizeChanged="OnRowSizeChanged" ToolTipService.ToolTip="Doble clic para ver detalles; Enter sobre la fila seleccionada">
                                     <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="2*" MinWidth="190" />
-                                        <ColumnDefinition Width="*" MinWidth="130" />
-                                        <ColumnDefinition Width="*" MinWidth="130" />
-                                        <ColumnDefinition Width="*" MinWidth="130" />
-                                        <ColumnDefinition Width="82" />
-                                        <ColumnDefinition Width="100" />
-                                        <ColumnDefinition Width="126" />
+                                        <ColumnDefinition Width="2*" MinWidth="150" />
+                                        <ColumnDefinition Width="*" MinWidth="85" />
+                                        <ColumnDefinition Width="*" MinWidth="85" />
+                                        <ColumnDefinition Width="*" MinWidth="85" />
+                                        <ColumnDefinition Width="*" MinWidth="110" />
+                                        <ColumnDefinition Width="74" />
+                                        <ColumnDefinition Width="94" />
+                                        <ColumnDefinition Width="98" />
                                         <ColumnDefinition Width="120" />
                                     </Grid.ColumnDefinitions>
+                                    <Border x:Name="RowSelectionMarker" Grid.ColumnSpan="9" Width="2" Margin="-8,0,0,0" HorizontalAlignment="Left" Background="{ThemeResource LimsAccentBrush}" CornerRadius="1" Opacity="0" IsHitTestVisible="False" />
                                     <StackPanel VerticalAlignment="Center" Spacing="1">
                                         <TextBlock FontWeight="SemiBold" Text="{x:Bind NameDisplay}" ToolTipService.ToolTip="{x:Bind NameDisplay}" TextTrimming="CharacterEllipsis" />
                                         <TextBlock Style="{StaticResource LimsCaptionStyle}" Text="{x:Bind CasDisplay}" ToolTipService.ToolTip="{x:Bind CasDisplay}" TextTrimming="CharacterEllipsis" />
@@ -148,10 +145,18 @@
                                     <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{x:Bind CatalogDisplay}" ToolTipService.ToolTip="{x:Bind CatalogDisplay}" TextTrimming="CharacterEllipsis" />
                                     <TextBlock Grid.Column="2" VerticalAlignment="Center" Text="{x:Bind LotDisplay}" ToolTipService.ToolTip="{x:Bind LotDisplay}" TextTrimming="CharacterEllipsis" />
                                     <TextBlock Grid.Column="3" VerticalAlignment="Center" Text="{x:Bind BrandDisplay}" ToolTipService.ToolTip="{x:Bind BrandDisplay}" TextTrimming="CharacterEllipsis" />
-                                    <TextBlock Grid.Column="4" VerticalAlignment="Center" Text="{x:Bind PurityDisplay}" ToolTipService.ToolTip="{x:Bind PurityDisplay}" />
-                                    <TextBlock Grid.Column="5" VerticalAlignment="Center" Text="{x:Bind ExpirationDisplay}" ToolTipService.ToolTip="{x:Bind ExpirationDisplay}" />
-                                    <design:StatusBadge Grid.Column="6" HorizontalAlignment="Left" VerticalAlignment="Center" Text="{x:Bind StatusLabel}" Tone="{x:Bind StatusTone}" />
-                                    <TextBlock Grid.Column="7" VerticalAlignment="Center" Text="{x:Bind AvailableDisplay}" ToolTipService.ToolTip="{x:Bind AvailableDisplay}" TextTrimming="CharacterEllipsis" />
+                                    <TextBlock Grid.Column="4" VerticalAlignment="Center" Text="{x:Bind Method}" ToolTipService.ToolTip="{x:Bind Method}" TextTrimming="CharacterEllipsis" />
+                                    <TextBlock Grid.Column="5" VerticalAlignment="Center" Text="{x:Bind PurityDisplay}" ToolTipService.ToolTip="{x:Bind PurityDisplay}" />
+                                    <TextBlock Grid.Column="6" VerticalAlignment="Center" Text="{x:Bind ExpirationDisplay}" ToolTipService.ToolTip="{x:Bind ExpirationDisplay}" />
+                                    <design:StatusBadge Grid.Column="7" HorizontalAlignment="Left" VerticalAlignment="Center" Text="{x:Bind StatusLabel}" Tone="{x:Bind StatusTone}" />
+                                    <StackPanel Grid.Column="8" VerticalAlignment="Center" Spacing="4">
+                                        <TextBlock FontWeight="SemiBold" Text="{x:Bind AvailableDisplay}" ToolTipService.ToolTip="{x:Bind AvailableDisplay}" TextTrimming="CharacterEllipsis" />
+                                        <Grid x:Name="RowAvailability" ColumnSpacing="5" Visibility="Collapsed">
+                                            <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                                            <ProgressBar x:Name="RowProgress" Height="3" Minimum="0" Maximum="100" Foreground="{ThemeResource LimsAccentBrush}" AutomationProperties.Name="Porcentaje disponible" />
+                                            <TextBlock x:Name="RowPercent" Grid.Column="1" FontSize="10" Foreground="{ThemeResource LimsTextSecondaryBrush}" />
+                                        </Grid>
+                                    </StackPanel>
                                 </Grid>
                             </DataTemplate>
                         </ListView.ItemTemplate>
@@ -164,152 +169,45 @@
                         VerticalAlignment="Center"
                         Spacing="7"
                         Visibility="{x:Bind ViewModel.HasNoItems, Mode=OneWay}">
-                        <FontIcon HorizontalAlignment="Center" FontSize="24" Foreground="{ThemeResource LimsTextTertiaryBrush}" Glyph="&#xE8A5;" />
+                        <design:LimsIcon Icon="ViewDetail" Size="{StaticResource IconSizeLarge}" Foreground="{ThemeResource LimsTextTertiaryBrush}" />
                         <TextBlock HorizontalAlignment="Center" FontSize="16" FontWeight="SemiBold" Text="No hay estándares registrados" />
                         <TextBlock TextAlignment="Center" Style="{StaticResource LimsCaptionStyle}" Text="Cree el primer estándar para comenzar." />
-                        <Button HorizontalAlignment="Center" Margin="0,4,0,0" Click="OnCreateClick" Content="Nuevo estándar" IsEnabled="{x:Bind ViewModel.CanCreate, Mode=OneWay}" />
+                        <Button HorizontalAlignment="Center" Margin="0,4,0,0" Click="OnCreateClick" Content="Nuevo estándar" Style="{StaticResource LimsPrimaryButtonStyle}" IsEnabled="{x:Bind ViewModel.CanCreate, Mode=OneWay}" />
                     </StackPanel>
 
-                    <Grid Grid.Row="2" Padding="12,7" Background="{ThemeResource LimsSurfaceSecondaryBrush}" ColumnSpacing="8">
+                </Grid>
+                </ScrollViewer>
+                    <Grid Grid.Row="1" Padding="12,7" Background="{ThemeResource LimsSurfaceSecondaryBrush}" ColumnSpacing="8">
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" MinWidth="130" />
+                            <ColumnDefinition Width="*" MinWidth="85" />
                             <ColumnDefinition Width="Auto" />
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
-                        <TextBlock VerticalAlignment="Center" Style="{StaticResource LimsCaptionStyle}" Text="{x:Bind ViewModel.PaginationText, Mode=OneWay}" />
-                        <Button Grid.Column="1" Click="OnPreviousPageClick" IsEnabled="{x:Bind ViewModel.CanGoToPreviousPage, Mode=OneWay}" ToolTipService.ToolTip="Página anterior" AutomationProperties.Name="Página anterior">
-                            <FontIcon Glyph="&#xE76B;" />
+                        <StackPanel Orientation="Horizontal" Spacing="18" VerticalAlignment="Center">
+                            <TextBlock Style="{StaticResource LimsCaptionStyle}" Text="{x:Bind ViewModel.PaginationText, Mode=OneWay}" />
+                            <TextBlock Style="{StaticResource LimsCaptionStyle}" Text="Doble clic o Enter para ver la ficha" />
+                        </StackPanel>
+                        <Button Grid.Column="1" Style="{StaticResource LimsIconButtonStyle}" Click="OnPreviousPageClick" IsEnabled="{x:Bind ViewModel.CanGoToPreviousPage, Mode=OneWay}" ToolTipService.ToolTip="Página anterior" AutomationProperties.Name="Página anterior">
+                            <design:LimsIcon Icon="ChevronLeft" Size="{StaticResource IconSizeSmall}" />
                         </Button>
-                        <Button Grid.Column="2" Click="OnNextPageClick" IsEnabled="{x:Bind ViewModel.CanGoToNextPage, Mode=OneWay}" ToolTipService.ToolTip="Página siguiente" AutomationProperties.Name="Página siguiente">
-                            <FontIcon Glyph="&#xE76C;" />
+                        <Button Grid.Column="2" Style="{StaticResource LimsIconButtonStyle}" Click="OnNextPageClick" IsEnabled="{x:Bind ViewModel.CanGoToNextPage, Mode=OneWay}" ToolTipService.ToolTip="Página siguiente" AutomationProperties.Name="Página siguiente">
+                            <design:LimsIcon Icon="ChevronRight" Size="{StaticResource IconSizeSmall}" />
                         </Button>
                     </Grid>
                 </Grid>
-                </ScrollViewer>
             </Border>
 
-            <Border
-                x:Name="DetailBorder"
-                Grid.Column="1"
-                Padding="18"
-                Background="{ThemeResource LimsSurfaceBrush}"
-                BorderBrush="{ThemeResource LimsBorderBrush}"
-                BorderThickness="1"
-                CornerRadius="8">
-                <Grid>
-                    <StackPanel x:Name="NoSelectionPanel" MaxWidth="280" HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="7">
-                        <FontIcon HorizontalAlignment="Center" FontSize="24" Foreground="{ThemeResource LimsTextTertiaryBrush}" Glyph="&#xE8A5;" />
-                        <TextBlock HorizontalAlignment="Center" FontSize="16" FontWeight="SemiBold" Text="Seleccione un estándar" />
-                        <TextBlock TextAlignment="Center" Style="{StaticResource LimsBodyStyle}" Text="Aquí verá identificación, disponibilidad y auditoría." />
-                    </StackPanel>
-
-                    <ScrollViewer x:Name="DetailPanel" Visibility="Collapsed" HorizontalScrollBarVisibility="Disabled">
-                        <StackPanel Spacing="16">
-                            <StackPanel Spacing="6">
-                                <TextBlock FontSize="22" FontWeight="SemiBold" Text="{x:Bind ViewModel.SelectedDetail.NameDisplay, Mode=OneWay}" TextWrapping="Wrap" />
-                                <design:StatusBadge HorizontalAlignment="Left" Text="{x:Bind ViewModel.SelectedDetail.StatusLabel, Mode=OneWay}" Tone="{x:Bind ViewModel.SelectedDetail.StatusTone, Mode=OneWay}" />
-                                <TextBlock Style="{StaticResource LimsCaptionStyle}" Text="{x:Bind ViewModel.SelectedDetail.CasDisplay, Mode=OneWay}" Visibility="{x:Bind ViewModel.SelectedDetail.HasCas, Mode=OneWay}" TextWrapping="Wrap" />
-                                <TextBlock Text="{x:Bind ViewModel.SelectedDetail.CatalogNumber, Mode=OneWay}" Visibility="{x:Bind ViewModel.SelectedDetail.HasCatalog, Mode=OneWay}" TextWrapping="Wrap" />
-                            </StackPanel>
-                            <Grid ColumnSpacing="8" RowSpacing="8">
-                                <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
-                                <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
-                                <Button Click="OnEditClick" AutomationProperties.Name="Editar" IsEnabled="{x:Bind ViewModel.CanEditSelected, Mode=OneWay}" Style="{StaticResource AccentButtonStyle}">
-                                    <StackPanel Orientation="Horizontal" Spacing="6"><FontIcon FontSize="12" Glyph="&#xE70F;" /><TextBlock Text="Editar" /></StackPanel>
-                                </Button>
-                                <Button Grid.Column="1" HorizontalAlignment="Left" Click="OnReplaceClick" AutomationProperties.Name="Reemplazar" IsEnabled="{x:Bind ViewModel.CanReplaceSelected, Mode=OneWay}">
-                                    <StackPanel Orientation="Horizontal" Spacing="6"><FontIcon FontSize="12" Glyph="&#xE8EB;" /><TextBlock Text="Reemplazar" /></StackPanel>
-                                </Button>
-                                <Button Grid.Row="1" Grid.ColumnSpan="2" HorizontalAlignment="Left" Click="OnArchiveClick" AutomationProperties.Name="Archivar" IsEnabled="{x:Bind ViewModel.CanArchiveSelected, Mode=OneWay}" Foreground="{ThemeResource LimsDangerBrush}" Background="{ThemeResource LimsDangerSurfaceBrush}" BorderBrush="{ThemeResource LimsDangerBorderBrush}">
-                                    <StackPanel Orientation="Horizontal" Spacing="6"><FontIcon FontSize="12" Glyph="&#xE7B8;" /><TextBlock Text="Archivar" /></StackPanel>
-                                </Button>
-                            </Grid>
-                            <StackPanel Spacing="8">
-                                <Border Height="1" Background="{ThemeResource LimsBorderBrush}" Margin="0,0,0,4" />
-                                <TextBlock FontSize="12" FontWeight="SemiBold" Foreground="{ThemeResource LimsTextSecondaryBrush}" Text="DATOS PRINCIPALES" />
-                                <Grid ColumnSpacing="12" RowSpacing="10">
-                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
-                                    <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
-                                    <StackPanel Grid.Row="0" Grid.Column="0" Spacing="2">
-                                        <TextBlock Style="{StaticResource LimsCaptionStyle}" Text="Método" />
-                                        <TextBlock Text="{x:Bind ViewModel.SelectedDetail.MethodDisplay, Mode=OneWay}" TextWrapping="Wrap" />
-                                    </StackPanel>
-                                    <StackPanel Grid.Row="0" Grid.Column="1" Spacing="2">
-                                        <TextBlock Style="{StaticResource LimsCaptionStyle}" Text="Pureza" />
-                                        <TextBlock Text="{x:Bind ViewModel.SelectedDetail.PurityDisplay, Mode=OneWay}" TextWrapping="Wrap" />
-                                    </StackPanel>
-                                    <StackPanel Grid.Row="1" Grid.Column="0" Spacing="2">
-                                        <TextBlock Style="{StaticResource LimsCaptionStyle}" Text="Lote" />
-                                        <TextBlock Text="{x:Bind ViewModel.SelectedDetail.LotDisplay, Mode=OneWay}" TextWrapping="Wrap" />
-                                    </StackPanel>
-                                    <StackPanel Grid.Row="1" Grid.Column="1" Spacing="2">
-                                        <TextBlock Style="{StaticResource LimsCaptionStyle}" Text="Marca" />
-                                        <TextBlock Text="{x:Bind ViewModel.SelectedDetail.BrandDisplay, Mode=OneWay}" TextWrapping="Wrap" />
-                                    </StackPanel>
-                                </Grid>
-                            </StackPanel>
-                            <StackPanel Spacing="8">
-                                <Border Height="1" Background="{ThemeResource LimsBorderBrush}" Margin="0,0,0,4" />
-                                <TextBlock FontSize="12" FontWeight="SemiBold" Foreground="{ThemeResource LimsTextSecondaryBrush}" Text="VIGENCIA" />
-                                <TextBlock Style="{StaticResource LimsCaptionStyle}" Text="Ingreso → Expiración" />
-                                <TextBlock Text="{x:Bind ViewModel.SelectedDetail.ValidityDisplay, Mode=OneWay}" TextWrapping="Wrap" />
-                            </StackPanel>
-                            <StackPanel Spacing="8">
-                                <Border Height="1" Background="{ThemeResource LimsBorderBrush}" Margin="0,0,0,4" />
-                                <TextBlock FontSize="12" FontWeight="SemiBold" Foreground="{ThemeResource LimsTextSecondaryBrush}" Text="ALMACENAMIENTO" />
-                                <TextBlock Text="{x:Bind ViewModel.SelectedDetail.LocationDisplay, Mode=OneWay}" TextWrapping="Wrap" />
-                                <TextBlock Text="{x:Bind ViewModel.SelectedDetail.TemperatureDisplay, Mode=OneWay}" TextWrapping="Wrap" />
-                            </StackPanel>
-                            <StackPanel Spacing="8">
-                                <Border Height="1" Background="{ThemeResource LimsBorderBrush}" Margin="0,0,0,4" />
-                                <TextBlock FontSize="12" FontWeight="SemiBold" Foreground="{ThemeResource LimsTextSecondaryBrush}" Text="DISPONIBILIDAD" />
-                                <TextBlock FontSize="20" FontWeight="SemiBold" Text="{x:Bind ViewModel.SelectedDetail.AvailabilityHeadline, Mode=OneWay}" TextWrapping="Wrap" />
-                                <StackPanel Spacing="2">
-                                    <TextBlock Style="{StaticResource LimsCaptionStyle}" Text="Presentación" />
-                                    <TextBlock Text="{x:Bind ViewModel.SelectedDetail.PresentationDisplay, Mode=OneWay}" TextWrapping="Wrap" />
-                                </StackPanel>
-                                <TextBlock Style="{StaticResource LimsCaptionStyle}" Text="{x:Bind ViewModel.SelectedDetail.AvailabilityPercentDisplay, Mode=OneWay}" Visibility="{x:Bind ViewModel.SelectedDetail.HasAvailabilityPercent, Mode=OneWay}" />
-                            </StackPanel>
-                            <StackPanel Spacing="8">
-                                <Border Height="1" Background="{ThemeResource LimsBorderBrush}" Margin="0,0,0,4" />
-                                <TextBlock FontSize="12" FontWeight="SemiBold" Foreground="{ThemeResource LimsTextSecondaryBrush}" Text="AUDITORÍA" />
-                                <StackPanel Spacing="2">
-                                    <TextBlock Style="{StaticResource LimsCaptionStyle}" Text="Creado por" />
-                                    <TextBlock Text="{x:Bind ViewModel.SelectedDetail.CreatedByDisplay, Mode=OneWay}" TextWrapping="Wrap" />
-                                </StackPanel>
-                                <TextBlock Style="{StaticResource LimsCaptionStyle}" Text="{x:Bind ViewModel.SelectedDetail.CreatedAtDisplay, Mode=OneWay}" />
-                                <StackPanel Spacing="2">
-                                    <TextBlock Style="{StaticResource LimsCaptionStyle}" Text="Última modificación" />
-                                    <TextBlock Text="{x:Bind ViewModel.SelectedDetail.UpdatedByDisplay, Mode=OneWay}" TextWrapping="Wrap" />
-                                </StackPanel>
-                                <TextBlock Style="{StaticResource LimsCaptionStyle}" Text="{x:Bind ViewModel.SelectedDetail.UpdatedAtDisplay, Mode=OneWay}" />
-                                <StackPanel Spacing="2" Visibility="{x:Bind ViewModel.SelectedDetail.HasArchiveReason, Mode=OneWay}">
-                                    <TextBlock Style="{StaticResource LimsCaptionStyle}" Text="Motivo de baja" />
-                                    <TextBlock Text="{x:Bind ViewModel.SelectedDetail.ArchiveReason, Mode=OneWay}" TextWrapping="Wrap" />
-                                </StackPanel>
-                                <StackPanel Spacing="2" Visibility="{x:Bind ViewModel.SelectedDetail.HasArchiveActor, Mode=OneWay}">
-                                    <TextBlock Style="{StaticResource LimsCaptionStyle}" Text="Archivado por" />
-                                    <TextBlock Text="{x:Bind ViewModel.SelectedDetail.ArchivedByDisplay, Mode=OneWay}" TextWrapping="Wrap" />
-                                </StackPanel>
-                                <StackPanel Spacing="2" Visibility="{x:Bind ViewModel.SelectedDetail.HasArchiveTimestamp, Mode=OneWay}">
-                                    <TextBlock Style="{StaticResource LimsCaptionStyle}" Text="Fecha de baja" />
-                                    <TextBlock Text="{x:Bind ViewModel.SelectedDetail.ArchivedAtDisplay, Mode=OneWay}" TextWrapping="Wrap" />
-                                </StackPanel>
-                                <StackPanel Spacing="2" Visibility="{x:Bind ViewModel.SelectedDetail.HasReplacement, Mode=OneWay}">
-                                    <TextBlock Style="{StaticResource LimsCaptionStyle}" Text="Reemplazado por" />
-                                    <TextBlock Text="{x:Bind ViewModel.SelectedDetail.ReplacementDisplay, Mode=OneWay}" TextWrapping="Wrap" />
-                                </StackPanel>
-                                <StackPanel Spacing="2" Visibility="{x:Bind ViewModel.SelectedDetail.HasReplacementReason, Mode=OneWay}">
-                                    <TextBlock Style="{StaticResource LimsCaptionStyle}" Text="Motivo del reemplazo" />
-                                    <TextBlock Text="{x:Bind ViewModel.SelectedDetail.ArchiveReason, Mode=OneWay}" TextWrapping="Wrap" />
-                                </StackPanel>
-                            </StackPanel>
-                        </StackPanel>
-                    </ScrollViewer>
-                </Grid>
-            </Border>
         </Grid>
 
-        <ProgressBar Grid.RowSpan="3" Height="3" VerticalAlignment="Top" IsIndeterminate="True" Visibility="{x:Bind ViewModel.IsBusy, Mode=OneWay}" />
+        <Border x:Name="LoadingPlaceholder" Grid.Row="2" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="16,54,16,0" Padding="16" Background="{ThemeResource LimsSurfaceBrush}" CornerRadius="6" Visibility="Collapsed" IsHitTestVisible="False" AutomationProperties.Name="Cargando estándares">
+            <StackPanel Spacing="12">
+                <ProgressBar Width="260" Height="2" IsIndeterminate="True" />
+                <Border Width="260" Height="8" Background="{ThemeResource LimsSurfaceSecondaryBrush}" CornerRadius="4" />
+                <Border Width="220" Height="8" HorizontalAlignment="Left" Background="{ThemeResource LimsSurfaceSecondaryBrush}" CornerRadius="4" />
+                <Border Width="180" Height="8" HorizontalAlignment="Left" Background="{ThemeResource LimsSurfaceSecondaryBrush}" CornerRadius="4" />
+                <TextBlock Style="{StaticResource LimsCaptionStyle}" Text="Cargando estándares…" />
+            </StackPanel>
+        </Border>
+        <ProgressBar x:Name="DelayedProgress" Grid.Row="2" Height="2" VerticalAlignment="Top" IsIndeterminate="True" Visibility="Collapsed" IsHitTestVisible="False" />
     </Grid>
 </Page>

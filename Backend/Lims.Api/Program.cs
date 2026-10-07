@@ -9,6 +9,7 @@ using Lims.Api.ReferenceMaterials;
 using Lims.Application.Authentication;
 using Lims.Application.Authentication.Ports;
 using Lims.Application.ReferenceMaterials;
+using Lims.Application.ReferencePreparations;
 using Lims.Application.ReferenceMaterials.Ports;
 using Lims.Contracts.Errors;
 using Lims.Contracts.ReferenceMaterials;
@@ -71,6 +72,8 @@ try
     builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
     builder.Services.AddScoped<IReferenceMaterialRepository, ReferenceMaterialRepository>();
     builder.Services.AddScoped<IReferenceMaterialService, ReferenceMaterialService>();
+    builder.Services.AddScoped<IStockRepository, StockRepository>();
+    builder.Services.AddScoped<IStockService, StockService>();
 
     builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
     {
@@ -187,6 +190,7 @@ try
     app.MapGet("/", () => Results.Ok(new { service = "Lims.Api", status = "running" }));
     app.MapAuthenticationEndpoints();
     app.MapReferenceMaterialEndpoints();
+    app.MapStockEndpoints();
     app.MapHealthChecks("/health/live", new HealthCheckOptions
     {
         Predicate = static _ => false,

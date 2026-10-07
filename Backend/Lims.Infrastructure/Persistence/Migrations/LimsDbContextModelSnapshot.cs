@@ -22,6 +22,8 @@ namespace Lims.Infrastructure.Persistence.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.HasSequence("reference_stock_code_sequence");
+
             modelBuilder.Entity("Lims.Domain.Authentication.AuthSession", b =>
                 {
                     b.Property<Guid>("Id")
@@ -718,6 +720,310 @@ namespace Lims.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Lims.Domain.ReferencePreparations.ReferenceMaterialMovement", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<int>("ActorUserId")
+                        .HasColumnType("integer")
+                        .HasColumnName("actor_user_id");
+
+                    b.Property<decimal>("BalanceAfter")
+                        .HasPrecision(18, 6)
+                        .HasColumnType("numeric(18,6)")
+                        .HasColumnName("balance_after");
+
+                    b.Property<decimal>("BalanceBefore")
+                        .HasPrecision(18, 6)
+                        .HasColumnType("numeric(18,6)")
+                        .HasColumnName("balance_before");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(24)
+                        .HasColumnType("character varying(24)")
+                        .HasColumnName("kind");
+
+                    b.Property<DateTimeOffset>("OccurredAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("occurred_at");
+
+                    b.Property<Guid>("PreparationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("preparation_id");
+
+                    b.Property<decimal>("Quantity")
+                        .HasPrecision(18, 6)
+                        .HasColumnType("numeric(18,6)")
+                        .HasColumnName("quantity");
+
+                    b.Property<Guid>("SourceMaterialId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("source_material_id");
+
+                    b.Property<string>("Unit")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("unit");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ActorUserId");
+
+                    b.HasIndex("PreparationId")
+                        .IsUnique()
+                        .HasDatabaseName("ux_reference_material_movements_preparation");
+
+                    b.HasIndex("SourceMaterialId", "OccurredAt")
+                        .HasDatabaseName("ix_reference_material_movements_source_time");
+
+                    b.HasIndex("PreparationId", "SourceMaterialId", "ActorUserId", "Quantity", "Unit");
+
+                    b.ToTable("reference_material_movements", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_reference_material_movements_balance", "quantity > 0 AND balance_before >= quantity AND balance_after >= 0 AND balance_after = balance_before - quantity");
+
+                            t.HasCheckConstraint("ck_reference_material_movements_kind", "kind = 'StockConsumption'");
+                        });
+                });
+
+            modelBuilder.Entity("Lims.Domain.ReferencePreparations.ReferencePreparation", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<decimal>("ActualConcentration")
+                        .HasPrecision(40, 28)
+                        .HasColumnType("numeric(40,28)")
+                        .HasColumnName("actual_concentration");
+
+                    b.Property<string>("ActualConcentrationUnit")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("actual_concentration_unit");
+
+                    b.Property<decimal>("ActualWeight")
+                        .HasPrecision(18, 6)
+                        .HasColumnType("numeric(18,6)")
+                        .HasColumnName("actual_weight");
+
+                    b.Property<string>("ActualWeightUnit")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("actual_weight_unit");
+
+                    b.Property<decimal>("CalculatedWeight")
+                        .HasPrecision(40, 28)
+                        .HasColumnType("numeric(40,28)")
+                        .HasColumnName("calculated_weight");
+
+                    b.Property<string>("CalculatedWeightUnit")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("calculated_weight_unit");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)")
+                        .HasColumnName("code");
+
+                    b.Property<string>("ConcentrationUnit")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("concentration_unit");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<DateOnly>("ExpirationDate")
+                        .HasColumnType("date")
+                        .HasColumnName("expiration_date");
+
+                    b.Property<decimal>("FinalVolume")
+                        .HasPrecision(18, 6)
+                        .HasColumnType("numeric(18,6)")
+                        .HasColumnName("final_volume");
+
+                    b.Property<string>("FinalVolumeUnit")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("final_volume_unit");
+
+                    b.Property<string>("Formula")
+                        .IsRequired()
+                        .HasMaxLength(240)
+                        .HasColumnType("character varying(240)")
+                        .HasColumnName("formula");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(24)
+                        .HasColumnType("character varying(24)")
+                        .HasColumnName("kind");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("name");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)")
+                        .HasColumnName("notes");
+
+                    b.Property<DateOnly>("PreparationDate")
+                        .HasColumnType("date")
+                        .HasColumnName("preparation_date");
+
+                    b.Property<int>("PreparedByUserId")
+                        .HasColumnType("integer")
+                        .HasColumnName("prepared_by_user_id");
+
+                    b.Property<decimal>("PurityPercentUsed")
+                        .HasPrecision(7, 4)
+                        .HasColumnType("numeric(7,4)")
+                        .HasColumnName("purity_percent_used");
+
+                    b.Property<string>("RequestFingerprint")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("request_fingerprint");
+
+                    b.Property<string>("SourceBrand")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)")
+                        .HasColumnName("source_brand");
+
+                    b.Property<string>("SourceCasNumber")
+                        .HasMaxLength(80)
+                        .HasColumnType("character varying(80)")
+                        .HasColumnName("source_cas_number");
+
+                    b.Property<string>("SourceCatalogNumber")
+                        .HasMaxLength(80)
+                        .HasColumnType("character varying(80)")
+                        .HasColumnName("source_catalog_number");
+
+                    b.Property<DateOnly>("SourceExpirationDate")
+                        .HasColumnType("date")
+                        .HasColumnName("source_expiration_date");
+
+                    b.Property<string>("SourceLocation")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("source_location");
+
+                    b.Property<string>("SourceLot")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)")
+                        .HasColumnName("source_lot");
+
+                    b.Property<Guid>("SourceMaterialId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("source_material_id");
+
+                    b.Property<string>("SourceMethod")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("source_method");
+
+                    b.Property<string>("SourceName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("source_name");
+
+                    b.Property<decimal>("SourceTotalQuantity")
+                        .HasPrecision(18, 6)
+                        .HasColumnType("numeric(18,6)")
+                        .HasColumnName("source_total_quantity");
+
+                    b.Property<string>("SourceUnit")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("source_unit");
+
+                    b.Property<Guid>("SourceVersion")
+                        .HasColumnType("uuid")
+                        .HasColumnName("source_version");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(24)
+                        .HasColumnType("character varying(24)")
+                        .HasColumnName("status");
+
+                    b.Property<string>("StorageTemperature")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("storage_temperature");
+
+                    b.Property<decimal>("TargetConcentration")
+                        .HasPrecision(18, 6)
+                        .HasColumnType("numeric(18,6)")
+                        .HasColumnName("target_concentration");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<Guid>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("uuid")
+                        .HasColumnName("version");
+
+                    b.HasKey("Id");
+
+                    b.HasAlternateKey("Id", "SourceMaterialId", "PreparedByUserId", "ActualWeight", "SourceUnit")
+                        .HasName("ak_reference_preparations_consumption");
+
+                    b.HasIndex("Code")
+                        .IsUnique()
+                        .HasDatabaseName("ux_reference_preparations_code");
+
+                    b.HasIndex("PreparationDate")
+                        .HasDatabaseName("ix_reference_preparations_date");
+
+                    b.HasIndex("PreparedByUserId")
+                        .HasDatabaseName("ix_reference_preparations_actor");
+
+                    b.HasIndex("SourceMaterialId")
+                        .HasDatabaseName("ix_reference_preparations_source");
+
+                    b.ToTable("reference_preparations", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_reference_preparations_dates", "expiration_date >= preparation_date AND preparation_date <= source_expiration_date AND updated_at >= created_at");
+
+                            t.HasCheckConstraint("ck_reference_preparations_identity", "length(trim(code)) > 0 AND length(trim(name)) > 0 AND length(request_fingerprint) = 64");
+
+                            t.HasCheckConstraint("ck_reference_preparations_kind_status", "kind = 'Stock' AND status = 'Active'");
+
+                            t.HasCheckConstraint("ck_reference_preparations_purity", "purity_percent_used > 0 AND purity_percent_used <= 100");
+
+                            t.HasCheckConstraint("ck_reference_preparations_quantities", "target_concentration > 0 AND actual_concentration > 0 AND final_volume > 0 AND calculated_weight > 0 AND actual_weight > 0 AND source_total_quantity >= actual_weight");
+
+                            t.HasCheckConstraint("ck_reference_preparations_units", "concentration_unit IN ('mg/L','g/L','µg/L','µg/mL') AND final_volume_unit IN ('mL','L') AND calculated_weight_unit = source_unit AND actual_weight_unit = source_unit AND actual_concentration_unit = concentration_unit AND source_unit IN ('g','mg','µg','μg','ug')");
+                        });
+                });
+
             modelBuilder.Entity("Lims.Domain.Authentication.AuthSession", b =>
                 {
                     b.HasOne("Lims.Domain.Identity.User", null)
@@ -814,6 +1120,47 @@ namespace Lims.Infrastructure.Persistence.Migrations
                     b.Navigation("Method");
 
                     b.Navigation("Unit");
+                });
+
+            modelBuilder.Entity("Lims.Domain.ReferencePreparations.ReferenceMaterialMovement", b =>
+                {
+                    b.HasOne("Lims.Domain.Identity.User", null)
+                        .WithMany()
+                        .HasForeignKey("ActorUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Lims.Domain.ReferenceMaterials.ReferenceMaterial", null)
+                        .WithMany()
+                        .HasForeignKey("SourceMaterialId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Lims.Domain.ReferencePreparations.ReferencePreparation", "Preparation")
+                        .WithMany()
+                        .HasForeignKey("PreparationId", "SourceMaterialId", "ActorUserId", "Quantity", "Unit")
+                        .HasPrincipalKey("Id", "SourceMaterialId", "PreparedByUserId", "ActualWeight", "SourceUnit")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Preparation");
+                });
+
+            modelBuilder.Entity("Lims.Domain.ReferencePreparations.ReferencePreparation", b =>
+                {
+                    b.HasOne("Lims.Domain.Identity.User", null)
+                        .WithMany()
+                        .HasForeignKey("PreparedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Lims.Domain.ReferenceMaterials.ReferenceMaterial", "SourceMaterial")
+                        .WithMany()
+                        .HasForeignKey("SourceMaterialId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("SourceMaterial");
                 });
 
             modelBuilder.Entity("Lims.Domain.Identity.User", b =>

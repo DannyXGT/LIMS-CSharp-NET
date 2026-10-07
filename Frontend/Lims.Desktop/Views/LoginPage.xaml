@@ -3,6 +3,7 @@
     x:Class="Lims.Desktop.Views.LoginPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:design="using:Lims.DesignSystem.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     Background="#FF0A1017"
@@ -192,13 +193,7 @@
                             BorderBrush="#A830465A"
                             BorderThickness="1"
                             CornerRadius="10">
-                            <FontIcon
-                                HorizontalAlignment="Center"
-                                VerticalAlignment="Center"
-                                FontFamily="Segoe Fluent Icons"
-                                FontSize="20"
-                                Foreground="{StaticResource LoginAccentBrush}"
-                                Glyph="&#xE9F9;" />
+                            <design:LimsIcon HorizontalAlignment="Center" VerticalAlignment="Center" Icon="Reports" Size="{StaticResource IconSizeMedium}" Foreground="{ThemeResource LimsAccentBrush}" />
                         </Border>
 
                         <StackPanel VerticalAlignment="Center" Spacing="-1">
@@ -411,12 +406,7 @@
                                     <CompositeTransform />
                                 </Border.RenderTransform>
                                 <StackPanel Orientation="Horizontal" Spacing="8">
-                                    <FontIcon
-                                        VerticalAlignment="Center"
-                                        FontFamily="Segoe Fluent Icons"
-                                        FontSize="13"
-                                        Foreground="#FFFF8A94"
-                                        Glyph="&#xE783;" />
+                                    <design:LimsIcon VerticalAlignment="Center" Icon="Error" Size="{StaticResource IconSizeSmall}" IsDanger="True" />
                                     <TextBlock
                                         VerticalAlignment="Center"
                                         FontFamily="Segoe UI Variable Text"
@@ -451,14 +441,7 @@
                                                 <ColumnDefinition Width="136" />
                                             </Grid.ColumnDefinitions>
 
-                                            <FontIcon
-                                                HorizontalAlignment="Center"
-                                                VerticalAlignment="Center"
-                                                FontFamily="Segoe Fluent Icons"
-                                                FontSize="17"
-                                                Foreground="{StaticResource LoginSecondaryTextBrush}"
-                                                Glyph="&#xE77B;"
-                                                IsHitTestVisible="False" />
+                                            <design:LimsIcon HorizontalAlignment="Center" VerticalAlignment="Center" Icon="User" Size="{StaticResource IconSizeSmall}" Foreground="{ThemeResource LimsTextSecondaryBrush}" />
 
                                             <TextBox
                                                 x:Name="IdentifierBox"
@@ -525,14 +508,7 @@
                                                 <ColumnDefinition Width="52" />
                                             </Grid.ColumnDefinitions>
 
-                                            <FontIcon
-                                                HorizontalAlignment="Center"
-                                                VerticalAlignment="Center"
-                                                FontFamily="Segoe Fluent Icons"
-                                                FontSize="16"
-                                                Foreground="{StaticResource LoginSecondaryTextBrush}"
-                                                Glyph="&#xE72E;"
-                                                IsHitTestVisible="False" />
+                                            <design:LimsIcon HorizontalAlignment="Center" VerticalAlignment="Center" Icon="Lock" Size="{StaticResource IconSizeSmall}" Foreground="{ThemeResource LimsTextSecondaryBrush}" />
 
                                             <PasswordBox
                                                 x:Name="PasswordInput"
@@ -577,11 +553,7 @@
                                                 TabIndex="2"
                                                 ToolTipService.ToolTip="Mostrar contraseña">
 
-                                                <FontIcon
-                                                    x:Name="RevealPasswordGlyph"
-                                                    FontFamily="Segoe Fluent Icons"
-                                                    FontSize="17"
-                                                    Glyph="&#xE890;" />
+                                                <design:LimsIcon x:Name="RevealPasswordGlyph" Icon="ShowPassword" Size="{StaticResource IconSizeSmall}" />
                                             </Button>
                                         </Grid>
                                     </Border>
@@ -626,13 +598,7 @@
                                             VerticalAlignment="Center"
                                             Text="{x:Bind ViewModel.ActionLabel, Mode=OneWay}" />
 
-                                        <FontIcon
-                                            x:Name="SubmitArrow"
-                                            Grid.Column="2"
-                                            HorizontalAlignment="Right"
-                                            FontFamily="Segoe Fluent Icons"
-                                            FontSize="15"
-                                            Glyph="&#xE72A;" />
+                                        <design:LimsIcon x:Name="SubmitArrow" Grid.Column="2" HorizontalAlignment="Right" Icon="SignIn" Size="{StaticResource IconSizeSmall}" />
                                     </Grid>
                                 </Button>
 

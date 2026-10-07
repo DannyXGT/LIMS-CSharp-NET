@@ -1,0 +1,42 @@
+<Page x:Class="Lims.Desktop.Views.StockPage"
+ xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+ xmlns:design="using:Lims.DesignSystem.Controls" xmlns:contracts="using:Lims.Contracts.ReferencePreparations"
+ Background="{ThemeResource LimsBackgroundBrush}" Language="es-GT">
+ <Grid RowSpacing="16">
+  <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+  <Grid ColumnSpacing="16"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+   <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center"><design:StatusBadge Text="Stock" Tone="Information"/><TextBlock Style="{StaticResource LimsCaptionStyle}" Text="Preparaciones trazables desde un estándar"/></StackPanel>
+   <Button Grid.Column="1" Style="{StaticResource LimsPrimaryButtonStyle}" Click="OnNewClick" IsEnabled="{x:Bind ViewModel.CanCreate, Mode=OneWay}" AutomationProperties.Name="Nueva preparación Stock"><StackPanel Orientation="Horizontal" Spacing="8"><design:LimsIcon Icon="Preparations" Size="16"/><TextBlock Text="Nueva preparación"/></StackPanel></Button>
+  </Grid>
+  <Grid Grid.Row="1" ColumnSpacing="12"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+   <TextBox x:Name="SearchBox" Style="{StaticResource LimsTextBoxStyle}" PlaceholderText="Buscar por código, preparación, estándar o lote" KeyDown="OnSearchKeyDown" AutomationProperties.Name="Buscar preparaciones"/>
+   <Button Grid.Column="1" Style="{StaticResource LimsSecondaryButtonStyle}" Click="OnSearchClick" Content="Buscar"/>
+  </Grid>
+  <Border Grid.Row="2" Background="{ThemeResource LimsSurfaceBrush}" BorderBrush="{ThemeResource LimsBorderBrush}" BorderThickness="1" CornerRadius="12">
+   <Grid RowSpacing="8" Padding="12"><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+    <TextBlock Text="{x:Bind ViewModel.ListMessage, Mode=OneWay}" Style="{StaticResource LimsCaptionStyle}" TextWrapping="Wrap"/>
+    <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+     <Grid MinWidth="1194"><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+      <Grid Padding="12,8" ColumnSpacing="10" Background="{ThemeResource LimsSurfaceSecondaryBrush}">
+       <Grid.ColumnDefinitions><ColumnDefinition Width="200"/><ColumnDefinition Width="160"/><ColumnDefinition Width="100"/><ColumnDefinition Width="90"/><ColumnDefinition Width="120"/><ColumnDefinition Width="100"/><ColumnDefinition Width="100"/><ColumnDefinition Width="130"/><ColumnDefinition Width="90"/></Grid.ColumnDefinitions>
+       <TextBlock Text="Código / Preparación" Style="{StaticResource LimsLabelStyle}"/><TextBlock Grid.Column="1" Text="Estándar / Lote" Style="{StaticResource LimsLabelStyle}"/><TextBlock Grid.Column="4" Text="Concentración real" Style="{StaticResource LimsLabelStyle}"/><TextBlock Grid.Column="3" Text="Volumen final" Style="{StaticResource LimsLabelStyle}"/><TextBlock Grid.Column="5" Text="Preparación" Style="{StaticResource LimsLabelStyle}"/><TextBlock Grid.Column="7" Text="Preparado por" Style="{StaticResource LimsLabelStyle}"/><TextBlock Grid.Column="8" Text="Estado" Style="{StaticResource LimsLabelStyle}"/><TextBlock Grid.Column="2" Text="Peso tomado" Style="{StaticResource LimsLabelStyle}"/><TextBlock Grid.Column="6" Text="Expiración" Style="{StaticResource LimsLabelStyle}"/>
+      </Grid>
+      <ListView Grid.Row="1" x:Name="PreparationsList" ItemsSource="{x:Bind ViewModel.Items}" ItemContainerStyle="{StaticResource LimsDataRowStyle}" DoubleTapped="OnDoubleTapped" SelectionMode="Single" AutomationProperties.Name="Preparaciones Stock">
+       <ListView.ItemTemplate><DataTemplate x:DataType="contracts:StockSummary">
+        <Grid Padding="8,10" ColumnSpacing="10"><Grid.ColumnDefinitions><ColumnDefinition Width="200"/><ColumnDefinition Width="160"/><ColumnDefinition Width="100"/><ColumnDefinition Width="90"/><ColumnDefinition Width="120"/><ColumnDefinition Width="100"/><ColumnDefinition Width="100"/><ColumnDefinition Width="130"/><ColumnDefinition Width="90"/></Grid.ColumnDefinitions>
+         <StackPanel Spacing="3"><TextBlock Text="{x:Bind Code}" FontWeight="SemiBold"/><TextBlock Text="{x:Bind Name}" Style="{StaticResource LimsCaptionStyle}" TextTrimming="CharacterEllipsis" ToolTipService.ToolTip="{x:Bind Name}"/></StackPanel>
+         <StackPanel Grid.Column="1" Spacing="3"><TextBlock Text="{x:Bind SourceName}" TextTrimming="CharacterEllipsis" ToolTipService.ToolTip="{x:Bind SourceName}"/><TextBlock Text="{x:Bind SourceLot}" Style="{StaticResource LimsCaptionStyle}"/></StackPanel>
+         <TextBlock Grid.Column="4" Text="{x:Bind ConcentrationDisplay}" VerticalAlignment="Center"/><TextBlock Grid.Column="3" Text="{x:Bind FinalDisplay}" VerticalAlignment="Center"/><TextBlock Grid.Column="5" Text="{x:Bind DateDisplay}" VerticalAlignment="Center"/><TextBlock Grid.Column="7" Text="{x:Bind PreparedBy}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" ToolTipService.ToolTip="{x:Bind PreparedBy}"/><TextBlock Grid.Column="2" Text="{x:Bind WeightDisplay}" VerticalAlignment="Center"/><TextBlock Grid.Column="6" Text="{x:Bind ExpirationDisplay}" VerticalAlignment="Center"/><design:StatusBadge Grid.Column="8" Text="{x:Bind StatusLabel}" Tone="{x:Bind StatusTone}" VerticalAlignment="Center"/>
+        </Grid>
+       </DataTemplate></ListView.ItemTemplate>
+      </ListView>
+     </Grid>
+    </ScrollViewer>
+   </Grid>
+  </Border>
+  <Grid Grid.Row="3"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+   <TextBlock Text="{x:Bind ViewModel.PageDisplay, Mode=OneWay}" Style="{StaticResource LimsCaptionStyle}" VerticalAlignment="Center"/>
+   <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8"><StackPanel Orientation="Horizontal" Spacing="8" Visibility="{x:Bind ViewModel.HasMultiplePages, Mode=OneWay}"><Button Style="{StaticResource LimsSecondaryButtonStyle}" Content="‹" AutomationProperties.Name="Página anterior" IsEnabled="{x:Bind ViewModel.HasPreviousPage, Mode=OneWay}" Click="OnPreviousPage"/><TextBlock Text="{x:Bind ViewModel.Page, Mode=OneWay}" VerticalAlignment="Center"/><Button Style="{StaticResource LimsSecondaryButtonStyle}" Content="›" AutomationProperties.Name="Página siguiente" IsEnabled="{x:Bind ViewModel.HasNextPage, Mode=OneWay}" Click="OnNextPage"/></StackPanel><Button Style="{StaticResource LimsSecondaryButtonStyle}" Content="Ver preparación" Click="OnDetailClick"/></StackPanel>
+  </Grid>
+ </Grid>
+</Page>

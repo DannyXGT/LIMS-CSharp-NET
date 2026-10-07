@@ -140,10 +140,10 @@ internal static class ReferenceMaterialEndpoints
             : ToError(context, result.Error!);
     }
 
-    private static IResult ToResult<T>(HttpContext context, OperationResult<T> result) =>
+    internal static IResult ToResult<T>(HttpContext context, OperationResult<T> result) =>
         result.IsSuccess ? Results.Ok(result.Value) : ToError(context, result.Error!);
 
-    private static IResult ToError(HttpContext context, OperationError error)
+    internal static IResult ToError(HttpContext context, OperationError error)
     {
         var statusCode = error.Code switch
         {
@@ -159,13 +159,13 @@ internal static class ReferenceMaterialEndpoints
             statusCode: statusCode);
     }
 
-    private static bool TryGetActorUserId(HttpContext context, out int userId) => int.TryParse(
+    internal static bool TryGetActorUserId(HttpContext context, out int userId) => int.TryParse(
         context.User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value,
         NumberStyles.None,
         CultureInfo.InvariantCulture,
         out userId);
 
-    private static IResult InvalidSession(HttpContext context) => Results.Json(
+    internal static IResult InvalidSession(HttpContext context) => Results.Json(
         new ApiError(
             ErrorCodes.InvalidSession,
             "La sesión no es válida o expiró.",

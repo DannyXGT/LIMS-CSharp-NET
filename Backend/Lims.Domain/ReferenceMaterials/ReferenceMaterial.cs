@@ -147,6 +147,19 @@ public sealed class ReferenceMaterial
         Version = Guid.NewGuid();
     }
 
+    public void Consume(decimal quantity, int actorUserId, DateTimeOffset now, DateOnly today)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(actorUserId);
+        if (EffectiveStatus(today) != ReferenceMaterialStatus.Active)
+            throw new InvalidOperationException("El estándar no está disponible para uso.");
+        if (quantity <= 0 || quantity > AvailableQuantity || decimal.Round(quantity, 6) != quantity)
+            throw new ArgumentOutOfRangeException(nameof(quantity), "No hay suficiente material disponible o la cantidad es inválida.");
+        AvailableQuantity -= quantity;
+        UpdatedByUserId = actorUserId;
+        UpdatedAt = now;
+        Version = Guid.NewGuid();
+    }
+
     public void Archive(string reason, int actorUserId, DateTimeOffset now)
     {
         EnsureEditable();

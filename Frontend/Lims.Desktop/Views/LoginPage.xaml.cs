@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using Lims.DesignSystem.Controls;
 using Lims.Desktop.ViewModels;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Automation;
@@ -71,8 +72,8 @@ public sealed partial class LoginPage : Page
             ? "Ocultar contraseña"
             : "Mostrar contraseña";
 
-        // Fluent eye / hide-eye glyphs. Keep this button separate from PasswordBox content.
-        RevealPasswordGlyph.Glyph = _isPasswordVisible ? "\uE8F5" : "\uE890";
+        // Icon meaning follows the existing password visibility action.
+        RevealPasswordGlyph.Icon = _isPasswordVisible ? LimsIconKind.HidePassword : LimsIconKind.ShowPassword;
 
         ToolTipService.SetToolTip(RevealPasswordButton, accessibleName);
         AutomationProperties.SetName(RevealPasswordButton, accessibleName);
