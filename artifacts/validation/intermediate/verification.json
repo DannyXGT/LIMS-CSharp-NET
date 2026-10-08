@@ -1,0 +1,420 @@
+{
+    "FixtureOnly":  true,
+    "CreateCalls":  1,
+    "Created":  {
+                    "Preparation":  {
+                                        "Id":  "c5047ba3-f9d7-45d3-b0f9-a6e2ab4c5dc0",
+                                        "Code":  "INT-20261007-001",
+                                        "Name":  "Intermedia de aminas · validación",
+                                        "Method":  "Aminas aromáticas",
+                                        "ComponentCount":  3,
+                                        "FinalVolume":  100,
+                                        "VolumeUnit":  "mL",
+                                        "AvailableVolume":  100,
+                                        "Results":  [
+                                                        {
+                                                            "MaterialId":  "9ba3f18c-42c4-4c99-8767-f6165af6b9be",
+                                                            "Name":  "4-Aminobiphenyl",
+                                                            "CasNumber":  "92-67-1",
+                                                            "Lot":  "LOTE-VALIDACIÓN-1",
+                                                            "Concentration":  100,
+                                                            "Unit":  "mg/L"
+                                                        },
+                                                        {
+                                                            "MaterialId":  "6c54f7a6-95e4-4f9f-90e4-912c1ef04b5b",
+                                                            "Name":  "Benzidine",
+                                                            "CasNumber":  "92-87-5",
+                                                            "Lot":  "LOTE-VALIDACIÓN-2",
+                                                            "Concentration":  50,
+                                                            "Unit":  "mg/L"
+                                                        },
+                                                        {
+                                                            "MaterialId":  "133ef4c3-3e2e-4fee-9668-05d8177fa67d",
+                                                            "Name":  "2-Naphthylamine",
+                                                            "CasNumber":  "91-59-8",
+                                                            "Lot":  "LOTE-VALIDACIÓN-3",
+                                                            "Concentration":  10,
+                                                            "Unit":  "mg/L"
+                                                        }
+                                                    ],
+                                        "PreparationDate":  "2026-10-07",
+                                        "ExpirationDate":  "2026-11-06",
+                                        "PreparedBy":  "Usuario de prueba",
+                                        "Status":  "Active"
+                                    },
+                    "Calculation":  {
+                                        "TotalVolumeTaken":  25,
+                                        "FinalVolume":  100,
+                                        "VolumeUnit":  "mL",
+                                        "RemainingToFill":  75,
+                                        "OccupiedPercent":  25.00,
+                                        "ExceedsFinalVolume":  false,
+                                        "HasSufficientVolume":  true,
+                                        "Components":  [
+                                                           {
+                                                               "Source":  {
+                                                                              "Id":  "9d051ef3-386b-4a47-982b-fe036d0cc2c0",
+                                                                              "Kind":  "Stock",
+                                                                              "Code":  "STK-20261007-001",
+                                                                              "Name":  "4-Aminobiphenyl",
+                                                                              "MethodId":  1,
+                                                                              "Method":  "Aminas aromáticas",
+                                                                              "AvailableVolume":  200,
+                                                                              "InitialVolume":  200,
+                                                                              "VolumeUnit":  "mL",
+                                                                              "PreparationDate":  "2026-01-01",
+                                                                              "ExpirationDate":  "2027-06-24",
+                                                                              "Version":  "cb0f7791-f1ce-490c-afc0-aaf918c03f3d",
+                                                                              "Analytes":  [
+                                                                                               {
+                                                                                                   "MaterialId":  "9ba3f18c-42c4-4c99-8767-f6165af6b9be",
+                                                                                                   "Name":  "4-Aminobiphenyl",
+                                                                                                   "CasNumber":  "92-67-1",
+                                                                                                   "Lot":  "LOTE-VALIDACIÓN-1",
+                                                                                                   "Concentration":  1000,
+                                                                                                   "Unit":  "mg/L"
+                                                                                               }
+                                                                                           ]
+                                                                          },
+                                                               "VolumeTaken":  10,
+                                                               "VolumeUnit":  "mL",
+                                                               "RemainingVolume":  190,
+                                                               "Results":  [
+                                                                               {
+                                                                                   "MaterialId":  "9ba3f18c-42c4-4c99-8767-f6165af6b9be",
+                                                                                   "Name":  "4-Aminobiphenyl",
+                                                                                   "CasNumber":  "92-67-1",
+                                                                                   "Lot":  "LOTE-VALIDACIÓN-1",
+                                                                                   "Concentration":  100,
+                                                                                   "Unit":  "mg/L"
+                                                                               }
+                                                                           ]
+                                                           },
+                                                           {
+                                                               "Source":  {
+                                                                              "Id":  "5a436793-705b-41a6-bca3-d41c611ba751",
+                                                                              "Kind":  "Stock",
+                                                                              "Code":  "STK-20261007-002",
+                                                                              "Name":  "Benzidine",
+                                                                              "MethodId":  1,
+                                                                              "Method":  "Aminas aromáticas",
+                                                                              "AvailableVolume":  200,
+                                                                              "InitialVolume":  200,
+                                                                              "VolumeUnit":  "mL",
+                                                                              "PreparationDate":  "2026-01-01",
+                                                                              "ExpirationDate":  "2027-06-24",
+                                                                              "Version":  "46e57d66-8d46-4446-ac2f-52e7d81870cf",
+                                                                              "Analytes":  [
+                                                                                               {
+                                                                                                   "MaterialId":  "6c54f7a6-95e4-4f9f-90e4-912c1ef04b5b",
+                                                                                                   "Name":  "Benzidine",
+                                                                                                   "CasNumber":  "92-87-5",
+                                                                                                   "Lot":  "LOTE-VALIDACIÓN-2",
+                                                                                                   "Concentration":  500,
+                                                                                                   "Unit":  "mg/L"
+                                                                                               }
+                                                                                           ]
+                                                                          },
+                                                               "VolumeTaken":  10,
+                                                               "VolumeUnit":  "mL",
+                                                               "RemainingVolume":  190,
+                                                               "Results":  [
+                                                                               {
+                                                                                   "MaterialId":  "6c54f7a6-95e4-4f9f-90e4-912c1ef04b5b",
+                                                                                   "Name":  "Benzidine",
+                                                                                   "CasNumber":  "92-87-5",
+                                                                                   "Lot":  "LOTE-VALIDACIÓN-2",
+                                                                                   "Concentration":  50,
+                                                                                   "Unit":  "mg/L"
+                                                                               }
+                                                                           ]
+                                                           },
+                                                           {
+                                                               "Source":  {
+                                                                              "Id":  "11a5a0d5-b409-4940-8bdf-8bbeb0e4b123",
+                                                                              "Kind":  "Stock",
+                                                                              "Code":  "STK-20261007-003",
+                                                                              "Name":  "2-Naphthylamine",
+                                                                              "MethodId":  1,
+                                                                              "Method":  "Aminas aromáticas",
+                                                                              "AvailableVolume":  200,
+                                                                              "InitialVolume":  200,
+                                                                              "VolumeUnit":  "mL",
+                                                                              "PreparationDate":  "2026-01-01",
+                                                                              "ExpirationDate":  "2027-06-24",
+                                                                              "Version":  "faabb21b-84f9-4138-9505-52ad51093b0d",
+                                                                              "Analytes":  [
+                                                                                               {
+                                                                                                   "MaterialId":  "133ef4c3-3e2e-4fee-9668-05d8177fa67d",
+                                                                                                   "Name":  "2-Naphthylamine",
+                                                                                                   "CasNumber":  "91-59-8",
+                                                                                                   "Lot":  "LOTE-VALIDACIÓN-3",
+                                                                                                   "Concentration":  200,
+                                                                                                   "Unit":  "mg/L"
+                                                                                               }
+                                                                                           ]
+                                                                          },
+                                                               "VolumeTaken":  5,
+                                                               "VolumeUnit":  "mL",
+                                                               "RemainingVolume":  195,
+                                                               "Results":  [
+                                                                               {
+                                                                                   "MaterialId":  "133ef4c3-3e2e-4fee-9668-05d8177fa67d",
+                                                                                   "Name":  "2-Naphthylamine",
+                                                                                   "CasNumber":  "91-59-8",
+                                                                                   "Lot":  "LOTE-VALIDACIÓN-3",
+                                                                                   "Concentration":  10,
+                                                                                   "Unit":  "mg/L"
+                                                                               }
+                                                                           ]
+                                                           }
+                                                       ],
+                                        "Results":  [
+                                                        {
+                                                            "MaterialId":  "9ba3f18c-42c4-4c99-8767-f6165af6b9be",
+                                                            "Name":  "4-Aminobiphenyl",
+                                                            "CasNumber":  "92-67-1",
+                                                            "Lot":  "LOTE-VALIDACIÓN-1",
+                                                            "Concentration":  100,
+                                                            "Unit":  "mg/L"
+                                                        },
+                                                        {
+                                                            "MaterialId":  "6c54f7a6-95e4-4f9f-90e4-912c1ef04b5b",
+                                                            "Name":  "Benzidine",
+                                                            "CasNumber":  "92-87-5",
+                                                            "Lot":  "LOTE-VALIDACIÓN-2",
+                                                            "Concentration":  50,
+                                                            "Unit":  "mg/L"
+                                                        },
+                                                        {
+                                                            "MaterialId":  "133ef4c3-3e2e-4fee-9668-05d8177fa67d",
+                                                            "Name":  "2-Naphthylamine",
+                                                            "CasNumber":  "91-59-8",
+                                                            "Lot":  "LOTE-VALIDACIÓN-3",
+                                                            "Concentration":  10,
+                                                            "Unit":  "mg/L"
+                                                        }
+                                                    ]
+                                    },
+                    "Consumptions":  [
+                                         {
+                                             "Id":  "579515fa-7373-47f3-b032-f5e2562dade6",
+                                             "SourceId":  "9d051ef3-386b-4a47-982b-fe036d0cc2c0",
+                                             "SourceCode":  "STK-20261007-001",
+                                             "Quantity":  10,
+                                             "Unit":  "mL",
+                                             "BalanceBefore":  200,
+                                             "BalanceAfter":  190,
+                                             "Actor":  "Usuario de prueba",
+                                             "OccurredAt":  "2026-10-07T23:44:41.6276262+00:00"
+                                         },
+                                         {
+                                             "Id":  "3ee3dc90-2d5b-4693-a3c9-6ffca55fabc8",
+                                             "SourceId":  "5a436793-705b-41a6-bca3-d41c611ba751",
+                                             "SourceCode":  "STK-20261007-002",
+                                             "Quantity":  10,
+                                             "Unit":  "mL",
+                                             "BalanceBefore":  200,
+                                             "BalanceAfter":  190,
+                                             "Actor":  "Usuario de prueba",
+                                             "OccurredAt":  "2026-10-07T23:44:41.6276262+00:00"
+                                         },
+                                         {
+                                             "Id":  "cb87dd6c-e7d4-4032-b265-28a4633f421e",
+                                             "SourceId":  "11a5a0d5-b409-4940-8bdf-8bbeb0e4b123",
+                                             "SourceCode":  "STK-20261007-003",
+                                             "Quantity":  5,
+                                             "Unit":  "mL",
+                                             "BalanceBefore":  200,
+                                             "BalanceAfter":  195,
+                                             "Actor":  "Usuario de prueba",
+                                             "OccurredAt":  "2026-10-07T23:44:41.6276262+00:00"
+                                         }
+                                     ],
+                    "DilutedPreparationId":  null,
+                    "Notes":  "",
+                    "CreatedAt":  "2026-10-07T23:44:41.6276262+00:00",
+                    "UpdatedAt":  "2026-10-07T23:44:41.6276262+00:00",
+                    "UpdatedBy":  "Usuario de prueba",
+                    "Version":  "f96978d6-b8f9-4d9e-a739-2fd894f65a77"
+                },
+    "CanSave":  false,
+    "Calculation":  {
+                        "TotalVolumeTaken":  25,
+                        "FinalVolume":  100,
+                        "VolumeUnit":  "mL",
+                        "RemainingToFill":  75,
+                        "OccupiedPercent":  25.00,
+                        "ExceedsFinalVolume":  false,
+                        "HasSufficientVolume":  true,
+                        "Components":  [
+                                           {
+                                               "Source":  {
+                                                              "Id":  "9d051ef3-386b-4a47-982b-fe036d0cc2c0",
+                                                              "Kind":  "Stock",
+                                                              "Code":  "STK-20261007-001",
+                                                              "Name":  "4-Aminobiphenyl",
+                                                              "MethodId":  1,
+                                                              "Method":  "Aminas aromáticas",
+                                                              "AvailableVolume":  200,
+                                                              "InitialVolume":  200,
+                                                              "VolumeUnit":  "mL",
+                                                              "PreparationDate":  "2026-01-01",
+                                                              "ExpirationDate":  "2027-06-24",
+                                                              "Version":  "cb0f7791-f1ce-490c-afc0-aaf918c03f3d",
+                                                              "Analytes":  [
+                                                                               {
+                                                                                   "MaterialId":  "9ba3f18c-42c4-4c99-8767-f6165af6b9be",
+                                                                                   "Name":  "4-Aminobiphenyl",
+                                                                                   "CasNumber":  "92-67-1",
+                                                                                   "Lot":  "LOTE-VALIDACIÓN-1",
+                                                                                   "Concentration":  1000,
+                                                                                   "Unit":  "mg/L"
+                                                                               }
+                                                                           ]
+                                                          },
+                                               "VolumeTaken":  10,
+                                               "VolumeUnit":  "mL",
+                                               "RemainingVolume":  190,
+                                               "Results":  [
+                                                               {
+                                                                   "MaterialId":  "9ba3f18c-42c4-4c99-8767-f6165af6b9be",
+                                                                   "Name":  "4-Aminobiphenyl",
+                                                                   "CasNumber":  "92-67-1",
+                                                                   "Lot":  "LOTE-VALIDACIÓN-1",
+                                                                   "Concentration":  100,
+                                                                   "Unit":  "mg/L"
+                                                               }
+                                                           ]
+                                           },
+                                           {
+                                               "Source":  {
+                                                              "Id":  "5a436793-705b-41a6-bca3-d41c611ba751",
+                                                              "Kind":  "Stock",
+                                                              "Code":  "STK-20261007-002",
+                                                              "Name":  "Benzidine",
+                                                              "MethodId":  1,
+                                                              "Method":  "Aminas aromáticas",
+                                                              "AvailableVolume":  200,
+                                                              "InitialVolume":  200,
+                                                              "VolumeUnit":  "mL",
+                                                              "PreparationDate":  "2026-01-01",
+                                                              "ExpirationDate":  "2027-06-24",
+                                                              "Version":  "46e57d66-8d46-4446-ac2f-52e7d81870cf",
+                                                              "Analytes":  [
+                                                                               {
+                                                                                   "MaterialId":  "6c54f7a6-95e4-4f9f-90e4-912c1ef04b5b",
+                                                                                   "Name":  "Benzidine",
+                                                                                   "CasNumber":  "92-87-5",
+                                                                                   "Lot":  "LOTE-VALIDACIÓN-2",
+                                                                                   "Concentration":  500,
+                                                                                   "Unit":  "mg/L"
+                                                                               }
+                                                                           ]
+                                                          },
+                                               "VolumeTaken":  10,
+                                               "VolumeUnit":  "mL",
+                                               "RemainingVolume":  190,
+                                               "Results":  [
+                                                               {
+                                                                   "MaterialId":  "6c54f7a6-95e4-4f9f-90e4-912c1ef04b5b",
+                                                                   "Name":  "Benzidine",
+                                                                   "CasNumber":  "92-87-5",
+                                                                   "Lot":  "LOTE-VALIDACIÓN-2",
+                                                                   "Concentration":  50,
+                                                                   "Unit":  "mg/L"
+                                                               }
+                                                           ]
+                                           },
+                                           {
+                                               "Source":  {
+                                                              "Id":  "11a5a0d5-b409-4940-8bdf-8bbeb0e4b123",
+                                                              "Kind":  "Stock",
+                                                              "Code":  "STK-20261007-003",
+                                                              "Name":  "2-Naphthylamine",
+                                                              "MethodId":  1,
+                                                              "Method":  "Aminas aromáticas",
+                                                              "AvailableVolume":  200,
+                                                              "InitialVolume":  200,
+                                                              "VolumeUnit":  "mL",
+                                                              "PreparationDate":  "2026-01-01",
+                                                              "ExpirationDate":  "2027-06-24",
+                                                              "Version":  "faabb21b-84f9-4138-9505-52ad51093b0d",
+                                                              "Analytes":  [
+                                                                               {
+                                                                                   "MaterialId":  "133ef4c3-3e2e-4fee-9668-05d8177fa67d",
+                                                                                   "Name":  "2-Naphthylamine",
+                                                                                   "CasNumber":  "91-59-8",
+                                                                                   "Lot":  "LOTE-VALIDACIÓN-3",
+                                                                                   "Concentration":  200,
+                                                                                   "Unit":  "mg/L"
+                                                                               }
+                                                                           ]
+                                                          },
+                                               "VolumeTaken":  5,
+                                               "VolumeUnit":  "mL",
+                                               "RemainingVolume":  195,
+                                               "Results":  [
+                                                               {
+                                                                   "MaterialId":  "133ef4c3-3e2e-4fee-9668-05d8177fa67d",
+                                                                   "Name":  "2-Naphthylamine",
+                                                                   "CasNumber":  "91-59-8",
+                                                                   "Lot":  "LOTE-VALIDACIÓN-3",
+                                                                   "Concentration":  10,
+                                                                   "Unit":  "mg/L"
+                                                               }
+                                                           ]
+                                           }
+                                       ],
+                        "Results":  [
+                                        {
+                                            "MaterialId":  "9ba3f18c-42c4-4c99-8767-f6165af6b9be",
+                                            "Name":  "4-Aminobiphenyl",
+                                            "CasNumber":  "92-67-1",
+                                            "Lot":  "LOTE-VALIDACIÓN-1",
+                                            "Concentration":  100,
+                                            "Unit":  "mg/L"
+                                        },
+                                        {
+                                            "MaterialId":  "6c54f7a6-95e4-4f9f-90e4-912c1ef04b5b",
+                                            "Name":  "Benzidine",
+                                            "CasNumber":  "92-87-5",
+                                            "Lot":  "LOTE-VALIDACIÓN-2",
+                                            "Concentration":  50,
+                                            "Unit":  "mg/L"
+                                        },
+                                        {
+                                            "MaterialId":  "133ef4c3-3e2e-4fee-9668-05d8177fa67d",
+                                            "Name":  "2-Naphthylamine",
+                                            "CasNumber":  "91-59-8",
+                                            "Lot":  "LOTE-VALIDACIÓN-3",
+                                            "Concentration":  10,
+                                            "Unit":  "mg/L"
+                                        }
+                                    ]
+                    },
+    "OccupiedPercent":  25.00,
+    "VolumeError":  "",
+    "Message":  "",
+    "EditorWidth":  480,
+    "EditorHeight":  188,
+    "ResultStacked":  false,
+    "Sources":  [
+                    {
+                        "Code":  "STK-20261007-001",
+                        "AvailableVolume":  190
+                    },
+                    {
+                        "Code":  "STK-20261007-002",
+                        "AvailableVolume":  190
+                    },
+                    {
+                        "Code":  "STK-20261007-003",
+                        "AvailableVolume":  195
+                    },
+                    {
+                        "Code":  "INT-20261007-001",
+                        "AvailableVolume":  100
+                    }
+                ]
+}

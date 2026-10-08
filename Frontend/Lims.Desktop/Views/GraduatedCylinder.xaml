@@ -1,0 +1,25 @@
+<UserControl x:Class="Lims.Desktop.Views.GraduatedCylinder"
+ xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+ AutomationProperties.Name="Volumen acumulado y aforo" IsTabStop="False">
+ <Grid Width="220" Height="218" HorizontalAlignment="Center">
+  <Grid.ColumnDefinitions><ColumnDefinition Width="100"/><ColumnDefinition Width="100"/></Grid.ColumnDefinitions>
+  <Canvas Grid.Column="1" Width="90" Height="202" VerticalAlignment="Top">
+   <Border Canvas.Left="12" Canvas.Top="14" Width="64" Height="174" CornerRadius="0,0,16,16" Background="{ThemeResource LimsSurfaceBrush}"/>
+   <Border x:Name="Liquid" Canvas.Left="16" Canvas.Top="18" Width="56" Height="166" CornerRadius="0,0,12,12" Background="{ThemeResource LimsAccentBrush}" Opacity="0.65" RenderTransformOrigin="0.5,1">
+    <Border.RenderTransform><ScaleTransform x:Name="LiquidScale" ScaleY="0"/></Border.RenderTransform>
+   </Border>
+   <Path Data="M12,14 L12,172 Q12,188 28,188 L60,188 Q76,188 76,172 L76,14" Stroke="{ThemeResource LimsTextSecondaryBrush}" StrokeThickness="2"/>
+   <Ellipse Canvas.Left="10" Canvas.Top="9" Width="68" Height="10" Stroke="{ThemeResource LimsTextSecondaryBrush}" StrokeThickness="2"/>
+   <Path Data="M44,188 L44,198 M22,198 L66,198" Stroke="{ThemeResource LimsTextSecondaryBrush}" StrokeThickness="2"/>
+   <Path Data="M12,18 L27,18 M12,59.5 L22,59.5 M12,101 L27,101 M12,142.5 L22,142.5 M12,184 L27,184" Stroke="{ThemeResource LimsTextSecondaryBrush}" StrokeThickness="1"/>
+  </Canvas>
+  <Canvas Height="202" Width="100" VerticalAlignment="Top">
+   <TextBlock x:Name="Tick100" Canvas.Top="7" Style="{StaticResource LimsCaptionStyle}"/>
+   <TextBlock x:Name="Tick75" Canvas.Top="49" Style="{StaticResource LimsCaptionStyle}"/>
+   <TextBlock x:Name="Tick50" Canvas.Top="90" Style="{StaticResource LimsCaptionStyle}"/>
+   <TextBlock x:Name="Tick25" Canvas.Top="132" Style="{StaticResource LimsCaptionStyle}"/>
+   <TextBlock Text="0 mL" Canvas.Top="174" Style="{StaticResource LimsCaptionStyle}"/>
+  </Canvas>
+  <TextBlock x:Name="PercentText" Grid.ColumnSpan="2" VerticalAlignment="Bottom" HorizontalAlignment="Center" FontWeight="SemiBold"/>
+ </Grid>
+</UserControl>

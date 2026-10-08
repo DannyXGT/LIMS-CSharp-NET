@@ -8,16 +8,16 @@ namespace Lims.Desktop.Views;
 public sealed partial class ShellPage : Page
 {
     private readonly ReferenceMaterialsPage _referenceMaterialsPage;
-    private readonly StockPage _stockPage;
+    private readonly PreparationsPage _preparationsPage;
 
-    public ShellPage(ShellViewModel viewModel, ReferenceMaterialsPage referenceMaterialsPage, StockPage stockPage)
+    public ShellPage(ShellViewModel viewModel, ReferenceMaterialsPage referenceMaterialsPage, StockPage stockPage, IntermediatePage intermediatePage)
     {
         ViewModel = viewModel;
         _referenceMaterialsPage = referenceMaterialsPage;
-        _stockPage = stockPage;
+        _preparationsPage = new PreparationsPage(stockPage, intermediatePage);
         InitializeComponent();
         StandardsHost.Content = referenceMaterialsPage;
-        PreparationsHost.Content = stockPage;
+        PreparationsHost.Content = _preparationsPage;
         MainNavigation.SelectedItem = HomeItem;
     }
 
@@ -46,7 +46,7 @@ public sealed partial class ShellPage : Page
                 break;
             case "preparations":
                 Show(PreparationsHost, "Preparaciones", "Materiales de Referencia");
-                _ = _stockPage.LoadAsync();
+                _ = _preparationsPage.LoadAsync();
                 break;
         }
     }

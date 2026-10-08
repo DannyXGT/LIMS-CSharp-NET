@@ -2,7 +2,7 @@ using Lims.Domain.ReferenceMaterials;
 
 namespace Lims.Domain.ReferencePreparations;
 
-/// <summary>Immutable preparation and calculation snapshot. Downstream consumption is a separate phase.</summary>
+/// <summary>Historical preparation and calculation snapshots, with a versioned volume balance and consumption audit.</summary>
 public sealed class ReferencePreparation
 {
     private ReferencePreparation() { }
@@ -41,6 +41,9 @@ public sealed class ReferencePreparation
         ActualConcentration = resultConcentration;
         ConcentrationUnit = Text(concentrationUnit, 16);
         FinalVolume = finalQuantity;
+        AvailableVolume = finalQuantity;
+        MethodId = source.MethodId;
+        UpdatedByUserId = actorUserId;
         FinalVolumeUnit = Text(finalUnit, 16);
         CalculatedWeight = calculatedWeight;
         ActualWeight = actualWeight;
@@ -66,8 +69,8 @@ public sealed class ReferencePreparation
     public string Name { get; private set; } = string.Empty;
     public string Kind { get; private set; } = "Stock";
     public string Status { get; private set; } = "Active";
-    public Guid SourceMaterialId { get; private set; }
-    public ReferenceMaterial SourceMaterial { get; private set; } = null!;
+    public Guid? SourceMaterialId { get; private set; }
+    public ReferenceMaterial? SourceMaterial { get; private set; }
     public Guid SourceVersion { get; private set; }
     public string SourceName { get; private set; } = string.Empty;
     public string SourceLot { get; private set; } = string.Empty;
@@ -100,6 +103,39 @@ public sealed class ReferencePreparation
     public DateTimeOffset UpdatedAt { get; private set; }
     public Guid Version { get; private set; }
     public string RequestFingerprint { get; private set; } = string.Empty;
+    public int? MethodId { get; private set; }
+    public decimal AvailableVolume { get; private set; }
+    public int? UpdatedByUserId { get; private set; }
+    public Guid? DilutedPreparationId { get; private set; }
+    public string ResultsJson { get; private set; } = "[]";
+
+    public static ReferencePreparation Intermediate(Guid id, string code, string name, int methodId, string methodName,
+        decimal finalVolume, string unit, string resultsJson, DateOnly date, DateOnly expiration, int actor,
+        string? notes, DateTimeOffset now, string fingerprint, Guid? parent)
+    {
+        if (id == Guid.Empty || methodId <= 0 || actor <= 0 || finalVolume <= 0 || expiration < date)
+            throw new ArgumentException("Revise método, volumen, usuario y fechas de la Intermedia.");
+        if (notes?.Trim().Length > 2000) throw new ArgumentException("Las observaciones admiten hasta 2000 caracteres.");
+        return new ReferencePreparation
+        {
+            Id = id, Code = Text(code, 40), Name = Text(name, 200), Kind = "Intermedia", MethodId = methodId,
+            SourceMethod = Text(methodName, 200), FinalVolume = finalVolume, FinalVolumeUnit = Text(unit, 16),
+            AvailableVolume = finalVolume, ResultsJson = resultsJson, PreparationDate = date, ExpirationDate = expiration,
+            PreparedByUserId = actor, UpdatedByUserId = actor, Notes = string.IsNullOrWhiteSpace(notes) ? null : notes.Trim(),
+            CreatedAt = now, UpdatedAt = now, Version = Guid.NewGuid(), RequestFingerprint = Text(fingerprint, 64),
+            DilutedPreparationId = parent, Formula = "C₂ por analito = C₁ × V tomado / V aforo; se conservan los analitos de cada origen"
+        };
+    }
+
+    public void ConsumeVolume(decimal quantity, int actor, DateTimeOffset now, DateOnly today)
+    {
+        if (Status != "Active" || ExpirationDate < today || quantity <= 0 || quantity > AvailableVolume || actor <= 0)
+            throw new InvalidOperationException("El origen no tiene volumen disponible suficiente.");
+        AvailableVolume -= quantity;
+        UpdatedAt = now;
+        UpdatedByUserId = actor;
+        Version = Guid.NewGuid();
+    }
 
     private static string Text(string value, int maximum)
     {

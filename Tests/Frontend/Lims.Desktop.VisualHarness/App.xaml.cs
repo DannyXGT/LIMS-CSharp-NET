@@ -19,6 +19,8 @@ public partial class App : Microsoft.UI.Xaml.Application
     private ShellPage? _shell;
     private ReferenceMaterialsPage? _page;
     private StockPage? _stockPage;
+    private IntermediatePage? _intermediatePage;
+    private readonly FixtureIntermediateApi _intermediateApi = new();
     private readonly FixtureStockApi _stockApi = new();
     private readonly FixtureApi _api = new();
     private readonly DispatcherTimer _timer = new() { Interval = TimeSpan.FromMilliseconds(100) };
@@ -48,7 +50,8 @@ public partial class App : Microsoft.UI.Xaml.Application
         shellModel.RefreshProfile();
         _page = new ReferenceMaterialsPage(new ReferenceMaterialsViewModel(_api, session));
         _stockPage = new StockPage(new StockViewModel(_stockApi, session));
-        _shell = new ShellPage(shellModel, _page, _stockPage) { RequestedTheme = ElementTheme.Dark };
+        _intermediatePage = new IntermediatePage(new IntermediateViewModel(_intermediateApi, session));
+        _shell = new ShellPage(shellModel, _page, _stockPage, _intermediatePage) { RequestedTheme = ElementTheme.Dark };
         var root = new Grid { RequestedTheme = ElementTheme.Dark, Style = (Style)Resources["FixtureRootStyle"] };
         root.RowDefinitions.Add(new RowDefinition { Height = new GridLength(40) });
         root.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
@@ -82,6 +85,41 @@ public partial class App : Microsoft.UI.Xaml.Application
             var navigation = (NavigationView)_shell.FindName("MainNavigation");
             switch (action)
             {
+                case "intermediate":
+                    navigation.SelectedItem = _shell.FindName("PreparationsItem");
+                    await ((PreparationsPage)((ContentControl)_shell.FindName("PreparationsHost")).Content).ShowIntermediateAsync();
+                    break;
+                case "intEditor": _ = _intermediatePage!.OpenCreateAsync(); break;
+                case "intScenario":
+                    var intVm = _intermediatePage!.ViewModel;
+                    intVm.SelectDilution(null);
+                    intVm.Method = intVm.Methods[0]; intVm.Name = "Intermedia de aminas · validación"; intVm.FinalVolume = "100";
+                    intVm.ExpirationDate = DateTimeOffset.UtcNow.ToOffset(TimeSpan.FromHours(-6)).AddDays(30);
+                    ((LimsDatePicker)_intermediatePage.Editor!.FindName("ExpirationPicker")).Date = intVm.ExpirationDate;
+                    var intVolumes = data.GetProperty("volumes").EnumerateArray().Select(v => v.GetDecimal()).ToArray();
+                    for (var intIndex = 0; intIndex < intVolumes.Length; intIndex++)
+                    {
+                        var intRow = intVm.AddComponent(); intRow.Source = _intermediateApi.Sources[intIndex];
+                        intRow.Volume = intVolumes[intIndex].ToString(CultureInfo.InvariantCulture);
+                    }
+                    break;
+                case "intText": ((TextBox)_intermediatePage!.Editor!.FindName(data.GetProperty("field").GetString()!)).Text = data.GetProperty("text").GetString()!; break;
+                case "intDate": ((LimsDatePicker)_intermediatePage!.Editor!.FindName(data.GetProperty("field").GetString()!)).Date = DateTimeOffset.Parse(data.GetProperty("text").GetString()!, CultureInfo.InvariantCulture); break;
+                case "intScroll": ((ScrollViewer)_intermediatePage!.Editor!.FindName("EditorScroll")).ChangeView(null, data.GetProperty("offset").GetDouble(), null, true); break;
+                case "intClose": _intermediatePage!.Editor?.Hide(); break;
+                case "intPopup": ((LimsPopupField)_intermediatePage!.Editor!.FindName(data.GetProperty("field").GetString()!)).OpenPopup(); break;
+                case "intDetail": ((ListView)_intermediatePage!.FindName("PreparationsList")).SelectedIndex = 0; _ = _intermediatePage.OpenDetailAsync(); break;
+                case "intReport":
+                    File.WriteAllText(System.IO.Path.Combine(_directory, "intermediate-report.json"), JsonSerializer.Serialize(new {
+                        FixtureOnly = true, _intermediateApi.CreateCalls, _intermediatePage!.ViewModel.Created,
+                        _intermediatePage.ViewModel.CanSave, _intermediatePage.ViewModel.Calculation,
+                        _intermediatePage.ViewModel.OccupiedPercent, _intermediatePage.ViewModel.VolumeError,
+                        _intermediatePage.ViewModel.Message,
+                        EditorWidth = (_intermediatePage.Editor?.FindName("EditorRoot") as FrameworkElement)?.ActualWidth,
+                        EditorHeight = (_intermediatePage.Editor?.FindName("EditorRoot") as FrameworkElement)?.ActualHeight,
+                        ResultStacked = _intermediatePage.Editor?.FindName("ResultPanel") is FrameworkElement intResult && Grid.GetRow(intResult) == 1,
+                        Sources = _intermediateApi.Sources.Select(src => new { src.Code, src.AvailableVolume }),
+                    }, ReportOptions)); break;
                 case "preparations": navigation.SelectedItem = _shell.FindName("PreparationsItem"); break;
                 case "stockEditor": _ = _stockPage!.OpenCreateAsync(); break;
                 case "stockSelect": ((LimsSearchSelect)_stockPage!.Editor!.FindName("SourceList")).SelectedIndex = data.GetProperty("index").GetInt32(); break;

@@ -56,7 +56,7 @@ public sealed record StockSummary(Guid Id, string Code, string Name, string Sour
     [JsonIgnore] public string ConcentrationDisplay => StockPresentation.Quantity(ActualConcentration, ConcentrationUnit);
     [JsonIgnore] public string FinalDisplay => StockPresentation.Quantity(FinalVolume, FinalVolumeUnit);
     [JsonIgnore] public string DateDisplay => ReferenceMaterialPresentation.Date(PreparationDate);
-    [JsonIgnore] public string StatusLabel => Status switch { "Active" => "Disponible", "Expired" => "Expirado", _ => "No disponible" };
+    [JsonIgnore] public string StatusLabel => Status switch { "Active" => "Disponible", "Expired" => "Expirado", "Depleted" => "Agotado", _ => "No disponible" };
     [JsonIgnore] public string StatusTone => Status == "Active" ? "Success" : "Warning";
     public override string ToString() => $"{Code} · {Name}";
 }

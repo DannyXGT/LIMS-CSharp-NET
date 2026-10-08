@@ -226,18 +226,22 @@ public sealed class StockPostgresTests
         await using var fixture = await Fixture.CreateAsync(100);
         await using var context = fixture.Context();
         // The fixture model owns these tables; remove only the two empty Stock tables in this isolated schema.
-        await context.Database.ExecuteSqlRawAsync("DROP TABLE reference_material_movements; DROP TABLE reference_preparations; DROP SEQUENCE reference_stock_code_sequence;");
+        await context.Database.ExecuteSqlRawAsync("DROP TABLE reference_material_movements; DROP TABLE reference_preparation_components; DROP TABLE reference_preparations; DROP SEQUENCE reference_stock_code_sequence; DROP SEQUENCE reference_intermediate_code_sequence;");
         await context.Database.ExecuteSqlRawAsync("CREATE TABLE \"__EFMigrationsHistory\" (\"MigrationId\" varchar(150) PRIMARY KEY, \"ProductVersion\" varchar(32) NOT NULL); INSERT INTO \"__EFMigrationsHistory\" VALUES ('20261001225215_FinalizeReferenceMaterialCatalogs', '10.0.10');");
         var scriptPath = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../../../artifacts/sql/reference_stock.sql"));
         var script = await File.ReadAllTextAsync(scriptPath);
         await context.Database.ExecuteSqlRawAsync(script);
         await context.Database.ExecuteSqlRawAsync(script);
+        var intermediatePath = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../../../artifacts/sql/reference_intermediate.sql"));
+        var intermediateScript = await File.ReadAllTextAsync(intermediatePath);
+        await context.Database.ExecuteSqlRawAsync(intermediateScript);
+        await context.Database.ExecuteSqlRawAsync(intermediateScript);
         Assert.False(context.Database.HasPendingModelChanges());
         Assert.True((await Service(context).CreateAsync(fixture.Request(50), 42, CancellationToken.None)).IsSuccess);
     }
 
     private static StockService Service(LimsDbContext context) => new(new StockRepository(context), TimeProvider.System);
-    private sealed class Fixture(string connectionString, ReferenceMaterial source) : IAsyncDisposable
+    internal sealed class Fixture(string connectionString, ReferenceMaterial source) : IAsyncDisposable
     {
         public ReferenceMaterial Source { get; } = source;
         public LimsDbContext Context(IInterceptor? interceptor = null, bool retryIo = false)

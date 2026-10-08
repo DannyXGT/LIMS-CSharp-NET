@@ -113,12 +113,12 @@ public sealed class StockRepository(LimsDbContext dbContext) : IStockRepository
 
     public async Task<StockDetail?> GetAsync(Guid id, CancellationToken cancellationToken)
     {
-        var item = await dbContext.ReferencePreparations.AsNoTracking().SingleOrDefaultAsync(item => item.Id == id, cancellationToken).ConfigureAwait(false);
+        var item = await dbContext.ReferencePreparations.AsNoTracking().SingleOrDefaultAsync(item => item.Id == id && item.Kind == "Stock", cancellationToken).ConfigureAwait(false);
         if (item is null) return null;
         var movement = await dbContext.ReferenceMaterialMovements.AsNoTracking().SingleAsync(item => item.PreparationId == id, cancellationToken).ConfigureAwait(false);
         var actor = await dbContext.Users.AsNoTracking().Where(user => user.Id == item.PreparedByUserId)
             .Select(user => user.Name).SingleOrDefaultAsync(cancellationToken).ConfigureAwait(false) ?? "Usuario no informado";
-        var source = new StockSource(item.SourceMaterialId, item.SourceName, item.SourceCasNumber, item.SourceCatalogNumber,
+        var source = new StockSource(item.SourceMaterialId!.Value, item.SourceName, item.SourceCasNumber, item.SourceCatalogNumber,
             item.SourceLot, item.SourceBrand, item.SourceMethod, item.PurityPercentUsed, movement.BalanceBefore,
             item.SourceTotalQuantity, item.SourceUnit, item.SourceExpirationDate, item.SourceLocation, item.SourceVersion);
         var calculation = new StockCalculation(item.CalculatedWeight, item.ActualWeight, item.SourceUnit,
@@ -136,6 +136,6 @@ public sealed class StockRepository(LimsDbContext dbContext) : IStockRepository
         item.ExpirationDate, item.Location.Name, item.Version, item.ReceivedDate);
     private static StockSummary Summary(ReferencePreparation item, string actor) => new(item.Id, item.Code, item.Name,
         item.SourceName, item.SourceLot, item.TargetConcentration, item.ActualConcentration, item.ConcentrationUnit,
-        item.FinalVolume, item.FinalVolumeUnit, item.PreparationDate, actor, item.ExpirationDate < DateOnly.FromDateTime(DateTimeOffset.UtcNow.ToOffset(TimeSpan.FromHours(-6)).DateTime) ? "Expired" : item.Status, item.ActualWeight, item.ActualWeightUnit, item.ExpirationDate);
+        item.FinalVolume, item.FinalVolumeUnit, item.PreparationDate, actor, item.ExpirationDate < DateOnly.FromDateTime(DateTimeOffset.UtcNow.ToOffset(TimeSpan.FromHours(-6)).DateTime) ? "Expired" : item.AvailableVolume == 0 ? "Depleted" : item.Status, item.ActualWeight, item.ActualWeightUnit, item.ExpirationDate);
     private static OperationResult<StockDetail> Failure(string message) => OperationResult.Failure<StockDetail>(new OperationError(ErrorCodes.Conflict, message));
 }

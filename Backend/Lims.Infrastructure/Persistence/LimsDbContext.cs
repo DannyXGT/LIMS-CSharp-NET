@@ -29,6 +29,7 @@ public sealed class LimsDbContext(DbContextOptions<LimsDbContext> options) : DbC
     public DbSet<ReferenceLocation> ReferenceLocations => Set<ReferenceLocation>();
 
     public DbSet<ReferencePreparation> ReferencePreparations => Set<ReferencePreparation>();
+    public DbSet<ReferencePreparationComponent> ReferencePreparationComponents => Set<ReferencePreparationComponent>();
     public DbSet<ReferenceMaterialMovement> ReferenceMaterialMovements => Set<ReferenceMaterialMovement>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
