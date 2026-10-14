@@ -277,11 +277,12 @@ public sealed class AuthenticationEndpointsTests : IClassFixture<AuthenticationA
         Assert.Equal(HttpStatusCode.NotFound, allowed.StatusCode);
     }
 
-    private static string CreateAccessToken(params string[] permissions)
+    private string CreateAccessToken(params string[] permissions)
         => CreateAccessTokenForRole("Administrador", permissions);
 
-    private static string CreateAccessTokenForRole(string role, params string[] permissions)
+    private string CreateAccessTokenForRole(string role, params string[] permissions)
     {
+        _factory.SetIdentity(role, permissions);
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(AuthenticationApiFactory.SigningKey));
         var claims = new List<Claim>
         {

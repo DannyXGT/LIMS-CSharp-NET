@@ -49,15 +49,16 @@ public sealed record StockCalculation(
 public sealed record StockSummary(Guid Id, string Code, string Name, string SourceName, string SourceLot,
     decimal TargetConcentration, decimal ActualConcentration, string ConcentrationUnit,
     decimal FinalVolume, string FinalVolumeUnit, DateOnly PreparationDate, string PreparedBy, string Status,
-    decimal ActualWeight = 0, string ActualWeightUnit = "mg", DateOnly? ExpirationDate = null)
+    decimal ActualWeight = 0, string ActualWeightUnit = "mg", DateOnly? ExpirationDate = null, decimal? AvailableVolume = null)
 {
+    [JsonIgnore] public StockAvailability Availability => new(FinalVolume, FinalVolumeUnit, AvailableVolume);
     [JsonIgnore] public string WeightDisplay => StockPresentation.Quantity(ActualWeight, ActualWeightUnit);
     [JsonIgnore] public string ExpirationDisplay => ExpirationDate is { } date ? ReferenceMaterialPresentation.Date(date) : "No informada";
     [JsonIgnore] public string ConcentrationDisplay => StockPresentation.Quantity(ActualConcentration, ConcentrationUnit);
     [JsonIgnore] public string FinalDisplay => StockPresentation.Quantity(FinalVolume, FinalVolumeUnit);
     [JsonIgnore] public string DateDisplay => ReferenceMaterialPresentation.Date(PreparationDate);
-    [JsonIgnore] public string StatusLabel => Status switch { "Active" => "Disponible", "Expired" => "Expirado", "Depleted" => "Agotado", _ => "No disponible" };
-    [JsonIgnore] public string StatusTone => Status == "Active" ? "Success" : "Warning";
+    [JsonIgnore] public string StatusLabel => Status == "Active" && Availability.IsDepleted ? "Agotado" : Status switch { "Active" => "Disponible", "Expired" => "Expirado", "Depleted" => "Agotado", _ => "No disponible" };
+    [JsonIgnore] public string StatusTone => Status == "Depleted" || Availability.IsDepleted ? "Danger" : Status == "Active" ? "Success" : "Warning";
     public override string ToString() => $"{Code} · {Name}";
 }
 public sealed record StockPage(IReadOnlyList<StockSummary> Items, int Page, int PageSize, int TotalCount);

@@ -4,6 +4,7 @@ using Lims.Application.Common;
 using Lims.Application.ReferenceMaterials;
 using Lims.Contracts.Errors;
 using Lims.Contracts.ReferenceMaterials;
+using Lims.Contracts.Permissions;
 
 namespace Lims.Api.ReferenceMaterials;
 
@@ -23,8 +24,7 @@ internal static class ReferenceMaterialEndpoints
             .RequireAuthorization(ReferenceMaterialPermissions.Archive);
         group.MapPost("/{id:guid}/replacement", ReplaceAsync)
             .RequireAuthorization(
-                ReferenceMaterialPermissions.Create,
-                ReferenceMaterialPermissions.Archive);
+                PermissionCatalog.Replace);
         return endpoints;
     }
 

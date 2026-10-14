@@ -10,10 +10,111 @@ namespace Lims.Desktop.Tests;
 public sealed class StockViewModelTests
 {
     [Fact]
+    public async Task EmptyListHasNoSelectionAndCannotOpenDetail()
+    {
+        var api = new FakeStockApi { ListItems = [] };
+        var vm = Model(api);
+        await vm.LoadAsync(null, 1, CancellationToken.None);
+        Assert.Null(vm.SelectedPreparation);
+        Assert.False(vm.OpenSelectedPreparationCommand.CanExecute(null));
+        await vm.OpenSelectedPreparationCommand.ExecuteAsync(null);
+        Assert.Empty(api.DetailIds);
+        Assert.True(vm.IsEmpty);
+        Assert.False(vm.HasSearchCriteria);
+        Assert.Equal("0 preparaciones", vm.PageDisplay);
+    }
+
+    [Fact]
+    public async Task LoadedRowDoesNotEnableDetailUntilActuallySelected()
+    {
+        var api = new FakeStockApi();
+        var vm = Model(api);
+        await vm.LoadAsync(null, 1, CancellationToken.None);
+        Assert.Single(vm.Items);
+        Assert.Null(vm.SelectedPreparation);
+        Assert.False(vm.OpenSelectedPreparationCommand.CanExecute(null));
+        var notifications = 0;
+        vm.OpenSelectedPreparationCommand.CanExecuteChanged += (_, _) => notifications++;
+        vm.SelectedPreparation = vm.Items[0];
+        Assert.True(vm.OpenSelectedPreparationCommand.CanExecute(null));
+        Assert.True(notifications > 0);
+        vm.SelectedPreparation = api.Created.Preparation with { Id = Guid.NewGuid() };
+        Assert.False(vm.OpenSelectedPreparationCommand.CanExecute(null));
+    }
+
+    [Fact]
+    public async Task CommandOpensExactlySelectedPreparationAndStaysDisabledWhileSheetIsOpen()
+    {
+        var api = new FakeStockApi();
+        var vm = Model(api);
+        await vm.LoadAsync(null, 1, CancellationToken.None);
+        vm.SelectedPreparation = vm.Items[0];
+        StockDetail? opened = null;
+        var close = new TaskCompletionSource();
+        vm.PreparationOpened += detail => { opened = detail; return close.Task; };
+        var execution = vm.OpenSelectedPreparationCommand.ExecuteAsync(null);
+        Assert.Same(api.Created, opened);
+        Assert.Equal(vm.SelectedPreparation.Id, Assert.Single(api.DetailIds));
+        Assert.False(vm.OpenSelectedPreparationCommand.CanExecute(null));
+        close.SetResult();
+        await execution;
+        Assert.True(vm.OpenSelectedPreparationCommand.CanExecute(null));
+    }
+
+    [Fact]
+    public async Task RefreshPreservesSelectionByIdentityAndClearsItWhenMissing()
+    {
+        var api = new FakeStockApi();
+        var vm = Model(api);
+        await vm.LoadAsync(null, 1, CancellationToken.None);
+        vm.SelectedPreparation = vm.Items[0];
+        var fresh = api.Created.Preparation with { Name = "Actualizado" };
+        api.ListItems = [fresh];
+        await vm.LoadAsync(null, 1, CancellationToken.None);
+        Assert.Same(fresh, vm.SelectedPreparation);
+        api.ListItems = [];
+        await vm.LoadAsync(null, 1, CancellationToken.None);
+        Assert.Null(vm.SelectedPreparation);
+        Assert.False(vm.OpenSelectedPreparationCommand.CanExecute(null));
+    }
+
+    [Fact]
+    public async Task TabSelectionResetDisablesDetailAndRejectsPendingDetail()
+    {
+        var api = new FakeStockApi();
+        var vm = Model(api);
+        await vm.LoadAsync(null, 1, CancellationToken.None);
+        vm.SelectedPreparation = vm.Items[0];
+        var response = new TaskCompletionSource<ApiCallResult<StockDetail>>();
+        api.DetailHandler = _ => response.Task;
+        var opens = 0;
+        vm.PreparationOpened += _ => { opens++; return Task.CompletedTask; };
+        var execution = vm.OpenSelectedPreparationCommand.ExecuteAsync(null);
+        vm.ClearSelection();
+        response.SetResult(Ok(api.Created));
+        await execution;
+        Assert.Null(vm.SelectedPreparation);
+        Assert.False(vm.OpenSelectedPreparationCommand.CanExecute(null));
+        Assert.Equal(0, opens);
+    }
+
+    [Fact]
+    public async Task EmptySearchUsesCriteriaMessageAndClearingRestoresCreateState()
+    {
+        var vm = Model(new FakeStockApi { ListItems = [] });
+        await vm.LoadAsync("inexistente", 1, CancellationToken.None);
+        Assert.True(vm.HasSearchCriteria);
+        Assert.Equal("No encontramos preparaciones con estos criterios.", vm.EmptyTitle);
+        await vm.LoadAsync(null, 1, CancellationToken.None);
+        Assert.False(vm.HasSearchCriteria);
+        Assert.Equal("No hay preparaciones Stock", vm.EmptyTitle);
+    }
+
+    [Fact]
     public async Task ViewerCanListButCannotCreateOrQuerySources()
     {
         var api = new FakeStockApi();
-        var vm = new StockViewModel(api, new Session("Usuario", ["reference_materials.view"]));
+        var vm = new StockViewModel(api, new Session("Usuario", ["stock.view"]));
         await vm.LoadAsync(null, 1, CancellationToken.None);
         await vm.SearchSourcesAsync(null, 1, CancellationToken.None);
         Assert.True(vm.CanView);
@@ -95,6 +196,22 @@ public sealed class StockViewModelTests
     }
 
     [Fact]
+    public async Task ServerFailureShowsSupportReferenceAndRetryPreservesTheRequest()
+    {
+        var api = new FakeStockApi { CreateError = new(ErrorCodes.UnexpectedError,
+            "Ocurrió un error inesperado. Use el identificador de soporte para solicitar ayuda.", "stock-save-123") };
+        var vm = Model(api);
+        await ReadyAsync(vm);
+        Assert.False(await vm.SaveAsync(CancellationToken.None));
+        Assert.Contains("Referencia de soporte: stock-save-123", vm.Message, StringComparison.Ordinal);
+        Assert.Null(vm.Created);
+        Assert.Equal(100, vm.SelectedSource!.AvailableQuantity);
+        api.CreateError = null;
+        Assert.True(await vm.SaveAsync(CancellationToken.None));
+        Assert.Equal(api.Requests[0], api.Requests[1]);
+    }
+
+    [Fact]
     public async Task NewDraftResetsIdentityAndValidationAcceptsLocalizedDecimals()
     {
         var api = new FakeStockApi();
@@ -153,6 +270,10 @@ public sealed class StockViewModelTests
     private static ApiCallResult<T> Ok<T>(T value) => new(true, value, null, 200);
     private sealed class FakeStockApi : IStockApiClient
     {
+        public IReadOnlyList<StockSummary>? ListItems { get; set; }
+        public List<Guid> DetailIds { get; } = [];
+        public Func<Guid, Task<ApiCallResult<StockDetail>>>? DetailHandler { get; set; }
+        public ApiError? CreateError { get; set; }
         public StockCalculation Result { get; set; } = Calculation;
         public int ListCalls { get; private set; }
         public int SourceCalls { get; private set; }
@@ -170,12 +291,13 @@ public sealed class StockViewModelTests
         public Task<ApiCallResult<StockDetail>> CreateAsync(CreateStockRequest request, CancellationToken cancellationToken)
         {
             Requests.Add(request);
+            if (CreateError is { } error) return Task.FromResult(new ApiCallResult<StockDetail>(false, null, error, 500));
             if (CreateErrorCode is { } code) return Task.FromResult(new ApiCallResult<StockDetail>(false, null, new ApiError(code, "El estándar cambió.", string.Empty), 409));
             if (FailFirstCreate && Requests.Count == 1) throw new HttpRequestException("Simulated lost response");
             return Task.FromResult(Ok(Created));
         }
-        public Task<ApiCallResult<StockPage>> ListAsync(string? search, int page, CancellationToken cancellationToken) { ListCalls++; return Task.FromResult(Ok(new StockPage([Created.Preparation], page, 25, 1))); }
-        public Task<ApiCallResult<StockDetail>> GetAsync(Guid id, CancellationToken cancellationToken) => Task.FromResult(Ok(Created));
+        public Task<ApiCallResult<StockPage>> ListAsync(string? search, int page, CancellationToken cancellationToken) { ListCalls++; var items = ListItems ?? [Created.Preparation]; return Task.FromResult(Ok(new StockPage(items, page, 25, items.Count))); }
+        public Task<ApiCallResult<StockDetail>> GetAsync(Guid id, CancellationToken cancellationToken) { DetailIds.Add(id); return DetailHandler?.Invoke(id) ?? Task.FromResult(Ok(Created)); }
     }
     private sealed class Session(string role, IReadOnlyList<string> permissions) : ISessionService
     {

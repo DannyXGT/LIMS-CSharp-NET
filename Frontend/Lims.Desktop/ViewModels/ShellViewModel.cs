@@ -2,13 +2,16 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Lims.Desktop.Services;
 using Lims.Contracts.ReferenceMaterials;
+using Lims.Contracts.Permissions;
+using Lims.Desktop.Http;
 
 namespace Lims.Desktop.ViewModels;
 
 public sealed partial class ShellViewModel(
     ISessionService session,
     IAuthenticationGateway authentication,
-    INavigationService navigation) : ObservableObject
+    INavigationService navigation,
+    IPermissionsApiClient? permissionsApi = null) : ObservableObject
 {
     [ObservableProperty]
     public partial string DisplayName { get; set; } = string.Empty;
@@ -31,9 +34,32 @@ public sealed partial class ShellViewModel(
         }
     }
 
-    public bool CanViewReferenceMaterials =>
+    private bool _accessVerified = true;
+    public bool HasAccessWarning => !_accessVerified;
+
+    public bool CanViewReferenceMaterials => _accessVerified && (
         string.Equals(session.Profile?.Role, "Administrador", StringComparison.OrdinalIgnoreCase) ||
-        session.Profile?.Permissions.Contains(ReferenceMaterialPermissions.View, StringComparer.Ordinal) == true;
+        session.Profile?.Permissions.Contains(ReferenceMaterialPermissions.View, StringComparer.Ordinal) == true);
+
+    public bool IsAdministrator => session.Profile?.Role == "Administrador";
+    public bool CanViewStock => Has(PermissionCatalog.StockView);
+    public bool CanViewIntermediate => Has(PermissionCatalog.IntermediateView);
+    public bool CanViewPreparations => CanViewStock || CanViewIntermediate;
+    private bool Has(string code) => _accessVerified && (IsAdministrator || session.Profile?.Permissions.Contains(code, StringComparer.Ordinal) == true);
+    public async Task<bool> RefreshAccessAsync()
+    {
+        if (permissionsApi is null) { RefreshProfile(); return true; }
+        var response = await permissionsApi.EffectiveAsync(CancellationToken.None);
+        if (response.IsSuccess && response.Value is { } current)
+        { _accessVerified = true; session.UpdateAuthorization(current.Role, current.Permissions); RefreshProfile(); return true; }
+        // Service failures do not change identity. Operational access needs a fresh server response.
+        _accessVerified = false;
+        RefreshProfile();
+        SessionMessage = response.StatusCode is 401 or 403
+            ? "No se pudo validar la sesión. Inicie sesión nuevamente."
+            : "No se pudo verificar el acceso con el servidor. Reintente para recuperar los módulos.";
+        return false;
+    }
 
     public void RefreshProfile()
     {
@@ -42,8 +68,13 @@ public sealed partial class ShellViewModel(
         Role = profile?.Role ?? string.Empty;
         Department = profile?.Department ?? "Sin departamento";
         SessionMessage = "Sesión activa";
+        OnPropertyChanged(nameof(HasAccessWarning));
         OnPropertyChanged(nameof(Initials));
         OnPropertyChanged(nameof(CanViewReferenceMaterials));
+        OnPropertyChanged(nameof(IsAdministrator));
+        OnPropertyChanged(nameof(CanViewStock));
+        OnPropertyChanged(nameof(CanViewIntermediate));
+        OnPropertyChanged(nameof(CanViewPreparations));
     }
 
     [RelayCommand(AllowConcurrentExecutions = false)]

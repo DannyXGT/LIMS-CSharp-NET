@@ -14,11 +14,13 @@ public sealed partial class StockPage : Page
     {
         ViewModel = viewModel;
         InitializeComponent();
+        ViewModel.PreparationOpened += ShowSelectedDetailAsync;
         // ListView can consume Enter internally; keep the detail action available to keyboard users.
         PreparationsList.AddHandler(UIElement.KeyDownEvent, new KeyEventHandler(OnListKeyDown), true);
     }
     public StockViewModel ViewModel { get; }
     public StockEditorDialog? Editor { get; private set; }
+    public StockDetailDialog? DetailSheet { get; private set; }
     public Task LoadAsync() => ViewModel.LoadAsync(SearchBox.Text, 1, CancellationToken.None);
     public async Task OpenCreateAsync()
     {
@@ -40,22 +42,43 @@ public sealed partial class StockPage : Page
         finally { Editor = null; _dialogOpen = false; }
     }
     private async void OnNewClick(object sender, RoutedEventArgs e) => await OpenCreateAsync();
-    private async void OnSearchClick(object sender, RoutedEventArgs e) => await LoadAsync();
+    private async void OnClearSearch(object sender, RoutedEventArgs e) { SearchBox.Text = string.Empty; await LoadAsync(); }
     private async void OnSearchKeyDown(object sender, KeyRoutedEventArgs e) { if (e.Key == VirtualKey.Enter) { e.Handled = true; await LoadAsync(); } }
     private async void OnPreviousPage(object sender, RoutedEventArgs e) { if (ViewModel.Page > 1) await ViewModel.LoadAsync(SearchBox.Text, ViewModel.Page - 1, CancellationToken.None); }
     private async void OnNextPage(object sender, RoutedEventArgs e) { if (ViewModel.Page * 25 < ViewModel.TotalCount) await ViewModel.LoadAsync(SearchBox.Text, ViewModel.Page + 1, CancellationToken.None); }
-    private async void OnDetailClick(object sender, RoutedEventArgs e) => await OpenDetailAsync();
-    private async void OnDoubleTapped(object sender, DoubleTappedRoutedEventArgs e) => await OpenDetailAsync();
-    private async void OnListKeyDown(object sender, KeyRoutedEventArgs e) { if (e.Key == VirtualKey.Enter) { e.Handled = true; await OpenDetailAsync(); } }
-    public async Task OpenDetailAsync()
+    private async void OnDoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
     {
-        if (_dialogOpen || PreparationsList.SelectedItem is not StockSummary item) return;
+        if (!SelectRow(e.OriginalSource as DependencyObject)) return;
+        e.Handled = true;
+        await OpenDetailAsync();
+    }
+    private bool SelectRow(DependencyObject? source)
+    {
+        while (source is not null && source != PreparationsList && source is not ListViewItem)
+            source = Microsoft.UI.Xaml.Media.VisualTreeHelper.GetParent(source);
+        if (source is not ListViewItem row) return false;
+        PreparationsList.SelectedItem = PreparationsList.ItemFromContainer(row);
+        return true;
+    }
+    private async void OnListKeyDown(object sender, KeyRoutedEventArgs e)
+    {
+        if (e.Key != VirtualKey.Enter) return;
+        SelectRow(e.OriginalSource as DependencyObject);
+        e.Handled = true;
+        await OpenDetailAsync();
+    }
+    public Task OpenDetailAsync() => ViewModel.OpenSelectedPreparationCommand.CanExecute(null)
+        ? ViewModel.OpenSelectedPreparationCommand.ExecuteAsync(null) : Task.CompletedTask;
+    private async Task ShowSelectedDetailAsync(StockDetail detail)
+    {
+        if (_dialogOpen) return;
         _dialogOpen = true;
         try
         {
-            if (await ViewModel.OpenDetailAsync(item.Id, CancellationToken.None))
-                await new StockDetailDialog(ViewModel.Detail!) { XamlRoot = XamlRoot, RequestedTheme = RequestedTheme }.ShowAsync();
+            DetailSheet = new StockDetailDialog(detail) { XamlRoot = XamlRoot, RequestedTheme = RequestedTheme };
+            await DetailSheet.ShowAsync();
         }
-        finally { _dialogOpen = false; }
+        finally { DetailSheet = null; _dialogOpen = false; }
     }
+
 }

@@ -1,5 +1,4 @@
 using Lims.DesignSystem.Presentation;
-using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 
 namespace Lims.Desktop.Views;
@@ -8,26 +7,44 @@ public sealed partial class PreparationsPage : Page
 {
     private readonly StockPage _stock;
     private readonly IntermediatePage _intermediate;
-    private bool _showIntermediate;
+    private bool ShowIntermediate => PreparationTabs.SelectedIndex == 1;
+    public string CreateLabel => ShowIntermediate ? "Nueva Intermedia" : "Nuevo Stock";
+    public bool CanCreate => ShowIntermediate ? _intermediate.ViewModel.CanCreate : _stock.ViewModel.CanCreate;
+    public event EventHandler? SelectionChanged;
     public PreparationsPage(StockPage stock, IntermediatePage intermediate)
     {
         _stock = stock; _intermediate = intermediate; InitializeComponent(); PreparationHost.Content = stock;
     }
-    public Task LoadAsync() => _showIntermediate ? _intermediate.LoadAsync() : _stock.LoadAsync();
+    public Task LoadAsync() => ShowIntermediate ? _intermediate.LoadAsync() : _stock.LoadAsync();
+    public Task OpenCreateAsync() => ShowIntermediate ? _intermediate.OpenCreateAsync() : _stock.OpenCreateAsync();
+    public void RefreshAccess(bool stock, bool intermediate)
+    {
+        _stock.ViewModel.RefreshPermissions(); _intermediate.ViewModel.RefreshPermissions();
+        StockTab.Visibility = stock ? Microsoft.UI.Xaml.Visibility.Visible : Microsoft.UI.Xaml.Visibility.Collapsed;
+        StockTab.IsEnabled = stock;
+        IntermediateTab.Visibility = intermediate ? Microsoft.UI.Xaml.Visibility.Visible : Microsoft.UI.Xaml.Visibility.Collapsed;
+        IntermediateTab.IsEnabled = intermediate;
+        if (ShowIntermediate && !intermediate && stock) PreparationTabs.SelectedIndex = 0;
+        if (!ShowIntermediate && !stock && intermediate) PreparationTabs.SelectedIndex = 1;
+        if (!stock) { _stock.ViewModel.Items.Clear(); _stock.ViewModel.ClearSelection(); }
+        if (!intermediate) { _intermediate.ViewModel.Items.Clear(); _intermediate.ViewModel.ClearSelection(); }
+        SelectionChanged?.Invoke(this, EventArgs.Empty);
+    }
     public async Task ShowIntermediateAsync()
     {
-        _showIntermediate = true; UpdateTabs(); PreparationHost.Content = _intermediate;
-        Motion.Enter(_intermediate, y: 4, milliseconds: 150); await _intermediate.LoadAsync();
+        if (ShowIntermediate) await _intermediate.LoadAsync();
+        else PreparationTabs.SelectedIndex = 1;
     }
-    private async void OnStock(object sender, RoutedEventArgs args)
+    private async void OnTabChanged(object? sender, EventArgs args)
     {
-        _showIntermediate = false; UpdateTabs(); PreparationHost.Content = _stock;
-        Motion.Enter(_stock, y: 4, milliseconds: 150); await _stock.LoadAsync();
-    }
-    private async void OnIntermediate(object sender, RoutedEventArgs args) => await ShowIntermediateAsync();
-    private void UpdateTabs()
-    {
-        StockTab.Style = (Style)Application.Current.Resources[_showIntermediate ? "LimsSecondaryButtonStyle" : "LimsPrimaryButtonStyle"];
-        IntermediateTab.Style = (Style)Application.Current.Resources[_showIntermediate ? "LimsPrimaryButtonStyle" : "LimsSecondaryButtonStyle"];
+        _stock.ViewModel.ClearSelection();
+        _intermediate.ViewModel.ClearSelection();
+        PreparationHost.Content = ShowIntermediate ? (Page)_intermediate : _stock;
+        PreparationDescription.Text = ShowIntermediate
+            ? "Soluciones intermedias compuestas a partir de preparaciones."
+            : "Preparaciones trazables desde un estándar.";
+        SelectionChanged?.Invoke(this, EventArgs.Empty);
+        Motion.Enter(PreparationHost, x: ShowIntermediate ? 6 : -6, milliseconds: 160);
+        await LoadAsync();
     }
 }

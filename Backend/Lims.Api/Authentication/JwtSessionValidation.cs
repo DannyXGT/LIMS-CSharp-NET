@@ -1,5 +1,7 @@
 using System.Globalization;
 using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using Lims.Application.Permissions;
 using Lims.Api.Http;
 using Lims.Application.Authentication.Ports;
 using Lims.Contracts.Errors;
@@ -52,6 +54,17 @@ internal static class JwtSessionValidation
         if (session is null || session.UserId != userId)
         {
             context.Fail("Server-side session is no longer active.");
+            return;
+        }
+        var permissions = context.HttpContext.RequestServices.GetRequiredService<IPermissionRepository>();
+        var current = await permissions.EffectiveAsync(userId, context.HttpContext.RequestAborted).ConfigureAwait(false);
+        if (current is null) { context.Fail("User is no longer active."); return; }
+        if (context.Principal?.Identity is ClaimsIdentity identity)
+        {
+            foreach (var claim in identity.FindAll(ClaimTypes.Role).Concat(identity.FindAll(JwtAccessTokenService.PermissionClaim)).ToArray())
+                identity.RemoveClaim(claim);
+            identity.AddClaim(new Claim(ClaimTypes.Role, current.Role));
+            identity.AddClaims(current.Permissions.Select(code => new Claim(JwtAccessTokenService.PermissionClaim, code)));
         }
     }
 }

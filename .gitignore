@@ -8,6 +8,8 @@ artifacts/sql/*
 !artifacts/sql/reference_material_catalogs.sql
 !artifacts/sql/reference_stock.sql
 !artifacts/sql/reference_intermediate.sql
+!artifacts/sql/reference_preparation_decimal_scale.sql
+!artifacts/sql/preflight_reference_preparation_decimal_scale.sql
 !artifacts/validation/
 artifacts/validation/*
 !artifacts/validation/stock/

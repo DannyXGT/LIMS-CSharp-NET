@@ -11,7 +11,8 @@ namespace Lims.Desktop.VisualHarness;
 internal sealed class FixtureSession : ISessionService
 {
     public string? AccessToken => null;
-    public UserProfile? Profile { get; } = new(1, "Usuario de prueba", "fixture@example.invalid", "Administrador", "Validación visual", []);
+    public UserProfile? Profile { get; private set; } = new(1, "Usuario de prueba", "fixture@example.invalid", "Administrador", "Validación visual", []);
+    public void UpdateAuthorization(string role, IReadOnlyList<string> permissions) => Profile = Profile! with { Role = role, Permissions = permissions };
     public Task SetAuthenticatedAsync(AuthenticationResponse response, CancellationToken cancellationToken) => Task.CompletedTask;
     public Task<string?> ReadRefreshTokenAsync(CancellationToken cancellationToken) => Task.FromResult<string?>(null);
     public Task ClearAsync(CancellationToken cancellationToken) => Task.CompletedTask;

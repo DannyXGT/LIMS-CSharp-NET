@@ -26,6 +26,8 @@
   </ItemGroup>
   <!-- Compile the real presentation sources. No production startup/auth/HTTP is included. -->
   <ItemGroup>
+    <Page Include="../../../Frontend/Lims.Desktop/Views/PermissionsPage.xaml" Link="Views/PermissionsPage.xaml" />
+    <Compile Include="../../../Frontend/Lims.Desktop/Views/PermissionsPage.xaml.cs;../../../Frontend/Lims.Desktop/ViewModels/PermissionsViewModel.cs;../../../Frontend/Lims.Desktop/Http/IPermissionsApiClient.cs" Link="Permissions/%(Filename)%(Extension)" />
     <Page Include="../../../Frontend/Lims.Desktop/Views/PreparationsPage.xaml;../../../Frontend/Lims.Desktop/Views/IntermediatePage.xaml;../../../Frontend/Lims.Desktop/Views/IntermediateEditorDialog.xaml;../../../Frontend/Lims.Desktop/Views/IntermediateDetailDialog.xaml;../../../Frontend/Lims.Desktop/Views/GraduatedCylinder.xaml" Link="Views/%(Filename)%(Extension)" />
     <Compile Include="../../../Frontend/Lims.Desktop/Views/PreparationsPage.xaml.cs;../../../Frontend/Lims.Desktop/Views/IntermediatePage.xaml.cs;../../../Frontend/Lims.Desktop/Views/IntermediateEditorDialog.xaml.cs;../../../Frontend/Lims.Desktop/Views/IntermediateDetailDialog.xaml.cs;../../../Frontend/Lims.Desktop/Views/GraduatedCylinder.xaml.cs;../../../Frontend/Lims.Desktop/ViewModels/IntermediateViewModel.cs;../../../Frontend/Lims.Desktop/Http/IIntermediateApiClient.cs" Link="Intermediate/%(Filename)%(Extension)" />
     <Page Include="../../../Frontend/Lims.Desktop/Views/StockPage.xaml;../../../Frontend/Lims.Desktop/Views/StockEditorDialog.xaml;../../../Frontend/Lims.Desktop/Views/StockDetailDialog.xaml" Link="Views/%(Filename)%(Extension)" />

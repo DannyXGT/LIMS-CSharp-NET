@@ -8,6 +8,8 @@ public interface ISessionService
 
     UserProfile? Profile { get; }
 
+    void UpdateAuthorization(string role, IReadOnlyList<string> permissions) { }
+
     Task SetAuthenticatedAsync(AuthenticationResponse response, CancellationToken cancellationToken);
 
     Task<string?> ReadRefreshTokenAsync(CancellationToken cancellationToken);

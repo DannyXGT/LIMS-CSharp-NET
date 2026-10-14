@@ -37,6 +37,7 @@ public sealed class LimsDbContext(DbContextOptions<LimsDbContext> options) : DbC
         ArgumentNullException.ThrowIfNull(modelBuilder);
 
         ConfigureLegacyIdentity(modelBuilder);
+        PermissionModel.Configure(modelBuilder);
         ConfigureAuthentication(modelBuilder);
         ConfigureReferenceMaterialCatalogs(modelBuilder);
         ConfigureReferenceMaterials(modelBuilder);

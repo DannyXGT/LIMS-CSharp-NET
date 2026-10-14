@@ -155,6 +155,56 @@ namespace Lims.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Lims.Domain.Identity.PermissionCode", b =>
+                {
+                    b.Property<string>("Code")
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)")
+                        .HasColumnName("permission_code");
+
+                    b.HasKey("Code");
+
+                    b.ToTable("permission_catalog", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Code = "reference_materials.view"
+                        },
+                        new
+                        {
+                            Code = "reference_materials.create"
+                        },
+                        new
+                        {
+                            Code = "reference_materials.edit"
+                        },
+                        new
+                        {
+                            Code = "reference_materials.archive"
+                        },
+                        new
+                        {
+                            Code = "reference_materials.replace"
+                        },
+                        new
+                        {
+                            Code = "stock.view"
+                        },
+                        new
+                        {
+                            Code = "stock.create"
+                        },
+                        new
+                        {
+                            Code = "intermedia.view"
+                        },
+                        new
+                        {
+                            Code = "intermedia.create"
+                        });
+                });
+
             modelBuilder.Entity("Lims.Domain.Identity.Role", b =>
                 {
                     b.Property<int>("Id")
@@ -232,6 +282,81 @@ namespace Lims.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Lims.Domain.Identity.UserPermissionAssignment", b =>
+                {
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer")
+                        .HasColumnName("user_id");
+
+                    b.Property<string>("Code")
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)")
+                        .HasColumnName("permission_code");
+
+                    b.Property<int>("ActorUserId")
+                        .HasColumnType("integer")
+                        .HasColumnName("actor_user_id");
+
+                    b.Property<DateTimeOffset>("ChangedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("changed_at");
+
+                    b.Property<bool>("IsGranted")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_granted");
+
+                    b.HasKey("UserId", "Code");
+
+                    b.HasIndex("ActorUserId");
+
+                    b.HasIndex("Code");
+
+                    b.ToTable("user_permission_assignments", (string)null);
+                });
+
+            modelBuilder.Entity("Lims.Domain.Identity.UserPermissionAudit", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<int>("ActorUserId")
+                        .HasColumnType("integer")
+                        .HasColumnName("actor_user_id");
+
+                    b.Property<bool>("After")
+                        .HasColumnType("boolean")
+                        .HasColumnName("after_granted");
+
+                    b.Property<DateTimeOffset>("At")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("changed_at");
+
+                    b.Property<bool>("Before")
+                        .HasColumnType("boolean")
+                        .HasColumnName("before_granted");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)")
+                        .HasColumnName("permission_code");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ActorUserId");
+
+                    b.HasIndex("Code");
+
+                    b.HasIndex("UserId", "At");
+
+                    b.ToTable("user_permission_audit", (string)null);
+                });
+
             modelBuilder.Entity("Lims.Domain.Identity.UserPermissionGrant", b =>
                 {
                     b.Property<int>("UserId")
@@ -249,6 +374,22 @@ namespace Lims.Infrastructure.Persistence.Migrations
                         {
                             t.ExcludeFromMigrations();
                         });
+                });
+
+            modelBuilder.Entity("Lims.Domain.Identity.UserPermissionSet", b =>
+                {
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer")
+                        .HasColumnName("user_id");
+
+                    b.Property<Guid>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("uuid")
+                        .HasColumnName("version");
+
+                    b.HasKey("UserId");
+
+                    b.ToTable("user_permission_sets", (string)null);
                 });
 
             modelBuilder.Entity("Lims.Domain.ReferenceMaterials.ReferenceLocation", b =>
@@ -811,8 +952,7 @@ namespace Lims.Infrastructure.Persistence.Migrations
                         .HasColumnName("id");
 
                     b.Property<decimal>("ActualConcentration")
-                        .HasPrecision(40, 28)
-                        .HasColumnType("numeric(40,28)")
+                        .HasColumnType("numeric")
                         .HasColumnName("actual_concentration");
 
                     b.Property<string>("ActualConcentrationUnit")
@@ -838,8 +978,7 @@ namespace Lims.Infrastructure.Persistence.Migrations
                         .HasColumnName("available_volume");
 
                     b.Property<decimal>("CalculatedWeight")
-                        .HasPrecision(40, 28)
-                        .HasColumnType("numeric(40,28)")
+                        .HasColumnType("numeric")
                         .HasColumnName("calculated_weight");
 
                     b.Property<string>("CalculatedWeightUnit")
@@ -1169,12 +1308,63 @@ namespace Lims.Infrastructure.Persistence.Migrations
                     b.Navigation("Role");
                 });
 
+            modelBuilder.Entity("Lims.Domain.Identity.UserPermissionAssignment", b =>
+                {
+                    b.HasOne("Lims.Domain.Identity.User", null)
+                        .WithMany()
+                        .HasForeignKey("ActorUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Lims.Domain.Identity.PermissionCode", null)
+                        .WithMany()
+                        .HasForeignKey("Code")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Lims.Domain.Identity.UserPermissionSet", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Lims.Domain.Identity.UserPermissionAudit", b =>
+                {
+                    b.HasOne("Lims.Domain.Identity.User", null)
+                        .WithMany()
+                        .HasForeignKey("ActorUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Lims.Domain.Identity.PermissionCode", null)
+                        .WithMany()
+                        .HasForeignKey("Code")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Lims.Domain.Identity.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Lims.Domain.Identity.UserPermissionGrant", b =>
                 {
                     b.HasOne("Lims.Domain.Identity.User", null)
                         .WithMany("Permissions")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Lims.Domain.Identity.UserPermissionSet", b =>
+                {
+                    b.HasOne("Lims.Domain.Identity.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });
 

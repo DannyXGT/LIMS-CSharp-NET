@@ -1,8 +1,11 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using Lims.Contracts.ReferenceMaterials;
+using Lims.Contracts.Permissions;
 using Lims.Contracts.ReferencePreparations;
 using Lims.Desktop.Http;
+using Lims.Desktop.Presentation;
 using Lims.Desktop.Services;
 using Lims.Desktop.Validation;
 
@@ -17,6 +20,40 @@ public sealed partial class StockViewModel(IStockApiClient api, ISessionService 
     private CreateStockRequest? _pendingRequest;
     public ObservableCollection<StockSource> Sources { get; } = [];
     public ObservableCollection<StockSummary> Items { get; } = [];
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(OpenSelectedPreparationCommand))]
+    public partial StockSummary? SelectedPreparation { get; set; }
+    [ObservableProperty] public partial bool HasLoadedList { get; set; }
+    [ObservableProperty] public partial bool HasSearchCriteria { get; set; }
+    public event Func<StockDetail, Task>? PreparationOpened;
+    public bool ShowEmptyCreate => !HasSearchCriteria;
+    public bool HasResults => Items.Count > 0;
+    public bool HasListMessage => ListMessage.Length > 0;
+    public bool IsEmpty => HasLoadedList && !HasResults && !HasListMessage;
+    public string EmptyTitle => HasSearchCriteria ? "No encontramos preparaciones con estos criterios." : "No hay preparaciones Stock";
+    public string EmptyDescription => HasSearchCriteria ? "Cambie los criterios de búsqueda o limpie la búsqueda." : "Cree una preparación Stock para comenzar\no cambie los criterios de búsqueda.";
+    public bool CanOpenSelectedPreparation => CanView && SelectedPreparation is { } item && Items.Contains(item);
+    public void ClearSelection()
+    {
+        ++_listRevision;
+        SelectedPreparation = null;
+        Detail = null;
+    }
+    [RelayCommand(CanExecute = nameof(CanOpenSelectedPreparation))]
+    private async Task OpenSelectedPreparationAsync(CancellationToken cancellationToken)
+    {
+        if (!CanOpenSelectedPreparation || SelectedPreparation is not { } selected) return;
+        if (!await OpenDetailAsync(selected.Id, cancellationToken) || SelectedPreparation?.Id != selected.Id) return;
+        if (Detail is { } detail && detail.Preparation.Id == selected.Id && PreparationOpened is { } show)
+            await show(detail);
+    }
+    private void NotifyListState()
+    {
+        foreach (var property in new[] { nameof(ShowEmptyCreate), nameof(HasResults), nameof(IsEmpty), nameof(HasListMessage), nameof(EmptyTitle), nameof(EmptyDescription), nameof(PageDisplay) }) OnPropertyChanged(property);
+        OpenSelectedPreparationCommand.NotifyCanExecuteChanged();
+    }
+    partial void OnListMessageChanged(string value) => NotifyListState();
+
     public ObservableCollection<string> ConcentrationUnits { get; } = [];
     public ObservableCollection<string> FinalVolumeUnits { get; } = [];
     [ObservableProperty] public partial StockSource? SelectedSource { get; set; }
@@ -44,8 +81,13 @@ public sealed partial class StockViewModel(IStockApiClient api, ISessionService 
     [ObservableProperty] public partial int SourcePage { get; set; } = 1;
     [ObservableProperty] public partial int SourceCount { get; set; }
     public string PreparedBy => session.Profile?.Name ?? "Usuario no informado";
-    public bool CanView => HasPermission(ReferenceMaterialPermissions.View);
-    public bool CanCreate => CanView && HasPermission(ReferenceMaterialPermissions.Create);
+    public bool CanView => HasPermission(PermissionCatalog.StockView);
+    public void RefreshPermissions()
+    {
+        OnPropertyChanged(nameof(CanView)); OnPropertyChanged(nameof(CanCreate)); OnPropertyChanged(nameof(CanSave));
+        if (!CanView) { Items.Clear(); ClearSelection(); }
+    }
+    public bool CanCreate => CanView && HasPermission(PermissionCatalog.StockCreate);
     public bool CanSave => CanCreate && Created is null && !IsBusy && !IsCalculating &&
         Calculation is { HasSufficientMaterial: true, ActualWeight: > 0, ActualConcentration: > 0 } &&
         Name.Trim().Length is > 0 and <= 200 && Notes.Trim().Length <= 2000 && StorageTemperature.Trim().Length <= 200 &&
@@ -57,7 +99,7 @@ public sealed partial class StockViewModel(IStockApiClient api, ISessionService 
     public bool HasPreviousPage => Page > 1;
     public bool HasNextPage => Page * 25 < TotalCount;
     public bool HasMoreSources => Sources.Count < SourceCount;
-    public string PageDisplay => $"Página {Page} · {TotalCount} preparaciones";
+    public string PageDisplay => TotalCount == 0 ? "0 preparaciones" : $"Página {Page} · {TotalCount} preparaciones";
     public string SourcePageDisplay => $"Página {SourcePage} · {SourceCount} estándares";
 
     public void BeginNew()
@@ -78,7 +120,7 @@ public sealed partial class StockViewModel(IStockApiClient api, ISessionService 
         try
         {
             var response = await api.OptionsAsync(cancellationToken).ConfigureAwait(true);
-            if (!response.IsSuccess || response.Value is null) { Message = Error(response.Error?.Message); return; }
+            if (!response.IsSuccess || response.Value is null) { Message = ReferenceMaterialErrors.PreparationMessage(response.Error); return; }
             Replace(ConcentrationUnits, response.Value.ConcentrationUnits);
             Replace(FinalVolumeUnits, response.Value.FinalVolumeUnits);
         }
@@ -94,7 +136,7 @@ public sealed partial class StockViewModel(IStockApiClient api, ISessionService 
         {
             var response = await api.SourcesAsync(search, page, cancellationToken).ConfigureAwait(true);
             if (revision != _sourceRevision) return;
-            if (!response.IsSuccess || response.Value is null) { Message = Error(response.Error?.Message); return; }
+            if (!response.IsSuccess || response.Value is null) { Message = ReferenceMaterialErrors.PreparationMessage(response.Error); return; }
             if (page == 1) Replace(Sources, response.Value.Items);
             else foreach (var item in response.Value.Items) if (!Sources.Any(existing => existing.Id == item.Id)) Sources.Add(item);
             SourcePage = response.Value.Page;
@@ -107,17 +149,23 @@ public sealed partial class StockViewModel(IStockApiClient api, ISessionService 
 
     public async Task LoadAsync(string? search, int page, CancellationToken cancellationToken)
     {
-        if (!CanView) { ListMessage = "No tiene permiso para consultar preparaciones."; return; }
+        if (!CanView) { Items.Clear(); ClearSelection(); ListMessage = "No tiene permiso para consultar preparaciones."; return; }
         var revision = ++_listRevision;
         try
         {
             var response = await api.ListAsync(search, page, cancellationToken).ConfigureAwait(true);
             if (revision != _listRevision) return;
-            if (!response.IsSuccess || response.Value is null) { ListMessage = Error(response.Error?.Message); return; }
+            if (!response.IsSuccess || response.Value is null) { if (response.StatusCode == 403) { Items.Clear(); ClearSelection(); } ListMessage = ReferenceMaterialErrors.PreparationMessage(response.Error); return; }
+            var selectedId = SelectedPreparation?.Id;
+            SelectedPreparation = null;
             Replace(Items, response.Value.Items);
+            SelectedPreparation = Items.FirstOrDefault(item => item.Id == selectedId);
             Page = response.Value.Page;
             TotalCount = response.Value.TotalCount;
-            ListMessage = Items.Count == 0 ? "No hay preparaciones Stock para esta búsqueda." : string.Empty;
+            HasLoadedList = true;
+            HasSearchCriteria = !string.IsNullOrWhiteSpace(search);
+            ListMessage = string.Empty;
+            NotifyListState();
         }
         catch (HttpRequestException) { if (revision == _listRevision) ListMessage = "No se pudo conectar con el servidor."; }
         catch (OperationCanceledException) { }
@@ -135,7 +183,7 @@ public sealed partial class StockViewModel(IStockApiClient api, ISessionService 
             var response = await api.PreviewAsync(request!, cancellationToken).ConfigureAwait(true);
             if (revision != _inputRevision) return;
             Calculation = response.IsSuccess ? response.Value : null;
-            Message = !response.IsSuccess ? Error(response.Error?.Message) : Calculation?.HasSufficientMaterial == false
+            Message = !response.IsSuccess ? ReferenceMaterialErrors.PreparationMessage(response.Error) : Calculation?.HasSufficientMaterial == false
                 ? "No hay suficiente material disponible." : string.Empty;
         }
         catch (HttpRequestException) { if (revision == _inputRevision) Message = "No se pudo conectar con el servidor."; }
@@ -155,7 +203,7 @@ public sealed partial class StockViewModel(IStockApiClient api, ISessionService 
             var response = await api.CreateAsync(_pendingRequest, cancellationToken).ConfigureAwait(true);
             if (!response.IsSuccess || response.Value is null)
             {
-                var message = Error(response.Error?.Message);
+                var message = ReferenceMaterialErrors.PreparationMessage(response.Error);
                 if (response.Error?.Code is Lims.Contracts.Errors.ErrorCodes.Conflict or Lims.Contracts.Errors.ErrorCodes.InvalidState)
                 {
                     SelectedSource = null;
@@ -186,7 +234,7 @@ public sealed partial class StockViewModel(IStockApiClient api, ISessionService 
         try
         {
             var response = await api.GetAsync(id, cancellationToken).ConfigureAwait(true);
-            if (!response.IsSuccess || response.Value is null) { ListMessage = Error(response.Error?.Message); return false; }
+            if (!response.IsSuccess || response.Value is null) { if (response.StatusCode == 403) { Items.Clear(); ClearSelection(); } ListMessage = ReferenceMaterialErrors.PreparationMessage(response.Error); return false; }
             Detail = response.Value;
             return true;
         }
@@ -209,7 +257,6 @@ public sealed partial class StockViewModel(IStockApiClient api, ISessionService 
         return true;
     }
     private bool HasPermission(string permission) => string.Equals(session.Profile?.Role, "Administrador", StringComparison.OrdinalIgnoreCase) || session.Profile?.Permissions.Contains(permission, StringComparer.Ordinal) == true;
-    private static string Error(string? message) => string.IsNullOrWhiteSpace(message) ? "No se pudo completar la operación. Intente nuevamente." : message;
     private static void Replace<T>(ObservableCollection<T> target, IEnumerable<T> values) { target.Clear(); foreach (var value in values) target.Add(value); }
     private void Invalidate()
     {

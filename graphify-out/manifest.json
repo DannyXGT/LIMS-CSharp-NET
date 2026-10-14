@@ -1,0 +1,2060 @@
+{
+  "Backend/Lims.Api/ApiLog.cs": {
+    "mtime": 1790399436.9106894,
+    "seen": 1791939451.9499557,
+    "ast_hash": "16c36729531566ab29191cbb579a2c88",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Api/Authentication/AuthenticationEndpoints.cs": {
+    "mtime": 1790399420.645597,
+    "seen": 1791939451.9499557,
+    "ast_hash": "599646adf2ed1b226d9686350b5fc1f5",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Api/Authentication/JwtSessionValidation.cs": {
+    "mtime": 1791871261.7009299,
+    "seen": 1791939451.9499557,
+    "ast_hash": "2ef70c8ea68e06324f0748f5583934eb",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Api/Authentication/LimsPolicies.cs": {
+    "mtime": 1790746707.6675491,
+    "seen": 1791939451.9499557,
+    "ast_hash": "f2ccd1ff1cc81c0e3abbfa0bdb8afd79",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Api/Authentication/LoginAttemptTracker.cs": {
+    "mtime": 1790399098.4622533,
+    "seen": 1791939451.9499557,
+    "ast_hash": "7d63fa3939cdb23843e0bb408da1a569",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Api/Health/HealthResponseWriter.cs": {
+    "mtime": 1790399262.7551572,
+    "seen": 1791939451.9499557,
+    "ast_hash": "d582aaff1478473db9c3bf21cf24b722",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Api/Health/PostgreSqlHealthCheck.cs": {
+    "mtime": 1790399430.8260436,
+    "seen": 1791939451.9499557,
+    "ast_hash": "9179ffcca21d7d600bfb7c869b9a8ade",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Api/Http/ApiErrorWriter.cs": {
+    "mtime": 1790399249.4952486,
+    "seen": 1791939451.9499557,
+    "ast_hash": "f351a839f5b13217f869b3c8795ac55a",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Api/Http/ApiExceptionHandler.cs": {
+    "mtime": 1790899158.0284069,
+    "seen": 1791939451.9499557,
+    "ast_hash": "6d8aa3c7769d1da3d465da44a3c901dc",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Api/Http/CorrelationIdMiddleware.cs": {
+    "mtime": 1790399245.494506,
+    "seen": 1791939451.9499557,
+    "ast_hash": "3550ccf1d6d5731b69a3c01e00474249",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Api/Lims.Api.csproj": {
+    "mtime": 1790404997.302451,
+    "seen": 1791939451.9499557,
+    "ast_hash": "04c22d98218be880ec57d6e87e810c14",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Api/Permissions/PermissionEndpoints.cs": {
+    "mtime": 1791871261.2777107,
+    "seen": 1791939451.9499557,
+    "ast_hash": "6dfe1f07c938d380a1f7c72f78ba57e3",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Api/Program.cs": {
+    "mtime": 1791872097.2988572,
+    "seen": 1791939451.9499557,
+    "ast_hash": "bb253f34332a9bf36722c942074c09ee",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Api/Properties/launchSettings.json": {
+    "mtime": 1790396418.9145308,
+    "seen": 1791939451.9499557,
+    "ast_hash": "210354b8f99ff49520285efb333c08fc",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Api/ReferenceMaterials/IntermediateEndpoints.cs": {
+    "mtime": 1791871262.7123995,
+    "seen": 1791939451.9499557,
+    "ast_hash": "d9ab840cdd5bcfa52c088c346e88224d",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Api/ReferenceMaterials/ReferenceMaterialEndpoints.cs": {
+    "mtime": 1791871262.7157452,
+    "seen": 1791939451.9499557,
+    "ast_hash": "e69a1a0d912d52521945e32bdfed5afc",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Api/ReferenceMaterials/StockEndpoints.cs": {
+    "mtime": 1791871262.7073994,
+    "seen": 1791939451.9499557,
+    "ast_hash": "ccce5006e5eabb36e3d3cc8e76208434",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Api/appsettings.Development.json": {
+    "mtime": 1790399306.759767,
+    "seen": 1791939451.9499557,
+    "ast_hash": "f4033bc9dc73c82db07c6f3cf36643b4",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Api/appsettings.Testing.json": {
+    "mtime": 1790399698.596954,
+    "seen": 1791939451.9499557,
+    "ast_hash": "ab493b20ae55794f16604667c3b86805",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Api/appsettings.json": {
+    "mtime": 1791872164.2327633,
+    "seen": 1791939451.9499557,
+    "ast_hash": "3f764ff6d221a3030669a07c15a94d63",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Application/Authentication/AuthenticationPolicy.cs": {
+    "mtime": 1790397398.6528003,
+    "seen": 1791939451.9499557,
+    "ast_hash": "dbdc1ec97a1de509200f88e06d52d99f",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Application/Authentication/AuthenticationService.cs": {
+    "mtime": 1790397529.6504538,
+    "seen": 1791939451.9499557,
+    "ast_hash": "6b479e475ff5096cb3985b07e638c9e1",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Application/Authentication/CorporateIdentityPolicy.cs": {
+    "mtime": 1790397389.324625,
+    "seen": 1791939451.9499557,
+    "ast_hash": "46a5161a44cdf37e3ef88675b0820d84",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Application/Authentication/IAuthenticationService.cs": {
+    "mtime": 1790397486.0089574,
+    "seen": 1791939451.9499557,
+    "ast_hash": "f8a501f7a9fe36df9843f8bde8fc6adc",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Application/Authentication/Ports/IAccessTokenService.cs": {
+    "mtime": 1790397451.8923194,
+    "seen": 1791939451.9499557,
+    "ast_hash": "519206768cbd7d8b1bcdc88ee19b05ca",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Application/Authentication/Ports/IAuthenticationSessionStore.cs": {
+    "mtime": 1790397433.3377688,
+    "seen": 1791939451.9499557,
+    "ast_hash": "fec1761ce08dff7abd0fb8f378162546",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Application/Authentication/Ports/IPasswordHashService.cs": {
+    "mtime": 1790397441.6753645,
+    "seen": 1791939451.9499557,
+    "ast_hash": "552d409dff326cb512dedbccadb9833b",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Application/Authentication/Ports/IRefreshTokenService.cs": {
+    "mtime": 1790397462.5477076,
+    "seen": 1791939451.9499557,
+    "ast_hash": "77e0b7770386c25ac950a83e0051e20d",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Application/Authentication/Ports/IUserRepository.cs": {
+    "mtime": 1790397424.039574,
+    "seen": 1791939451.9499557,
+    "ast_hash": "daf2fac800541618ce8646aad5357d1f",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Application/Authentication/Security/AuthenticationSecurityModels.cs": {
+    "mtime": 1790397477.016199,
+    "seen": 1791939451.9499557,
+    "ast_hash": "441b2c9b9aa99bc30d8cb116f95ec39b",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Application/Authentication/UserIdentifierNormalizer.cs": {
+    "mtime": 1790397407.113015,
+    "seen": 1791939451.9499557,
+    "ast_hash": "7d21293a3f9de6277c028113390c2e23",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Application/Common/OperationResult.cs": {
+    "mtime": 1790397524.6792283,
+    "seen": 1791939451.9499557,
+    "ast_hash": "555d107eaa7e89b9ff082dc1b4ccf2b3",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Application/Lims.Application.csproj": {
+    "mtime": 1790405005.2647183,
+    "seen": 1791939451.9499557,
+    "ast_hash": "0e5a122115a81dfcf326b4db7123effb",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Application/Permissions/IPermissionRepository.cs": {
+    "mtime": 1791871217.812097,
+    "seen": 1791939451.9499557,
+    "ast_hash": "c03d3ed485e1d33274b1c230dd1fae66",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Application/ReferenceMaterials/IReferenceMaterialService.cs": {
+    "mtime": 1790894380.6865263,
+    "seen": 1791939451.9499557,
+    "ast_hash": "dd0c9d0053d20797c54eafdfc152abda",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Application/ReferenceMaterials/Ports/IReferenceMaterialRepository.cs": {
+    "mtime": 1791037466.3696086,
+    "seen": 1791939451.9499557,
+    "ast_hash": "cf65b211b08cb5b7888d813c2a79af3d",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Application/ReferenceMaterials/ReferenceMaterialService.cs": {
+    "mtime": 1791038251.3253498,
+    "seen": 1791939451.9499557,
+    "ast_hash": "b1114998b271aa4645d4ab5424ad45ae",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Application/ReferencePreparations/IIntermediateService.cs": {
+    "mtime": 1791414061.0100594,
+    "seen": 1791939451.9499557,
+    "ast_hash": "403e8fbb8b704550adccf106dcfdfcca",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Application/ReferencePreparations/IStockRepository.cs": {
+    "mtime": 1791353107.7489922,
+    "seen": 1791939451.9499557,
+    "ast_hash": "2c2ec8438b469cabbc72694dd6babe35",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Application/ReferencePreparations/IStockService.cs": {
+    "mtime": 1791352425.4050786,
+    "seen": 1791939451.9499557,
+    "ast_hash": "715ed8d113f7ce6e7cab3ce9342ee655",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Application/ReferencePreparations/IntermediateService.cs": {
+    "mtime": 1791414062.5576024,
+    "seen": 1791939451.9499557,
+    "ast_hash": "dcb273250e7a661a415e08d0ff5901e7",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Application/ReferencePreparations/StockCalculator.cs": {
+    "mtime": 1791352562.1227193,
+    "seen": 1791939451.9499557,
+    "ast_hash": "dcfc334c22dda256cfc00c0f4fabf442",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Application/ReferencePreparations/StockService.cs": {
+    "mtime": 1791353108.575338,
+    "seen": 1791939451.9499557,
+    "ast_hash": "1a330b7822cb4fb3f58b4812ee0f4252",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Domain/Authentication/AuthSession.cs": {
+    "mtime": 1790397203.0822926,
+    "seen": 1791939451.9499557,
+    "ast_hash": "fa945869332e146c31991b8e108f773d",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Domain/Authentication/RefreshToken.cs": {
+    "mtime": 1790397023.6247187,
+    "seen": 1791939451.9499557,
+    "ast_hash": "c03f2efd0c02129abe849bc8e454bc3b",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Domain/Identity/Department.cs": {
+    "mtime": 1790397183.59235,
+    "seen": 1791939451.9499557,
+    "ast_hash": "ac1244748f472fdf24bd340871f11aef",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Domain/Identity/ManagedPermissions.cs": {
+    "mtime": 1791871216.3860729,
+    "seen": 1791939451.9499557,
+    "ast_hash": "ba2f59f7c32066c650d496fe06e6a9fa",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Domain/Identity/Role.cs": {
+    "mtime": 1790397179.6714852,
+    "seen": 1791939451.9499557,
+    "ast_hash": "87f4f858cb5e8adef316d36f6ccf211d",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Domain/Identity/User.cs": {
+    "mtime": 1790665924.137923,
+    "seen": 1791939451.9499557,
+    "ast_hash": "c6ddeddd49c0994b873750f2c3ec6c8c",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Domain/Identity/UserPermission.cs": {
+    "mtime": 1790397189.287215,
+    "seen": 1791939451.9499557,
+    "ast_hash": "3995543b65054a4057c361dd32b176c7",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Domain/Lims.Domain.csproj": {
+    "mtime": 1790396418.8866763,
+    "seen": 1791939451.9499557,
+    "ast_hash": "46b0780bd56312ea2d1bab391f179e89",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Domain/ReferenceMaterials/CasRegistryNumber.cs": {
+    "mtime": 1790746471.057045,
+    "seen": 1791939451.9499557,
+    "ast_hash": "9baf8ab4e0a26dd878e3577a41978493",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Domain/ReferenceMaterials/ReferenceLocation.cs": {
+    "mtime": 1790830512.2293427,
+    "seen": 1791939451.9499557,
+    "ast_hash": "bca4bebe674a1cb6eb7e8ae7b6f391b2",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Domain/ReferenceMaterials/ReferenceMaterial.cs": {
+    "mtime": 1791348308.5092525,
+    "seen": 1791939451.9499557,
+    "ast_hash": "f0bd8bf5503be9a133b27bf25a3b391d",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Domain/ReferenceMaterials/ReferenceMaterialStatus.cs": {
+    "mtime": 1790746462.403221,
+    "seen": 1791939451.9499557,
+    "ast_hash": "fc2857787ce18501e322f488dfe8e130",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Domain/ReferenceMaterials/ReferenceMethod.cs": {
+    "mtime": 1790830509.5542154,
+    "seen": 1791939451.9499557,
+    "ast_hash": "e54625484b7eaa30f7a654c4e8240174",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Domain/ReferenceMaterials/ReferenceUnit.cs": {
+    "mtime": 1790830510.8176358,
+    "seen": 1791939451.9499557,
+    "ast_hash": "5cf5d2149a2b84bdb1f8dbf914e9d305",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Domain/ReferencePreparations/ReferenceMaterialMovement.cs": {
+    "mtime": 1791413998.3700707,
+    "seen": 1791939451.9499557,
+    "ast_hash": "e057e7e382ccac04ffba826ba8197286",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Domain/ReferencePreparations/ReferencePreparation.cs": {
+    "mtime": 1791416239.026971,
+    "seen": 1791939451.9499557,
+    "ast_hash": "818f0669e0457f527118c4d3b6a82cd9",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Domain/ReferencePreparations/ReferencePreparationComponent.cs": {
+    "mtime": 1791413997.893756,
+    "seen": 1791939451.9499557,
+    "ast_hash": "01ff5f40e87c927f9cd9830d61a5b6c0",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Infrastructure/Lims.Infrastructure.csproj": {
+    "mtime": 1790397760.8414128,
+    "seen": 1791939451.9499557,
+    "ast_hash": "0368069935511adb8bdee4a1154e24de",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Infrastructure/Persistence/AuthenticationSessionStore.cs": {
+    "mtime": 1790739782.1671066,
+    "seen": 1791939451.9499557,
+    "ast_hash": "813502251b1853a75526f1384133d269",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Infrastructure/Persistence/IntermediateRepository.cs": {
+    "mtime": 1791415630.2512207,
+    "seen": 1791939451.9499557,
+    "ast_hash": "ad8881a9818d8806d681b99b1bcb4df3",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Infrastructure/Persistence/LimsDbContext.cs": {
+    "mtime": 1791871219.6956527,
+    "seen": 1791939451.9499557,
+    "ast_hash": "ba01cd33a392a31044c83f16f5df7286",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Infrastructure/Persistence/LimsDbContextFactory.cs": {
+    "mtime": 1790398542.344676,
+    "seen": 1791939451.9499557,
+    "ast_hash": "b3cc317c1aa5e89fc190c3c7a3e43872",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Infrastructure/Persistence/Migrations/20260926045625_CreateAuthenticationSessions.Designer.cs": {
+    "mtime": 1790398585.9220655,
+    "seen": 1791939451.9499557,
+    "ast_hash": "f44015f592630a59b1694d041e2ae8f5",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Infrastructure/Persistence/Migrations/20260926045625_CreateAuthenticationSessions.cs": {
+    "mtime": 1790398657.529694,
+    "seen": 1791939451.9499557,
+    "ast_hash": "df8e270ba44f7726fd83adb96aff9079",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Infrastructure/Persistence/Migrations/20260930060339_CreateReferenceMaterials.Designer.cs": {
+    "mtime": 1790748219.704038,
+    "seen": 1791939451.9499557,
+    "ast_hash": "262cf69382bac9fefdb538307c513529",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Infrastructure/Persistence/Migrations/20260930060339_CreateReferenceMaterials.cs": {
+    "mtime": 1790748971.569887,
+    "seen": 1791939451.9499557,
+    "ast_hash": "9a5577c4485d9695787f993473d470d6",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Infrastructure/Persistence/Migrations/20261001225215_FinalizeReferenceMaterialCatalogs.Designer.cs": {
+    "mtime": 1790895135.366059,
+    "seen": 1791939451.9499557,
+    "ast_hash": "21972c89c6273fc11ee941d01571e8ca",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Infrastructure/Persistence/Migrations/20261001225215_FinalizeReferenceMaterialCatalogs.cs": {
+    "mtime": 1790895389.4706905,
+    "seen": 1791939451.9499557,
+    "ast_hash": "f6ed6c3cce12c8159293df69a38f7c19",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Infrastructure/Persistence/Migrations/20261007045455_CreateReferenceStock.Designer.cs": {
+    "mtime": 1791353147.22085,
+    "seen": 1791939451.9499557,
+    "ast_hash": "73170bf70a01008cc13e105d6400ce40",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Infrastructure/Persistence/Migrations/20261007045455_CreateReferenceStock.cs": {
+    "mtime": 1791353147.2091703,
+    "seen": 1791939451.9499557,
+    "ast_hash": "160e5bdb4364342b5a0fe678fedcbb8d",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Infrastructure/Persistence/Migrations/20261007230730_AddIntermediatePreparations.Designer.cs": {
+    "mtime": 1791414450.1836002,
+    "seen": 1791939451.9499557,
+    "ast_hash": "fe0d7cfad3786dee1e00b717ae742208",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Infrastructure/Persistence/Migrations/20261007230730_AddIntermediatePreparations.cs": {
+    "mtime": 1791415551.898043,
+    "seen": 1791939451.9499557,
+    "ast_hash": "d7e3d2df928dc38dd1a840752f552654",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Infrastructure/Persistence/Migrations/20261013060720_AddIndividualPermissions.Designer.cs": {
+    "mtime": 1791871640.2274158,
+    "seen": 1791939451.9499557,
+    "ast_hash": "2e241fbf4a807dc60085510c4879d752",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Infrastructure/Persistence/Migrations/20261013060720_AddIndividualPermissions.cs": {
+    "mtime": 1791871822.6102724,
+    "seen": 1791939451.9499557,
+    "ast_hash": "b54708b91d5d195b224b0cbaffabbb86",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Infrastructure/Persistence/Migrations/20261013065016_PreservePreparationDecimalScale.Designer.cs": {
+    "mtime": 1791874216.9993804,
+    "seen": 1791939451.9499557,
+    "ast_hash": "034fea2000d4c8b776a0113923f78ae4",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Infrastructure/Persistence/Migrations/20261013065016_PreservePreparationDecimalScale.cs": {
+    "mtime": 1791874302.933547,
+    "seen": 1791939451.9499557,
+    "ast_hash": "816863a533c8c04f36367c24919d57b6",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Infrastructure/Persistence/Migrations/LimsDbContextModelSnapshot.cs": {
+    "mtime": 1791874216.9998014,
+    "seen": 1791939451.9499557,
+    "ast_hash": "759525a52abfd193b8b7bbf688b6cf8d",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Infrastructure/Persistence/PermissionModel.cs": {
+    "mtime": 1791871219.185979,
+    "seen": 1791939451.9499557,
+    "ast_hash": "eb2928c50cb6c1c4283e351203fe81f5",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Infrastructure/Persistence/PermissionRepository.cs": {
+    "mtime": 1791872760.1890738,
+    "seen": 1791939451.9499557,
+    "ast_hash": "5fbf24e98fb8b8f7c69a92b92ada561e",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Infrastructure/Persistence/ReferenceMaterialRepository.cs": {
+    "mtime": 1791037469.203163,
+    "seen": 1791939451.9499557,
+    "ast_hash": "cca939e094297ed9e022d7259649bdda",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Infrastructure/Persistence/StockModel.cs": {
+    "mtime": 1791874205.608181,
+    "seen": 1791939451.9499557,
+    "ast_hash": "49c430372bc7471bc02479cbe5a2c9a1",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Infrastructure/Persistence/StockRepository.cs": {
+    "mtime": 1791862757.8837135,
+    "seen": 1791939451.9499557,
+    "ast_hash": "3aaf75b50df82e32ce6e430d15eebab6",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Infrastructure/Persistence/UserRepository.cs": {
+    "mtime": 1790397918.2102878,
+    "seen": 1791939451.9499557,
+    "ast_hash": "2d0d0c29221241dbf745738f78b23382",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Infrastructure/Security/Argon2PasswordHashService.cs": {
+    "mtime": 1790398473.820357,
+    "seen": 1791939451.9499557,
+    "ast_hash": "c1033658065c1b77c49cfa9e8d79a970",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Infrastructure/Security/JwtAccessTokenService.cs": {
+    "mtime": 1790397941.5498886,
+    "seen": 1791939451.9499557,
+    "ast_hash": "b3f03350122824ff2c41059c24510850",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Infrastructure/Security/JwtOptions.cs": {
+    "mtime": 1790397938.3246882,
+    "seen": 1791939451.9499557,
+    "ast_hash": "523ddd1edcaf6b49b537cfa669b4240a",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Infrastructure/Security/RefreshTokenService.cs": {
+    "mtime": 1790397935.0835164,
+    "seen": 1791939451.9499557,
+    "ast_hash": "833f63da8cc81e73690b927a35fbfbe9",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.DesignSystem/Controls/LimsAvailabilityBar.cs": {
+    "mtime": 1791862784.5170853,
+    "seen": 1791939451.9499557,
+    "ast_hash": "84aa6df773c27664c7a039e677ad14ed",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.DesignSystem/Controls/LimsDatePicker.cs": {
+    "mtime": 1791258987.283283,
+    "seen": 1791939451.9499557,
+    "ast_hash": "bdb0395d0db36d0dbe8c3f3fff2d075e",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.DesignSystem/Controls/LimsIcon.cs": {
+    "mtime": 1791259807.868988,
+    "seen": 1791939451.9499557,
+    "ast_hash": "1bbdf4eed35c8872d1e8f45cb184edf3",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.DesignSystem/Controls/LimsIconCatalog.cs": {
+    "mtime": 1791259542.5891864,
+    "seen": 1791939451.9499557,
+    "ast_hash": "cfdbb4792a634944c43a0afc811cd367",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.DesignSystem/Controls/LimsIconKind.cs": {
+    "mtime": 1791258914.1849072,
+    "seen": 1791939451.9499557,
+    "ast_hash": "92211b3e687d2b411a8ec23d9a5af795",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.DesignSystem/Controls/LimsPopupField.cs": {
+    "mtime": 1791265270.2947936,
+    "seen": 1791939451.9499557,
+    "ast_hash": "d04296e70cb22f69262183910035e1a3",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.DesignSystem/Controls/LimsPopupSurface.cs": {
+    "mtime": 1791243745.222347,
+    "seen": 1791939451.9499557,
+    "ast_hash": "31bd472e0a0804ca254fb7d544428d95",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.DesignSystem/Controls/LimsSearchSelect.cs": {
+    "mtime": 1791243821.1000998,
+    "seen": 1791939451.9499557,
+    "ast_hash": "83bc1200fff44c2f93eaf8e2c48fa214",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.DesignSystem/Controls/LimsSelect.cs": {
+    "mtime": 1791352651.050095,
+    "seen": 1791939451.9499557,
+    "ast_hash": "fb676c5ea613e40377b6e8df6f8f0729",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.DesignSystem/Controls/LimsTabItem.cs": {
+    "mtime": 1791864152.3132012,
+    "seen": 1791939451.9499557,
+    "ast_hash": "cb270ceaa7fa452911735f8fd5f81189",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.DesignSystem/Controls/LimsTabStrip.cs": {
+    "mtime": 1791864361.641098,
+    "seen": 1791939451.9499557,
+    "ast_hash": "7aef4070c1ec30f84ced2d59be14f651",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.DesignSystem/Controls/StatusBadge.xaml": {
+    "mtime": 1791038181.2828429,
+    "seen": 1791939451.9499557,
+    "ast_hash": "f7ab103ff410da40b335474a179e18a8",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.DesignSystem/Controls/StatusBadge.xaml.cs": {
+    "mtime": 1791043864.9734087,
+    "seen": 1791939451.9499557,
+    "ast_hash": "d7205b15fd1b217a210f52696c6914e4",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.DesignSystem/Lims.DesignSystem.csproj": {
+    "mtime": 1790399921.1858525,
+    "seen": 1791939451.9499557,
+    "ast_hash": "fe911a6dfe6be43957509a56b0832aa2",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.DesignSystem/Presentation/InteractionMotion.cs": {
+    "mtime": 1791244117.4666686,
+    "seen": 1791939451.9499557,
+    "ast_hash": "5915d228c8c592ef273f5d16efada94b",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.DesignSystem/Presentation/LocalSelectFilter.cs": {
+    "mtime": 1791243744.6066954,
+    "seen": 1791939451.9499557,
+    "ast_hash": "b50d04b258fe991ec6a4b52ee189e155",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.DesignSystem/Presentation/Motion.cs": {
+    "mtime": 1791265242.988756,
+    "seen": 1791939451.9499557,
+    "ast_hash": "0283704bf995ecb240d3d33c3fbf8e13",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.DesignSystem/Presentation/PopupLayout.cs": {
+    "mtime": 1791243743.187994,
+    "seen": 1791939451.9499557,
+    "ast_hash": "d99b08c17ae5418c45aab6a2300efeac",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.DesignSystem/Themes/LimsControls.xaml": {
+    "mtime": 1791862784.864064,
+    "seen": 1791939451.9499557,
+    "ast_hash": "995f49fc9e6edfc7657d408cc7df4a56",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.DesignSystem/Themes/LimsTheme.xaml": {
+    "mtime": 1791258987.2569764,
+    "seen": 1791939451.9499557,
+    "ast_hash": "8e72b83adc875bb04714932be36e4324",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/App.xaml": {
+    "mtime": 1791043364.1564593,
+    "seen": 1791939451.9499557,
+    "ast_hash": "e1ad161dccec86469f1305b5d9a86192",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/App.xaml.cs": {
+    "mtime": 1791871531.3448212,
+    "seen": 1791939451.9499557,
+    "ast_hash": "34dd8a455c2be428630115663286039b",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/DesktopLog.cs": {
+    "mtime": 1790402132.5227742,
+    "seen": 1791939451.9499557,
+    "ast_hash": "5d384f0ec884fbaa17ce18d778b84105",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/Http/ApiCallResult.cs": {
+    "mtime": 1790748067.8279276,
+    "seen": 1791939451.9499557,
+    "ast_hash": "05fd02a758868c54f01388f37125f1ba",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/Http/ApiClientNames.cs": {
+    "mtime": 1790400177.2661748,
+    "seen": 1791939451.9499557,
+    "ast_hash": "b0566ee6424deda7c8a150000161f51d",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/Http/ApiOperationFailure.cs": {
+    "mtime": 1790899154.0927737,
+    "seen": 1791939451.9499557,
+    "ast_hash": "a691994973a0949d7ef02e91ab868b11",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/Http/AuthenticationApiClient.cs": {
+    "mtime": 1790400192.2611237,
+    "seen": 1791939451.9499557,
+    "ast_hash": "5468f358b2d82f476ad73f62bc220bfd",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/Http/AuthorizedApiHandler.cs": {
+    "mtime": 1790400210.0569096,
+    "seen": 1791939451.9499557,
+    "ast_hash": "c1000d14de2b698e7a2ba0e13c1f79e5",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/Http/CorrelationIdHandler.cs": {
+    "mtime": 1790400214.3403063,
+    "seen": 1791939451.9499557,
+    "ast_hash": "3c1710dbef3951f6f010f9df2a6ac858",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/Http/IAuthenticationApiClient.cs": {
+    "mtime": 1790400186.561569,
+    "seen": 1791939451.9499557,
+    "ast_hash": "6e3871fb8ee17e9594f270fec4414ce4",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/Http/IIntermediateApiClient.cs": {
+    "mtime": 1791414172.8868978,
+    "seen": 1791939451.9499557,
+    "ast_hash": "0d25c558590963d593e48cbd53e408a2",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/Http/IPermissionsApiClient.cs": {
+    "mtime": 1791871370.918325,
+    "seen": 1791939451.9499557,
+    "ast_hash": "236d85419d3c2491f5aa82fe8fc8bb81",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/Http/IReferenceMaterialsApiClient.cs": {
+    "mtime": 1790894628.1763396,
+    "seen": 1791939451.9499557,
+    "ast_hash": "4001ab8184f80811e8a1c6dad5ec9a45",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/Http/IStockApiClient.cs": {
+    "mtime": 1791352425.536063,
+    "seen": 1791939451.9499557,
+    "ast_hash": "7966b87a8970001a31acf4e203140f0e",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/Http/ITokenRefreshCoordinator.cs": {
+    "mtime": 1790400197.7503202,
+    "seen": 1791939451.9499557,
+    "ast_hash": "252314ecb0fdb3d4f7c553b7d15e0352",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/Http/IntermediateApiClient.cs": {
+    "mtime": 1791414172.8868978,
+    "seen": 1791939451.9499557,
+    "ast_hash": "ced6af511c6f9a9e09c6d622119b37e4",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/Http/PermissionsApiClient.cs": {
+    "mtime": 1791939238.2502584,
+    "seen": 1791939451.9499557,
+    "ast_hash": "614bf9730804db581ca2fd81defbd1d8",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/Http/ReferenceMaterialsApiClient.cs": {
+    "mtime": 1790894632.2962513,
+    "seen": 1791939451.9499557,
+    "ast_hash": "df12e968b8831aac7b534d660f232426",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/Http/StockApiClient.cs": {
+    "mtime": 1791352425.4772785,
+    "seen": 1791939451.9499557,
+    "ast_hash": "3ce8318f2c84bb34a14feda67c2e2720",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/Http/TokenRefreshCoordinator.cs": {
+    "mtime": 1790400204.2996867,
+    "seen": 1791939451.9499557,
+    "ast_hash": "02e75c69ccfd141515ae0a4c768ade2f",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/Lims.Desktop.csproj": {
+    "mtime": 1790656921.559573,
+    "seen": 1791939451.9499557,
+    "ast_hash": "771468a2ae7ae0310e93c18894d8c538",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/MainWindow.xaml": {
+    "mtime": 1790434554.285214,
+    "seen": 1791939451.9499557,
+    "ast_hash": "413d577deba156c02a527d776246408c",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/MainWindow.xaml.cs": {
+    "mtime": 1790825656.9269412,
+    "seen": 1791939451.9499557,
+    "ast_hash": "eeda7351925dc824613565abfaf22496",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/Presentation/ReferenceMaterialErrors.cs": {
+    "mtime": 1791654424.486246,
+    "seen": 1791939451.9499557,
+    "ast_hash": "a248b2dcfdb6c0f44a9df04003fefe1e",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/Presentation/ReferenceMaterialVisuals.cs": {
+    "mtime": 1791333913.3091109,
+    "seen": 1791939451.9499557,
+    "ast_hash": "20997e70811e56d5ac64538117525aba",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/Properties/AssemblyInfo.cs": {
+    "mtime": 1790401265.3380601,
+    "seen": 1791939451.9499557,
+    "ast_hash": "0c82b4076d9a12b4aea74b67439d6eb6",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/Services/AuthenticationGateway.cs": {
+    "mtime": 1790402138.496237,
+    "seen": 1791939451.9499557,
+    "ast_hash": "f6ca13c7d8ba563d48c3caa45057bf49",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/Services/AuthenticationOutcome.cs": {
+    "mtime": 1790400108.5770152,
+    "seen": 1791939451.9499557,
+    "ast_hash": "83d6a851a7176350c2a961b8c1b63f6c",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/Services/DesktopOptions.cs": {
+    "mtime": 1790658591.4246645,
+    "seen": 1791939451.9499557,
+    "ast_hash": "81c56ed6dda673f85518d69708fb2b88",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/Services/IAuthenticationGateway.cs": {
+    "mtime": 1790400111.9431894,
+    "seen": 1791939451.9499557,
+    "ast_hash": "812c3b02d4d77a821b19d19fa741c43d",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/Services/INavigationService.cs": {
+    "mtime": 1790400100.0110097,
+    "seen": 1791939451.9499557,
+    "ast_hash": "7912e4054c5627f6a5b976cdfbb39093",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/Services/ISecureStorage.cs": {
+    "mtime": 1790400087.212653,
+    "seen": 1791939451.9499557,
+    "ast_hash": "347931fa70a4f44dc0f30e7ec03058d7",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/Services/ISessionService.cs": {
+    "mtime": 1791871439.09635,
+    "seen": 1791939451.9499557,
+    "ast_hash": "c9fc074fa06e5620dfd25c177ef7a074",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/Services/NavigationService.cs": {
+    "mtime": 1790400104.6172416,
+    "seen": 1791939451.9499557,
+    "ast_hash": "d444b361207db64b4927ff42722a655c",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/Services/PasswordVaultSecureStorage.cs": {
+    "mtime": 1790400091.5680964,
+    "seen": 1791939451.9499557,
+    "ast_hash": "36c6cd0d12c283bb52cc04e0f798f234",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/Services/SessionService.cs": {
+    "mtime": 1791871440.7062523,
+    "seen": 1791939451.9499557,
+    "ast_hash": "63000d7c1c0ab63f3768021ba70e2aeb",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/Validation/ReferenceMaterialInput.cs": {
+    "mtime": 1791037680.0042183,
+    "seen": 1791939451.9499557,
+    "ast_hash": "72c62ea7cc5b6d7444eeb6002979fd6c",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/ViewModels/IntermediateViewModel.cs": {
+    "mtime": 1791871825.9651532,
+    "seen": 1791939451.9499557,
+    "ast_hash": "aea2bf7bcb22445739ebec244160fa9f",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/ViewModels/LoginState.cs": {
+    "mtime": 1790400318.5017276,
+    "seen": 1791939451.9499557,
+    "ast_hash": "722174abf524a4d3cd82af802ab021a7",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/ViewModels/LoginViewModel.cs": {
+    "mtime": 1790447973.3444035,
+    "seen": 1791939451.9499557,
+    "ast_hash": "4eccc1f0306a6fb437e0587136831c6b",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/ViewModels/PermissionsViewModel.cs": {
+    "mtime": 1791872797.9556348,
+    "seen": 1791939451.9499557,
+    "ast_hash": "3a66b92cfef2949c7826ff63a19b2b54",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/ViewModels/ReferenceMaterialsViewModel.cs": {
+    "mtime": 1791871824.054417,
+    "seen": 1791939451.9499557,
+    "ast_hash": "b1924d35220bf0a82a9280b7798d2f64",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/ViewModels/ShellViewModel.cs": {
+    "mtime": 1791939238.2617517,
+    "seen": 1791939451.9499557,
+    "ast_hash": "04ef797a4a8830efb1129ab95af08fb9",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/ViewModels/StockViewModel.cs": {
+    "mtime": 1791871824.4902036,
+    "seen": 1791939451.9499557,
+    "ast_hash": "cca60aaded7a2b953c1bf49a455fa639",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/Views/GraduatedCylinder.xaml": {
+    "mtime": 1791414433.9837816,
+    "seen": 1791939451.9499557,
+    "ast_hash": "bc20094de494b2e090a8f24a7f17c0e5",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/Views/GraduatedCylinder.xaml.cs": {
+    "mtime": 1791414559.778813,
+    "seen": 1791939451.9499557,
+    "ast_hash": "a5d098aa674959d093b9c68e9125b8d6",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/Views/IntermediateDetailDialog.xaml": {
+    "mtime": 1791414558.3287024,
+    "seen": 1791939451.9499557,
+    "ast_hash": "768dbb6262660657f954ba29997cf2e6",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/Views/IntermediateDetailDialog.xaml.cs": {
+    "mtime": 1791414558.7763934,
+    "seen": 1791939451.9499557,
+    "ast_hash": "e4b4990aa60a22dfd941d7869d7a8985",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/Views/IntermediateEditorDialog.xaml": {
+    "mtime": 1791654424.4819365,
+    "seen": 1791939451.9499557,
+    "ast_hash": "8ec980325d84033a0743bda3ddb04781",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/Views/IntermediateEditorDialog.xaml.cs": {
+    "mtime": 1791416161.9724832,
+    "seen": 1791939451.9499557,
+    "ast_hash": "74956bcf8ee0dca6cb75807ab63ec419",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/Views/IntermediatePage.xaml": {
+    "mtime": 1791847861.8690026,
+    "seen": 1791939451.9499557,
+    "ast_hash": "d640dea7bf137521f6c22e5366fbcbf5",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/Views/IntermediatePage.xaml.cs": {
+    "mtime": 1791847861.8741274,
+    "seen": 1791939451.9499557,
+    "ast_hash": "3b47e397c32e6554e313805e77537782",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/Views/LoginPage.xaml": {
+    "mtime": 1791259010.363759,
+    "seen": 1791939451.9499557,
+    "ast_hash": "6072fd28a7a8072ce10c8710c552d979",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/Views/LoginPage.xaml.cs": {
+    "mtime": 1791259010.366662,
+    "seen": 1791939451.9499557,
+    "ast_hash": "57d170d0aba1a942d9341b30eb5abdb5",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/Views/PermissionsPage.xaml": {
+    "mtime": 1791872795.1519735,
+    "seen": 1791939451.9499557,
+    "ast_hash": "c844020fe18f05cf85e81c8bb3f8af85",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/Views/PermissionsPage.xaml.cs": {
+    "mtime": 1791871884.8827007,
+    "seen": 1791939451.9499557,
+    "ast_hash": "5cfa96e637b6afaa34129be255979afc",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/Views/PreparationsPage.xaml": {
+    "mtime": 1791871509.5782428,
+    "seen": 1791939451.9499557,
+    "ast_hash": "d50f5a877894e697c01d9deeb8db2478",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/Views/PreparationsPage.xaml.cs": {
+    "mtime": 1791871827.4326432,
+    "seen": 1791939451.9499557,
+    "ast_hash": "6f3acbfec6d4365fb18601a518c82987",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/Views/ReferenceMaterialDetailDialog.xaml": {
+    "mtime": 1791347264.1705709,
+    "seen": 1791939451.9499557,
+    "ast_hash": "4c268a9f400d4e019596665614fc2b7e",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/Views/ReferenceMaterialDetailDialog.xaml.cs": {
+    "mtime": 1791347264.1715705,
+    "seen": 1791939451.9499557,
+    "ast_hash": "ca6af78b9cbe71266821141b320a74eb",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/Views/ReferenceMaterialEditorDialog.xaml": {
+    "mtime": 1791265271.2497087,
+    "seen": 1791939451.9499557,
+    "ast_hash": "5c14ced305d7bd762391b683c2eeba0e",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/Views/ReferenceMaterialEditorDialog.xaml.cs": {
+    "mtime": 1791267673.424404,
+    "seen": 1791939451.9499557,
+    "ast_hash": "fe6198aeb182f94f3babde9e6d4cae0b",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/Views/ReferenceMaterialsPage.xaml": {
+    "mtime": 1791334344.7375627,
+    "seen": 1791939451.9499557,
+    "ast_hash": "aee2ed23f034865029cd63e62593985c",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/Views/ReferenceMaterialsPage.xaml.cs": {
+    "mtime": 1791334342.6239617,
+    "seen": 1791939451.9499557,
+    "ast_hash": "2a11ec39c4c227d5280fd17819147488",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/Views/ShellPage.xaml": {
+    "mtime": 1791939238.3053777,
+    "seen": 1791939451.9499557,
+    "ast_hash": "90f53c0d0f1c82a5b1097e5634e413e3",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/Views/ShellPage.xaml.cs": {
+    "mtime": 1791939238.3063786,
+    "seen": 1791939451.9499557,
+    "ast_hash": "040449fe978da67e1fa158083c195763",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/Views/StockDetailDialog.xaml": {
+    "mtime": 1791862847.274058,
+    "seen": 1791939451.9499557,
+    "ast_hash": "5d2659746b871614ed407eb1f9c3d9bb",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/Views/StockDetailDialog.xaml.cs": {
+    "mtime": 1791352717.1405067,
+    "seen": 1791939451.9499557,
+    "ast_hash": "e0a4031a4b0fa4f640c645ab3815fca8",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/Views/StockEditorDialog.xaml": {
+    "mtime": 1791654424.4798837,
+    "seen": 1791939451.9499557,
+    "ast_hash": "9c9c2b40e0c8d3540b599733e4a1cd80",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/Views/StockEditorDialog.xaml.cs": {
+    "mtime": 1791353627.5804775,
+    "seen": 1791939451.9499557,
+    "ast_hash": "15c593cce035cd40e708d7eda110f397",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/Views/StockPage.xaml": {
+    "mtime": 1791862847.2730558,
+    "seen": 1791939451.9499557,
+    "ast_hash": "77ce46b3739989706c0bde9e2aa42574",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/Views/StockPage.xaml.cs": {
+    "mtime": 1791847861.8669577,
+    "seen": 1791939451.9499557,
+    "ast_hash": "1470507e44230e5435e8a038f2e868b2",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/appsettings.Development.json": {
+    "mtime": 1790658538.000628,
+    "seen": 1791939451.9499557,
+    "ast_hash": "88a5106afb7f040c2559442f48abbe1f",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/appsettings.json": {
+    "mtime": 1790642786.7097738,
+    "seen": 1791939451.9499557,
+    "ast_hash": "2b9cf26f642302fc479f7820c967359d",
+    "semantic_hash": ""
+  },
+  "Lims.sln": {
+    "mtime": 1790405098.8470674,
+    "seen": 1791939451.9499557,
+    "ast_hash": "55f40e4cb496c2fe030852bf4f2b4790",
+    "semantic_hash": ""
+  },
+  "Shared/Lims.Contracts/Authentication/AuthenticationResponse.cs": {
+    "mtime": 1790397113.4222367,
+    "seen": 1791939451.9499557,
+    "ast_hash": "77b22241f1b42151f94ddced77d8ded0",
+    "semantic_hash": ""
+  },
+  "Shared/Lims.Contracts/Authentication/LoginRequest.cs": {
+    "mtime": 1790397080.9947484,
+    "seen": 1791939451.9499557,
+    "ast_hash": "f6973ac13d356873143c9e2ef4e70a50",
+    "semantic_hash": ""
+  },
+  "Shared/Lims.Contracts/Authentication/LogoutResponse.cs": {
+    "mtime": 1790397124.4997547,
+    "seen": 1791939451.9499557,
+    "ast_hash": "4804fccbe910bda13bfe45e59d5239f9",
+    "semantic_hash": ""
+  },
+  "Shared/Lims.Contracts/Authentication/RefreshRequest.cs": {
+    "mtime": 1790397090.9165664,
+    "seen": 1791939451.9499557,
+    "ast_hash": "2d5f21dc6a94573cc2eacb302776d9ba",
+    "semantic_hash": ""
+  },
+  "Shared/Lims.Contracts/Authentication/UserProfile.cs": {
+    "mtime": 1790397102.4022558,
+    "seen": 1791939451.9499557,
+    "ast_hash": "c736f4aefdff7b5e8aaf7cb7b368e6ba",
+    "semantic_hash": ""
+  },
+  "Shared/Lims.Contracts/Errors/ApiError.cs": {
+    "mtime": 1790397065.044909,
+    "seen": 1791939451.9499557,
+    "ast_hash": "cc46e0b0f7feaab91d9cd77ba8f754c8",
+    "semantic_hash": ""
+  },
+  "Shared/Lims.Contracts/Errors/ErrorCodes.cs": {
+    "mtime": 1790899155.6651628,
+    "seen": 1791939451.9499557,
+    "ast_hash": "aa2d95d20fef3257412b1d3f3bd8b457",
+    "semantic_hash": ""
+  },
+  "Shared/Lims.Contracts/Lims.Contracts.csproj": {
+    "mtime": 1790396418.9331973,
+    "seen": 1791939451.9499557,
+    "ast_hash": "46b0780bd56312ea2d1bab391f179e89",
+    "semantic_hash": ""
+  },
+  "Shared/Lims.Contracts/Permissions/PermissionContracts.cs": {
+    "mtime": 1791873470.5917628,
+    "seen": 1791939451.9499557,
+    "ast_hash": "160192ed73a309d8c933e1e6533ea2fd",
+    "semantic_hash": ""
+  },
+  "Shared/Lims.Contracts/ReferenceMaterials/ReferenceMaterialContracts.cs": {
+    "mtime": 1791038861.262073,
+    "seen": 1791939451.9499557,
+    "ast_hash": "8a9614393e018982decb749839586130",
+    "semantic_hash": ""
+  },
+  "Shared/Lims.Contracts/ReferenceMaterials/ReferenceMaterialPermissions.cs": {
+    "mtime": 1790746448.9875672,
+    "seen": 1791939451.9499557,
+    "ast_hash": "9b02585256e9938472f77b16397c2109",
+    "semantic_hash": ""
+  },
+  "Shared/Lims.Contracts/ReferenceMaterials/ReferenceMaterialPresentation.cs": {
+    "mtime": 1791038247.2265623,
+    "seen": 1791939451.9499557,
+    "ast_hash": "a2505614dac695a01e4382caab3dfabd",
+    "semantic_hash": ""
+  },
+  "Shared/Lims.Contracts/ReferencePreparations/IntermediateCalculator.cs": {
+    "mtime": 1791415629.7684166,
+    "seen": 1791939451.9499557,
+    "ast_hash": "17284b9c26996f96bfee85a7cc2f120f",
+    "semantic_hash": ""
+  },
+  "Shared/Lims.Contracts/ReferencePreparations/IntermediateContracts.cs": {
+    "mtime": 1791416237.2212481,
+    "seen": 1791939451.9499557,
+    "ast_hash": "6a3d1ebe4af939c3508666c8e49f1bb0",
+    "semantic_hash": ""
+  },
+  "Shared/Lims.Contracts/ReferencePreparations/StockAvailability.cs": {
+    "mtime": 1791862784.2251225,
+    "seen": 1791939451.9499557,
+    "ast_hash": "c4f16a45d2060b1210149f1f8c2027ca",
+    "semantic_hash": ""
+  },
+  "Shared/Lims.Contracts/ReferencePreparations/StockContracts.cs": {
+    "mtime": 1791862756.3417466,
+    "seen": 1791939451.9499557,
+    "ast_hash": "8b538bb61e2c8780b8a0d66e0619d324",
+    "semantic_hash": ""
+  },
+  "Shared/Lims.Contracts/ReferencePreparations/StockPresentation.cs": {
+    "mtime": 1791353059.9782655,
+    "seen": 1791939451.9499557,
+    "ast_hash": "cb387e7c575745f9cb3b29adffe30970",
+    "semantic_hash": ""
+  },
+  "Shared/Lims.Contracts/ReferencePreparations/StockUnits.cs": {
+    "mtime": 1791352478.352159,
+    "seen": 1791939451.9499557,
+    "ast_hash": "75633b31ef0eb0d44f58ca489f16e570",
+    "semantic_hash": ""
+  },
+  "Tests/Backend/Lims.Api.Tests/AssemblyInfo.cs": {
+    "mtime": 1791349239.4452798,
+    "seen": 1791939451.9499557,
+    "ast_hash": "197d9c1e10adb8c95a0aacd151932783",
+    "semantic_hash": ""
+  },
+  "Tests/Backend/Lims.Api.Tests/AuthenticationApiFactory.cs": {
+    "mtime": 1791871642.3698804,
+    "seen": 1791939451.9499557,
+    "ast_hash": "9f37d405b188b286e58361909cb8443a",
+    "semantic_hash": ""
+  },
+  "Tests/Backend/Lims.Api.Tests/AuthenticationEndpointsTests.cs": {
+    "mtime": 1791871643.568683,
+    "seen": 1791939451.9499557,
+    "ast_hash": "adcd4e99060a49f87da3f99a34e5b988",
+    "semantic_hash": ""
+  },
+  "Tests/Backend/Lims.Api.Tests/IntermediateEndpointsTests.cs": {
+    "mtime": 1791871643.5727031,
+    "seen": 1791939451.9499557,
+    "ast_hash": "73e210fe2f24f677f314267bb8c4a688",
+    "semantic_hash": ""
+  },
+  "Tests/Backend/Lims.Api.Tests/Lims.Api.Tests.csproj": {
+    "mtime": 1790405023.853405,
+    "seen": 1791939451.9499557,
+    "ast_hash": "4471cd31830733c339627059b38525ea",
+    "semantic_hash": ""
+  },
+  "Tests/Backend/Lims.Api.Tests/PermissionEndpointsTests.cs": {
+    "mtime": 1791872232.0868235,
+    "seen": 1791939451.9499557,
+    "ast_hash": "59713eed915162e499fa364867217c99",
+    "semantic_hash": ""
+  },
+  "Tests/Backend/Lims.Api.Tests/StockEndpointsTests.cs": {
+    "mtime": 1791871643.5706909,
+    "seen": 1791939451.9499557,
+    "ast_hash": "8c304797b9c1e118692428eaf29c3444",
+    "semantic_hash": ""
+  },
+  "Tests/Backend/Lims.Api.Tests/TestPermissionRepository.cs": {
+    "mtime": 1791871642.7488844,
+    "seen": 1791939451.9499557,
+    "ast_hash": "1a3414c52c323249cb49d0df4bed5912",
+    "semantic_hash": ""
+  },
+  "Tests/Backend/Lims.Application.Tests/Authentication/AuthenticationDomainTests.cs": {
+    "mtime": 1790397654.4981291,
+    "seen": 1791939451.9499557,
+    "ast_hash": "cf55d4c0245f546967f6408107c45b19",
+    "semantic_hash": ""
+  },
+  "Tests/Backend/Lims.Application.Tests/Authentication/AuthenticationServiceTests.cs": {
+    "mtime": 1790397658.6260855,
+    "seen": 1791939451.9499557,
+    "ast_hash": "99a1979d5f1f4d16be627a44008162d6",
+    "semantic_hash": ""
+  },
+  "Tests/Backend/Lims.Application.Tests/Authentication/UserIdentifierNormalizerTests.cs": {
+    "mtime": 1790397650.9218538,
+    "seen": 1791939451.9499557,
+    "ast_hash": "1b86ff44dfc24896833b1ef124a3ce28",
+    "semantic_hash": ""
+  },
+  "Tests/Backend/Lims.Application.Tests/Lims.Application.Tests.csproj": {
+    "mtime": 1790405033.7536464,
+    "seen": 1791939451.9499557,
+    "ast_hash": "f23fa7fa18bec2209f104e1dc9c417d5",
+    "semantic_hash": ""
+  },
+  "Tests/Backend/Lims.Application.Tests/ReferenceMaterials/IntermediateCalculatorTests.cs": {
+    "mtime": 1791416289.089399,
+    "seen": 1791939451.9499557,
+    "ast_hash": "853586ff2c44d85ddcc4d1f8c6d57cc3",
+    "semantic_hash": ""
+  },
+  "Tests/Backend/Lims.Application.Tests/ReferenceMaterials/ReferenceMaterialDomainTests.cs": {
+    "mtime": 1790894879.4711726,
+    "seen": 1791939451.9499557,
+    "ast_hash": "4038044573bac554e33bfb8fbfec8d8b",
+    "semantic_hash": ""
+  },
+  "Tests/Backend/Lims.Application.Tests/ReferenceMaterials/ReferenceMaterialPresentationTests.cs": {
+    "mtime": 1791038985.119913,
+    "seen": 1791939451.9499557,
+    "ast_hash": "6c3f36a903776cfec9b1440c0a524f3f",
+    "semantic_hash": ""
+  },
+  "Tests/Backend/Lims.Application.Tests/ReferenceMaterials/ReferenceMaterialServiceTests.cs": {
+    "mtime": 1791037923.2259247,
+    "seen": 1791939451.9499557,
+    "ast_hash": "6613a7674ef10f3cd4a42e694b884df2",
+    "semantic_hash": ""
+  },
+  "Tests/Backend/Lims.Application.Tests/ReferenceMaterials/StockCalculatorTests.cs": {
+    "mtime": 1791352830.544737,
+    "seen": 1791939451.9499557,
+    "ast_hash": "23b2077313f383cbe5c0c34295f304b7",
+    "semantic_hash": ""
+  },
+  "Tests/Backend/Lims.Application.Tests/ReferenceMaterials/StockPresentationTests.cs": {
+    "mtime": 1791862907.921973,
+    "seen": 1791939451.9499557,
+    "ast_hash": "47a9589243e14fdc901c8c975e6580d3",
+    "semantic_hash": ""
+  },
+  "Tests/Backend/Lims.Infrastructure.Tests/Lims.Infrastructure.Tests.csproj": {
+    "mtime": 1790740184.9585025,
+    "seen": 1791939451.9499557,
+    "ast_hash": "15d311bf640da8065e8ef3f5405e98be",
+    "semantic_hash": ""
+  },
+  "Tests/Backend/Lims.Infrastructure.Tests/Persistence/AuthenticationSessionStoreTests.cs": {
+    "mtime": 1790740144.6094768,
+    "seen": 1791939451.9499557,
+    "ast_hash": "13d4530c988d6d42fa8511e948ce73fc",
+    "semantic_hash": ""
+  },
+  "Tests/Backend/Lims.Infrastructure.Tests/Persistence/IntermediatePostgresTests.cs": {
+    "mtime": 1791414988.8912952,
+    "seen": 1791939451.9499557,
+    "ast_hash": "0951128c5234729fc9b75f0bae94f0e4",
+    "semantic_hash": ""
+  },
+  "Tests/Backend/Lims.Infrastructure.Tests/Persistence/LimsDbContextModelTests.cs": {
+    "mtime": 1790894926.4836905,
+    "seen": 1791939451.9499557,
+    "ast_hash": "232aaeb351ff3027ef29eb4d899c059f",
+    "semantic_hash": ""
+  },
+  "Tests/Backend/Lims.Infrastructure.Tests/Persistence/PermissionPostgresTests.cs": {
+    "mtime": 1791873107.4604661,
+    "seen": 1791939451.9499557,
+    "ast_hash": "aca81b38c08f1d1eb1ddfe896e464e82",
+    "semantic_hash": ""
+  },
+  "Tests/Backend/Lims.Infrastructure.Tests/Persistence/PermissionRepositoryTests.cs": {
+    "mtime": 1791871975.7348802,
+    "seen": 1791939451.9499557,
+    "ast_hash": "270a1ffff4992066a246b463950a3f19",
+    "semantic_hash": ""
+  },
+  "Tests/Backend/Lims.Infrastructure.Tests/Persistence/ReferenceMaterialDisplayTests.cs": {
+    "mtime": 1791038025.5280652,
+    "seen": 1791939451.9499557,
+    "ast_hash": "572798bce5f8471c5053034dab8c0d5c",
+    "semantic_hash": ""
+  },
+  "Tests/Backend/Lims.Infrastructure.Tests/Persistence/StockPostgresTests.cs": {
+    "mtime": 1791874485.1918218,
+    "seen": 1791939451.9499557,
+    "ast_hash": "4967f912c23e102b2b2d93dba8c9ac47",
+    "semantic_hash": ""
+  },
+  "Tests/Backend/Lims.Infrastructure.Tests/Security/Argon2PasswordHashServiceTests.cs": {
+    "mtime": 1790398480.3102667,
+    "seen": 1791939451.9499557,
+    "ast_hash": "cf4596f012a71ce45641722bbba9a6f8",
+    "semantic_hash": ""
+  },
+  "Tests/Backend/Lims.Infrastructure.Tests/Security/RefreshTokenServiceTests.cs": {
+    "mtime": 1790398402.1635528,
+    "seen": 1791939451.9499557,
+    "ast_hash": "66238a9b35f089276eb3285e9d2374fc",
+    "semantic_hash": ""
+  },
+  "Tests/Frontend/Lims.Desktop.Tests/DesktopOptionsTests.cs": {
+    "mtime": 1790658680.6133044,
+    "seen": 1791939451.9499557,
+    "ast_hash": "eff6d62f1df569a0cfa999450ed9a7fd",
+    "semantic_hash": ""
+  },
+  "Tests/Frontend/Lims.Desktop.Tests/IntermediateViewModelTests.cs": {
+    "mtime": 1791871643.578396,
+    "seen": 1791939451.9499557,
+    "ast_hash": "6bf1f2827785d84371ce48277dc7736c",
+    "semantic_hash": ""
+  },
+  "Tests/Frontend/Lims.Desktop.Tests/Lims.Desktop.Tests.csproj": {
+    "mtime": 1790405014.9827194,
+    "seen": 1791939451.9499557,
+    "ast_hash": "9353580d6138f2ccb17dc8a98f733b86",
+    "semantic_hash": ""
+  },
+  "Tests/Frontend/Lims.Desktop.Tests/LoginViewModelTests.cs": {
+    "mtime": 1790401274.9661376,
+    "seen": 1791939451.9499557,
+    "ast_hash": "9df4c15d7871cea018242e2c6234ef81",
+    "semantic_hash": ""
+  },
+  "Tests/Frontend/Lims.Desktop.Tests/PermissionsApiClientTests.cs": {
+    "mtime": 1791939381.5248923,
+    "seen": 1791939451.9499557,
+    "ast_hash": "1dfe474038fa1a9459b4618c6968dd88",
+    "semantic_hash": ""
+  },
+  "Tests/Frontend/Lims.Desktop.Tests/PermissionsViewModelTests.cs": {
+    "mtime": 1791939238.3401668,
+    "seen": 1791939451.9499557,
+    "ast_hash": "ebb5e53a86c42364262d314bd2f1d8ff",
+    "semantic_hash": ""
+  },
+  "Tests/Frontend/Lims.Desktop.Tests/PopupPresentationTests.cs": {
+    "mtime": 1791244120.252026,
+    "seen": 1791939451.9499557,
+    "ast_hash": "eddcb4836d1d2e7482888d130a9e897a",
+    "semantic_hash": ""
+  },
+  "Tests/Frontend/Lims.Desktop.Tests/PreparationErrorTests.cs": {
+    "mtime": 1791654424.4966204,
+    "seen": 1791939451.9499557,
+    "ast_hash": "af454b51946f0cd4dfcfe4f5c9298113",
+    "semantic_hash": ""
+  },
+  "Tests/Frontend/Lims.Desktop.Tests/ReferenceMaterialErrorsTests.cs": {
+    "mtime": 1791037957.543311,
+    "seen": 1791939451.9499557,
+    "ast_hash": "346573db9de9e723735791a11f7b69ba",
+    "semantic_hash": ""
+  },
+  "Tests/Frontend/Lims.Desktop.Tests/ReferenceMaterialInputTests.cs": {
+    "mtime": 1790899481.6894917,
+    "seen": 1791939451.9499557,
+    "ast_hash": "ec137341100b412568ee3977bcaf1bb7",
+    "semantic_hash": ""
+  },
+  "Tests/Frontend/Lims.Desktop.Tests/ReferenceMaterialsViewModelTests.cs": {
+    "mtime": 1791871643.5804062,
+    "seen": 1791939451.9499557,
+    "ast_hash": "9692d1737934bb9d6269d7abf7f4fc07",
+    "semantic_hash": ""
+  },
+  "Tests/Frontend/Lims.Desktop.Tests/SessionAndRefreshTests.cs": {
+    "mtime": 1790401279.1842551,
+    "seen": 1791939451.9499557,
+    "ast_hash": "797578f0e03ba23090b9ce4029286789",
+    "semantic_hash": ""
+  },
+  "Tests/Frontend/Lims.Desktop.Tests/StockApiClientTests.cs": {
+    "mtime": 1791352425.4925575,
+    "seen": 1791939451.9499557,
+    "ast_hash": "ac4298ad1ba1b3517bf14f319b0dfc16",
+    "semantic_hash": ""
+  },
+  "Tests/Frontend/Lims.Desktop.Tests/StockViewModelTests.cs": {
+    "mtime": 1791871643.5752046,
+    "seen": 1791939451.9499557,
+    "ast_hash": "0c5948eceddd92ea93f7845ad3d1b237",
+    "semantic_hash": ""
+  },
+  "Tests/Frontend/Lims.Desktop.VisualHarness/App.xaml.cs": {
+    "mtime": 1791871978.5817502,
+    "seen": 1791939451.9499557,
+    "ast_hash": "fc46e8c14907adebde8e8589153fb236",
+    "semantic_hash": ""
+  },
+  "Tests/Frontend/Lims.Desktop.VisualHarness/FixtureIntermediateApi.cs": {
+    "mtime": 1791415052.711727,
+    "seen": 1791939451.9499557,
+    "ast_hash": "3f32caabb33e22c3009c88904d70ba5e",
+    "semantic_hash": ""
+  },
+  "Tests/Frontend/Lims.Desktop.VisualHarness/FixturePermissionsApi.cs": {
+    "mtime": 1791871976.2221951,
+    "seen": 1791939451.9499557,
+    "ast_hash": "eac11dbd65f7549bddbf5c6f22b7ffe0",
+    "semantic_hash": ""
+  },
+  "Tests/Frontend/Lims.Desktop.VisualHarness/FixtureStockApi.cs": {
+    "mtime": 1791353629.7994933,
+    "seen": 1791939451.9499557,
+    "ast_hash": "5af0e14cf87aceb870b3f8d1e4490ecb",
+    "semantic_hash": ""
+  },
+  "Tests/Frontend/Lims.Desktop.VisualHarness/Fixtures.cs": {
+    "mtime": 1791871976.6414948,
+    "seen": 1791939451.9499557,
+    "ast_hash": "efdd05b243d99b9c1d59b54469f3c9ce",
+    "semantic_hash": ""
+  },
+  "Tests/Frontend/Lims.Desktop.VisualHarness/IconValidation.cs": {
+    "mtime": 1791259678.676891,
+    "seen": 1791939451.9499557,
+    "ast_hash": "016f0459421b5a1370dcc62b3edbad09",
+    "semantic_hash": ""
+  },
+  "Tests/Frontend/Lims.Desktop.VisualHarness/Lims.Desktop.VisualHarness.csproj": {
+    "mtime": 1791871977.118838,
+    "seen": 1791939451.9499557,
+    "ast_hash": "4b7caabc1193d604573d36dcf2abeb7b",
+    "semantic_hash": ""
+  },
+  "Tests/Frontend/Lims.Desktop.VisualHarness/PopupInteractionChecks.cs": {
+    "mtime": 1791244732.85783,
+    "seen": 1791939451.9499557,
+    "ast_hash": "e1a2672dbcee8c4a1083ffa054fbffcb",
+    "semantic_hash": ""
+  },
+  "Tests/Frontend/Lims.Desktop.VisualHarness/StandardsPresentationChecks.cs": {
+    "mtime": 1791265619.7137997,
+    "seen": 1791939451.9499557,
+    "ast_hash": "7b50b64099034280056601c7c0cf282b",
+    "semantic_hash": ""
+  },
+  "Tests/Frontend/Lims.Desktop.VisualHarness/ValidationApp.xaml": {
+    "mtime": 1791239111.3424497,
+    "seen": 1791939451.9499557,
+    "ast_hash": "3166d4ba115081f9fb660e49e72645fb",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/intermediate/verification.json": {
+    "mtime": 1791416682.3800583,
+    "seen": 1791939451.9499557,
+    "ast_hash": "775de5842e030935099c23d3dd61ef12",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/stock/interaction.json": {
+    "mtime": 1791351052.1565132,
+    "seen": 1791939451.9499557,
+    "ast_hash": "f367537dfee9e83ecbd967bdfc46ddd5",
+    "semantic_hash": ""
+  },
+  "dotnet-tools.json": {
+    "mtime": 1790398560.9298787,
+    "seen": 1791939451.9499557,
+    "ast_hash": "2c73b4aa6fff26d858e9c56c01974559",
+    "semantic_hash": ""
+  },
+  "global.json": {
+    "mtime": 1790396533.6931236,
+    "seen": 1791939451.9499557,
+    "ast_hash": "541e3c5de905b7cfc02175bf68335dcf",
+    "semantic_hash": ""
+  },
+  "scripts/apply-auth-migration.ps1": {
+    "mtime": 1790662129.58376,
+    "seen": 1791939451.9499557,
+    "ast_hash": "45e6e73b442c42a0e980749348117311",
+    "semantic_hash": ""
+  },
+  "scripts/build.ps1": {
+    "mtime": 1790645141.7838674,
+    "seen": 1791939451.9499557,
+    "ast_hash": "99b3189c8da488041db9a290382722f6",
+    "semantic_hash": ""
+  },
+  "scripts/capture-stock-availability.ps1": {
+    "mtime": 1791863445.244237,
+    "seen": 1791939451.9499557,
+    "ast_hash": "a3a13a337eecfeabe7cbebc73ebf033a",
+    "semantic_hash": ""
+  },
+  "scripts/dev.ps1": {
+    "mtime": 1790658596.766567,
+    "seen": 1791939451.9499557,
+    "ast_hash": "145ad2a5558cfc3285a0c95e5a39f8bc",
+    "semantic_hash": ""
+  },
+  "scripts/run-winui.ps1": {
+    "mtime": 1790405674.550975,
+    "seen": 1791939451.9499557,
+    "ast_hash": "14df1ec414ee3a6106cc24e1c6a91da8",
+    "semantic_hash": ""
+  },
+  "scripts/run.ps1": {
+    "mtime": 1790658602.4884295,
+    "seen": 1791939451.9499557,
+    "ast_hash": "faaee0772f8ba676922240476ebabaf4",
+    "semantic_hash": ""
+  },
+  "scripts/test-stock.ps1": {
+    "mtime": 1791349169.7956746,
+    "seen": 1791939451.9499557,
+    "ast_hash": "bdb60979ff0e4e6a9d4dee1cf3dee8cb",
+    "semantic_hash": ""
+  },
+  "scripts/validate-intermediate.ps1": {
+    "mtime": 1791416077.1316185,
+    "seen": 1791939451.9499557,
+    "ast_hash": "d211a7ea180f01617cec2428158e8bd5",
+    "semantic_hash": ""
+  },
+  "scripts/validate-permissions.ps1": {
+    "mtime": 1791873482.013435,
+    "seen": 1791939451.9499557,
+    "ast_hash": "a1a53f88e06431f02507e64f37e433bd",
+    "semantic_hash": ""
+  },
+  "scripts/validate-preparation-list.ps1": {
+    "mtime": 1791848112.513777,
+    "seen": 1791939451.9499557,
+    "ast_hash": "448ff8ea013951f96a44c66f3b54ee81",
+    "semantic_hash": ""
+  },
+  "scripts/validate-preparation-tabs.ps1": {
+    "mtime": 1791656897.224315,
+    "seen": 1791939451.9499557,
+    "ast_hash": "704d2df6233f661a6209d2c74276fb4b",
+    "semantic_hash": ""
+  },
+  "scripts/validate-standards-availability.ps1": {
+    "mtime": 1791347812.5226772,
+    "seen": 1791939451.9499557,
+    "ast_hash": "92bc05ef320d1a175722071f2e3b14b2",
+    "semantic_hash": ""
+  },
+  "scripts/validate-standards-detail-polish.ps1": {
+    "mtime": 1791344498.0511198,
+    "seen": 1791939451.9499557,
+    "ast_hash": "46bc2c08dce171c31d73cc4995186f42",
+    "semantic_hash": ""
+  },
+  "scripts/validate-standards-detail-workspace.ps1": {
+    "mtime": 1791345785.1776323,
+    "seen": 1791939451.9499557,
+    "ast_hash": "5902561c3855298b8b75efd7ae9fa5dd",
+    "semantic_hash": ""
+  },
+  "scripts/validate-standards-detail.ps1": {
+    "mtime": 1791345785.1796322,
+    "seen": 1791939451.9499557,
+    "ast_hash": "e3f7879500f45f44cb55de5655aaa81b",
+    "semantic_hash": ""
+  },
+  "scripts/validate-standards-visual.ps1": {
+    "mtime": 1791345578.830935,
+    "seen": 1791939451.9499557,
+    "ast_hash": "c7b5cc48da86d71a3b1264babb2c4e78",
+    "semantic_hash": ""
+  },
+  "scripts/validate-stock.ps1": {
+    "mtime": 1791353471.1997447,
+    "seen": 1791939451.9499557,
+    "ast_hash": "d1812fad1ff22d63521399e85213d33c",
+    "semantic_hash": ""
+  },
+  ".github/workflows/publish-api.yml": {
+    "mtime": 1790450879.2290046,
+    "seen": 1791939451.9499557,
+    "ast_hash": "705312dc39fa604eafe6132ebbd04158",
+    "semantic_hash": ""
+  },
+  "README.md": {
+    "mtime": 1790811526.4219737,
+    "seen": 1791939451.9499557,
+    "ast_hash": "ea7b92391aca5b2502a37c7507c2e608",
+    "semantic_hash": ""
+  },
+  "docs/architecture.md": {
+    "mtime": 1790749387.1936488,
+    "seen": 1791939451.9499557,
+    "ast_hash": "88e70e040e38d3fe40fb1de50e458174",
+    "semantic_hash": ""
+  },
+  "docs/authentication.md": {
+    "mtime": 1790401957.6229653,
+    "seen": 1791939451.9499557,
+    "ast_hash": "0975a7387f9bbe9146a3bb6a35c48d58",
+    "semantic_hash": ""
+  },
+  "docs/correccion-decimal-preparaciones.md": {
+    "mtime": 1791874430.3146412,
+    "seen": 1791939451.9499557,
+    "ast_hash": "7edcd8344e3bd52e0564b2e937227158",
+    "semantic_hash": ""
+  },
+  "docs/development.md": {
+    "mtime": 1790811293.8439953,
+    "seen": 1791939451.9499557,
+    "ast_hash": "f7c210ad6e0a319a03ab4a787b8e252f",
+    "semantic_hash": ""
+  },
+  "docs/estandares-ajustes-visuales-finales.md": {
+    "mtime": 1791268413.3232014,
+    "seen": 1791939451.9499557,
+    "ast_hash": "886a73d2079a821177375b439e4cfa4d",
+    "semantic_hash": ""
+  },
+  "docs/estandares-auditoria-presentacion.md": {
+    "mtime": 1791039974.447227,
+    "seen": 1791939451.9499557,
+    "ast_hash": "c88950b53aaedb1df30695dac8b4e6d1",
+    "semantic_hash": ""
+  },
+  "docs/estandares-controles-popup.md": {
+    "mtime": 1791245457.750841,
+    "seen": 1791939451.9499557,
+    "ast_hash": "c2c14421d9ba07716e9a0d7335c93353",
+    "semantic_hash": ""
+  },
+  "docs/estandares-disponibilidad.md": {
+    "mtime": 1791347812.5226772,
+    "seen": 1791939451.9499557,
+    "ast_hash": "faf3887d782c6bdc875711206af1428e",
+    "semantic_hash": ""
+  },
+  "docs/estandares-ficha-detalle.md": {
+    "mtime": 1791334710.5198386,
+    "seen": 1791939451.9499557,
+    "ast_hash": "78805f76d728ab060514cc2ce09c9b46",
+    "semantic_hash": ""
+  },
+  "docs/estandares-ficha-pulido-final.md": {
+    "mtime": 1791344819.0597067,
+    "seen": 1791939451.9509616,
+    "ast_hash": "80e4d229cf9cebb818e2c7ceafdc7918",
+    "semantic_hash": ""
+  },
+  "docs/estandares-ficha-workspace.md": {
+    "mtime": 1791346111.248073,
+    "seen": 1791939451.9509616,
+    "ast_hash": "62247a7d1f025b8c7a4e71503b6ac7e1",
+    "semantic_hash": ""
+  },
+  "docs/estandares-ux-v2.md": {
+    "mtime": 1791240313.9577458,
+    "seen": 1791939451.9509616,
+    "ast_hash": "c590fa7b63402696979d8a9a315d0bff",
+    "semantic_hash": ""
+  },
+  "docs/gestion-permisos.md": {
+    "mtime": 1791939283.082728,
+    "seen": 1791939451.9509616,
+    "ast_hash": "2320da24b75b6573b1311b852bfbba0f",
+    "semantic_hash": ""
+  },
+  "docs/iconografia-lims.md": {
+    "mtime": 1791260042.4794776,
+    "seen": 1791939451.9509616,
+    "ast_hash": "cd07bdd15a442b00a2f2eeda165e031e",
+    "semantic_hash": ""
+  },
+  "docs/legacy-audit.md": {
+    "mtime": 1790401978.9225771,
+    "seen": 1791939451.9509616,
+    "ast_hash": "914092c1cc1b1c726db84a98e98e8353",
+    "semantic_hash": ""
+  },
+  "docs/materiales-referencia-db.md": {
+    "mtime": 1790895288.3899505,
+    "seen": 1791939451.9509616,
+    "ast_hash": "3b83b35137b0902c879a33ad79d1cd2f",
+    "semantic_hash": ""
+  },
+  "docs/preparaciones-intermedia.md": {
+    "mtime": 1791415834.38151,
+    "seen": 1791939451.9509616,
+    "ast_hash": "f9856cfb4de3a360d902fb36886f4197",
+    "semantic_hash": ""
+  },
+  "docs/preparaciones-stock.md": {
+    "mtime": 1791353282.8410287,
+    "seen": 1791939451.9509616,
+    "ast_hash": "c5a7f01eab30cc61464b5115796f2590",
+    "semantic_hash": ""
+  },
+  "docs/reference-materials/ARCHITECTURE.md": {
+    "mtime": 1790895290.6769004,
+    "seen": 1791939451.9509616,
+    "ast_hash": "fcc2f9f98eb656c769131fe9ef207aee",
+    "semantic_hash": ""
+  },
+  "docs/reference-materials/DOMAIN.md": {
+    "mtime": 1790895293.8386188,
+    "seen": 1791939451.9509616,
+    "ast_hash": "917b4c8dc60c419fa024ec0ad834f66e",
+    "semantic_hash": ""
+  },
+  "docs/reference-materials/FORMULAS.md": {
+    "mtime": 1790748660.1600463,
+    "seen": 1791939451.9509616,
+    "ast_hash": "5026f7e580a94f529844410e4b2b70eb",
+    "semantic_hash": ""
+  },
+  "docs/reference-materials/MIGRATION_NOTES.md": {
+    "mtime": 1790895296.5777564,
+    "seen": 1791939451.9509616,
+    "ast_hash": "53258dd90a384c425d820d24fb3e14cc",
+    "semantic_hash": ""
+  },
+  "docs/reference-materials/OPEN_DECISIONS.md": {
+    "mtime": 1790895299.2375536,
+    "seen": 1791939451.9509616,
+    "ast_hash": "c8f8a1c348d0706b993d23e8ce72d708",
+    "semantic_hash": ""
+  },
+  "docs/security.md": {
+    "mtime": 1790401963.1647792,
+    "seen": 1791939451.9509616,
+    "ast_hash": "1e2260a6d5a083d5a78d4af850675611",
+    "semantic_hash": ""
+  },
+  "docs/testing.md": {
+    "mtime": 1790811530.9956453,
+    "seen": 1791939451.9509616,
+    "ast_hash": "a1bcb5d67c6d6c32a95006e4c9a74c02",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/Assets/Branding/LIMS.png": {
+    "mtime": 1790432364.9373019,
+    "seen": 1791939451.9509616,
+    "ast_hash": "fae7ff9fad4a27a33b2daba48b2b8f0f",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/Assets/Branding/LoginLaboratoryBackground.png": {
+    "mtime": 1790430703.9983895,
+    "seen": 1791939451.9509616,
+    "ast_hash": "79a3647d32135a6283fafa5e57bdab56",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/Assets/SplashScreen.scale-200.png": {
+    "mtime": 1790395233.3950763,
+    "seen": 1791939451.9509616,
+    "ast_hash": "4e1144b1fe897a4d60fea4d9d3777556",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/Assets/Square150x150Logo.scale-200.png": {
+    "mtime": 1790395233.3950763,
+    "seen": 1791939451.9509616,
+    "ast_hash": "6faba75d1f817fc5696a54badb4c9fbb",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/Assets/Square44x44Logo.scale-200.png": {
+    "mtime": 1790395233.3950763,
+    "seen": 1791939451.9509616,
+    "ast_hash": "cf1e1f33567766615f1d3c813ba85c16",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/Assets/Square44x44Logo.targetsize-24_altform-unplated.png": {
+    "mtime": 1790395233.3950763,
+    "seen": 1791939451.9509616,
+    "ast_hash": "32e7726aab9962e11346a8fc90328e64",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/Assets/Square44x44Logo.targetsize-48_altform-lightunplated.png": {
+    "mtime": 1790395233.3950763,
+    "seen": 1791939451.9509616,
+    "ast_hash": "6b83cfa58f2599e0d0cafd4d3bd16479",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/Assets/StoreLogo.png": {
+    "mtime": 1790395233.3950763,
+    "seen": 1791939451.9509616,
+    "ast_hash": "5b53c3ecf5f9b1013cb64486ce6dcb4e",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/Assets/Wide310x150Logo.scale-200.png": {
+    "mtime": 1790395233.4021583,
+    "seen": 1791939451.9509616,
+    "ast_hash": "abcda9caed8b376564b78d045eec0850",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/intermediate/confirmation-1920.png": {
+    "mtime": 1791416681.5860434,
+    "seen": 1791939451.9509616,
+    "ast_hash": "15694087f6bb862c3044a0d6502e5a0b",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/intermediate/detail-1920.png": {
+    "mtime": 1791416683.636406,
+    "seen": 1791939451.9509616,
+    "ast_hash": "74f05d2be74b4b5f24249fbd6c139c91",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/intermediate/empty-1920.png": {
+    "mtime": 1791416528.5342307,
+    "seen": 1791939451.9509616,
+    "ast_hash": "d95cfa30e3d7df1f9a55015534c6277d",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/intermediate/excess-1920.png": {
+    "mtime": 1791416535.1441388,
+    "seen": 1791939451.9509616,
+    "ast_hash": "78edd9cef18addde5031cf4945894ece",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/intermediate/insufficient-1920.png": {
+    "mtime": 1791416536.1968224,
+    "seen": 1791939451.9509616,
+    "ast_hash": "bce549cb1cf5e03d9f8204978d0b246a",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/intermediate/list-1920.png": {
+    "mtime": 1791416682.9465208,
+    "seen": 1791939451.9509616,
+    "ast_hash": "efa6bb3584fcedae09e14935fe6123a9",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/intermediate/one-component-1920.png": {
+    "mtime": 1791416530.479535,
+    "seen": 1791939451.9509616,
+    "ast_hash": "26092658024e1ecacc00ae3edb7b7b5b",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/intermediate/probe-0-1920.png": {
+    "mtime": 1791416529.5242224,
+    "seen": 1791939451.9509616,
+    "ast_hash": "2902bf6424df4eae389d9c444f558319",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/intermediate/probe-100-1920.png": {
+    "mtime": 1791416534.249362,
+    "seen": 1791939451.9509616,
+    "ast_hash": "3c2679c030dc0b3ded57c63091091f29",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/intermediate/probe-25-1920.png": {
+    "mtime": 1791416532.320448,
+    "seen": 1791939451.9509616,
+    "ast_hash": "2da1c2d06352affd86bb85018ff48180",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/intermediate/probe-75-1920.png": {
+    "mtime": 1791416533.2642736,
+    "seen": 1791939451.9509616,
+    "ast_hash": "efc2f3403aab3db1311561d2ff58bfd0",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/intermediate/ready-1920.png": {
+    "mtime": 1791416537.1809576,
+    "seen": 1791939451.9509616,
+    "ast_hash": "05ead3e08fa7a825b131e3b824e88f96",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/intermediate/responsive-1366.png": {
+    "mtime": 1791416692.834509,
+    "seen": 1791939451.9509616,
+    "ast_hash": "3f679dfda07b1acd2c6b382c5a9a1b28",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/intermediate/responsive-1600.png": {
+    "mtime": 1791416691.380226,
+    "seen": 1791939451.9509616,
+    "ast_hash": "0bf85625aeaeb63f03ac264fa2fb4260",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/intermediate/result-1366.png": {
+    "mtime": 1791416693.498165,
+    "seen": 1791939451.9509616,
+    "ast_hash": "461b40d63ad8c858c797d15b7b68a0d6",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/intermediate/result-1600.png": {
+    "mtime": 1791416691.9969487,
+    "seen": 1791939451.9509616,
+    "ast_hash": "a562dd55676cc818d20f99a482a2dbb4",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/intermediate/success-1920.png": {
+    "mtime": 1791416682.1802962,
+    "seen": 1791939451.9509616,
+    "ast_hash": "1edc28df60ac432d6673878991a9cf3c",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/intermediate/three-components-1920.png": {
+    "mtime": 1791416531.3968866,
+    "seen": 1791939451.9509616,
+    "ast_hash": "3f1aa6ce86033f81343f4d34a9c67580",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/stock/stock-confirmation-1366.png": {
+    "mtime": 1791350739.0300672,
+    "seen": 1791939451.9509616,
+    "ast_hash": "811ee2489b5191658918fc288a0684e3",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/stock/stock-detail-1366.png": {
+    "mtime": 1791350859.1857817,
+    "seen": 1791939451.9509616,
+    "ast_hash": "54ce41419cc677afa135b89bf60a9cb3",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/stock/stock-detail-audit-1920.png": {
+    "mtime": 1791351088.9542646,
+    "seen": 1791939451.9509616,
+    "ast_hash": "cad1602ef3441fd1221506639613e7c0",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/stock/stock-detail-keyboard-1920.png": {
+    "mtime": 1791351046.1260233,
+    "seen": 1791939451.9509616,
+    "ast_hash": "addbe79c0b3dd6b86caf62da40add591",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/stock/stock-insufficient-1366.png": {
+    "mtime": 1791350736.0299487,
+    "seen": 1791939451.9509616,
+    "ast_hash": "0d90de90c7a9b64ba902b6d21800946e",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/stock/stock-list-created-1920.png": {
+    "mtime": 1791350560.3220477,
+    "seen": 1791939451.9509616,
+    "ast_hash": "cf83aca7b81f35cf7b8b45390081fbb4",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/stock/stock-list-empty-1920.png": {
+    "mtime": 1791349581.6280007,
+    "seen": 1791939451.9509616,
+    "ast_hash": "c65e7640a2f68dbc0101adc66a4d04a0",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/stock/stock-result-1366.png": {
+    "mtime": 1791350228.6241856,
+    "seen": 1791939451.9509616,
+    "ast_hash": "dd2d08999b6c2b1e64c590f4b866114e",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/stock/stock-step1-1920.png": {
+    "mtime": 1791349596.6713734,
+    "seen": 1791939451.9509616,
+    "ast_hash": "cc2516074ef2243bcef5b6e05f8193d9",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/stock/stock-step2-1366.png": {
+    "mtime": 1791350225.501296,
+    "seen": 1791939451.9509616,
+    "ast_hash": "caeb88dec1b6375ef5a4a25122430fcb",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/stock/stock-step2-1600.png": {
+    "mtime": 1791350221.982285,
+    "seen": 1791939451.9509616,
+    "ast_hash": "b2e683c0f592dea5236ade95799a4771",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/stock/stock-step2-1920.png": {
+    "mtime": 1791350218.816999,
+    "seen": 1791939451.9509616,
+    "ast_hash": "cf6a7fda6b39836ee8372cccddb68a98",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/stock/stock-success-1366.png": {
+    "mtime": 1791350799.5379744,
+    "seen": 1791939451.9509616,
+    "ast_hash": "a786ae3e38b936f3da5322918d35dc52",
+    "semantic_hash": ""
+  }
+}

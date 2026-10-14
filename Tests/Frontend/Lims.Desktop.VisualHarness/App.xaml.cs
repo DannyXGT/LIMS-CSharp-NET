@@ -20,6 +20,9 @@ public partial class App : Microsoft.UI.Xaml.Application
     private ReferenceMaterialsPage? _page;
     private StockPage? _stockPage;
     private IntermediatePage? _intermediatePage;
+    private PermissionsPage? _permissionsPage;
+    private readonly FixturePermissionsApi _permissionsApi = new();
+    private double _fourTabWidth;
     private readonly FixtureIntermediateApi _intermediateApi = new();
     private readonly FixtureStockApi _stockApi = new();
     private readonly FixtureApi _api = new();
@@ -46,12 +49,13 @@ public partial class App : Microsoft.UI.Xaml.Application
     protected override void OnLaunched(LaunchActivatedEventArgs args)
     {
         var session = new FixtureSession();
-        var shellModel = new ShellViewModel(session, new FixtureAuthentication(), new FixtureNavigation());
+        var shellModel = new ShellViewModel(session, new FixtureAuthentication(), new FixtureNavigation(), _permissionsApi);
         shellModel.RefreshProfile();
         _page = new ReferenceMaterialsPage(new ReferenceMaterialsViewModel(_api, session));
         _stockPage = new StockPage(new StockViewModel(_stockApi, session));
         _intermediatePage = new IntermediatePage(new IntermediateViewModel(_intermediateApi, session));
-        _shell = new ShellPage(shellModel, _page, _stockPage, _intermediatePage) { RequestedTheme = ElementTheme.Dark };
+        _permissionsPage = new PermissionsPage(new PermissionsViewModel(_permissionsApi, session));
+        _shell = new ShellPage(shellModel, _page, _stockPage, _intermediatePage, _permissionsPage) { RequestedTheme = ElementTheme.Dark };
         var root = new Grid { RequestedTheme = ElementTheme.Dark, Style = (Style)Resources["FixtureRootStyle"] };
         root.RowDefinitions.Add(new RowDefinition { Height = new GridLength(40) });
         root.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
@@ -85,6 +89,86 @@ public partial class App : Microsoft.UI.Xaml.Application
             var navigation = (NavigationView)_shell.FindName("MainNavigation");
             switch (action)
             {
+                case "permissions": navigation.SelectedItem = _shell.FindName("PermissionsItem"); break;
+                case "permissionSelect":
+                    var selectedPermissionUser = _permissionsPage!.ViewModel.Users[data.GetProperty("index").GetInt32()];
+                    await _permissionsPage.ViewModel.SelectAsync(selectedPermissionUser, true);
+                    ((ListView)_permissionsPage.FindName("UsersList")).SelectedItem = selectedPermissionUser;
+                    break;
+                case "permissionToggle":
+                    var permissionChoice = _permissionsPage!.ViewModel.Groups.SelectMany(g => g.Items).Single(c => c.Definition.Code == data.GetProperty("code").GetString());
+                    permissionChoice.IsGranted = !permissionChoice.IsGranted;
+                    break;
+                case "permissionSave": await _permissionsPage!.ViewModel.SaveAsync(); break;
+                case "permissionFailSave": _permissionsApi.FailSave = data.GetProperty("fail").GetBoolean(); break;
+                case "permissionScroll": ((ScrollViewer)_permissionsPage!.FindName("PermissionScroll")).ChangeView(null, data.GetProperty("offset").GetDouble(), null, true); break;
+                case "permissionCommon":
+                    _permissionsApi.Current = new("Analista", [], true);
+                    await _shell.ViewModel.RefreshAccessAsync();
+                    navigation.SelectedItem = _shell.FindName("HomeItem");
+                    navigation.SelectedItem = _shell.FindName("PermissionsItem");
+                    break;
+                case "tabSelect":
+                    ((LimsTabStrip)((PreparationsPage)((ContentControl)_shell.FindName("PreparationsHost")).Content).FindName("PreparationTabs")).SelectedIndex = data.GetProperty("index").GetInt32();
+                    break;
+                case "tabFocus":
+                    var focusTabs = (LimsTabStrip)((PreparationsPage)((ContentControl)_shell.FindName("PreparationsHost")).Content).FindName("PreparationTabs");
+                    focusTabs.SelectedItem!.Focus(FocusState.Keyboard);
+                    break;
+                case "tabCapacity":
+                    var capacityPage = (PreparationsPage)((ContentControl)_shell.FindName("PreparationsHost")).Content;
+                    var capacityTabs = (LimsTabStrip)capacityPage.FindName("PreparationTabs");
+                    // Measure a four-item DesignSystem sample only; these are not module routes.
+                    var capacityProbe = new LimsTabStrip { Width = capacityTabs.ActualWidth, Opacity = 0, IsHitTestVisible = false };
+                    foreach (var label in new[] { "Stock", "Intermedia", "Curvas", "AQS" }) capacityProbe.Items.Add(new LimsTabItem { Label = label });
+                    var preparationRoot = (Grid)capacityPage.Content;
+                    preparationRoot.Children.Add(capacityProbe);
+                    capacityProbe.UpdateLayout();
+                    _fourTabWidth = capacityProbe.Items.Sum(tab => tab.ActualWidth);
+                    preparationRoot.Children.Remove(capacityProbe);
+                    break;
+                case "tabReport":
+                    var preparations = (PreparationsPage)((ContentControl)_shell.FindName("PreparationsHost")).Content;
+                    var tabs = (LimsTabStrip)preparations.FindName("PreparationTabs");
+                    var tabPeer = Microsoft.UI.Xaml.Automation.Peers.FrameworkElementAutomationPeer.CreatePeerForElement(tabs);
+                    var selection = (Microsoft.UI.Xaml.Automation.Provider.ISelectionProvider)tabPeer.GetPattern(Microsoft.UI.Xaml.Automation.Peers.PatternInterface.Selection);
+                    var indicator = (Border)((Grid)tabs.Content).Children[1];
+                    double ContentX(FrameworkElement element) => element.TransformToVisual(_shell).TransformPoint(new Windows.Foundation.Point()).X;
+                    double ContentY(FrameworkElement element) => element.TransformToVisual(_shell).TransformPoint(new Windows.Foundation.Point()).Y;
+                    var currentPreparationPage = tabs.SelectedIndex == 0 ? (Page)_stockPage! : _intermediatePage!;
+                    var tableSurface = ((Grid)currentPreparationPage.Content).Children.OfType<Border>().Single();
+                    var headerAction = (Button)_shell.FindName("PreparationsNewButton");
+                    var tabResults = tabs.Items.Select(tab => {
+                        var peer = Microsoft.UI.Xaml.Automation.Peers.FrameworkElementAutomationPeer.CreatePeerForElement(tab);
+                        var pattern = (Microsoft.UI.Xaml.Automation.Provider.ISelectionItemProvider)peer.GetPattern(Microsoft.UI.Xaml.Automation.Peers.PatternInterface.SelectionItem);
+                        var label = (TextBlock)((StackPanel)((Grid)tab.Content).Children[0]).Children[1];
+                        return new { Name = peer.GetName(), Type = peer.GetAutomationControlType().ToString(), pattern.IsSelected, tab.IsTabStop, Focus = tab.FocusState.ToString(), tab.ActualWidth, tab.ActualHeight,
+                            LabelX = ContentX(label), LabelWidth = label.ActualWidth, HitX = ContentX(tab), HitY = ContentY(tab),
+                            Foreground = ((Microsoft.UI.Xaml.Media.SolidColorBrush)label.Foreground).Color.ToString(CultureInfo.InvariantCulture), Weight = label.FontWeight.Weight };
+                    }).ToArray();
+                    File.WriteAllText(Path.Combine(_directory, "tabs.json"), JsonSerializer.Serialize(new {
+                        FixtureOnly = true, WindowWidth = _window.AppWindow.Size.Width, WindowHeight = _window.AppWindow.Size.Height, Theme = tabs.ActualTheme.ToString(), tabs.SelectedIndex,
+                        Type = tabPeer.GetAutomationControlType().ToString(), selection.IsSelectionRequired, selection.CanSelectMultiple,
+                        SelectionCount = selection.GetSelection().Length, Tabs = tabResults,
+                        Description = ((TextBlock)preparations.FindName("PreparationDescription")).Text,
+                        Action = ((TextBlock)_shell.FindName("PreparationsNewLabel")).Text,
+                        ContentMatchesSelection = ((ContentControl)preparations.FindName("PreparationHost")).Content == (tabs.SelectedIndex == 0 ? (object)_stockPage! : _intermediatePage!),
+                        StripWidth = tabs.ActualWidth, StripHeight = tabs.ActualHeight, RasterizationScale = tabs.XamlRoot.RasterizationScale,
+                        Guide = new {
+                            TitleX = ContentX((TextBlock)_shell.FindName("SectionTitle")),
+                            SubtitleX = ContentX((TextBlock)_shell.FindName("SectionSubtitle")),
+                            StockX = tabResults[0].LabelX,
+                            DescriptionX = ContentX((TextBlock)preparations.FindName("PreparationDescription")),
+                            SearchX = ContentX((TextBox)currentPreparationPage.FindName("SearchBox")),
+                            TableX = ContentX(tableSurface)
+                        },
+                        HeaderActionBottom = ContentY(headerAction) + headerAction.ActualHeight,
+                        StripY = ContentY(tabs), SeparatorY = ContentY((Border)((Grid)tabs.Content).Children[2]),
+                        FourTabWidth = _fourTabWidth, IndicatorHeight = indicator.ActualHeight, IndicatorBaseWidth = indicator.ActualWidth,
+                        IndicatorColor = ((Microsoft.UI.Xaml.Media.SolidColorBrush)indicator.Background).Color.ToString(CultureInfo.InvariantCulture),
+                        Background = ((Microsoft.UI.Xaml.Media.SolidColorBrush)_stockPage!.Background).Color.ToString(CultureInfo.InvariantCulture),
+                    }, ReportOptions));
+                    break;
                 case "intermediate":
                     navigation.SelectedItem = _shell.FindName("PreparationsItem");
                     await ((PreparationsPage)((ContentControl)_shell.FindName("PreparationsHost")).Content).ShowIntermediateAsync();
@@ -121,6 +205,26 @@ public partial class App : Microsoft.UI.Xaml.Application
                         Sources = _intermediateApi.Sources.Select(src => new { src.Code, src.AvailableVolume }),
                     }, ReportOptions)); break;
                 case "preparations": navigation.SelectedItem = _shell.FindName("PreparationsItem"); break;
+                case "preparationSelection":
+                    ((ListView)_stockPage!.FindName("PreparationsList")).SelectedIndex = data.GetProperty("index").GetInt32();
+                    break;
+                case "preparationReload": await _stockPage!.LoadAsync(); break;
+                case "preparationCloseDetail": _stockPage!.DetailSheet?.Hide(); break;
+                case "preparationListReport":
+                    var stockView = _stockPage!.ViewModel;
+                    var intermediateView = _intermediatePage!.ViewModel;
+                    File.WriteAllText(Path.Combine(_directory, "preparation-list.json"), JsonSerializer.Serialize(new {
+                        FixtureOnly = true, Count = stockView.Items.Count,
+                        SelectedId = stockView.SelectedPreparation?.Id,
+                        CanOpen = stockView.OpenSelectedPreparationCommand.CanExecute(null),
+                        ButtonEnabled = ((Button)_stockPage.FindName("ViewPreparationButton")).IsEnabled,
+                        EmptyVisible = ((StackPanel)_stockPage.FindName("EmptyState")).Visibility.ToString(),
+                        stockView.HasSearchCriteria, stockView.EmptyTitle,
+                        DetailId = _stockPage.DetailSheet?.Detail.Preparation.Id,
+                        IntermediateSelectedId = intermediateView.SelectedPreparation?.Id,
+                        IntermediateCanOpen = intermediateView.OpenSelectedPreparationCommand.CanExecute(null)
+                    }, ReportOptions));
+                    break;
                 case "stockEditor": _ = _stockPage!.OpenCreateAsync(); break;
                 case "stockSelect": ((LimsSearchSelect)_stockPage!.Editor!.FindName("SourceList")).SelectedIndex = data.GetProperty("index").GetInt32(); break;
                 case "stockText": ((TextBox)_stockPage!.Editor!.FindName(data.GetProperty("field").GetString()!)).Text = data.GetProperty("text").GetString()!; break;

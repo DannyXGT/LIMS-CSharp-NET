@@ -136,6 +136,6 @@ public sealed class StockRepository(LimsDbContext dbContext) : IStockRepository
         item.ExpirationDate, item.Location.Name, item.Version, item.ReceivedDate);
     private static StockSummary Summary(ReferencePreparation item, string actor) => new(item.Id, item.Code, item.Name,
         item.SourceName, item.SourceLot, item.TargetConcentration, item.ActualConcentration, item.ConcentrationUnit,
-        item.FinalVolume, item.FinalVolumeUnit, item.PreparationDate, actor, item.ExpirationDate < DateOnly.FromDateTime(DateTimeOffset.UtcNow.ToOffset(TimeSpan.FromHours(-6)).DateTime) ? "Expired" : item.AvailableVolume == 0 ? "Depleted" : item.Status, item.ActualWeight, item.ActualWeightUnit, item.ExpirationDate);
+        item.FinalVolume, item.FinalVolumeUnit, item.PreparationDate, actor, item.ExpirationDate < DateOnly.FromDateTime(DateTimeOffset.UtcNow.ToOffset(TimeSpan.FromHours(-6)).DateTime) ? "Expired" : item.AvailableVolume == 0 ? "Depleted" : item.Status, item.ActualWeight, item.ActualWeightUnit, item.ExpirationDate, item.AvailableVolume);
     private static OperationResult<StockDetail> Failure(string message) => OperationResult.Failure<StockDetail>(new OperationError(ErrorCodes.Conflict, message));
 }

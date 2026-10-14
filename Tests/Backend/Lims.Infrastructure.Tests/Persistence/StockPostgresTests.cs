@@ -3,8 +3,11 @@ using Lims.Contracts.Errors;
 using Lims.Contracts.ReferencePreparations;
 using Lims.Domain.ReferenceMaterials;
 using Lims.Infrastructure.Persistence;
+using Lims.Infrastructure.Persistence.Migrations;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Npgsql;
 
 namespace Lims.Infrastructure.Tests.Persistence;
@@ -21,6 +24,142 @@ public sealed class StockPostgresFactAttribute : FactAttribute
 
 public sealed class StockPostgresTests
 {
+    [StockPostgresFact]
+    public Task RecurringCalculatedWeightRoundTripsWithoutOverflowAndCanBeDiluted() => AssertDecimalRoundTripAsync(1000);
+
+    [StockPostgresFact]
+    public Task RecurringActualConcentrationRoundTripsWithoutOverflowAndCanBeDiluted() => AssertDecimalRoundTripAsync(3);
+
+    private static async Task AssertDecimalRoundTripAsync(decimal finalVolume)
+    {
+        await using var fixture = await Fixture.CreateAsync(150, 99.11m);
+        await using var context = fixture.Context();
+        var request = fixture.Request(100);
+        request = request with { Calculation = request.Calculation with { ActualWeight = 100m, FinalVolume = finalVolume } };
+        var expected = StockCalculator.Calculate(fixture.Source, request.Calculation);
+        var result = await Service(context).CreateAsync(request, 42, CancellationToken.None);
+        Assert.True(result.IsSuccess, result.Error?.Message);
+        Assert.Equal(expected.CalculatedWeight, result.Value!.Calculation.CalculatedWeight);
+        Assert.Equal(expected.ActualConcentration, result.Value.Calculation.ActualConcentration);
+        Assert.True((await Service(context).GetAsync(request.RequestId, CancellationToken.None)).IsSuccess);
+        Assert.Single((await Service(context).ListAsync(null, 1, 25, CancellationToken.None)).Value!.Items);
+
+        var intermediate = new IntermediateService(new IntermediateRepository(context), TimeProvider.System);
+        var options = await intermediate.OptionsAsync(CancellationToken.None);
+        var source = Assert.Single(options.Value!.Sources);
+        var volumeTaken = Math.Min(25, source.InitialVolume / 4);
+        var dilution = new CreateIntermediateRequest(Guid.NewGuid(), "Dilución de Stock con peso periódico",
+            new(source.MethodId, 100, "mL", [new(source.Id, source.Version, volumeTaken, "mL")]),
+            request.PreparationDate, request.ExpirationDate!.Value, null);
+        var diluted = await intermediate.CreateAsync(dilution, 42, CancellationToken.None);
+        Assert.True(diluted.IsSuccess, diluted.Error?.Message);
+        Assert.Single(diluted.Value!.Consumptions);
+        Assert.Equal(expected.ActualConcentration!.Value * volumeTaken / 100, diluted.Value.Calculation.Results[0].Concentration);
+    }
+
+    [StockPostgresFact]
+    public async Task PrecisionMigrationRepairsExistingValuesAndTheDeployedFixedScaleModel()
+    {
+        await using var fixture = await Fixture.CreateAsync(300, 99.11m);
+        await using var context = fixture.Context();
+        await context.Database.ExecuteSqlRawAsync("ALTER TABLE reference_preparations ALTER COLUMN calculated_weight TYPE numeric(40,28), ALTER COLUMN actual_concentration TYPE numeric(40,28)");
+        await using var legacy = new LimsDbContext(new DbContextOptionsBuilder<LimsDbContext>()
+            .UseNpgsql(context.Database.GetConnectionString(), options => options.EnableRetryOnFailure(2))
+            .ReplaceService<IModelCustomizer, FixedScaleModelCustomizer>().Options);
+        var request = fixture.Request(100);
+        request = request with { Calculation = request.Calculation with { ActualWeight = 100m } };
+        await Assert.ThrowsAsync<OverflowException>(() => Service(legacy).CreateAsync(request, 42, CancellationToken.None));
+        Assert.Empty(await context.ReferencePreparations.ToArrayAsync());
+        Assert.Empty(await context.ReferenceMaterialMovements.ToArrayAsync());
+        Assert.Equal(300, (await context.ReferenceMaterials.SingleAsync()).AvailableQuantity);
+
+        // Simulate a historic fixed-scale row, then prove normalization preserves its exact value.
+        var historical = await Service(context).CreateAsync(request with
+        {
+            RequestId = Guid.NewGuid(),
+            Calculation = request.Calculation with { TargetConcentration = 99.11m },
+        }, 42, CancellationToken.None);
+        Assert.True(historical.IsSuccess, historical.Error?.Message);
+        var expected = StockCalculator.Calculate(fixture.Source, request.Calculation).CalculatedWeight;
+        var historicalId = historical.Value!.Preparation.Id;
+        await context.Database.ExecuteSqlInterpolatedAsync($"UPDATE reference_preparations SET target_concentration = {100m}, calculated_weight = {expected} WHERE id = {historicalId}");
+        var before = await context.Database.SqlQuery<string>($"SELECT calculated_weight::text AS \"Value\" FROM reference_preparations WHERE id = {historicalId}").SingleAsync();
+        await Assert.ThrowsAsync<OverflowException>(() => Service(legacy).GetAsync(historicalId, CancellationToken.None));
+
+        var commands = context.GetService<IMigrationsSqlGenerator>().Generate(new PreservePreparationDecimalScale().UpOperations, context.Model);
+        foreach (var command in commands) await context.Database.ExecuteSqlRawAsync(command.CommandText);
+        var repairedHistory = await Service(legacy).GetAsync(historicalId, CancellationToken.None);
+        Assert.Equal(expected, repairedHistory.Value!.Calculation.CalculatedWeight);
+        Assert.True(await context.Database.SqlQuery<bool>($"SELECT calculated_weight = CAST({before} AS numeric) AS \"Value\" FROM reference_preparations WHERE id = {historicalId}").SingleAsync());
+        var fresh = (await new StockRepository(legacy).FindSourceAsync(fixture.Source.Id, CancellationToken.None))!;
+        var repairedRequest = request with { Calculation = request.Calculation with { SourceVersion = fresh.Version } };
+        Assert.True((await Service(legacy).CreateAsync(repairedRequest, 42, CancellationToken.None)).IsSuccess);
+        Assert.Equal(2, await context.ReferenceMaterialMovements.CountAsync());
+    }
+
+    private sealed class FixedScaleModelCustomizer(ModelCustomizerDependencies dependencies) : ModelCustomizer(dependencies)
+    {
+        public override void Customize(ModelBuilder modelBuilder, DbContext context)
+        {
+            base.Customize(modelBuilder, context);
+            modelBuilder.Entity<Lims.Domain.ReferencePreparations.ReferencePreparation>().Property(p => p.CalculatedWeight).HasColumnType("numeric(40,28)").HasPrecision(40, 28);
+            modelBuilder.Entity<Lims.Domain.ReferencePreparations.ReferencePreparation>().Property(p => p.ActualConcentration).HasColumnType("numeric(40,28)").HasPrecision(40, 28);
+        }
+    }
+
+    [StockPostgresFact]
+    public async Task PrecisionMigrationRejectsUnrepresentableHistoryWithoutRoundingIt()
+    {
+        await using var fixture = await Fixture.CreateAsync(150);
+        await using var context = fixture.Context();
+        Assert.True((await Service(context).CreateAsync(fixture.Request(50), 42, CancellationToken.None)).IsSuccess);
+        await context.Database.ExecuteSqlRawAsync("ALTER TABLE reference_preparations ALTER COLUMN calculated_weight TYPE numeric(40,28), ALTER COLUMN actual_concentration TYPE numeric(40,28)");
+        await context.Database.ExecuteSqlRawAsync("UPDATE reference_preparations SET actual_concentration = 123456789012.1234567890123456789012345678");
+        var before = await context.Database.SqlQueryRaw<string>("SELECT actual_concentration::text AS \"Value\" FROM reference_preparations").SingleAsync();
+        var commands = context.GetService<IMigrationsSqlGenerator>().Generate(new PreservePreparationDecimalScale().UpOperations, context.Model);
+        await using (var transaction = await context.Database.BeginTransactionAsync())
+        {
+            var error = await Assert.ThrowsAsync<PostgresException>(async () =>
+            {
+                foreach (var command in commands) await context.Database.ExecuteSqlRawAsync(command.CommandText);
+            });
+            Assert.Equal(PostgresErrorCodes.NumericValueOutOfRange, error.SqlState);
+            await transaction.RollbackAsync();
+        }
+        var after = await context.Database.SqlQueryRaw<string>("SELECT actual_concentration::text AS \"Value\" FROM reference_preparations").SingleAsync();
+        Assert.Equal(before, after);
+        Assert.Single(await context.ReferenceMaterialMovements.ToArrayAsync());
+    }
+
+    [StockPostgresFact]
+    public async Task ListAndDetailExposeCurrentSolutionBalanceSeparatelyFromSourceWeight()
+    {
+        await using var fixture = await Fixture.CreateAsync(100);
+        await using var context = fixture.Context();
+        var service = Service(context);
+        var request = fixture.Request(50);
+        var created = await service.CreateAsync(request, 42, CancellationToken.None);
+        Assert.True(created.IsSuccess, created.Error?.Message);
+        Assert.Equal(1000m, created.Value!.Preparation.AvailableVolume);
+        var preparation = await context.ReferencePreparations.SingleAsync(p => p.Id == request.RequestId);
+        var today = DateOnly.FromDateTime(DateTimeOffset.UtcNow.ToOffset(TimeSpan.FromHours(-6)).DateTime);
+        preparation.ConsumeVolume(400, 42, DateTimeOffset.UtcNow, today);
+        await context.SaveChangesAsync();
+        var listed = Assert.Single((await service.ListAsync(null, 1, 25, CancellationToken.None)).Value!.Items);
+        var detail = (await service.GetAsync(request.RequestId, CancellationToken.None)).Value!;
+        Assert.Equal(600m, listed.AvailableVolume);
+        Assert.Equal(600m, detail.Preparation.AvailableVolume);
+        Assert.Equal(400m, detail.Preparation.Availability.ConsumedVolume);
+        Assert.Equal(60m, detail.Preparation.Availability.RemainingPercent);
+        Assert.Equal("Warning", detail.Preparation.Availability.Tone);
+        Assert.Equal(50m, detail.Consumption.Quantity);
+        preparation.ConsumeVolume(600, 42, DateTimeOffset.UtcNow, today);
+        await context.SaveChangesAsync();
+        var depleted = (await service.GetAsync(request.RequestId, CancellationToken.None)).Value!;
+        Assert.Equal(0m, depleted.Preparation.AvailableVolume);
+        Assert.Equal("Agotado", depleted.Preparation.StatusLabel);
+        Assert.Equal("Danger", depleted.Preparation.Availability.Tone);
+    }
     [StockPostgresFact]
     public async Task MeasuredWeightAndConvertedDebitArePersistedSeparatelyFromTheoreticalWeight()
     {
@@ -236,6 +375,10 @@ public sealed class StockPostgresTests
         var intermediateScript = await File.ReadAllTextAsync(intermediatePath);
         await context.Database.ExecuteSqlRawAsync(intermediateScript);
         await context.Database.ExecuteSqlRawAsync(intermediateScript);
+        var precisionPath = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../../../artifacts/sql/reference_preparation_decimal_scale.sql"));
+        var precisionScript = await File.ReadAllTextAsync(precisionPath);
+        await context.Database.ExecuteSqlRawAsync(precisionScript);
+        await context.Database.ExecuteSqlRawAsync(precisionScript);
         Assert.False(context.Database.HasPendingModelChanges());
         Assert.True((await Service(context).CreateAsync(fixture.Request(50), 42, CancellationToken.None)).IsSuccess);
     }

@@ -151,7 +151,7 @@
    <TextBlock x:Name="SuccessResult"/>
    <TextBlock x:Name="SuccessConsumption"/>
   </StackPanel>
-  <TextBlock x:Name="MessageText" Grid.Row="1" Text="{x:Bind ViewModel.Message, Mode=OneWay}" Style="{StaticResource LimsInlineErrorStyle}" TextWrapping="Wrap"/>
+  <TextBlock x:Name="MessageText" IsTextSelectionEnabled="True" Grid.Row="1" Text="{x:Bind ViewModel.Message, Mode=OneWay}" Style="{StaticResource LimsInlineErrorStyle}" TextWrapping="Wrap"/>
   <Grid Grid.Row="2" Padding="0,12,0,0" BorderBrush="{ThemeResource LimsBorderBrush}" BorderThickness="0,1,0,0">
    <Grid.ColumnDefinitions>
     <ColumnDefinition Width="*"/>

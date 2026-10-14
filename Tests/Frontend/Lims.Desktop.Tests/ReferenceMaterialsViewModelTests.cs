@@ -181,7 +181,7 @@ public sealed class ReferenceMaterialsViewModelTests
             ArchiveResult = new ApiCallResult<ReferenceMaterialDetail>(true, archived, null, 200),
         };
         var viewModel = new ReferenceMaterialsViewModel(api,
-            new FakeSession([ReferenceMaterialPermissions.View, ReferenceMaterialPermissions.Archive]))
+            new FakeSession([ReferenceMaterialPermissions.View, ReferenceMaterialPermissions.Archive, Lims.Contracts.Permissions.PermissionCatalog.Replace]))
         {
             SelectedDetail = Detail(summary),
         };

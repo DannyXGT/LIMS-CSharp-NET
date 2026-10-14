@@ -10,6 +10,28 @@ namespace Lims.Desktop.Tests;
 public sealed class IntermediateViewModelTests
 {
     [Fact]
+    public async Task DetailRequiresRealSelectionAndClearsOnTabChange()
+    {
+        var api = new FakeApi();
+        var vm = await Ready(api);
+        await vm.LoadAsync(null, 1, CancellationToken.None);
+        Assert.Null(vm.SelectedPreparation);
+        Assert.False(vm.OpenSelectedPreparationCommand.CanExecute(null));
+        var row = vm.AddComponent(); row.Source = api.Source; row.Volume = "25";
+        Assert.True(await vm.SaveAsync(CancellationToken.None));
+        Assert.Single(vm.Items);
+        Assert.False(vm.OpenSelectedPreparationCommand.CanExecute(null));
+        vm.SelectedPreparation = vm.Items[0];
+        Assert.True(vm.OpenSelectedPreparationCommand.CanExecute(null));
+        IntermediateDetail? opened = null;
+        vm.PreparationOpened += detail => { opened = detail; return Task.CompletedTask; };
+        await vm.OpenSelectedPreparationCommand.ExecuteAsync(null);
+        Assert.Equal(vm.SelectedPreparation.Id, opened?.Preparation.Id);
+        vm.ClearSelection();
+        Assert.Null(vm.SelectedPreparation);
+        Assert.False(vm.OpenSelectedPreparationCommand.CanExecute(null));
+    }
+    [Fact]
     public async Task LiveCompositionUpdatesCylinderResultsAndDoesNotMakeHttpRequestsPerKeystroke()
     {
         var api = new FakeApi(); var vm = await Ready(api);
@@ -49,6 +71,20 @@ public sealed class IntermediateViewModelTests
         vm.ExpirationDate = null; Assert.False(vm.CanSave); Assert.NotEmpty(vm.DateError);
     }
     [Fact]
+    public async Task ServerFailureShowsSupportReferenceAndDoesNotLoseCompositionOrDuplicateRequest()
+    {
+        var api = new FakeApi { CreateError = new(ErrorCodes.UnexpectedError,
+            "Ocurrió un error inesperado. Use el identificador de soporte para solicitar ayuda.", "int-save-456") };
+        var vm = await Ready(api); var row = vm.AddComponent(); row.Source = api.Source; row.Volume = "25";
+        Assert.False(await vm.SaveAsync(CancellationToken.None));
+        Assert.Contains("Referencia de soporte: int-save-456", vm.Message, StringComparison.Ordinal);
+        Assert.Null(vm.Created); Assert.Same(api.Source, row.Source); Assert.Equal("25", row.Volume);
+        Assert.Equal(200, api.Source.AvailableVolume);
+        api.CreateError = null;
+        Assert.True(await vm.SaveAsync(CancellationToken.None));
+        Assert.Equal(api.Requests[0], api.Requests[1]);
+    }
+    [Fact]
     public async Task ViewerCannotQueryOriginsOrCreateAndCanList()
     {
         var api = new FakeApi(); var vm = new IntermediateViewModel(api, new Session("Usuario"));
@@ -64,13 +100,14 @@ public sealed class IntermediateViewModelTests
     private sealed class Session(string role) : ISessionService
     {
         public string? AccessToken => null;
-        public UserProfile? Profile { get; } = new(42, "Ana López", "ana@intertek.com", role, "Laboratorio", ["reference_materials.view"]);
+        public UserProfile? Profile { get; } = new(42, "Ana López", "ana@intertek.com", role, "Laboratorio", ["intermedia.view"]);
         public Task SetAuthenticatedAsync(AuthenticationResponse response, CancellationToken cancellationToken) => Task.CompletedTask;
         public Task<string?> ReadRefreshTokenAsync(CancellationToken cancellationToken) => Task.FromResult<string?>(null);
         public Task ClearAsync(CancellationToken cancellationToken) => Task.CompletedTask;
     }
     private sealed class FakeApi : IIntermediateApiClient
     {
+        public ApiError? CreateError { get; set; }
         public IntermediateSource Source { get; } = new(Guid.NewGuid(), "Stock", "STK-20261007-001", "Analito", 1, "Ensayo", 200, 200, "mL", new(2026, 1, 1), new(2099, 1, 1), Guid.NewGuid(), [new(Guid.NewGuid(), "Analito", null, "LOTE", 100, "mg/L")]);
         public int OptionCalls { get; private set; } public int PreviewCalls { get; private set; }
         public bool LoseFirstResponse { get; init; }
@@ -81,6 +118,7 @@ public sealed class IntermediateViewModelTests
         public Task<ApiCallResult<IntermediateDetail>> CreateAsync(CreateIntermediateRequest request, CancellationToken cancellationToken)
         {
             Requests.Add(request); if (LoseFirstResponse && Requests.Count == 1) throw new HttpRequestException("Lost response");
+            if (CreateError is { } error) return Task.FromResult(new ApiCallResult<IntermediateDetail>(false, null, error, 500));
             var calculation = IntermediateCalculator.Calculate(request.Calculation, [Source]);
             _created = new(new(request.RequestId, "INT-20261007-001", request.Name, "Ensayo", 1, 100, "mL", 100, calculation.Results,
                 request.PreparationDate, request.ExpirationDate, "Ana López", "Active"), calculation, [], null, request.Notes,

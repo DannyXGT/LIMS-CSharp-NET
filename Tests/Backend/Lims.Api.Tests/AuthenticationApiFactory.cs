@@ -7,6 +7,8 @@ using Lims.Contracts.Authentication;
 using Lims.Contracts.Errors;
 using Lims.Contracts.ReferenceMaterials;
 using Lims.Domain.Authentication;
+using Lims.Application.Permissions;
+using Lims.Contracts.Permissions;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Configuration;
@@ -22,6 +24,7 @@ public sealed class AuthenticationApiFactory : WebApplicationFactory<Program>
     public const string SigningKey = "testing-only-signing-key-32-characters-minimum";
     public static readonly Guid SessionId = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
     public const int UserId = 42;
+    public TestPermissionRepository PermissionRepository { get; } = new();
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
@@ -40,6 +43,8 @@ public sealed class AuthenticationApiFactory : WebApplicationFactory<Program>
             services.RemoveAll<IAuthenticationService>();
             services.RemoveAll<IAuthenticationSessionStore>();
             services.RemoveAll<IReferenceMaterialService>();
+            services.RemoveAll<IPermissionRepository>();
+            services.AddSingleton<IPermissionRepository>(PermissionRepository);
             services.AddSingleton<IAuthenticationService, FakeAuthenticationService>();
             services.AddSingleton<IAuthenticationSessionStore, FakeSessionStore>();
             services.AddSingleton<IReferenceMaterialService>(_referenceMaterials);
@@ -47,6 +52,15 @@ public sealed class AuthenticationApiFactory : WebApplicationFactory<Program>
     }
 
     public CreateReferenceMaterialRequest? LastCreateRequest => _referenceMaterials.LastCreateRequest;
+
+    public void SetIdentity(string role, params string[] permissions)
+    {
+        var codes = permissions.ToHashSet(StringComparer.Ordinal);
+        if (codes.Contains("reference_materials.view")) { codes.Add(PermissionCatalog.StockView); codes.Add(PermissionCatalog.IntermediateView); }
+        if (codes.Contains("reference_materials.create")) { codes.Add(PermissionCatalog.StockCreate); codes.Add(PermissionCatalog.IntermediateCreate); }
+        if (codes.Contains("reference_materials.create") && codes.Contains("reference_materials.archive")) codes.Add(PermissionCatalog.Replace);
+        PermissionRepository.Current = new(role, codes.ToArray(), true);
+    }
 
     private sealed class FakeReferenceMaterialService : IReferenceMaterialService
     {

@@ -28,6 +28,8 @@
             <NavigationViewItemHeader x:Name="MaterialsGroup" Content="MATERIALES DE REFERENCIA" />
             <NavigationViewItem x:Name="StandardsItem" design:LimsIcon.NavigationIcon="Standards" Content="Estándares" AutomationProperties.Name="Estándares" ToolTipService.ToolTip="Estándares" IsEnabled="{x:Bind ViewModel.CanViewReferenceMaterials, Mode=OneWay}" Tag="standards"></NavigationViewItem>
             <NavigationViewItem x:Name="PreparationsItem" design:LimsIcon.NavigationIcon="Preparations" Content="Preparaciones" AutomationProperties.Name="Preparaciones" ToolTipService.ToolTip="Preparaciones" IsEnabled="{x:Bind ViewModel.CanViewReferenceMaterials, Mode=OneWay}" Tag="preparations" />
+            <NavigationViewItemHeader x:Name="AdministrationGroup" Content="ADMINISTRACIÓN" Visibility="Collapsed" />
+            <NavigationViewItem x:Name="PermissionsItem" design:LimsIcon.NavigationIcon="Administration" Content="Gestión de permisos" Tag="permissions" AutomationProperties.Name="Gestión de permisos" ToolTipService.ToolTip="Gestión de permisos" Visibility="Collapsed" />
         </NavigationView.MenuItems>
         <NavigationView.PaneFooter>
             <Grid x:Name="UserArea" Margin="4,8,4,12" Padding="0,10,0,0" BorderBrush="{ThemeResource LimsBorderBrush}" BorderThickness="0,1,0,0" ColumnSpacing="4">
@@ -66,10 +68,23 @@
                         <TextBlock Text="Nuevo estándar" />
                     </StackPanel>
                 </Button>
+                <Button x:Name="PreparationsNewButton" Grid.Column="1" VerticalAlignment="Center"
+                    Click="OnNewPreparationClick" Style="{StaticResource LimsPrimaryButtonStyle}" Visibility="Collapsed">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <design:LimsIcon Icon="NewStandard" Size="{StaticResource IconSizeSmall}" Foreground="{ThemeResource LimsOnAccentBrush}" />
+                        <TextBlock x:Name="PreparationsNewLabel" Text="Nuevo Stock" />
+                    </StackPanel>
+                </Button>
             </Grid>
         </NavigationView.Header>
-        <Grid Padding="24,8,24,24">
-            <Grid x:Name="HomePanel">
+        <Grid Padding="24,8,24,24" RowSpacing="12">
+            <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /></Grid.RowDefinitions>
+            <InfoBar IsOpen="{x:Bind ViewModel.HasAccessWarning, Mode=OneWay}" IsClosable="False" Severity="Warning" Message="{x:Bind ViewModel.SessionMessage, Mode=OneWay}">
+                <InfoBar.ActionButton><Button Content="Reintentar" Click="OnRetryAccessClick" /></InfoBar.ActionButton>
+            </InfoBar>
+            <TextBlock Grid.Row="1" x:Name="DeniedPanel" Text="Acceso denegado. No tiene permiso para consultar esta pantalla." Style="{StaticResource LimsBodyStyle}" Visibility="Collapsed" />
+            <ContentControl Grid.Row="1" x:Name="PermissionsHost" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" Visibility="Collapsed" />
+            <Grid Grid.Row="1" x:Name="HomePanel">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="*" />
@@ -81,18 +96,18 @@
                             <TextBlock Style="{StaticResource LimsPageTitleStyle}" Text="Bienvenido al LIMS" />
                             <TextBlock MaxWidth="720" HorizontalAlignment="Left" Style="{StaticResource LimsBodyStyle}" Text="La autenticación está activa. Materiales de Referencia es el primer módulo operativo integrado a esta nueva base .NET." />
                         </StackPanel>
-                        <Border Grid.Column="1" Padding="16,8" Background="{ThemeResource LimsAccentSoftBrush}" CornerRadius="8"><TextBlock Foreground="{ThemeResource LimsAccentHoverBrush}" Text="Sesión activa" /></Border>
+                        <Border Grid.Column="1" Padding="16,8" Background="{ThemeResource LimsAccentSoftBrush}" CornerRadius="8"><TextBlock Foreground="{ThemeResource LimsAccentHoverBrush}" Text="{x:Bind ViewModel.SessionMessage, Mode=OneWay}" TextWrapping="Wrap" MaxWidth="280" /></Border>
                     </Grid>
                 </Border>
                 <Border Grid.Row="1" Margin="0,20,0,0" Padding="22" Background="{ThemeResource LimsSurfaceBrush}" CornerRadius="12"><StackPanel Spacing="8"><design:LimsIcon Icon="ReferenceMaterials" Size="{StaticResource IconSizeLarge}" HorizontalAlignment="Left" IsSelected="True" /><TextBlock Style="{StaticResource LimsSectionTitleStyle}" Text="Materiales de Referencia" /><TextBlock Style="{StaticResource LimsBodyStyle}" Text="Gestione estándares, su presentación, disponibilidad, estado y trazabilidad de cambios." /></StackPanel></Border>
             </Grid>
             <ContentControl
-                x:Name="PreparationsHost"
+                Grid.Row="1" x:Name="PreparationsHost"
                 HorizontalContentAlignment="Stretch"
                 VerticalContentAlignment="Stretch"
                 Visibility="Collapsed" />
             <ContentControl
-                x:Name="StandardsHost"
+                Grid.Row="1" x:Name="StandardsHost"
                 HorizontalContentAlignment="Stretch"
                 VerticalContentAlignment="Stretch"
                 Visibility="Collapsed" />

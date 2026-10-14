@@ -1,9 +1,12 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using Lims.Contracts.ReferenceMaterials;
+using Lims.Contracts.Permissions;
 using Lims.Contracts.ReferencePreparations;
 using Lims.Desktop.Http;
+using Lims.Desktop.Presentation;
 using Lims.Desktop.Services;
 using Lims.Desktop.Validation;
 
@@ -34,6 +37,40 @@ public sealed partial class IntermediateViewModel(IIntermediateApiClient api, IS
     private bool _updating;
     public ObservableCollection<IntermediateComponentViewModel> Components { get; } = [];
     public ObservableCollection<IntermediateSummary> Items { get; } = [];
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(OpenSelectedPreparationCommand))]
+    public partial IntermediateSummary? SelectedPreparation { get; set; }
+    [ObservableProperty] public partial bool HasLoadedList { get; set; }
+    [ObservableProperty] public partial bool HasSearchCriteria { get; set; }
+    public event Func<IntermediateDetail, Task>? PreparationOpened;
+    public bool ShowEmptyCreate => !HasSearchCriteria;
+    public bool HasResults => Items.Count > 0;
+    public bool HasListMessage => ListMessage.Length > 0;
+    public bool IsEmpty => HasLoadedList && !HasResults && !HasListMessage;
+    public string EmptyTitle => HasSearchCriteria ? "No encontramos preparaciones con estos criterios." : "No hay preparaciones Intermedia";
+    public string EmptyDescription => HasSearchCriteria ? "Cambie los criterios de búsqueda o limpie la búsqueda." : "Cree una preparación Intermedia para comenzar\no cambie los criterios de búsqueda.";
+    public bool CanOpenSelectedPreparation => CanView && SelectedPreparation is { } item && Items.Contains(item);
+    public void ClearSelection()
+    {
+        ++_listRevision;
+        SelectedPreparation = null;
+        Detail = null;
+    }
+    [RelayCommand(CanExecute = nameof(CanOpenSelectedPreparation))]
+    private async Task OpenSelectedPreparationAsync(CancellationToken cancellationToken)
+    {
+        if (!CanOpenSelectedPreparation || SelectedPreparation is not { } selected) return;
+        if (!await OpenDetailAsync(selected.Id, cancellationToken) || SelectedPreparation?.Id != selected.Id) return;
+        if (Detail is { } detail && detail.Preparation.Id == selected.Id && PreparationOpened is { } show)
+            await show(detail);
+    }
+    private void NotifyListState()
+    {
+        foreach (var property in new[] { nameof(ShowEmptyCreate), nameof(HasResults), nameof(IsEmpty), nameof(HasListMessage), nameof(EmptyTitle), nameof(EmptyDescription), nameof(PageDisplay) }) OnPropertyChanged(property);
+        OpenSelectedPreparationCommand.NotifyCanExecuteChanged();
+    }
+    partial void OnListMessageChanged(string value) => NotifyListState();
+
     public ObservableCollection<IntermediateMethod> Methods { get; } = [];
     public ObservableCollection<IntermediateSource> DilutionSources { get; } = [];
     public IReadOnlyList<string> VolumeUnits { get; } = ["mL", "L"];
@@ -59,8 +96,13 @@ public sealed partial class IntermediateViewModel(IIntermediateApiClient api, IS
     [ObservableProperty] public partial int Page { get; set; } = 1;
     [ObservableProperty] public partial int TotalCount { get; set; }
     public string PreparedBy => session.Profile?.Name ?? "Usuario no informado";
-    public bool CanView => HasPermission(ReferenceMaterialPermissions.View);
-    public bool CanCreate => CanView && HasPermission(ReferenceMaterialPermissions.Create);
+    public bool CanView => HasPermission(PermissionCatalog.IntermediateView);
+    public void RefreshPermissions()
+    {
+        OnPropertyChanged(nameof(CanView)); OnPropertyChanged(nameof(CanCreate)); OnPropertyChanged(nameof(CanSave));
+        if (!CanView) { Items.Clear(); ClearSelection(); }
+    }
+    public bool CanCreate => CanView && HasPermission(PermissionCatalog.IntermediateCreate);
     public bool CanSave => CanCreate && !IsBusy && !IsLoadingOptions && Created is null && (_pending is not null ||
         (NameError.Length == 0 && MethodError.Length == 0 && DateError.Length == 0 && VolumeError.Length == 0 && Notes.Trim().Length <= 2000 &&
         Calculation is { ExceedsFinalVolume: false, HasSufficientVolume: true } && Components.All(c => c.Error.Length == 0)));
@@ -72,7 +114,7 @@ public sealed partial class IntermediateViewModel(IIntermediateApiClient api, IS
     public bool HasMultiplePages => TotalCount > 25;
     public bool HasPreviousPage => Page > 1;
     public bool HasNextPage => Page * 25 < TotalCount;
-    public string PageDisplay => $"Página {Page} · {TotalCount} intermedias";
+    public string PageDisplay => TotalCount == 0 ? "0 preparaciones" : $"Página {Page} · {TotalCount} intermedias";
     public decimal TotalTakenMl => Components.Where(c => c.Source is not null).Sum(c => Parse(c.Volume, out var v) ? SafeMilliliters(v, c.Unit) : 0);
     public decimal FinalMl => Parse(FinalVolume, out var v) ? SafeMilliliters(v, FinalUnit) : 0;
     public decimal OccupiedPercent => IntermediateCalculator.OccupiedPercent(TotalTakenMl, FinalMl);
@@ -96,7 +138,7 @@ public sealed partial class IntermediateViewModel(IIntermediateApiClient api, IS
         try
         {
             var response = await api.OptionsAsync(cancellationToken).ConfigureAwait(true);
-            if (!response.IsSuccess || response.Value is null) { Message = Error(response.Error?.Message); return; }
+            if (!response.IsSuccess || response.Value is null) { Message = ReferenceMaterialErrors.PreparationMessage(response.Error); return; }
             var previousMethod = Method;
             _updating = true;
             _sources.Clear(); _sources.AddRange(response.Value.Sources);
@@ -206,7 +248,7 @@ public sealed partial class IntermediateViewModel(IIntermediateApiClient api, IS
             if (!response.IsSuccess || response.Value is null)
             {
                 if (response.StatusCode is >= 400 and < 500) _pending = null;
-                Message = Error(response.Error?.Message); return false;
+                Message = ReferenceMaterialErrors.PreparationMessage(response.Error); return false;
             }
             Created = response.Value; _pending = null;
             await LoadAsync(null, 1, cancellationToken).ConfigureAwait(true); return true;
@@ -217,15 +259,22 @@ public sealed partial class IntermediateViewModel(IIntermediateApiClient api, IS
     }
     public async Task LoadAsync(string? search, int page, CancellationToken cancellationToken)
     {
-        if (!CanView) { ListMessage = "No tiene permiso para consultar preparaciones."; return; }
+        if (!CanView) { Items.Clear(); ClearSelection(); ListMessage = "No tiene permiso para consultar preparaciones."; return; }
         var revision = ++_listRevision;
         try
         {
             var response = await api.ListAsync(search, page, cancellationToken).ConfigureAwait(true);
             if (revision != _listRevision) return;
-            if (!response.IsSuccess || response.Value is null) { ListMessage = Error(response.Error?.Message); return; }
-            Replace(Items, response.Value.Items); Page = response.Value.Page; TotalCount = response.Value.TotalCount;
-            ListMessage = Items.Count == 0 ? "No hay soluciones intermedias para esta búsqueda." : string.Empty;
+            if (!response.IsSuccess || response.Value is null) { if (response.StatusCode == 403) { Items.Clear(); ClearSelection(); } ListMessage = ReferenceMaterialErrors.PreparationMessage(response.Error); return; }
+            var selectedId = SelectedPreparation?.Id;
+            SelectedPreparation = null;
+            Replace(Items, response.Value.Items);
+            SelectedPreparation = Items.FirstOrDefault(item => item.Id == selectedId);
+            Page = response.Value.Page; TotalCount = response.Value.TotalCount;
+            HasLoadedList = true;
+            HasSearchCriteria = !string.IsNullOrWhiteSpace(search);
+            ListMessage = string.Empty;
+            NotifyListState();
             Notify();
         }
         catch (HttpRequestException) { if (revision == _listRevision) ListMessage = "No se pudo conectar con el servidor."; }
@@ -237,7 +286,7 @@ public sealed partial class IntermediateViewModel(IIntermediateApiClient api, IS
         try
         {
             var response = await api.GetAsync(id, cancellationToken).ConfigureAwait(true);
-            if (!response.IsSuccess || response.Value is null) { ListMessage = Error(response.Error?.Message); return false; }
+            if (!response.IsSuccess || response.Value is null) { if (response.StatusCode == 403) { Items.Clear(); ClearSelection(); } ListMessage = ReferenceMaterialErrors.PreparationMessage(response.Error); return false; }
             Detail = response.Value; return true;
         }
         catch (HttpRequestException) { ListMessage = "No se pudo conectar con el servidor."; return false; }
@@ -247,7 +296,6 @@ public sealed partial class IntermediateViewModel(IIntermediateApiClient api, IS
     private static bool Parse(string text, out decimal value) => ReferenceMaterialInput.TryParseDecimal(text, 6, out value) && value is >= 0 and < 1000000000000m;
     private static decimal SafeMilliliters(decimal volume, string unit) => SafeVolume(volume, unit, "mL");
     private static decimal SafeVolume(decimal volume, string from, string to) { try { return StockUnits.ConvertVolume(volume, from, to); } catch (ArgumentException) { return 0; } }
-    private static string Error(string? message) => string.IsNullOrWhiteSpace(message) ? "No se pudo completar la operación. Intente nuevamente." : message;
     private static void Replace<T>(ObservableCollection<T> target, IEnumerable<T> values) { target.Clear(); foreach (var value in values) target.Add(value); }
     private static void SyncSources(ObservableCollection<IntermediateSource> target, IEnumerable<IntermediateSource> values, IntermediateSource? selected)
     {

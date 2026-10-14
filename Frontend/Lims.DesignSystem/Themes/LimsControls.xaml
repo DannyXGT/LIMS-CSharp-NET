@@ -3,6 +3,45 @@
  xmlns:motion="using:Lims.DesignSystem.Presentation"
  xmlns:controls="using:Lims.DesignSystem.Controls"
  xmlns:primitives="using:Microsoft.UI.Xaml.Controls.Primitives">
+    <Style x:Key="LimsTabTextStyle" TargetType="TextBlock">
+        <Setter Property="Foreground" Value="{ThemeResource LimsTextSecondaryBrush}" />
+        <Setter Property="FontSize" Value="14" />
+    </Style>
+    <Style x:Key="LimsTabActiveTextStyle" TargetType="TextBlock" BasedOn="{StaticResource LimsTabTextStyle}">
+        <Setter Property="Foreground" Value="{ThemeResource LimsTextPrimaryBrush}" />
+    </Style>
+    <Style x:Key="LimsTabIndicatorStyle" TargetType="Border">
+        <Setter Property="Background" Value="{ThemeResource LimsAccentBrush}" />
+    </Style>
+    <Style x:Key="LimsTabSeparatorStyle" TargetType="Border">
+        <Setter Property="Background" Value="{ThemeResource LimsBorderBrush}" />
+    </Style>
+    <Style x:Key="LimsTabRootStyle" TargetType="UserControl">
+        <Setter Property="Foreground" Value="{ThemeResource LimsTextPrimaryBrush}" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="FocusVisualPrimaryBrush" Value="{ThemeResource LimsFocusBrush}" />
+    </Style>
+    <Style x:Key="LimsAvailabilityBarStyle" TargetType="ProgressBar">
+        <Setter Property="Minimum" Value="0" />
+        <Setter Property="Maximum" Value="100" />
+        <Setter Property="IsIndeterminate" Value="False" />
+        <Setter Property="Height" Value="6" />
+        <Setter Property="MinHeight" Value="6" />
+        <Setter Property="Background" Value="{ThemeResource LimsBorderBrush}" />
+        <Setter Property="Foreground" Value="{ThemeResource LimsAccentBrush}" />
+    </Style>
+    <Style x:Key="LimsAvailabilityWarningStyle" TargetType="ProgressBar" BasedOn="{StaticResource LimsAvailabilityBarStyle}">
+        <Setter Property="Foreground" Value="{ThemeResource LimsWarningBrush}" />
+    </Style>
+    <Style x:Key="LimsAvailabilityDangerStyle" TargetType="ProgressBar" BasedOn="{StaticResource LimsAvailabilityBarStyle}">
+        <Setter Property="Foreground" Value="{ThemeResource LimsDangerBrush}" />
+    </Style>
+    <Style x:Key="LimsAvailabilityUnknownStyle" TargetType="ProgressBar" BasedOn="{StaticResource LimsAvailabilityBarStyle}">
+        <Setter Property="Foreground" Value="{ThemeResource LimsTextTertiaryBrush}" />
+    </Style>
+    <Style x:Key="LimsTabFocusStyle" TargetType="Border">
+        <Setter Property="BorderBrush" Value="{ThemeResource LimsFocusBrush}" />
+    </Style>
     <!-- Native TextBox (including AutoSuggestBox's inner editor) reads these keys.
          Keep PlaceholderForeground unset so focused/disabled states can resolve separately. -->
     <SolidColorBrush x:Key="LimsPlaceholderBrush" Color="{ThemeResource LimsTextTertiaryColor}" />

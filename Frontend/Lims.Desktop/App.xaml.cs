@@ -58,6 +58,9 @@ public partial class App : Application
         builder.Services.AddSingleton<IAuthenticationGateway, AuthenticationGateway>();
         builder.Services.AddSingleton<IAuthenticationApiClient, AuthenticationApiClient>();
         builder.Services.AddSingleton<IReferenceMaterialsApiClient, ReferenceMaterialsApiClient>();
+        builder.Services.AddSingleton<IPermissionsApiClient, PermissionsApiClient>();
+        builder.Services.AddSingleton<PermissionsViewModel>();
+        builder.Services.AddSingleton<PermissionsPage>();
         builder.Services.AddSingleton<IStockApiClient, StockApiClient>();
         builder.Services.AddSingleton<IIntermediateApiClient, IntermediateApiClient>();
         builder.Services.AddSingleton<ITokenRefreshCoordinator, TokenRefreshCoordinator>();

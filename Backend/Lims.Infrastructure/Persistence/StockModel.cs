@@ -36,12 +36,16 @@ internal static class StockModel
         foreach (var property in preparation.Metadata.GetProperties())
         {
             preparation.Property(property.Name).HasColumnName(Snake(property.Name));
-            if (property.ClrType == typeof(decimal)) preparation.Property(property.Name).HasPrecision(18, 6);
+            if (property.ClrType == typeof(decimal) &&
+                property.Name is not (nameof(ReferencePreparation.CalculatedWeight) or nameof(ReferencePreparation.ActualConcentration)))
+                preparation.Property(property.Name).HasPrecision(18, 6);
             if (property.ClrType == typeof(string)) preparation.Property(property.Name).HasMaxLength(200);
         }
         preparation.Property(item => item.PurityPercentUsed).HasPrecision(7, 4);
-        preparation.Property(item => item.CalculatedWeight).HasPrecision(40, 28);
-        preparation.Property(item => item.ActualConcentration).HasPrecision(40, 28);
+        // Preserve Decimal's actual scale. Padding every value to scale 28 can overflow
+        // Npgsql's intermediate 96-bit coefficient while reading an otherwise valid Decimal.
+        preparation.Property(item => item.CalculatedWeight).HasColumnType("numeric");
+        preparation.Property(item => item.ActualConcentration).HasColumnType("numeric");
         preparation.Property(item => item.CalculatedWeightUnit).HasMaxLength(16);
         preparation.Property(item => item.ActualWeightUnit).HasMaxLength(16);
         preparation.Property(item => item.ActualConcentrationUnit).HasMaxLength(16);

@@ -4,6 +4,26 @@ namespace Lims.Desktop.Presentation;
 
 internal static class ReferenceMaterialErrors
 {
+    public static string PreparationMessage(ApiError? error)
+    {
+        var message = error?.Code switch
+        {
+            ErrorCodes.UnexpectedError => "No se pudo completar la operación en el servidor.",
+            ErrorCodes.DatabaseSchemaOutOfDate => "El servidor necesita actualizar el módulo de Preparaciones.",
+            ErrorCodes.ServerUnavailable => "El servidor no está disponible. Intente nuevamente.",
+            ErrorCodes.InvalidSession => "La sesión venció. Inicie sesión nuevamente.",
+            ErrorCodes.Forbidden => "No tiene autorización para realizar esta operación.",
+            _ => string.IsNullOrWhiteSpace(error?.Message)
+                ? "No se pudo completar la operación. Intente nuevamente."
+                : error.Message,
+        };
+        var supportId = error?.CorrelationId;
+        return supportId is { Length: > 0 and <= 64 } &&
+            supportId.All(static character => char.IsAsciiLetterOrDigit(character) || character is '-' or '_')
+            ? $"{message} Referencia de soporte: {supportId}."
+            : message;
+    }
+
     public static string Message(ApiError? error) => error?.Code switch
     {
         ErrorCodes.Forbidden => "No tiene autorización para realizar esta operación.",

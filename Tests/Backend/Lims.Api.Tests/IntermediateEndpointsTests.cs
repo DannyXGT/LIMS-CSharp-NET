@@ -68,8 +68,9 @@ public sealed class IntermediateEndpointsTests : IDisposable
         var source = _repository.Source; var today = DateOnly.FromDateTime(DateTimeOffset.UtcNow.ToOffset(TimeSpan.FromHours(-6)).DateTime);
         return new(Guid.NewGuid(), "Intermedia de prueba", new(1, 100, "mL", [new(source.Id, source.Version, 25, "mL")]), today, today.AddDays(30), null);
     }
-    private static AuthenticationHeaderValue Bearer(string role, params string[] permissions)
+    private AuthenticationHeaderValue Bearer(string role, params string[] permissions)
     {
+        _base.SetIdentity(role, permissions);
         var claims = new List<Claim> { new(JwtRegisteredClaimNames.Sub, AuthenticationApiFactory.UserId.ToString(System.Globalization.CultureInfo.InvariantCulture)), new(JwtAccessTokenService.SessionIdClaim, AuthenticationApiFactory.SessionId.ToString("D")), new(ClaimTypes.Role, role) };
         claims.AddRange(permissions.Select(p => new Claim(JwtAccessTokenService.PermissionClaim, p)));
         var token = new JwtSecurityToken("Lims.Api.Tests", "Lims.Api.Tests.Client", claims, expires: DateTime.UtcNow.AddMinutes(5),

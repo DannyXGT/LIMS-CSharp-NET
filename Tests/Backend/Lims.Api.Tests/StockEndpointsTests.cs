@@ -90,8 +90,9 @@ public sealed class StockEndpointsTests : IDisposable
     }
     public void Dispose() { _client.Dispose(); _factory.Dispose(); _baseFactory.Dispose(); }
     private static readonly StockCalculationRequest Calculation = new(Guid.NewGuid(), Guid.NewGuid(), 100, "mg/L", 1000, "mL");
-    private static AuthenticationHeaderValue Bearer(string role, params string[] permissions)
+    private AuthenticationHeaderValue Bearer(string role, params string[] permissions)
     {
+        _baseFactory.SetIdentity(role, permissions);
         var claims = new List<Claim>
         {
             new(JwtRegisteredClaimNames.Sub, AuthenticationApiFactory.UserId.ToString(CultureInfo.InvariantCulture)),

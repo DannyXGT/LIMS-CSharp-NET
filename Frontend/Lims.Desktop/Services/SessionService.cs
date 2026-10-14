@@ -46,6 +46,14 @@ public sealed class SessionService(ISecureStorage secureStorage) : ISessionServi
     public Task<string?> ReadRefreshTokenAsync(CancellationToken cancellationToken) =>
         secureStorage.ReadRefreshTokenAsync(cancellationToken);
 
+    public void UpdateAuthorization(string role, IReadOnlyList<string> permissions)
+    {
+        lock (_gate)
+        {
+            if (_profile is not null) _profile = _profile with { Role = role, Permissions = permissions };
+        }
+    }
+
     public async Task ClearAsync(CancellationToken cancellationToken)
     {
         lock (_gate)

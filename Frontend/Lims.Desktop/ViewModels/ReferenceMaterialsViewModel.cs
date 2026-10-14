@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Lims.Contracts.Errors;
 using Lims.Contracts.ReferenceMaterials;
+using Lims.Contracts.Permissions;
 using Lims.Desktop.Http;
 using Lims.Desktop.Presentation;
 using Lims.Desktop.Services;
@@ -63,7 +64,7 @@ public sealed partial class ReferenceMaterialsViewModel(
     public bool CanCreate => HasPermission(ReferenceMaterialPermissions.Create);
     public bool CanEdit => HasPermission(ReferenceMaterialPermissions.Edit);
     public bool CanArchive => HasPermission(ReferenceMaterialPermissions.Archive);
-    public bool CanReplace => CanCreate && CanArchive;
+    public bool CanReplace => HasPermission(PermissionCatalog.Replace);
     public bool CanEditSelected => CanEdit && IsSelectedMutable;
     public bool CanArchiveSelected => CanArchive && IsSelectedMutable;
     public bool CanReplaceSelected => CanReplace && IsSelectedMutable;
@@ -80,6 +81,7 @@ public sealed partial class ReferenceMaterialsViewModel(
 
     public void RefreshPermissions()
     {
+        if (!CanView) { Items.Clear(); SelectedMaterial = null; SelectedDetail = null; TotalCount = 0; NotifyCollectionState(); }
         OnPropertyChanged(nameof(CanView));
         OnPropertyChanged(nameof(CanCreate));
         OnPropertyChanged(nameof(CanEdit));
@@ -170,6 +172,7 @@ public sealed partial class ReferenceMaterialsViewModel(
                 .ConfigureAwait(true);
             if (!result.IsSuccess || result.Value is null)
             {
+                if (result.StatusCode == 403) { Items.Clear(); SelectedMaterial = null; SelectedDetail = null; TotalCount = 0; NotifyCollectionState(); }
                 Message = MessageFor(result.Error);
                 return;
             }
