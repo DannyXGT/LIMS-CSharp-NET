@@ -72,9 +72,9 @@
     "semantic_hash": ""
   },
   "Backend/Lims.Api/Program.cs": {
-    "mtime": 1791872097.2988572,
-    "seen": 1791939451.9499557,
-    "ast_hash": "bb253f34332a9bf36722c942074c09ee",
+    "mtime": 1791969756.0868967,
+    "seen": 1791970553.7230663,
+    "ast_hash": "5a2c0f56c683a10799c93d7b836dbed5",
     "semantic_hash": ""
   },
   "Backend/Lims.Api/Properties/launchSettings.json": {
@@ -252,9 +252,9 @@
     "semantic_hash": ""
   },
   "Backend/Lims.Application/ReferencePreparations/StockService.cs": {
-    "mtime": 1791353108.575338,
-    "seen": 1791939451.9499557,
-    "ast_hash": "1a330b7822cb4fb3f58b4812ee0f4252",
+    "mtime": 1791970408.206134,
+    "seen": 1791970553.739441,
+    "ast_hash": "0441f66ef679c59be2c4f72f2b5a3334",
     "semantic_hash": ""
   },
   "Backend/Lims.Domain/Authentication/AuthSession.cs": {
@@ -318,9 +318,9 @@
     "semantic_hash": ""
   },
   "Backend/Lims.Domain/ReferenceMaterials/ReferenceMaterial.cs": {
-    "mtime": 1791348308.5092525,
-    "seen": 1791939451.9499557,
-    "ast_hash": "f0bd8bf5503be9a133b27bf25a3b391d",
+    "mtime": 1791970408.2672465,
+    "seen": 1791970553.7434194,
+    "ast_hash": "66bfba4d7711678096e6d8b323408c53",
     "semantic_hash": ""
   },
   "Backend/Lims.Domain/ReferenceMaterials/ReferenceMaterialStatus.cs": {
@@ -486,9 +486,9 @@
     "semantic_hash": ""
   },
   "Backend/Lims.Infrastructure/Persistence/PermissionRepository.cs": {
-    "mtime": 1791872760.1890738,
-    "seen": 1791939451.9499557,
-    "ast_hash": "5fbf24e98fb8b8f7c69a92b92ada561e",
+    "mtime": 1791947732.0651472,
+    "seen": 1791970553.7624323,
+    "ast_hash": "48f3353e65c83ab978fe1468613a6c30",
     "semantic_hash": ""
   },
   "Backend/Lims.Infrastructure/Persistence/ReferenceMaterialRepository.cs": {
@@ -504,9 +504,9 @@
     "semantic_hash": ""
   },
   "Backend/Lims.Infrastructure/Persistence/StockRepository.cs": {
-    "mtime": 1791862757.8837135,
-    "seen": 1791939451.9499557,
-    "ast_hash": "3aaf75b50df82e32ce6e430d15eebab6",
+    "mtime": 1791970408.2426832,
+    "seen": 1791970553.7634313,
+    "ast_hash": "f09408e970fbf0d80b91fdbca5f43d3a",
     "semantic_hash": ""
   },
   "Backend/Lims.Infrastructure/Persistence/UserRepository.cs": {
@@ -666,9 +666,9 @@
     "semantic_hash": ""
   },
   "Frontend/Lims.Desktop/App.xaml.cs": {
-    "mtime": 1791871531.3448212,
-    "seen": 1791939451.9499557,
-    "ast_hash": "34dd8a455c2be428630115663286039b",
+    "mtime": 1791971343.5110378,
+    "seen": 1791971671.0837424,
+    "ast_hash": "4c3686bafb41a8bf449431370f52eb14",
     "semantic_hash": ""
   },
   "Frontend/Lims.Desktop/DesktopLog.cs": {
@@ -780,9 +780,9 @@
     "semantic_hash": ""
   },
   "Frontend/Lims.Desktop/Lims.Desktop.csproj": {
-    "mtime": 1790656921.559573,
-    "seen": 1791939451.9499557,
-    "ast_hash": "771468a2ae7ae0310e93c18894d8c538",
+    "mtime": 1792019536.1297908,
+    "seen": 1792019629.835126,
+    "ast_hash": "2c9d167baf697a3ba0d5c5ca58e297da",
     "semantic_hash": ""
   },
   "Frontend/Lims.Desktop/MainWindow.xaml": {
@@ -792,9 +792,9 @@
     "semantic_hash": ""
   },
   "Frontend/Lims.Desktop/MainWindow.xaml.cs": {
-    "mtime": 1790825656.9269412,
-    "seen": 1791939451.9499557,
-    "ast_hash": "eeda7351925dc824613565abfaf22496",
+    "mtime": 1791967761.0506308,
+    "seen": 1791970553.779268,
+    "ast_hash": "f1a941b62f23f520c1941a7e4441081e",
     "semantic_hash": ""
   },
   "Frontend/Lims.Desktop/Presentation/ReferenceMaterialErrors.cs": {
@@ -900,9 +900,9 @@
     "semantic_hash": ""
   },
   "Frontend/Lims.Desktop/ViewModels/PermissionsViewModel.cs": {
-    "mtime": 1791872797.9556348,
-    "seen": 1791939451.9499557,
-    "ast_hash": "3a66b92cfef2949c7826ff63a19b2b54",
+    "mtime": 1791950805.3803701,
+    "seen": 1791970553.7974086,
+    "ast_hash": "fe67de1e3a35550521e29825303acca8",
     "semantic_hash": ""
   },
   "Frontend/Lims.Desktop/ViewModels/ReferenceMaterialsViewModel.cs": {
@@ -912,15 +912,15 @@
     "semantic_hash": ""
   },
   "Frontend/Lims.Desktop/ViewModels/ShellViewModel.cs": {
-    "mtime": 1791939238.2617517,
-    "seen": 1791939451.9499557,
-    "ast_hash": "04ef797a4a8830efb1129ab95af08fb9",
+    "mtime": 1791969911.9651086,
+    "seen": 1791970553.7974086,
+    "ast_hash": "8d14b97cf07c502817bf94df89e98b56",
     "semantic_hash": ""
   },
   "Frontend/Lims.Desktop/ViewModels/StockViewModel.cs": {
-    "mtime": 1791871824.4902036,
-    "seen": 1791939451.9499557,
-    "ast_hash": "cca60aaded7a2b953c1bf49a455fa639",
+    "mtime": 1791970408.2710855,
+    "seen": 1791970553.7974086,
+    "ast_hash": "71713ec7a91116b13d65c14b43096f1f",
     "semantic_hash": ""
   },
   "Frontend/Lims.Desktop/Views/GraduatedCylinder.xaml": {
@@ -984,15 +984,15 @@
     "semantic_hash": ""
   },
   "Frontend/Lims.Desktop/Views/PermissionsPage.xaml": {
-    "mtime": 1791872795.1519735,
-    "seen": 1791939451.9499557,
-    "ast_hash": "c844020fe18f05cf85e81c8bb3f8af85",
+    "mtime": 1791958738.6571176,
+    "seen": 1791970553.802573,
+    "ast_hash": "cd27faeda5cca39cc15ebce77457aae9",
     "semantic_hash": ""
   },
   "Frontend/Lims.Desktop/Views/PermissionsPage.xaml.cs": {
-    "mtime": 1791871884.8827007,
-    "seen": 1791939451.9499557,
-    "ast_hash": "5cfa96e637b6afaa34129be255979afc",
+    "mtime": 1791951787.2729287,
+    "seen": 1791970553.802573,
+    "ast_hash": "a99ad0e4afaa5a719ddcf055cfbd651f",
     "semantic_hash": ""
   },
   "Frontend/Lims.Desktop/Views/PreparationsPage.xaml": {
@@ -1044,15 +1044,15 @@
     "semantic_hash": ""
   },
   "Frontend/Lims.Desktop/Views/ShellPage.xaml": {
-    "mtime": 1791939238.3053777,
-    "seen": 1791939451.9499557,
-    "ast_hash": "90f53c0d0f1c82a5b1097e5634e413e3",
+    "mtime": 1791969756.0983715,
+    "seen": 1791970553.808834,
+    "ast_hash": "a6553265376b6d349e21f93352e79bee",
     "semantic_hash": ""
   },
   "Frontend/Lims.Desktop/Views/ShellPage.xaml.cs": {
-    "mtime": 1791939238.3063786,
-    "seen": 1791939451.9499557,
-    "ast_hash": "040449fe978da67e1fa158083c195763",
+    "mtime": 1792019535.8732412,
+    "seen": 1792019629.8673487,
+    "ast_hash": "af9c3dccf1e4ec081792f6bce29dc731",
     "semantic_hash": ""
   },
   "Frontend/Lims.Desktop/Views/StockDetailDialog.xaml": {
@@ -1296,9 +1296,9 @@
     "semantic_hash": ""
   },
   "Tests/Backend/Lims.Application.Tests/ReferenceMaterials/ReferenceMaterialDomainTests.cs": {
-    "mtime": 1790894879.4711726,
-    "seen": 1791939451.9499557,
-    "ast_hash": "4038044573bac554e33bfb8fbfec8d8b",
+    "mtime": 1791970408.2753842,
+    "seen": 1791970553.8339398,
+    "ast_hash": "23dbb3d5adc4cae40b109d9a44da27a1",
     "semantic_hash": ""
   },
   "Tests/Backend/Lims.Application.Tests/ReferenceMaterials/ReferenceMaterialPresentationTests.cs": {
@@ -1350,15 +1350,15 @@
     "semantic_hash": ""
   },
   "Tests/Backend/Lims.Infrastructure.Tests/Persistence/PermissionPostgresTests.cs": {
-    "mtime": 1791873107.4604661,
-    "seen": 1791939451.9499557,
-    "ast_hash": "aca81b38c08f1d1eb1ddfe896e464e82",
+    "mtime": 1791947732.9697027,
+    "seen": 1791970553.8379388,
+    "ast_hash": "6c6462432776d7900e7bccd2306ab097",
     "semantic_hash": ""
   },
   "Tests/Backend/Lims.Infrastructure.Tests/Persistence/PermissionRepositoryTests.cs": {
-    "mtime": 1791871975.7348802,
-    "seen": 1791939451.9499557,
-    "ast_hash": "270a1ffff4992066a246b463950a3f19",
+    "mtime": 1791947732.5436268,
+    "seen": 1791970553.8379388,
+    "ast_hash": "7896927bc7cde9a703c0afcc6620739c",
     "semantic_hash": ""
   },
   "Tests/Backend/Lims.Infrastructure.Tests/Persistence/ReferenceMaterialDisplayTests.cs": {
@@ -1368,9 +1368,9 @@
     "semantic_hash": ""
   },
   "Tests/Backend/Lims.Infrastructure.Tests/Persistence/StockPostgresTests.cs": {
-    "mtime": 1791874485.1918218,
-    "seen": 1791939451.9499557,
-    "ast_hash": "4967f912c23e102b2b2d93dba8c9ac47",
+    "mtime": 1791970408.2778473,
+    "seen": 1791970553.8379388,
+    "ast_hash": "c908716039867a6dd963ca165e9b66e3",
     "semantic_hash": ""
   },
   "Tests/Backend/Lims.Infrastructure.Tests/Security/Argon2PasswordHashServiceTests.cs": {
@@ -1416,9 +1416,9 @@
     "semantic_hash": ""
   },
   "Tests/Frontend/Lims.Desktop.Tests/PermissionsViewModelTests.cs": {
-    "mtime": 1791939238.3401668,
-    "seen": 1791939451.9499557,
-    "ast_hash": "ebb5e53a86c42364262d314bd2f1d8ff",
+    "mtime": 1791949966.1489956,
+    "seen": 1791970553.8440106,
+    "ast_hash": "63afd98447f30f8f99e0dc52b01b5a6e",
     "semantic_hash": ""
   },
   "Tests/Frontend/Lims.Desktop.Tests/PopupPresentationTests.cs": {
@@ -1464,15 +1464,15 @@
     "semantic_hash": ""
   },
   "Tests/Frontend/Lims.Desktop.Tests/StockViewModelTests.cs": {
-    "mtime": 1791871643.5752046,
-    "seen": 1791939451.9499557,
-    "ast_hash": "0c5948eceddd92ea93f7845ad3d1b237",
+    "mtime": 1791970408.2730973,
+    "seen": 1791970553.847011,
+    "ast_hash": "ecbf6c0e702b32dd0624741f1191d188",
     "semantic_hash": ""
   },
   "Tests/Frontend/Lims.Desktop.VisualHarness/App.xaml.cs": {
-    "mtime": 1791871978.5817502,
-    "seen": 1791939451.9499557,
-    "ast_hash": "fc46e8c14907adebde8e8589153fb236",
+    "mtime": 1791972284.9499114,
+    "seen": 1792019629.9172034,
+    "ast_hash": "a98339b95f2173b56f87fbb5298294f7",
     "semantic_hash": ""
   },
   "Tests/Frontend/Lims.Desktop.VisualHarness/FixtureIntermediateApi.cs": {
@@ -1482,9 +1482,9 @@
     "semantic_hash": ""
   },
   "Tests/Frontend/Lims.Desktop.VisualHarness/FixturePermissionsApi.cs": {
-    "mtime": 1791871976.2221951,
-    "seen": 1791939451.9499557,
-    "ast_hash": "eac11dbd65f7549bddbf5c6f22b7ffe0",
+    "mtime": 1791950062.9541557,
+    "seen": 1791970553.848011,
+    "ast_hash": "d5b662eb52eddc7ef464aad40bd02004",
     "semantic_hash": ""
   },
   "Tests/Frontend/Lims.Desktop.VisualHarness/FixtureStockApi.cs": {
@@ -1494,9 +1494,9 @@
     "semantic_hash": ""
   },
   "Tests/Frontend/Lims.Desktop.VisualHarness/Fixtures.cs": {
-    "mtime": 1791871976.6414948,
-    "seen": 1791939451.9499557,
-    "ast_hash": "efdd05b243d99b9c1d59b54469f3c9ce",
+    "mtime": 1791971611.3026757,
+    "seen": 1791971671.1040554,
+    "ast_hash": "d622420f0223cdd17c8986213927dd3c",
     "semantic_hash": ""
   },
   "Tests/Frontend/Lims.Desktop.VisualHarness/IconValidation.cs": {
@@ -1506,9 +1506,9 @@
     "semantic_hash": ""
   },
   "Tests/Frontend/Lims.Desktop.VisualHarness/Lims.Desktop.VisualHarness.csproj": {
-    "mtime": 1791871977.118838,
-    "seen": 1791939451.9499557,
-    "ast_hash": "4b7caabc1193d604573d36dcf2abeb7b",
+    "mtime": 1791969912.1222038,
+    "seen": 1791970553.848011,
+    "ast_hash": "0245ccad6c552d8f2371b80ab582f72d",
     "semantic_hash": ""
   },
   "Tests/Frontend/Lims.Desktop.VisualHarness/PopupInteractionChecks.cs": {
@@ -1740,9 +1740,9 @@
     "semantic_hash": ""
   },
   "docs/gestion-permisos.md": {
-    "mtime": 1791939283.082728,
-    "seen": 1791939451.9509616,
-    "ast_hash": "2320da24b75b6573b1311b852bfbba0f",
+    "mtime": 1791948037.7603493,
+    "seen": 1791970553.867742,
+    "ast_hash": "178444372cff8d96354f410a85df042c",
     "semantic_hash": ""
   },
   "docs/iconografia-lims.md": {
@@ -2055,6 +2055,180 @@
     "mtime": 1791350799.5379744,
     "seen": 1791939451.9509616,
     "ast_hash": "a786ae3e38b936f3da5322918d35dc52",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Api/Dashboard/DashboardEndpoints.cs": {
+    "mtime": 1791969756.032408,
+    "seen": 1791970553.719618,
+    "ast_hash": "cf3e5e36378814b0157c16c77d3eadca",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Application/Dashboard/IDashboardRepository.cs": {
+    "mtime": 1791969755.9012277,
+    "seen": 1791970553.7297328,
+    "ast_hash": "4ca51deb037458a84f6c8fac16b96297",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Infrastructure/Persistence/DashboardRepository.cs": {
+    "mtime": 1791971611.3016696,
+    "seen": 1791971671.0837424,
+    "ast_hash": "e5214c92284fe4fdeb6bbd10f18d60d7",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/Controls/DashboardComponents.cs": {
+    "mtime": 1791971292.1219697,
+    "seen": 1791971671.0837424,
+    "ast_hash": "e1c3c57287dd9fe1dcb096c39bbfcc4a",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/Controls/PermissionAction.cs": {
+    "mtime": 1791958810.9404914,
+    "seen": 1791970553.7772324,
+    "ast_hash": "8adc9c98dea694482d5515287417655f",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/Controls/PermissionActionPanel.cs": {
+    "mtime": 1791951864.2956078,
+    "seen": 1791970553.7772324,
+    "ast_hash": "a09ce019b3624033f4b77881415339b8",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/Controls/PermissionUserItem.cs": {
+    "mtime": 1791949534.1174674,
+    "seen": 1791970553.7772324,
+    "ast_hash": "07bc473fb9ed060b18bcf860cd7baa33",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/Http/DashboardApiClient.cs": {
+    "mtime": 1791969756.0868967,
+    "seen": 1791970553.779268,
+    "ast_hash": "488a97ce18da4c5f86832e0959a2491a",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/Http/IDashboardApiClient.cs": {
+    "mtime": 1791969756.0868967,
+    "seen": 1791970553.779268,
+    "ast_hash": "5be8a9341f45dfa6d6cbfc7b46ec6470",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/Presentation/DashboardMotion.cs": {
+    "mtime": 1791970707.988628,
+    "seen": 1791970739.8218625,
+    "ast_hash": "132386431b5b6e7bd51f702830e10728",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/Presentation/PermissionsMotion.cs": {
+    "mtime": 1791949531.7823386,
+    "seen": 1791970553.779268,
+    "ast_hash": "b878563c8695e9a7f3751d5602c2036e",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/ViewModels/DashboardViewModel.cs": {
+    "mtime": 1791969756.0868967,
+    "seen": 1791970553.795406,
+    "ast_hash": "155c74d49cd4aaf8e108374371ab64c2",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/Views/DashboardPage.xaml": {
+    "mtime": 1791969911.9575524,
+    "seen": 1791970553.7974086,
+    "ast_hash": "286938b9369cf6a951530a4ce61b70d0",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/Views/DashboardPage.xaml.cs": {
+    "mtime": 1791971393.2907853,
+    "seen": 1791971671.0912645,
+    "ast_hash": "8e93efc865c0acb0c344be9798ce0680",
+    "semantic_hash": ""
+  },
+  "Shared/Lims.Contracts/Dashboard/DashboardContracts.cs": {
+    "mtime": 1791969755.8985584,
+    "seen": 1791970553.8095295,
+    "ast_hash": "b095b6144fc2ceb9ba2427b9ad0967b4",
+    "semantic_hash": ""
+  },
+  "Shared/Lims.Contracts/ReferencePreparations/HistoricalEntryPolicy.cs": {
+    "mtime": 1791970408.2041292,
+    "seen": 1791970553.8216252,
+    "ast_hash": "b874fbae3a634f0b96c19bd6a6f1dc12",
+    "semantic_hash": ""
+  },
+  "Tests/Backend/Lims.Api.Tests/DashboardEndpointsTests.cs": {
+    "mtime": 1791970088.6581385,
+    "seen": 1791970553.8284087,
+    "ast_hash": "1a1793b8ca32acef99ef6fb3da06da9b",
+    "semantic_hash": ""
+  },
+  "Tests/Backend/Lims.Application.Tests/DashboardSelectionTests.cs": {
+    "mtime": 1791969912.1131616,
+    "seen": 1791970553.8329387,
+    "ast_hash": "59bafd5fba8fd44ee8efc4873e7f5dad",
+    "semantic_hash": ""
+  },
+  "Tests/Backend/Lims.Infrastructure.Tests/Persistence/DashboardPostgresTests.cs": {
+    "mtime": 1791970259.8008735,
+    "seen": 1791970553.8369372,
+    "ast_hash": "44b396d901a404c12535a87d7ef55774",
+    "semantic_hash": ""
+  },
+  "Tests/Frontend/Lims.Desktop.Tests/DashboardViewModelTests.cs": {
+    "mtime": 1791969912.1182845,
+    "seen": 1791970553.839451,
+    "ast_hash": "e240190c0888c16623cc4ac7bbd6cb2b",
+    "semantic_hash": ""
+  },
+  "Tests/Frontend/Lims.Desktop.VisualHarness/FixtureDashboardApi.cs": {
+    "mtime": 1791971611.3036754,
+    "seen": 1791971671.1040554,
+    "ast_hash": "4c998b6f96b4b528659087c12b61b4ba",
+    "semantic_hash": ""
+  },
+  "scripts/publish-portable.ps1": {
+    "mtime": 1792019725.8582253,
+    "seen": 1792019730.5075514,
+    "ast_hash": "3565abd9cdbe81eb3b52d0fcc524937c",
+    "semantic_hash": ""
+  },
+  "scripts/record-permissions-motion.py": {
+    "mtime": 1791951786.8130908,
+    "seen": 1791970553.8550675,
+    "ast_hash": "27c25ce2d0a4cab3fb2159ef878e10b9",
+    "semantic_hash": ""
+  },
+  "scripts/validate-dashboard.ps1": {
+    "mtime": 1792019692.2374384,
+    "seen": 1792019730.5075514,
+    "ast_hash": "1ac0d63a40b8929cbbff12fe645ad09b",
+    "semantic_hash": ""
+  },
+  "scripts/validate-permissions-console.ps1": {
+    "mtime": 1791951484.0276737,
+    "seen": 1791970553.8560667,
+    "ast_hash": "53db3a9d662e56c6ba84f754b4a71ae3",
+    "semantic_hash": ""
+  },
+  "docs/carga-historica-y-portable.md": {
+    "mtime": 1792019725.8604543,
+    "seen": 1792019730.5133939,
+    "ast_hash": "378e83c728757a4a41f7588a47fdccfa",
+    "semantic_hash": ""
+  },
+  "docs/gestion-permisos-consola-visual.md": {
+    "mtime": 1791959737.8403945,
+    "seen": 1791970553.867742,
+    "ast_hash": "282f4340660c946e0fafe2047b01ca63",
+    "semantic_hash": ""
+  },
+  "scripts/test-dashboard.ps1": {
+    "mtime": 1791971611.333587,
+    "seen": 1791971671.1060562,
+    "ast_hash": "b877aa4d5734a51843594ff919f0fc47",
+    "semantic_hash": ""
+  },
+  "docs/dashboard-principal.md": {
+    "mtime": 1791971611.333587,
+    "seen": 1791971671.1070595,
+    "ast_hash": "027f625c073cc4a0662730f099e7c3e5",
     "semantic_hash": ""
   }
 }

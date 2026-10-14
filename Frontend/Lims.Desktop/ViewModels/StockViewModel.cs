@@ -91,7 +91,8 @@ public sealed partial class StockViewModel(IStockApiClient api, ISessionService 
     public bool CanSave => CanCreate && Created is null && !IsBusy && !IsCalculating &&
         Calculation is { HasSufficientMaterial: true, ActualWeight: > 0, ActualConcentration: > 0 } &&
         Name.Trim().Length is > 0 and <= 200 && Notes.Trim().Length <= 2000 && StorageTemperature.Trim().Length <= 200 &&
-        SelectedSource is { } source && source.ExpirationDate >= DateOnly.FromDateTime(DateTimeOffset.UtcNow.ToOffset(TimeSpan.FromHours(-6)).DateTime) &&
+        SelectedSource is { } source &&
+        (!HistoricalEntryPolicy.EnforceCurrentExpiration || source.ExpirationDate >= DateOnly.FromDateTime(DateTimeOffset.UtcNow.ToOffset(TimeSpan.FromHours(-6)).DateTime)) &&
         PreparationDate.Date <= DateTimeOffset.UtcNow.ToOffset(TimeSpan.FromHours(-6)).Date &&
         (source.ReceivedDate is null || DateOnly.FromDateTime(PreparationDate.Date) >= source.ReceivedDate) &&
         DateOnly.FromDateTime(PreparationDate.Date) <= source.ExpirationDate && ExpirationDate?.Date >= PreparationDate.Date;

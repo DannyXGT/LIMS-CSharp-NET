@@ -1,8 +1,9 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
     <ProjectReference Include="..\..\Shared\Lims.Contracts\Lims.Contracts.csproj" />
-    <ProjectReference Include="..\Lims.DesignSystem\Lims.DesignSystem.csproj" />
+    <!-- The WinUI runtime is bundled by the executable, not the control library. -->
+    <ProjectReference Include="..\Lims.DesignSystem\Lims.DesignSystem.csproj" GlobalPropertiesToRemove="WindowsAppSDKSelfContained;WindowsPackageType" />
   </ItemGroup>
 
   <PropertyGroup>
@@ -53,6 +54,20 @@
     <PublishReadyToRun Condition="'$(Configuration)' != 'Debug'">True</PublishReadyToRun>
 
     <PublishTrimmed>False</PublishTrimmed>
+  </PropertyGroup>
+
+  <!-- Keep these properties local to the executable; control libraries are not single-file apps. -->
+  <PropertyGroup Condition="'$(PortableSingleFile)' == 'true'">
+    <WindowsPackageType>None</WindowsPackageType>
+    <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
+    <PublishSingleFile>true</PublishSingleFile>
+    <IncludeAllContentForSelfExtract>true</IncludeAllContentForSelfExtract>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+    <PublishReadyToRun>false</PublishReadyToRun>
+    <DebugType>None</DebugType>
+    <DebugSymbols>false</DebugSymbols>
+    <CopyOutputSymbolsToPublishDirectory>false</CopyOutputSymbolsToPublishDirectory>
   </PropertyGroup>
 
 </Project>

@@ -44,6 +44,17 @@ internal sealed class FixtureApi : IReferenceMaterialsApiClient
         _details[index] = updated;
         return updated;
     }
+    internal IReadOnlyList<ReferenceMaterialDetail> ConfigureDashboardFixtures()
+    {
+        var today = DateOnly.FromDateTime(DateTimeOffset.UtcNow.ToOffset(TimeSpan.FromHours(-6)).DateTime);
+        decimal[] percentages = [100,20,60,0,75,50];
+        for (var i=0;i<6;i++) _details[i] = _details[i] with { ExpirationDate=today.AddDays(i*7), AvailableQuantity=percentages[i], Status=percentages[i]==0 ? "Depleted" : "Active" };
+        for (var i=6;i<9;i++) _details[i] = _details[i] with { Status="Expired", ExpirationDate=today.AddDays(-1) };
+        for (var i=9;i<11;i++) _details[i] = _details[i] with { Status="Depleted", AvailableQuantity=0 };
+        for (var i=11;i<14;i++) _details[i] = _details[i] with { Status="Archived" };
+        _details[14] = _details[14] with { Status="Replaced" };
+        return _details;
+    }
     public FixtureApi()
     {
         for (var index = 0; index < 30; index++)

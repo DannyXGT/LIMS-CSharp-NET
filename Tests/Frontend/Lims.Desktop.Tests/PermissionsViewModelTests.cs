@@ -34,14 +34,61 @@ public sealed class PermissionsViewModelTests
         Assert.False(shell.CanViewPreparations); Assert.False(shell.CanViewStock);
     }
     [Fact]
-    public async Task ExplicitDiscardLoadsAnotherUserAndEmptyFirstConfigurationIsSaveableWithoutFakeChanges()
+    public async Task ExplicitDiscardLoadsAnotherUserAndEmptyFirstConfigurationRequiresSeparateIntent()
     {
         var api = new FakeApi(); var vm = new PermissionsViewModel(api, new Session());
         await vm.LoadUsersAsync(); await vm.SelectAsync(api.State.User);
         vm.Groups[0].Items[0].IsGranted = true; Assert.True(vm.HasPendingChanges);
         api.State = api.State with { User = api.State.User with { Id = 90 }, Permissions = [], Version = Guid.Empty, IsConfigured = false };
-        Assert.True(await vm.SelectAsync(api.State.User, true)); Assert.False(vm.HasPendingChanges); Assert.True(vm.CanSave);
+        Assert.True(await vm.SelectAsync(api.State.User, true)); Assert.False(vm.HasPendingChanges); Assert.False(vm.CanSave);
+        Assert.False(await vm.SaveAsync()); Assert.Null(api.LastRequest); Assert.True(vm.CanConfigureEmpty);
         Assert.DoesNotContain(vm.Groups.SelectMany(g => g.Items), p => p.IsGranted);
+        Assert.True(await vm.ConfigureEmptyAsync()); Assert.True(vm.IsConfigured); Assert.Empty(api.LastRequest!.Permissions);
+        Assert.False(vm.CanSave); Assert.False(vm.CanConfigureEmpty);
+    }
+    [Fact]
+    public async Task DraftCountsNeverReplaceSavedSummaryAndDiscardRestoresConfirmedAssignments()
+    {
+        var api = new FakeApi(); var vm = new PermissionsViewModel(api, new Session());
+        await vm.LoadUsersAsync(); await vm.SelectAsync(api.State.User);
+        Assert.False(vm.CanSave); Assert.Equal(1, vm.SelectedCount); Assert.Equal(1, vm.SavedCount);
+        vm.Groups.SelectMany(g => g.Items).Single(p => p.Definition.Code == PermissionCatalog.StockCreate).IsGranted = true;
+        Assert.Equal(2, vm.SelectedCount); Assert.Equal(1, vm.SavedCount); Assert.Equal("1 permisos guardados", Assert.Single(vm.UserRows).Summary);
+        vm.DiscardChanges(); Assert.Equal(1, vm.SelectedCount); Assert.False(vm.HasPendingChanges); Assert.False(vm.CanSave); Assert.Null(api.LastRequest);
+        vm.Groups.SelectMany(g => g.Items).Single(p => p.Definition.Code == PermissionCatalog.StockView).IsGranted = false;
+        Assert.True(vm.RequiresEmptyConfirmation); Assert.Equal(0, vm.SelectedCount); Assert.Equal(1, vm.SavedCount);
+    }
+    [Fact]
+    public async Task LoadingAnotherUserClearsPreviousMatrixAndSaveIsBlockedWhileRequestIsPending()
+    {
+        var api = new FakeApi(); var vm = new PermissionsViewModel(api, new Session());
+        await vm.LoadUsersAsync(); await vm.SelectAsync(api.State.User);
+        api.PendingGet = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        var target = api.State.User with { Id = 90, Name = "Otro usuario" };
+        var loading = vm.SelectAsync(target);
+        Assert.True(vm.IsLoadingUser); Assert.Empty(vm.Groups); Assert.Empty(vm.History); Assert.False(vm.CanEdit); Assert.False(vm.CanSave); Assert.Equal(target.Id, vm.SelectedUser!.Id);
+        api.PendingGet.SetResult(new(true, new(target, [PermissionCatalog.StockView], Guid.NewGuid(), true), null, 200));
+        Assert.True(await loading); Assert.False(vm.IsLoadingUser);
+        vm.Groups.SelectMany(g => g.Items).Single(p => p.Definition.Code == PermissionCatalog.StockCreate).IsGranted = true;
+        api.PendingSave = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        var saving = vm.SaveAsync();
+        Assert.True(vm.IsSaving); Assert.False(vm.CanSave); Assert.False(vm.CanEdit); Assert.False(await vm.SaveAsync()); Assert.Equal(1, api.SaveCalls);
+        api.PendingSave.SetResult(new(false, null, new(ErrorCodes.NetworkUnavailable, "Sin red. Cambios pendientes.", "test"), 0));
+        Assert.False(await saving); Assert.False(vm.IsSaving); Assert.True(vm.HasPendingChanges); Assert.Equal(2, vm.SelectedCount); Assert.True(vm.CanSave);
+    }
+    [Fact]
+    public async Task FourConfigurationStatesStayDistinctAndAdministratorAccessRemainsByRole()
+    {
+        var api = new FakeApi(); var vm = new PermissionsViewModel(api, new Session());
+        await vm.LoadUsersAsync(); await vm.SelectAsync(api.State.User);
+        Assert.Equal("Configuración individual", vm.ConfigurationLabel); Assert.Equal(1, vm.AccessibleModules);
+        api.State = api.State with { Permissions = [], IsConfigured = true };
+        await vm.SelectAsync(api.State.User, true); Assert.Equal("Configurado · sin permisos", vm.ConfigurationLabel); Assert.False(vm.CanConfigureEmpty); Assert.False(vm.CanSave);
+        api.State = api.State with { IsConfigured = false };
+        await vm.SelectAsync(api.State.User, true); Assert.Equal("Sin configuración individual", vm.ConfigurationLabel); Assert.True(vm.CanConfigureEmpty);
+        api.State = api.State with { User = api.State.User with { Role = "Administrador" } };
+        await vm.SelectAsync(api.State.User, true); Assert.Equal("Administrador · acceso por rol", vm.ConfigurationLabel); Assert.Equal(3, vm.AccessibleModules); Assert.False(vm.CanConfigureEmpty);
+        Assert.Contains("acceso completo", vm.AccessNote, StringComparison.Ordinal);
     }
     [Fact]
     public async Task AdministratorKeepsIdentityAndManagementNavigationWhileUnverifiedOperationalAccessFailsClosed()
@@ -67,14 +114,19 @@ public sealed class PermissionsViewModelTests
         public bool FailEffective { get; set; }
         public int Calls { get; private set; }
         public SavePermissionsRequest? LastRequest { get; private set; }
+        public int SaveCalls { get; private set; }
+        public TaskCompletionSource<ApiCallResult<UserPermissionState>>? PendingGet { get; set; }
+        public TaskCompletionSource<ApiCallResult<UserPermissionState>>? PendingSave { get; set; }
         public EffectivePermissions Effective { get; set; } = new("Administrador", [], true);
         private static Task<ApiCallResult<T>> Ok<T>(T value) => Task.FromResult(new ApiCallResult<T>(true, value, null, 200));
         public Task<ApiCallResult<PermissionUsers>> UsersAsync(string? search, CancellationToken ct) { Calls++; return Ok(new PermissionUsers([State.User], true)); }
         public Task<ApiCallResult<IReadOnlyList<PermissionDefinition>>> CatalogAsync(CancellationToken ct) { Calls++; return Ok(PermissionCatalog.All); }
-        public Task<ApiCallResult<UserPermissionState>> GetAsync(int user, CancellationToken ct) => Ok(State);
+        public Task<ApiCallResult<UserPermissionState>> GetAsync(int user, CancellationToken ct) => PendingGet?.Task ?? Ok(State);
         public Task<ApiCallResult<UserPermissionState>> SaveAsync(int user, SavePermissionsRequest request, CancellationToken ct)
         {
             LastRequest = request;
+            SaveCalls++;
+            if (PendingSave is not null) return PendingSave.Task;
             if (FailSave) return Task.FromResult(new ApiCallResult<UserPermissionState>(false, null, new(ErrorCodes.NetworkUnavailable, "Sin red. Cambios pendientes.", "test"), 0));
             State = State with { Permissions = request.Permissions, Version = Guid.NewGuid(), IsConfigured = true }; return Ok(State);
         }

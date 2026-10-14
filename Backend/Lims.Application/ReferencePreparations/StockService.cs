@@ -81,7 +81,7 @@ public sealed class StockService(IStockRepository repository, TimeProvider timeP
         if (source is null) return new(ErrorCodes.NotFound, "El estándar solicitado no existe.");
         if (request.SourceVersion == Guid.Empty || source.Version != request.SourceVersion)
             return new(ErrorCodes.Conflict, "El estándar cambió. Vuelva a seleccionarlo y calcule nuevamente.");
-        return source.EffectiveStatus(today) != ReferenceMaterialStatus.Active
+        return source.EffectiveStatus(HistoricalEntryPolicy.EnforceCurrentExpiration ? today : source.ExpirationDate) != ReferenceMaterialStatus.Active
             ? new(ErrorCodes.InvalidState, "El estándar no está disponible para uso.") : null;
     }
     private static OperationResult<T> Failure<T>(string code, string message) => OperationResult.Failure<T>(new OperationError(code, message));

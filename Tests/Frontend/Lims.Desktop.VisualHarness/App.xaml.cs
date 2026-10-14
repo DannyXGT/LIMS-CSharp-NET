@@ -15,6 +15,10 @@ public partial class App : Microsoft.UI.Xaml.Application
     private static readonly JsonSerializerOptions ReportOptions = new() { WriteIndented = true };
     private static readonly string[] PopupFields = ["MethodBox", "UnitCombo", "StorageLocationBox", "ReceivedDatePicker", "ExpirationDatePicker"];
     private static readonly string[] DetailSectionNames = ["HeaderGrid", "KpiGrid", "GeneralSection", "AuditSection", "AvailabilityCard", "ExpiryCard", "StateCard"];
+    private static readonly string[] PermissionElementNames = ["UsersPanel", "UserSearch", "UsersList", "DetailPanel", "UserHeader", "PermissionTabs", "TabContent", "PermissionScroll", "HistoryView", "WorkspaceFooter", "SaveButton", "DiscardButton", "ReloadButton"];
+    private readonly FixtureDashboardApi _dashboardApi = new();
+    private DashboardPage? _dashboardPage;
+    private static readonly string[] DashboardElementNames = ["MetricsGrid", "OverviewGrid", "OperationsGrid", "QuickPanel", "Timestamp"];
     private Window? _window;
     private ShellPage? _shell;
     private ReferenceMaterialsPage? _page;
@@ -55,7 +59,8 @@ public partial class App : Microsoft.UI.Xaml.Application
         _stockPage = new StockPage(new StockViewModel(_stockApi, session));
         _intermediatePage = new IntermediatePage(new IntermediateViewModel(_intermediateApi, session));
         _permissionsPage = new PermissionsPage(new PermissionsViewModel(_permissionsApi, session));
-        _shell = new ShellPage(shellModel, _page, _stockPage, _intermediatePage, _permissionsPage) { RequestedTheme = ElementTheme.Dark };
+        _dashboardPage = new DashboardPage(new DashboardViewModel(_dashboardApi));
+        _shell = new ShellPage(shellModel, _page, _stockPage, _intermediatePage, _permissionsPage, _dashboardPage, _api) { RequestedTheme = ElementTheme.Dark };
         var root = new Grid { RequestedTheme = ElementTheme.Dark, Style = (Style)Resources["FixtureRootStyle"] };
         root.RowDefinitions.Add(new RowDefinition { Height = new GridLength(40) });
         root.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
@@ -89,17 +94,58 @@ public partial class App : Microsoft.UI.Xaml.Application
             var navigation = (NavigationView)_shell.FindName("MainNavigation");
             switch (action)
             {
+                case "dashboard":
+                    _dashboardApi.ReferenceRows = _api.ConfigureDashboardFixtures();
+                    _dashboardApi.Scenario = data.GetProperty("scenario").GetString()!;
+                    _permissionsApi.Current = _dashboardApi.Scenario == "Limited" ? new("Analista", [Lims.Contracts.Permissions.PermissionCatalog.StockView], true) :
+                        _dashboardApi.Scenario is "Laboratory" or "Purchasing" or "Restricted" ? new("Analista", _dashboardApi.Scenario == "Laboratory" ? Lims.Contracts.Permissions.PermissionCatalog.All.Select(p => p.Code).ToArray() : [], true) : new("Administrador", [], true);
+                    await _shell.RefreshAccessAsync();
+                    navigation.SelectedItem = _shell.FindName("HomeItem");
+                    await _dashboardPage!.LoadAsync();
+                    break;
+                case "dashboardReport":
+                    var ds = (ScrollViewer)_dashboardPage!.FindName("DashboardScroll");
+                    File.WriteAllText(Path.Combine(_directory, "dashboard-layout.json"), JsonSerializer.Serialize(new {
+                        fixtureOnly = true, _dashboardApi.Scenario, data = _dashboardPage.ViewModel.Data, _dashboardPage.ViewModel.Error,
+                        width = _dashboardPage.ActualWidth, height = _dashboardPage.ActualHeight, ds.ScrollableHeight, ds.VerticalOffset,
+                        scrollWidth = ds.ActualWidth, extentWidth = ds.ExtentWidth, animationsEnabled = Lims.DesignSystem.Presentation.Motion.Enabled,
+                        module = ((NavigationViewItem)navigation.SelectedItem).Tag,
+                        filter = _page.ViewModel.StatusFilter,
+                        _shell.LastDashboardRoute, _shell.DashboardRouteStage,
+                        standardIds = _page.ViewModel.Items.Select(r => r.Id).ToArray(),
+                        detailOpen = _page.DetailDialog is not null,
+                        standardsLoaded = _page.IsLoaded, standardsBusy = _page.ViewModel.IsBusy, standardMessage = _page.ViewModel.Message,
+                        selectedStandard = _page.ViewModel.SelectedMaterial?.Id, loadedStandard = _page.ViewModel.SelectedDetail?.Id,
+                        preparationTab = ((LimsTabStrip)((PreparationsPage)((ContentControl)_shell.FindName("PreparationsHost")).Content).FindName("PreparationTabs")).SelectedIndex,
+                        elements = DashboardElementNames.Select(n => {
+                            var el = (FrameworkElement)_dashboardPage.FindName(n); var point = el.TransformToVisual(_dashboardPage).TransformPoint(new Windows.Foundation.Point());
+                            return new { name=n, x=point.X,y=point.Y,width=el.ActualWidth,height=el.ActualHeight };
+                        }).ToArray()
+                    }, ReportOptions)); break;
+                case "dashboardScroll": ((ScrollViewer)_dashboardPage!.FindName("DashboardScroll")).ChangeView(null, data.GetProperty("offset").GetDouble(), null, true); break;
                 case "permissions": navigation.SelectedItem = _shell.FindName("PermissionsItem"); break;
+                case "permissionActivate": _window.AppWindow.Show(true); _window.Activate(); break;
                 case "permissionSelect":
                     var selectedPermissionUser = _permissionsPage!.ViewModel.Users[data.GetProperty("index").GetInt32()];
                     await _permissionsPage.ViewModel.SelectAsync(selectedPermissionUser, true);
-                    ((ListView)_permissionsPage.FindName("UsersList")).SelectedItem = selectedPermissionUser;
+                    ((ListView)_permissionsPage.FindName("UsersList")).SelectedItem = _permissionsPage.ViewModel.UserRows.Single(r => r.User.Id == selectedPermissionUser.Id);
                     break;
                 case "permissionToggle":
                     var permissionChoice = _permissionsPage!.ViewModel.Groups.SelectMany(g => g.Items).Single(c => c.Definition.Code == data.GetProperty("code").GetString());
                     permissionChoice.IsGranted = !permissionChoice.IsGranted;
                     break;
                 case "permissionSave": await _permissionsPage!.ViewModel.SaveAsync(); break;
+                case "permissionTab": ((LimsTabStrip)_permissionsPage!.FindName("PermissionTabs")).SelectedIndex = data.GetProperty("index").GetInt32(); break;
+                case "permissionReport":
+                    var permissionModel = _permissionsPage!.ViewModel;
+                    var permissionElements = PermissionElementNames.Select(name =>
+                    {
+                        var element = (FrameworkElement)_permissionsPage.FindName(name);
+                        var position = element.TransformToVisual(_permissionsPage).TransformPoint(new Windows.Foundation.Point());
+                        return new { name, x = position.X, y = position.Y, width = element.ActualWidth, height = element.ActualHeight, visibility = element.Visibility.ToString() };
+                    }).ToArray();
+                    File.WriteAllText(Path.Combine(_directory, "permission-layout.json"), JsonSerializer.Serialize(new { fixtureOnly = true, animationsEnabled = Lims.DesignSystem.Presentation.Motion.Enabled, width = _permissionsPage.ActualWidth, height = _permissionsPage.ActualHeight, selected = permissionModel.SelectedUser?.Name, permissionModel.CanSave, permissionModel.HasPendingChanges, permissionModel.SelectedCount, permissionModel.SavedCount, permissionModel.IsConfigured, permissionModel.IsSaving, permissionModel.HistoryTotal, permissionModel.HistoryPage, _permissionsApi.SaveCalls, elements = permissionElements }, ReportOptions));
+                    break;
                 case "permissionFailSave": _permissionsApi.FailSave = data.GetProperty("fail").GetBoolean(); break;
                 case "permissionScroll": ((ScrollViewer)_permissionsPage!.FindName("PermissionScroll")).ChangeView(null, data.GetProperty("offset").GetDouble(), null, true); break;
                 case "permissionCommon":

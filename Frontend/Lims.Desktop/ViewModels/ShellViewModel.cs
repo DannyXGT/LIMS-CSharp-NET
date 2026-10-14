@@ -34,6 +34,8 @@ public sealed partial class ShellViewModel(
         }
     }
 
+    public string AuthorizationSignature => $"{session.Profile?.Id}|{session.Profile?.Role}|{string.Join(",", (session.Profile?.Permissions ?? []).OrderBy(p => p))}";
+
     private bool _accessVerified = true;
     public bool HasAccessWarning => !_accessVerified;
 

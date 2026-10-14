@@ -147,10 +147,11 @@ public sealed class ReferenceMaterial
         Version = Guid.NewGuid();
     }
 
-    public void Consume(decimal quantity, int actorUserId, DateTimeOffset now, DateOnly today)
+    public void Consume(decimal quantity, int actorUserId, DateTimeOffset now, DateOnly today, bool enforceCurrentExpiration = true)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(actorUserId);
-        if (EffectiveStatus(today) != ReferenceMaterialStatus.Active)
+        // Historical Stock entry may bypass current expiry; lifecycle and balance still apply.
+        if (EffectiveStatus(enforceCurrentExpiration ? today : ExpirationDate) != ReferenceMaterialStatus.Active)
             throw new InvalidOperationException("El estándar no está disponible para uso.");
         if (quantity <= 0 || quantity > AvailableQuantity || decimal.Round(quantity, 6) != quantity)
             throw new ArgumentOutOfRangeException(nameof(quantity), "No hay suficiente material disponible o la cantidad es inválida.");

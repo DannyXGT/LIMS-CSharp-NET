@@ -81,6 +81,20 @@ public sealed class ReferenceMaterialDomainTests
     }
 
     [Fact]
+    public void HistoricalConsumptionBypassesOnlyCurrentExpiration()
+    {
+        var material = CreateMaterial();
+        var today = new DateOnly(2027, 10, 1);
+        Assert.Throws<InvalidOperationException>(() => material.Consume(5, 7, Now, today));
+        material.Consume(5, 7, Now, today, enforceCurrentExpiration: false);
+        Assert.Equal(45m, material.AvailableQuantity);
+        Assert.Equal(ReferenceMaterialStatus.Expired, material.EffectiveStatus(today));
+        Assert.Throws<ArgumentOutOfRangeException>(() => material.Consume(46, 7, Now, today, enforceCurrentExpiration: false));
+        material.Archive("Historical record archived", 7, Now);
+        Assert.Throws<InvalidOperationException>(() => material.Consume(1, 7, Now, today, enforceCurrentExpiration: false));
+    }
+
+    [Fact]
     public void NativeMaterialRequiresPositiveActor()
     {
         Assert.Throws<ArgumentOutOfRangeException>(() => new ReferenceMaterial(

@@ -253,6 +253,28 @@ public sealed class StockViewModelTests
         vm.ActualQuantity = "101";
         Assert.False(vm.CanSave);
     }
+    [Fact]
+    public async Task HistoricalExpiredSourceAndStockCanBeSavedWithOriginalDates()
+    {
+        var api = new FakeStockApi();
+        var vm = Model(api);
+        await ReadyAsync(vm);
+        var today = DateTimeOffset.UtcNow.ToOffset(TimeSpan.FromHours(-6));
+        vm.SelectedSource = Source with
+        {
+            ReceivedDate = DateOnly.FromDateTime(today.AddDays(-90).Date),
+            ExpirationDate = DateOnly.FromDateTime(today.AddDays(-30).Date),
+        };
+        vm.PreparationDate = today.AddDays(-60);
+        vm.ExpirationDate = today.AddDays(-40);
+        await vm.PreviewAsync(CancellationToken.None);
+        Assert.True(vm.CanSave);
+        Assert.True(await vm.SaveAsync(CancellationToken.None));
+        var request = Assert.Single(api.Requests);
+        Assert.Equal(DateOnly.FromDateTime(today.AddDays(-60).Date), request.PreparationDate);
+        Assert.Equal(DateOnly.FromDateTime(today.AddDays(-40).Date), request.ExpirationDate);
+    }
+
     private static StockViewModel Model(FakeStockApi api) => new(api, new Session("Administrador", []));
     private static async Task ReadyAsync(StockViewModel vm)
     {

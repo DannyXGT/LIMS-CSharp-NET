@@ -3,6 +3,8 @@ using System.Security.Claims;
 using System.Text;
 using System.Threading.RateLimiting;
 using Lims.Api.Authentication;
+using Lims.Api.Dashboard;
+using Lims.Application.Dashboard;
 using Lims.Api.Health;
 using Lims.Api.Permissions;
 using Lims.Application.Permissions;
@@ -76,6 +78,8 @@ try
     builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
     builder.Services.AddScoped<IReferenceMaterialRepository, ReferenceMaterialRepository>();
     builder.Services.AddScoped<IReferenceMaterialService, ReferenceMaterialService>();
+    builder.Services.AddSingleton(builder.Configuration.GetSection("Dashboard").Get<DashboardOptions>() ?? new DashboardOptions());
+    builder.Services.AddScoped<IDashboardRepository, DashboardRepository>();
     builder.Services.AddScoped<IStockRepository, StockRepository>();
     builder.Services.AddScoped<IStockService, StockService>();
     builder.Services.AddScoped<IIntermediateRepository, IntermediateRepository>();
@@ -179,6 +183,7 @@ try
     app.MapGet("/", () => Results.Ok(new { service = "Lims.Api", status = "running" }));
     app.MapAuthenticationEndpoints();
     app.MapPermissionEndpoints();
+    app.MapDashboardEndpoints();
     app.MapReferenceMaterialEndpoints();
     app.MapStockEndpoints();
     app.MapIntermediateEndpoints();

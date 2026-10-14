@@ -14,7 +14,7 @@ public sealed class StockRepository(LimsDbContext dbContext) : IStockRepository
     public async Task<StockSourcePage> SourcesAsync(string? search, DateOnly today, int page, int pageSize, CancellationToken cancellationToken)
     {
         var query = Sources().AsNoTracking().Where(source => source.Status == ReferenceMaterialStatus.Active &&
-            source.AvailableQuantity > 0 && source.ExpirationDate >= today &&
+            source.AvailableQuantity > 0 && (!HistoricalEntryPolicy.EnforceCurrentExpiration || source.ExpirationDate >= today) &&
             (source.Unit.Symbol == "g" || source.Unit.Symbol == "mg" || source.Unit.Symbol == "µg" || source.Unit.Symbol == "μg" || source.Unit.Symbol == "ug"));
         if (!string.IsNullOrWhiteSpace(search))
         {
@@ -59,7 +59,8 @@ public sealed class StockRepository(LimsDbContext dbContext) : IStockRepository
                 if (!prepared.IsSuccess) return OperationResult.Failure<StockDetail>(prepared.Error!);
                 var preparation = prepared.Value!;
                 var movement = new ReferenceMaterialMovement(preparation, source.AvailableQuantity, now);
-                source.Consume(preparation.ActualWeight, preparation.PreparedByUserId, now, today);
+                source.Consume(preparation.ActualWeight, preparation.PreparedByUserId, now, today,
+                    enforceCurrentExpiration: HistoricalEntryPolicy.EnforceCurrentExpiration);
                 dbContext.ReferencePreparations.Add(preparation);
                 dbContext.ReferenceMaterialMovements.Add(movement);
                 await dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);

@@ -24,6 +24,10 @@ public sealed partial class MainWindow : Window
         AppWindow.SetIcon("Assets/Branding/LIMS.ico");
         ConfigureTitleBar();
         ConfigureWindow();
+        shellPage.Loaded += (_, _) =>
+        {
+            if (AppWindow.Presenter is OverlappedPresenter presenter) presenter.Maximize();
+        };
         navigation.Initialize(RootContent, loginPage, shellPage);
         navigation.ShowLogin();
     }

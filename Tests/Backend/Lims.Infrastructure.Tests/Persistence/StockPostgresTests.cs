@@ -215,6 +215,34 @@ public sealed class StockPostgresTests
     }
 
     [StockPostgresFact]
+    public async Task HistoricalExpiredStandardCanBeSelectedPreviewedAndConsumedForExpiredStock()
+    {
+        await using var fixture = await Fixture.CreateAsync(100);
+        await using var context = fixture.Context();
+        var today = DateOnly.FromDateTime(DateTimeOffset.UtcNow.ToOffset(TimeSpan.FromHours(-6)).DateTime);
+        var source = await context.ReferenceMaterials.Include(item => item.Method).Include(item => item.Unit).Include(item => item.Location).SingleAsync();
+        source.Update(source.Name, source.CasNumber, source.CatalogNumber, source.Method, source.PurityPercent,
+            source.Lot, source.Brand, today.AddDays(-90), today.AddDays(-30), source.PresentationQuantity,
+            source.Unit, 1, source.StorageTemperature, source.Location, 42, DateTimeOffset.UtcNow);
+        await context.SaveChangesAsync();
+        var service = Service(context);
+        var selected = Assert.Single((await service.SourcesAsync(null, 1, 25, CancellationToken.None)).Value!.Items);
+        var request = fixture.Request(50) with
+        {
+            Calculation = fixture.Request(50).Calculation with { SourceVersion = selected.Version },
+            PreparationDate = today.AddDays(-60),
+            ExpirationDate = today.AddDays(-40),
+        };
+        Assert.True((await service.PreviewAsync(request.Calculation, CancellationToken.None)).IsSuccess);
+        var result = await service.CreateAsync(request, 42, CancellationToken.None);
+        Assert.True(result.IsSuccess, result.Error?.Message);
+        Assert.Equal("Expired", result.Value!.Preparation.Status);
+        Assert.Equal(request.ExpirationDate, result.Value.Preparation.ExpirationDate);
+        Assert.Equal(50m, (await context.ReferenceMaterials.AsNoTracking().SingleAsync()).AvailableQuantity);
+        Assert.Single(await context.ReferenceMaterialMovements.ToArrayAsync());
+    }
+
+    [StockPostgresFact]
     public async Task ExactDebitDepletesSourceAndExcludesItFromSelector()
     {
         await using var fixture = await Fixture.CreateAsync(100);

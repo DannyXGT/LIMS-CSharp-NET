@@ -21,7 +21,7 @@ public partial class App : Application
         var uiCulture = CultureInfo.GetCultureInfo("es-GT");
         CultureInfo.DefaultThreadCurrentCulture = uiCulture;
         CultureInfo.DefaultThreadCurrentUICulture = uiCulture;
-        Windows.Globalization.ApplicationLanguages.PrimaryLanguageOverride = uiCulture.Name;
+        Microsoft.Windows.Globalization.ApplicationLanguages.PrimaryLanguageOverride = uiCulture.Name;
         InitializeComponent();
         var builder = Host.CreateApplicationBuilder(new HostApplicationBuilderSettings
         {
@@ -58,6 +58,9 @@ public partial class App : Application
         builder.Services.AddSingleton<IAuthenticationGateway, AuthenticationGateway>();
         builder.Services.AddSingleton<IAuthenticationApiClient, AuthenticationApiClient>();
         builder.Services.AddSingleton<IReferenceMaterialsApiClient, ReferenceMaterialsApiClient>();
+        builder.Services.AddSingleton<IDashboardApiClient, DashboardApiClient>();
+        builder.Services.AddSingleton<DashboardViewModel>();
+        builder.Services.AddSingleton<DashboardPage>();
         builder.Services.AddSingleton<IPermissionsApiClient, PermissionsApiClient>();
         builder.Services.AddSingleton<PermissionsViewModel>();
         builder.Services.AddSingleton<PermissionsPage>();
