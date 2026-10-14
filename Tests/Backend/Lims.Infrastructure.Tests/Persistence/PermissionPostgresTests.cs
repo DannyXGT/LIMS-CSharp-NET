@@ -38,13 +38,19 @@ public sealed class PermissionPostgresTests
         var migration = new AddIndividualPermissions();
         var generator = db.GetService<IMigrationsSqlGenerator>();
         foreach (var command in generator.Generate(migration.UpOperations, db.Model)) await db.Database.ExecuteSqlRawAsync(command.CommandText);
-        var role = new Role(1, "Administrador"); var analyst = new Role(2, "Analista"); var department = new Department(7, PermissionCatalog.DepartmentName);
+        // Reproduce the unaccented department name shown by the shared React catalog.
+        var role = new Role(1, "Administrador"); var analyst = new Role(2, "Analista"); var department = new Department(7, "Laboratorio Analitico");
         db.Users.AddRange(new User(42, "Administrador de prueba", "admin@example.invalid", "test", true, role, department), new User(84, "Ana López", "ana@example.invalid", "test", true, analyst, department));
         await db.SaveChangesAsync(); db.ChangeTracker.Clear();
         var repository = new PermissionRepository(db, new() { EnforceIndividualPermissions = true }, TimeProvider.System);
-        Assert.Equal(2, (await repository.UsersAsync(42, null, default)).Value!.Items.Count);
+        var users = (await repository.UsersAsync(42, null, default)).Value!;
+        Assert.True(users.DepartmentExists);
+        Assert.Equal(2, users.Items.Count);
+        Assert.All(users.Items, u => Assert.Equal("Laboratorio Analitico", u.Department));
+        Assert.True((await repository.GetAsync(42, 84, default)).IsSuccess);
         var granted = await repository.SaveAsync(42, 84, new([PermissionCatalog.StockView, PermissionCatalog.StockCreate], Guid.Empty), default);
         Assert.True(granted.IsSuccess, granted.Error?.Message);
+        Assert.Contains(PermissionCatalog.StockCreate, (await repository.EffectiveAsync(84, default))!.Permissions);
         var revoked = await repository.SaveAsync(42, 84, new([PermissionCatalog.StockView], granted.Value!.Version), default);
         Assert.True(revoked.IsSuccess, revoked.Error?.Message);
         Assert.DoesNotContain(PermissionCatalog.StockCreate, (await repository.EffectiveAsync(84, default))!.Permissions);

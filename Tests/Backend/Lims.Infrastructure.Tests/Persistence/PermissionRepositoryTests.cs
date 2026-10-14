@@ -12,6 +12,46 @@ namespace Lims.Infrastructure.Tests.Persistence;
 
 public sealed class PermissionRepositoryTests
 {
+    [Theory]
+    [InlineData("Laboratorio Analítico")]
+    [InlineData("Laboratorio Analitico")]
+    public async Task SharedDepartmentSpellingSupportsListStateSaveHistoryAndEffectivePermissions(string departmentName)
+    {
+        await using var f = await Fixture.Create(departmentName);
+        var users = (await f.Repository.UsersAsync(1, null, default)).Value!;
+        Assert.True(users.DepartmentExists);
+        var user = Assert.Single(users.Items);
+        Assert.Equal(2, user.Id);
+        Assert.Equal(departmentName, user.Department);
+        var state = (await f.Repository.GetAsync(1, user.Id, default)).Value!;
+        var saved = await f.Repository.SaveAsync(1, user.Id, new([PermissionCatalog.StockView], state.Version), default);
+        Assert.True(saved.IsSuccess, saved.Error?.Message);
+        Assert.Equal([PermissionCatalog.StockView], (await f.Repository.EffectiveAsync(user.Id, default))!.Permissions);
+        var history = (await f.Repository.HistoryAsync(1, user.Id, 1, default)).Value!;
+        Assert.Equal(PermissionCatalog.All.Count, history.Total);
+
+        // Moving out of either recognized spelling must still revoke effective access.
+        await f.Db.Users.Where(u => u.Id == user.Id).ExecuteUpdateAsync(s => s.SetProperty(u => u.DepartmentId, (int?)2));
+        Assert.Empty((await f.Repository.EffectiveAsync(user.Id, default))!.Permissions);
+        Assert.Equal(ErrorCodes.Forbidden, (await f.Repository.GetAsync(1, user.Id, default)).Error?.Code);
+        Assert.Equal(ErrorCodes.Forbidden, (await f.Repository.SaveAsync(1, user.Id, new([], saved.Value!.Version), default)).Error?.Code);
+        Assert.Equal(ErrorCodes.Forbidden, (await f.Repository.HistoryAsync(1, user.Id, 1, default)).Error?.Code);
+    }
+
+    [Theory]
+    [InlineData("Laboratorio Químico")]
+    [InlineData("Laboratorio Analitico Externo")]
+    public async Task OtherDepartmentNamesDoNotExpandPermissionScope(string departmentName)
+    {
+        await using var f = await Fixture.Create(departmentName);
+        var users = (await f.Repository.UsersAsync(1, null, default)).Value!;
+        Assert.False(users.DepartmentExists);
+        Assert.Empty(users.Items);
+        Assert.Equal(ErrorCodes.Forbidden, (await f.Repository.GetAsync(1, 2, default)).Error?.Code);
+        Assert.Equal(ErrorCodes.Forbidden, (await f.Repository.SaveAsync(1, 2, new([], Guid.Empty), default)).Error?.Code);
+        Assert.Equal(ErrorCodes.Forbidden, (await f.Repository.HistoryAsync(1, 2, 1, default)).Error?.Code);
+    }
+
     [Fact]
     public async Task ScopeUsesUserDepartmentAndActiveStatusAndNeverPhysicalLocation()
     {
@@ -85,13 +125,13 @@ public sealed class PermissionRepositoryTests
         public LimsDbContext Db { get; } = db;
         public PermissionOptions Options { get; } = new() { EnforceIndividualPermissions = true };
         public PermissionRepository Repository => new(Db, Options, TimeProvider.System);
-        public static async Task<Fixture> Create()
+        public static async Task<Fixture> Create(string departmentName = PermissionCatalog.DepartmentName)
         {
             var connection = new SqliteConnection("Data Source=:memory:"); await connection.OpenAsync();
             var options = new DbContextOptionsBuilder<LimsDbContext>().UseSqlite(connection).ReplaceService<IModelCustomizer, PermissionTestModel>().Options;
             var db = new LimsDbContext(options); await db.Database.EnsureCreatedAsync();
             var admin = new Role(1, "Administrador"); var analyst = new Role(2, "Analista");
-            var laboratory = new Department(1, PermissionCatalog.DepartmentName); var other = new Department(2, "Laboratorio Químico");
+            var laboratory = new Department(1, departmentName); var other = new Department(2, "Laboratorio Químico");
             db.Users.AddRange(new User(1, "Administrador existente", "admin@intertek.com", "hash", true, admin, other),
                 new User(2, "Ana López", "ana@intertek.com", "hash", true, analyst, laboratory, [new(2, "reference_materials.view")]),
                 new User(3, "Usuario externo", "externo@intertek.com", "hash", true, analyst, other),

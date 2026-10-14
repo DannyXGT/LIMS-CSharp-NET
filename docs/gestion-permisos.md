@@ -4,7 +4,7 @@ Implementación local de Administración → Gestión de permisos. No se aplicó
 
 ## Identidad y alcance
 
-Se reutiliza el modelo existente: `usuarios.id_departamento → departamentos.id`, `usuarios.id_rol → roles.id`, `usuarios.activo`, `usuarios.nombre` y `usuarios.email`. El servidor busca el nombre exacto `departamentos.nombre = 'Laboratorio Analítico'`; no hay IDs predeterminados. `reference_locations` es ubicación física de estándares y no participa.
+Se reutiliza el modelo existente: `usuarios.id_departamento → departamentos.id`, `usuarios.id_rol → roles.id`, `usuarios.activo`, `usuarios.nombre` y `usuarios.email`. El servidor acepta los nombres exactos `Laboratorio Analítico` y `Laboratorio Analitico` (grafía sin tilde mostrada por el catálogo compartido de React). Resuelve los IDs desde `departamentos` y aplica el mismo alcance al listado, lectura, guardado, historial y permisos efectivos; no hay IDs predeterminados. `reference_locations` es ubicación física de estándares y no participa.
 
 La existencia del nombre y de sus usuarios en **InterDB no se verificó**: la solicitud prohíbe ejecutar SQL allí. El módulo consulta la relación al ejecutarse; si el departamento no existe devuelve `DepartmentExists = false`, lista vacía y un mensaje explícito. No interpreta Laboratorio Químico como equivalente. Usuarios inactivos, sin departamento, inexistentes o de otro departamento quedan fuera tanto del listado como de lectura, escritura e historial. El servidor devuelve 403 sin revelar sus datos.
 
@@ -113,3 +113,15 @@ El cliente conserva el nombre, rol y departamento autenticados cuando falla la c
 Para guardar asignaciones reales sigue siendo necesario aplicar `AddIndividualPermissions` en el entorno autorizado y desplegar la API que incluye las rutas administrativas. La corrección del cliente no realiza ese despliegue ni aplica migraciones.
 
 Verificación de esta corrección: 85/85 pruebas Desktop y 38/38 API aprobadas. Desktop compilado sin advertencias ni errores y API Release publicada localmente en `artifacts/publish/permissions-api`. Se reabrió la aplicación real y se comprobó por SHA256 que AppX ejecuta el binario nuevo; la ventana quedó en Iniciar sesión. La sesión real del administrador y el guardado productivo siguen pendientes. Evidencia: `artifacts/validation/administrator-access/verification.json`.
+
+## Corrección de identificación del departamento · 13 de octubre de 2026
+
+La captura de React muestra usuarios del departamento `Laboratorio Analitico`, sin tilde. El backend React devuelve `u.departamento.nombre`; el backend .NET filtraba solo `Laboratorio Analítico`, con tilde, y por eso devolvía `DepartmentExists = false` aun compartiendo la base de datos.
+
+`PermissionRepository` acepta ahora ambas grafías exactas mediante un catálogo único de nombres. El listado y la elegibilidad resuelven los IDs de esos departamentos y consultan `usuarios.id_departamento`. La misma selección se aplica a lectura, guardado, historial y permisos efectivos. El nombre mostrado permanece como está almacenado; otros departamentos y usuarios inactivos siguen excluidos. Este ajuste no modifica identidad ni requiere una migración nueva.
+
+Comprobación actual de solo lectura: la API configurada responde 200 en `/health/live` y 401 sin credenciales en `/api/administration/permissions/users`; la ruta administrativa ya está publicada. No se consultaron usuarios reales desde esta sesión.
+
+Paquete Release corregido: `artifacts/publish/permissions-department-fix-api.zip`, con instrucciones en `DESPLIEGUE.md`. Sus binarios coinciden por SHA256 con la compilación Release. Falta actualizar la API del servidor y verificar Recargar con la sesión real del administrador; el paquete no se desplegó desde esta sesión y no se ejecutó SQL en InterDB.
+
+Validación: solución Debug x64 compilada con 0 advertencias y 0 errores; API Release publicada correctamente; 291/291 pruebas aprobadas (Application 115, API 38, Infrastructure 53, Desktop 85), sin omisiones. Las regresiones verifican las dos grafías, listado, consulta, guardado, historial y pérdida de permisos al cambiar de departamento. La prueba PostgreSQL aislada reproduce el nombre sin tilde y comprueba concesión, revocación, historial y concurrencia. Resultados en `artifacts/validation/stock-postgres/results`; prueba focalizada adicional 9/9 en `artifacts/validation/permission-department/permission-department-regression.trx`.

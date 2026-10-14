@@ -10,18 +10,28 @@ namespace Lims.Infrastructure.Persistence;
 
 public sealed class PermissionRepository(LimsDbContext db, PermissionOptions options, TimeProvider clock) : IPermissionRepository
 {
+    // The shared legacy catalog also stores the department without the accent.
+    private static readonly string[] AnalyticalDepartmentNames = [PermissionCatalog.DepartmentName, "Laboratorio Analitico"];
+    private IQueryable<Department> AnalyticalDepartments => db.Departments.Where(d => AnalyticalDepartmentNames.Contains(d.Name));
     private IQueryable<User> Users => db.Users.AsNoTracking().Include(u => u.Role).Include(u => u.Department);
+    private IQueryable<User> EligibleUsers
+    {
+        get
+        {
+            var departmentIds = AnalyticalDepartments.Select(d => d.Id);
+            return Users.Where(u => u.IsActive && u.DepartmentId.HasValue && departmentIds.Contains(u.DepartmentId.Value));
+        }
+    }
     private Task<bool> IsAdmin(int actor, CancellationToken ct) => Users.AnyAsync(u => u.Id == actor && u.IsActive && u.Role != null && u.Role.Name == "Administrador", ct);
     private static OperationResult<T> Denied<T>() => OperationResult.Failure<T>(new(ErrorCodes.Forbidden, "No tiene autorización para administrar los permisos de este usuario."));
     private static PermissionUser Display(User u) => new(u.Id, u.Name, u.Email, u.Role?.Name ?? "Sin rol", u.Department!.Name);
-    private Task<User?> Eligible(int user, CancellationToken ct) => Users.SingleOrDefaultAsync(u => u.Id == user && u.IsActive && u.Department != null && u.Department.Name == PermissionCatalog.DepartmentName, ct);
+    private Task<User?> Eligible(int user, CancellationToken ct) => EligibleUsers.SingleOrDefaultAsync(u => u.Id == user, ct);
 
     public async Task<OperationResult<PermissionUsers>> UsersAsync(int actor, string? search, CancellationToken ct)
     {
         if (!await IsAdmin(actor, ct).ConfigureAwait(false)) return Denied<PermissionUsers>();
-        var exists = await db.Departments.AnyAsync(d => d.Name == PermissionCatalog.DepartmentName, ct).ConfigureAwait(false);
-        var query = Users.Where(u => u.IsActive && u.Department != null && u.Department.Name == PermissionCatalog.DepartmentName);
-        var users = await query.OrderBy(u => u.Name).ToArrayAsync(ct).ConfigureAwait(false);
+        var exists = await AnalyticalDepartments.AnyAsync(ct).ConfigureAwait(false);
+        var users = await EligibleUsers.OrderBy(u => u.Name).ToArrayAsync(ct).ConfigureAwait(false);
         if (!string.IsNullOrWhiteSpace(search)) users = users.Where(u => u.Name.Contains(search.Trim(), StringComparison.OrdinalIgnoreCase) || u.Email.Contains(search.Trim(), StringComparison.OrdinalIgnoreCase)).ToArray();
         return OperationResult.Success(new PermissionUsers(users.Select(Display).ToArray(), exists));
     }
@@ -95,7 +105,7 @@ public sealed class PermissionRepository(LimsDbContext db, PermissionOptions opt
         var unrelated = target.Permissions.Select(p => p.Key).Where(code => !PermissionCatalog.All.Any(p => p.Code == code)).ToArray();
         if (target.Role?.Name == "Administrador") return new("Administrador", PermissionCatalog.All.Select(p => p.Code).Concat(unrelated).Distinct(StringComparer.Ordinal).ToArray(), options.EnforceIndividualPermissions);
         var configured = await db.Set<UserPermissionSet>().AnyAsync(p => p.UserId == user, ct).ConfigureAwait(false);
-        var granted = configured && target.Department?.Name != PermissionCatalog.DepartmentName ? [] : configured
+        var granted = configured && (target.Department is null || !AnalyticalDepartmentNames.Contains(target.Department.Name)) ? [] : configured
             ? await db.Set<UserPermissionAssignment>().Where(p => p.UserId == user && p.IsGranted).Select(p => p.Code).ToArrayAsync(ct).ConfigureAwait(false)
             : options.EnforceIndividualPermissions ? [] : Legacy(target.Permissions.Select(p => p.Key));
         return new(target.Role?.Name ?? string.Empty, granted.Concat(unrelated).Distinct(StringComparer.Ordinal).ToArray(), options.EnforceIndividualPermissions || configured);
