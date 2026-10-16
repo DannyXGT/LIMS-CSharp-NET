@@ -19,6 +19,7 @@ public sealed class PermissionsViewModelTests
         Assert.True(vm.HasPendingChanges); Assert.True(vm.CanSave); Assert.False(await vm.SelectAsync(api.State.User with { Id = 90 }));
         api.FailSave = true; Assert.False(await vm.SaveAsync()); Assert.True(vm.HasPendingChanges); Assert.True(create.IsGranted); Assert.Contains("pendientes", vm.Message, StringComparison.Ordinal);
         api.FailSave = false; Assert.True(await vm.SaveAsync()); Assert.False(vm.HasPendingChanges);
+        Assert.All(vm.Groups.SelectMany(g => g.Items), choice => Assert.False(choice.IsChanged));
         Assert.Contains(PermissionCatalog.StockCreate, api.LastRequest!.Permissions); Assert.Equal(api.InitialVersion, api.LastRequest.Version);
         Assert.Contains("confirmados", vm.Message, StringComparison.Ordinal); Assert.Single(vm.History);
     }
@@ -53,8 +54,10 @@ public sealed class PermissionsViewModelTests
         await vm.LoadUsersAsync(); await vm.SelectAsync(api.State.User);
         Assert.False(vm.CanSave); Assert.Equal(1, vm.SelectedCount); Assert.Equal(1, vm.SavedCount);
         vm.Groups.SelectMany(g => g.Items).Single(p => p.Definition.Code == PermissionCatalog.StockCreate).IsGranted = true;
+        Assert.Single(vm.Groups.SelectMany(g => g.Items), p => p.IsChanged);
         Assert.Equal(2, vm.SelectedCount); Assert.Equal(1, vm.SavedCount); Assert.Equal("1 permisos guardados", Assert.Single(vm.UserRows).Summary);
         vm.DiscardChanges(); Assert.Equal(1, vm.SelectedCount); Assert.False(vm.HasPendingChanges); Assert.False(vm.CanSave); Assert.Null(api.LastRequest);
+        Assert.All(vm.Groups.SelectMany(g => g.Items), choice => Assert.False(choice.IsChanged));
         vm.Groups.SelectMany(g => g.Items).Single(p => p.Definition.Code == PermissionCatalog.StockView).IsGranted = false;
         Assert.True(vm.RequiresEmptyConfirmation); Assert.Equal(0, vm.SelectedCount); Assert.Equal(1, vm.SavedCount);
     }

@@ -62,10 +62,11 @@ public sealed class StockService(IStockRepository repository, TimeProvider timeP
         }, request.Calculation.SourceMaterialId, today, now, cancellationToken);
     }
 
-    public async Task<OperationResult<StockPage>> ListAsync(string? search, int page, int pageSize, CancellationToken cancellationToken)
+    public async Task<OperationResult<StockPage>> ListAsync(string? search, int page, int pageSize, CancellationToken cancellationToken, PreparationListFilter? filter = null)
     {
+        if (filter?.IsValid == false) return Failure<StockPage>(ErrorCodes.ValidationError, "Los filtros solicitados son inválidos.");
         if (!ValidPage(page, pageSize)) return Failure<StockPage>(ErrorCodes.ValidationError, "La página solicitada es inválida.");
-        return OperationResult.Success(await repository.ListAsync(search?.Trim(), page, pageSize, cancellationToken).ConfigureAwait(false));
+        return OperationResult.Success(await repository.ListAsync(search?.Trim(), page, pageSize, cancellationToken, filter).ConfigureAwait(false));
     }
 
     public async Task<OperationResult<StockDetail>> GetAsync(Guid id, CancellationToken cancellationToken)

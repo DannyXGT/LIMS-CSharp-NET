@@ -8,8 +8,8 @@ namespace Lims.Desktop.Controls;
 public sealed class PermissionActionPanel : Panel
 {
     private const double Gap = 8;
-    private const double MinimumWidth = 128;
-    private const double TileHeight = 62;
+    private const double MinimumWidth = 144;
+    private double _tileHeight = 62;
     private static int Columns(double width) => Math.Max(1, Math.Min(5, (int)((width + Gap) / (MinimumWidth + Gap))));
     protected override Size MeasureOverride(Size availableSize)
     {
@@ -17,15 +17,20 @@ public sealed class PermissionActionPanel : Panel
         var width = double.IsInfinity(availableSize.Width) ? Children.Count * (MinimumWidth + Gap) - Gap : availableSize.Width;
         var columns = Columns(width);
         var tileWidth = Math.Max(0, (width - Gap * (columns - 1)) / columns);
-        foreach (var child in Children) child.Measure(new Size(tileWidth, TileHeight));
+        _tileHeight = 62;
+        foreach (var child in Children)
+        {
+            child.Measure(new Size(tileWidth, double.PositiveInfinity));
+            _tileHeight = Math.Max(_tileHeight, child.DesiredSize.Height);
+        }
         var rows = (Children.Count + columns - 1) / columns;
-        return new Size(width, rows * (TileHeight + Gap) - Gap);
+        return new Size(width, rows * (_tileHeight + Gap) - Gap);
     }
     protected override Size ArrangeOverride(Size finalSize)
     {
         var columns = Columns(finalSize.Width);
         var width = Math.Max(0, (finalSize.Width - Gap * (columns - 1)) / columns);
-        for (var i = 0; i < Children.Count; i++) Children[i].Arrange(new Rect(i % columns * (width + Gap), i / columns * (TileHeight + Gap), width, TileHeight));
+        for (var i = 0; i < Children.Count; i++) Children[i].Arrange(new Rect(i % columns * (width + Gap), i / columns * (_tileHeight + Gap), width, _tileHeight));
         return finalSize;
     }
 }

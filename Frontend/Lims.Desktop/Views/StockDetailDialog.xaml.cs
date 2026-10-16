@@ -15,6 +15,9 @@ public sealed partial class StockDetailDialog : ContentDialog
 
     }
     public StockDetail Detail { get; }
+    public IReadOnlyList<PreparationUsage> UsageHistory => Detail.UsageHistory ?? [];
+    public string UsageMessage => Detail.UsageHistory is null ? "Historial de consumos de esta solución no informado por el servidor." : Detail.UsageHistory.Count == 0 ? "Sin consumos de esta solución registrados." : $"{Detail.UsageHistory.Count} movimientos hacia preparaciones derivadas";
+    public string ExpirationDisplay => $"Vencimiento {Detail.Preparation.ExpirationDisplay}";
     public string SourceCas => ReferenceMaterialPresentation.Optional(Detail.Source.CasNumber);
     public string SourceCatalog => ReferenceMaterialPresentation.Optional(Detail.Source.CatalogNumber);
     public string ConsumedDisplay => "−" + Detail.Consumption.QuantityDisplay;

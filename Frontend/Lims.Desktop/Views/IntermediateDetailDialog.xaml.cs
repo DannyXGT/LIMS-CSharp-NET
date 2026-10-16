@@ -10,6 +10,8 @@ public sealed partial class IntermediateDetailDialog : ContentDialog
 {
     public IntermediateDetailDialog(IntermediateDetail detail) { Detail = detail; InitializeComponent(); }
     public IntermediateDetail Detail { get; }
+    public IReadOnlyList<PreparationUsage> UsageHistory => Detail.UsageHistory ?? [];
+    public string UsageMessage => Detail.UsageHistory is null ? "Historial de consumos de esta solución no informado por el servidor." : Detail.UsageHistory.Count == 0 ? "Sin consumos de esta solución registrados." : $"{Detail.UsageHistory.Count} movimientos hacia preparaciones derivadas";
     public IntermediateSource? RequestedSource { get; private set; }
     public string ContextDisplay => $"{Detail.Preparation.Method} · Preparado por {Detail.Preparation.PreparedBy} · {Detail.Preparation.DateDisplay}";
     public string VolumeDisplay => $"{Detail.Calculation.TakenDisplay} de componentes · Aforo {Detail.Calculation.FinalDisplay}";

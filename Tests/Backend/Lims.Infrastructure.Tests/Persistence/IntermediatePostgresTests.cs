@@ -10,6 +10,40 @@ namespace Lims.Infrastructure.Tests.Persistence;
 public sealed class IntermediatePostgresTests
 {
     [StockPostgresFact]
+    public async Task PreparationFiltersCountBeforePagingAndUsageTracksTheDerivedPreparation()
+    {
+        await using var fixture = await StockPostgresTests.Fixture.CreateAsync(10000);
+        var sources = await Stocks(fixture);
+        await using var db = fixture.Context();
+        var request = Request(sources, 900, 15);
+        request = request with { Calculation = request.Calculation with { FinalVolume = 1000 } };
+        var created = await Service(db).CreateAsync(request, 84, CancellationToken.None);
+        Assert.True(created.IsSuccess, created.Error?.Message);
+        var stocks = new StockService(new StockRepository(db), TimeProvider.System);
+        var low = (await stocks.ListAsync(null, 1, 1, CancellationToken.None, new("Active", "Low"))).Value!;
+        Assert.True(low.FiltersApplied);
+        Assert.Equal(1, low.TotalCount);
+        Assert.Equal(sources[0].Id, Assert.Single(low.Items).Id);
+        Assert.Empty((await stocks.ListAsync(null, 2, 1, CancellationToken.None, new("Active", "Low"))).Value!.Items);
+        Assert.Empty((await stocks.ListAsync(null, 1, 25, CancellationToken.None, new(Method: "método inexistente"))).Value!.Items);
+        Assert.Empty((await stocks.ListAsync("%_", 1, 25, CancellationToken.None)).Value!.Items);
+        var detail = (await stocks.GetAsync(sources[0].Id, CancellationToken.None)).Value!;
+        var usage = Assert.Single(detail.UsageHistory!);
+        Assert.Equal(created.Value!.Preparation.Id, usage.DerivedPreparationId);
+        Assert.Equal(created.Value.Preparation.Code, usage.DerivedCode);
+        Assert.Equal(900, usage.Quantity);
+        Assert.Equal("mL", usage.Unit);
+        Assert.Equal(100, usage.BalanceAfter);
+        Assert.Equal("Ana López", usage.Actor);
+        Assert.Equal(100, detail.Preparation.AvailableVolume);
+        Assert.NotEqual(usage.Quantity, detail.Consumption.Quantity);
+        var intermedia = (await Service(db).ListAsync(null, 1, 1, CancellationToken.None, new("Active", "Positive", sources[0].Method))).Value!;
+        Assert.True(intermedia.FiltersApplied);
+        Assert.Equal(1, intermedia.TotalCount);
+        Assert.Single(intermedia.Items);
+    }
+
+    [StockPostgresFact]
     public async Task MultiComponentCommitBalancesSnapshotsActorAndIdempotentRequestAreConsistent()
     {
         await using var fixture = await StockPostgresTests.Fixture.CreateAsync(10000);
@@ -80,6 +114,9 @@ public sealed class IntermediatePostgresTests
         var reopened = (await service.GetAsync(child.Value.Preparation.Id, CancellationToken.None)).Value!;
         Assert.Equal(option.Version, reopened.Calculation.Components[0].Source.Version);
         Assert.Equal(100, reopened.Calculation.Components[0].Source.AvailableVolume);
+        var history = (await service.GetAsync(parent.Preparation.Id, CancellationToken.None)).Value!.UsageHistory!;
+        Assert.Equal(child.Value.Preparation.Id, Assert.Single(history).DerivedPreparationId);
+        Assert.Equal(10, history[0].Quantity);
     }
     [StockPostgresFact]
     public async Task InvalidDatesActorMethodAndStaleSourceLeaveNoPreparation()

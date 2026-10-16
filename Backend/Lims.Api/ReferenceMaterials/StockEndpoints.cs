@@ -17,8 +17,8 @@ internal static class StockEndpoints
         group.MapPost("/preview", async (StockCalculationRequest request, IStockService service, HttpContext context, CancellationToken cancellationToken) =>
             ReferenceMaterialEndpoints.ToResult(context, await service.PreviewAsync(request, cancellationToken).ConfigureAwait(false)))
             .RequireAuthorization(PermissionCatalog.StockCreate);
-        group.MapGet("", async (string? search, int? page, int? pageSize, IStockService service, HttpContext context, CancellationToken cancellationToken) =>
-            ReferenceMaterialEndpoints.ToResult(context, await service.ListAsync(search, page ?? 1, pageSize ?? 25, cancellationToken).ConfigureAwait(false)))
+        group.MapGet("", async (string? status, string? availability, string? method, string? search, int? page, int? pageSize, IStockService service, HttpContext context, CancellationToken cancellationToken) =>
+            ReferenceMaterialEndpoints.ToResult(context, await service.ListAsync(search, page ?? 1, pageSize ?? 25, cancellationToken, new(status, availability, method)).ConfigureAwait(false)))
             .RequireAuthorization(PermissionCatalog.StockView);
         group.MapGet("/{id:guid}", async (Guid id, IStockService service, HttpContext context, CancellationToken cancellationToken) =>
             ReferenceMaterialEndpoints.ToResult(context, await service.GetAsync(id, cancellationToken).ConfigureAwait(false)))

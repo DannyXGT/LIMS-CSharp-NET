@@ -124,7 +124,7 @@ public sealed class IntermediateViewModelTests
                 request.PreparationDate, request.ExpirationDate, "Ana López", "Active"), calculation, [], null, request.Notes,
                 DateTimeOffset.UtcNow, DateTimeOffset.UtcNow, "Ana López", Guid.NewGuid()); return Task.FromResult(Ok(_created));
         }
-        public Task<ApiCallResult<IntermediatePage>> ListAsync(string? search, int page, CancellationToken cancellationToken) => Task.FromResult(Ok(new IntermediatePage(_created is null ? [] : [_created.Preparation], page, 25, _created is null ? 0 : 1)));
+        public Task<ApiCallResult<IntermediatePage>> ListAsync(string? search, int page, CancellationToken cancellationToken, PreparationListFilter? filter = null) => Task.FromResult(Ok(new IntermediatePage(_created is null ? [] : [_created.Preparation], page, 25, _created is null ? 0 : 1)));
         public Task<ApiCallResult<IntermediateDetail>> GetAsync(Guid id, CancellationToken cancellationToken) => Task.FromResult(_created is null ? new(false, null, new ApiError(ErrorCodes.NotFound, "No existe.", ""), 404) : Ok(_created));
         private static ApiCallResult<T> Ok<T>(T value) => new(true, value, null, 200);
     }

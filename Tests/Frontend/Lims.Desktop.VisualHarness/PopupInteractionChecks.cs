@@ -44,6 +44,15 @@ internal static class PopupInteractionChecks
         unit.OpenPopup();
         await Task.Delay(200);
         results["oneActivePopup"] = unit.IsPopupOpen && !method.IsPopupOpen;
+        LimsPopupField.CloseForRootAfterLayout(editor);
+        method.OpenPopup();
+        await Task.Delay(200);
+        results["deferredClosePreservesReplacement"] = method.IsPopupOpen;
+        LimsPopupField.CloseForRootAfterLayout(editor);
+        await Task.Delay(200);
+        results["deferredCloseAfterLayout"] = !method.IsPopupOpen;
+        unit.OpenPopup();
+        await Task.Delay(200);
         ((TextBox)editor.FindName("NameBox")).Focus(FocusState.Keyboard);
         await Task.Delay(250);
         results["focusOutsideCloses"] = !unit.IsPopupOpen;

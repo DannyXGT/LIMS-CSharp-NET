@@ -291,14 +291,17 @@
             </Grid.RowDefinitions>
 
             <ScrollViewer
+                x:Name="LoginScroll"
                 HorizontalScrollBarVisibility="Disabled"
+                HorizontalScrollMode="Disabled"
                 HorizontalContentAlignment="Stretch"
-                VerticalScrollBarVisibility="Hidden"
+                VerticalScrollBarVisibility="Auto"
                 VerticalContentAlignment="Center">
 
                 <Grid
+                    Width="{Binding ViewportWidth, ElementName=LoginScroll}"
                     MaxWidth="440"
-                    HorizontalAlignment="Stretch"
+                    HorizontalAlignment="Center"
                     VerticalAlignment="Center">
 
                     <!-- pseudo shadow -->
@@ -650,7 +653,7 @@
 
                 <VisualState x:Name="Normal">
                     <VisualState.StateTriggers>
-                        <AdaptiveTrigger MinWindowWidth="780" />
+                        <AdaptiveTrigger MinWindowWidth="900" />
                     </VisualState.StateTriggers>
                     <VisualState.Setters>
                         <Setter Target="HeroColumn.Width" Value="52*" />

@@ -15,8 +15,8 @@ internal static class IntermediateEndpoints
         group.MapPost("/preview", async (IntermediateCalculationRequest request, IIntermediateService service, HttpContext context, CancellationToken cancellationToken) =>
             ReferenceMaterialEndpoints.ToResult(context, await service.PreviewAsync(request, cancellationToken).ConfigureAwait(false)))
             .RequireAuthorization(PermissionCatalog.IntermediateCreate);
-        group.MapGet("", async (string? search, int? page, int? pageSize, IIntermediateService service, HttpContext context, CancellationToken cancellationToken) =>
-            ReferenceMaterialEndpoints.ToResult(context, await service.ListAsync(search, page ?? 1, pageSize ?? 25, cancellationToken).ConfigureAwait(false)))
+        group.MapGet("", async (string? status, string? availability, string? method, string? search, int? page, int? pageSize, IIntermediateService service, HttpContext context, CancellationToken cancellationToken) =>
+            ReferenceMaterialEndpoints.ToResult(context, await service.ListAsync(search, page ?? 1, pageSize ?? 25, cancellationToken, new(status, availability, method)).ConfigureAwait(false)))
             .RequireAuthorization(PermissionCatalog.IntermediateView);
         group.MapGet("/{id:guid}", async (Guid id, IIntermediateService service, HttpContext context, CancellationToken cancellationToken) =>
             ReferenceMaterialEndpoints.ToResult(context, await service.GetAsync(id, cancellationToken).ConfigureAwait(false)))

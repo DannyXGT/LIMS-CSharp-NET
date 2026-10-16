@@ -18,7 +18,7 @@ public sealed partial class DashboardViewModel(IDashboardApiClient api) : Observ
         _request?.Cancel();
         using var request = new CancellationTokenSource(); _request = request;
         var revision = ++_revision;
-        Data = null; Error = string.Empty; IsBusy = true;
+        IsBusy = true; Data = null; Error = string.Empty;
         try
         {
             var result = await api.GetAsync(request.Token);

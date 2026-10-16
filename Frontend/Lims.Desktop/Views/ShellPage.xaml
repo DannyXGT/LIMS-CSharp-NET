@@ -11,6 +11,7 @@
         IsBackButtonVisible="Collapsed"
         IsSettingsVisible="False"
         OpenPaneLength="252"
+        IsPaneOpen="False"
         PaneDisplayMode="Left"
         PaneOpening="OnPaneOpening"
         PaneClosing="OnPaneClosing"
@@ -27,7 +28,7 @@
             <NavigationViewItem x:Name="HomeItem" design:LimsIcon.NavigationIcon="Home" Content="Inicio" Tag="home" AutomationProperties.Name="Inicio" ToolTipService.ToolTip="Inicio"></NavigationViewItem>
             <NavigationViewItemSeparator />
             <NavigationViewItemHeader x:Name="MaterialsGroup" Content="MATERIALES DE REFERENCIA" />
-            <NavigationViewItem x:Name="StandardsItem" design:LimsIcon.NavigationIcon="Standards" Content="Estándares" AutomationProperties.Name="Estándares" ToolTipService.ToolTip="Estándares" IsEnabled="{x:Bind ViewModel.CanViewReferenceMaterials, Mode=OneWay}" Tag="standards"></NavigationViewItem>
+            <NavigationViewItem x:Name="StandardsItem" Icon="Library" Content="Estándares" AutomationProperties.Name="Estándares" ToolTipService.ToolTip="Estándares" IsEnabled="{x:Bind ViewModel.CanViewReferenceMaterials, Mode=OneWay}" Tag="standards"></NavigationViewItem>
             <NavigationViewItem x:Name="PreparationsItem" design:LimsIcon.NavigationIcon="Preparations" Content="Preparaciones" AutomationProperties.Name="Preparaciones" ToolTipService.ToolTip="Preparaciones" IsEnabled="{x:Bind ViewModel.CanViewReferenceMaterials, Mode=OneWay}" Tag="preparations" />
             <NavigationViewItemHeader x:Name="AdministrationGroup" Content="ADMINISTRACIÓN" Visibility="Collapsed" />
             <NavigationViewItem x:Name="PermissionsItem" design:LimsIcon.NavigationIcon="Administration" Content="Gestión de permisos" Tag="permissions" AutomationProperties.Name="Gestión de permisos" ToolTipService.ToolTip="Gestión de permisos" Visibility="Collapsed" />
@@ -78,7 +79,7 @@
                 </Button>
             </Grid>
         </NavigationView.Header>
-        <Grid Padding="24,8,24,24" RowSpacing="12">
+        <Grid x:Name="Workspace" Padding="24,8,24,24" RowSpacing="12">
             <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /></Grid.RowDefinitions>
             <InfoBar IsOpen="{x:Bind ViewModel.HasAccessWarning, Mode=OneWay}" IsClosable="False" Severity="Warning" Message="{x:Bind ViewModel.SessionMessage, Mode=OneWay}">
                 <InfoBar.ActionButton><Button Content="Reintentar" Click="OnRetryAccessClick" /></InfoBar.ActionButton>

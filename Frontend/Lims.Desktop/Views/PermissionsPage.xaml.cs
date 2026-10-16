@@ -81,6 +81,11 @@ public sealed partial class PermissionsPage : Page
         if (!_ready) return;
         UsersColumn.Width = new GridLength(e.NewSize.Width < 1050 ? 280 : 300);
         UserWorkspace.Padding = e.NewSize.Width < 900 ? new Thickness(16, 14, 16, 12) : new Thickness(20, 16, 20, 14);
+        var compact = e.NewSize.Width < 1000;
+        Grid.SetRow(SaveActions, compact ? 1 : 0);
+        Grid.SetColumn(SaveActions, compact ? 0 : 1);
+        Grid.SetColumnSpan(SaveActions, compact ? 2 : 1);
+        Grid.SetColumnSpan(ChangeSummary, compact ? 2 : 1);
     }
     private void OnModelChanged(object? sender, PropertyChangedEventArgs e)
     {

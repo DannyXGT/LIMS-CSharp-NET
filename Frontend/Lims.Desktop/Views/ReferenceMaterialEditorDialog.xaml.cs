@@ -29,7 +29,7 @@ public sealed partial class ReferenceMaterialEditorDialog : ContentDialog
             _formLayout.Add((child, Grid.GetRow(child), Grid.GetColumn(child), Grid.GetColumnSpan(child)));
         foreach (var field in new LimsPopupField[] { MethodBox, UnitCombo, StorageLocationBox, ReceivedDatePicker, ExpirationDatePicker })
             field.PopupBoundary = EditorScrollViewer;
-        EditorScrollViewer.ViewChanged += (_, _) => LimsPopupField.CloseForRoot(XamlRoot);
+        EditorScrollViewer.ViewChanged += (_, _) => LimsPopupField.CloseForRootAfterLayout(this);
         Closed += (_, _) =>
         {
             LimsPopupField.CloseForRoot(XamlRoot);

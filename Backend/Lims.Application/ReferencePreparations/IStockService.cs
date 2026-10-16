@@ -9,6 +9,6 @@ public interface IStockService
     Task<OperationResult<StockSourcePage>> SourcesAsync(string? search, int page, int pageSize, CancellationToken cancellationToken);
     Task<OperationResult<StockCalculation>> PreviewAsync(StockCalculationRequest request, CancellationToken cancellationToken);
     Task<OperationResult<StockDetail>> CreateAsync(CreateStockRequest request, int actorUserId, CancellationToken cancellationToken);
-    Task<OperationResult<StockPage>> ListAsync(string? search, int page, int pageSize, CancellationToken cancellationToken);
+    Task<OperationResult<StockPage>> ListAsync(string? search, int page, int pageSize, CancellationToken cancellationToken, PreparationListFilter? filter = null);
     Task<OperationResult<StockDetail>> GetAsync(Guid id, CancellationToken cancellationToken);
 }

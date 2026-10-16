@@ -10,6 +10,65 @@ namespace Lims.Desktop.Tests;
 public sealed class StockViewModelTests
 {
     [Fact]
+    public async Task LoadingErrorsAndOlderResponsesCannotMasqueradeAsAnEmptyList()
+    {
+        var api = new FakeStockApi();
+        var vm = Model(api);
+        var delayed = new TaskCompletionSource<ApiCallResult<StockPage>>();
+        api.ListHandler = _ => delayed.Task;
+        var first = vm.LoadAsync("anterior", 1, CancellationToken.None);
+        Assert.True(vm.IsLoadingList);
+        Assert.False(vm.IsEmpty);
+        Assert.False(vm.ShowFooter);
+        api.ListHandler = _ => throw new HttpRequestException();
+        await vm.LoadAsync("actual", 1, CancellationToken.None);
+        Assert.False(vm.IsLoadingList);
+        Assert.True(vm.HasListMessage);
+        Assert.False(vm.IsEmpty);
+        delayed.SetResult(Ok(new StockPage([api.Created.Preparation], 1, 25, 1)));
+        await first;
+        Assert.Empty(vm.Items);
+        Assert.True(vm.HasListMessage);
+    }
+
+    [Fact]
+    public async Task ServerFiltersAreForwardedAndRequireExplicitSupportBeforeShowingRows()
+    {
+        var api = new FakeStockApi();
+        var vm = Model(api);
+        vm.ListFilter = new("Expired", "Low", "Método real");
+        api.ListHandler = filter =>
+        {
+            Assert.Same(vm.ListFilter, filter);
+            return Task.FromResult(Ok(new StockPage([api.Created.Preparation], 1, 25, 1)));
+        };
+        await vm.LoadAsync(null, 1, CancellationToken.None);
+        Assert.True(vm.HasListMessage);
+        Assert.False(vm.HasResults);
+        Assert.Contains("actualización", vm.ListMessage, StringComparison.Ordinal);
+        api.ListHandler = _ => Task.FromResult(Ok(new StockPage([], 1, 25, 0, true)));
+        await vm.LoadAsync(null, 1, CancellationToken.None);
+        Assert.True(vm.IsEmpty);
+        Assert.True(vm.HasSearchCriteria);
+        Assert.Contains("criterios", vm.EmptyTitle, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task PaginationUsesTheServerPageSizeAndSelectionActionIsContextual()
+    {
+        var api = new FakeStockApi();
+        api.ListHandler = _ => Task.FromResult(Ok(new StockPage([api.Created.Preparation], 2, 10, 21)));
+        var vm = Model(api);
+        await vm.LoadAsync(null, 2, CancellationToken.None);
+        Assert.True(vm.HasNextPage);
+        Assert.True(vm.HasPreviousPage);
+        Assert.Equal("11–20 de 21 · Página 2 de 3", vm.PageDisplay);
+        Assert.False(vm.ShowSelectionAction);
+        vm.SelectedPreparation = vm.Items[0];
+        Assert.True(vm.ShowSelectionAction);
+    }
+
+    [Fact]
     public async Task EmptyListHasNoSelectionAndCannotOpenDetail()
     {
         var api = new FakeStockApi { ListItems = [] };
@@ -292,6 +351,7 @@ public sealed class StockViewModelTests
     private static ApiCallResult<T> Ok<T>(T value) => new(true, value, null, 200);
     private sealed class FakeStockApi : IStockApiClient
     {
+        public Func<PreparationListFilter?, Task<ApiCallResult<StockPage>>>? ListHandler { get; set; }
         public IReadOnlyList<StockSummary>? ListItems { get; set; }
         public List<Guid> DetailIds { get; } = [];
         public Func<Guid, Task<ApiCallResult<StockDetail>>>? DetailHandler { get; set; }
@@ -318,7 +378,7 @@ public sealed class StockViewModelTests
             if (FailFirstCreate && Requests.Count == 1) throw new HttpRequestException("Simulated lost response");
             return Task.FromResult(Ok(Created));
         }
-        public Task<ApiCallResult<StockPage>> ListAsync(string? search, int page, CancellationToken cancellationToken) { ListCalls++; var items = ListItems ?? [Created.Preparation]; return Task.FromResult(Ok(new StockPage(items, page, 25, items.Count))); }
+        public Task<ApiCallResult<StockPage>> ListAsync(string? search, int page, CancellationToken cancellationToken, PreparationListFilter? filter = null) { ListCalls++; var items = ListItems ?? [Created.Preparation]; return ListHandler?.Invoke(filter) ?? Task.FromResult(Ok(new StockPage(items, page, 25, items.Count))); }
         public Task<ApiCallResult<StockDetail>> GetAsync(Guid id, CancellationToken cancellationToken) { DetailIds.Add(id); return DetailHandler?.Invoke(id) ?? Task.FromResult(Ok(Created)); }
     }
     private sealed class Session(string role, IReadOnlyList<string> permissions) : ISessionService

@@ -4,7 +4,7 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     Title="LIMS">
-    <Grid
+    <Grid x:Name="WindowLayout"
         Background="{ThemeResource LimsBackgroundBrush}"
         RequestedTheme="Dark">
         <Grid.RowDefinitions>
@@ -19,6 +19,9 @@
             <Border
                 BorderBrush="{ThemeResource LimsBorderBrush}"
                 BorderThickness="0,0,0,1">
+                <Grid Padding="0,0,142,0" ColumnSpacing="16">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                <Grid x:Name="TitleBarDragArea">
                 <StackPanel
                     Margin="16,0,0,0"
                     VerticalAlignment="Center"
@@ -51,6 +54,11 @@
                         Foreground="{ThemeResource LimsTextSecondaryBrush}"
                         Text="Gestión de laboratorio" />
                 </StackPanel>
+                </Grid>
+                <AutoSuggestBox x:Name="SystemSearch" Grid.Column="1" Width="280" FontSize="12" MinHeight="30"
+                    VerticalAlignment="Center" PlaceholderText="Buscar en el sistema..." QueryIcon="Find"
+                    AutomationProperties.Name="Buscar en el sistema" Visibility="Collapsed"/>
+                </Grid>
             </Border>
         </Grid>
 

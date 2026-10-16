@@ -13,6 +13,6 @@ public interface IStockRepository
     Task<OperationResult<StockDetail>> CreateAsync(Guid requestId, string fingerprint,
         Func<ReferenceMaterial, long, OperationResult<ReferencePreparation>> prepare, Guid sourceId,
         DateOnly today, DateTimeOffset now, CancellationToken cancellationToken);
-    Task<StockPage> ListAsync(string? search, int page, int pageSize, CancellationToken cancellationToken);
+    Task<StockPage> ListAsync(string? search, int page, int pageSize, CancellationToken cancellationToken, PreparationListFilter? filter = null);
     Task<StockDetail?> GetAsync(Guid id, CancellationToken cancellationToken);
 }

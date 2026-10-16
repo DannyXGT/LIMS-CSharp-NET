@@ -5,6 +5,29 @@ namespace Lims.Application.Tests.ReferenceMaterials;
 public sealed class StockPresentationTests
 {
     [Theory]
+    [InlineData("Expired", 50, "Vencido", "Disponibilidad baja")]
+    [InlineData("Expired", 0, "Vencido", "Agotado")]
+    [InlineData("Archived", 75, "Archivado", "Con volumen")]
+    public void ValidityAndInventoryAreIndependentForBothPreparationTypes(string status, decimal balance, string validity, string inventory)
+    {
+        var stock = new StockSummary(Guid.NewGuid(), "STK", "Stock", "Origen", "Lote", 100, 100, "mg/L", 100, "mL", new(2026, 10, 12), "Usuario", status, AvailableVolume: balance);
+        var intermediate = new IntermediateSummary(Guid.NewGuid(), "INT", "Intermedia", "Método", 1, 0.1m, "L", balance / 1000m, [], new(2026, 10, 12), new(2026, 10, 13), "Usuario", status);
+        Assert.Equal(validity, stock.StatusLabel);
+        Assert.Equal(validity, intermediate.StatusLabel);
+        Assert.Equal(inventory, stock.InventoryLabel);
+        Assert.Equal(inventory, intermediate.InventoryLabel);
+        Assert.Equal(stock.Availability.RemainingPercent, intermediate.Availability.RemainingPercent);
+    }
+
+    [Theory]
+    [InlineData("Unknown", "Low", false)]
+    [InlineData("Expired", "inventado", false)]
+    [InlineData("Expired", "Low", true)]
+    [InlineData("Active", "Depleted", true)]
+    public void RejectsUnrecognizedReadFilters(string status, string availability, bool valid) =>
+        Assert.Equal(valid, new PreparationListFilter(status, availability).IsValid);
+
+    [Theory]
     [InlineData(98.99, 1.01, 98.99, "Information")]
     [InlineData(61, 39, 61, "Information")]
     [InlineData(60, 40, 60, "Warning")]
@@ -54,8 +77,9 @@ public sealed class StockPresentationTests
     public void ExhaustedStockStillHasAnAccessibleHistoricalIdentity()
     {
         var row = new StockSummary(Guid.NewGuid(), "STK", "Stock", "Origen", "Lote", 100, 100, "mg/L", 100, "mL", new(2026, 10, 12), "Usuario", "Active", AvailableVolume: 0);
-        Assert.Equal("Agotado", row.StatusLabel);
-        Assert.Equal("Danger", row.StatusTone);
+        Assert.Equal("Vigente", row.StatusLabel);
+        Assert.Equal("Agotado", row.InventoryLabel);
+        Assert.Equal("Danger", row.Availability.Tone);
         Assert.Equal("0 mL", row.Availability.AvailableDisplay);
     }
 
@@ -67,7 +91,8 @@ public sealed class StockPresentationTests
         Assert.Equal("100 mg/L", row.ConcentrationDisplay);
         Assert.Equal("1000 mL", row.FinalDisplay);
         Assert.Equal("06/10/2026", row.DateDisplay);
-        Assert.Equal("Disponible", row.StatusLabel);
+        Assert.Equal("Vigente", row.StatusLabel);
+        Assert.Equal("Saldo no informado", row.InventoryLabel);
         Assert.DoesNotContain(row.Id.ToString(), row.ToString(), StringComparison.Ordinal);
         var movement = new StockMovement(Guid.NewGuid(), 0.102000m, "g", 1m, 0.898000m, "Ana López", new DateTimeOffset(2026, 10, 6, 18, 0, 0, TimeSpan.Zero));
         Assert.Equal("0.102 g", movement.QuantityDisplay);

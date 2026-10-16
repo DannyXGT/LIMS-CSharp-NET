@@ -73,7 +73,7 @@ public sealed class IntermediateCalculatorTests
             new(2026, 10, 7), new(2027, 1, 1), "Ana López", "Active");
         Assert.Equal("2 analitos", summary.ConcentrationDisplay);
         Assert.Contains("25 mg/L", summary.ConcentrationDetails, StringComparison.Ordinal);
-        Assert.Contains("Disponible", summary.ToString(), StringComparison.Ordinal);
+        Assert.Contains("Vigente", summary.ToString(), StringComparison.Ordinal);
         Assert.DoesNotContain(id.ToString("D"), summary.ToString(), StringComparison.Ordinal);
         Assert.DoesNotContain("Active", summary.ToString(), StringComparison.Ordinal);
     }

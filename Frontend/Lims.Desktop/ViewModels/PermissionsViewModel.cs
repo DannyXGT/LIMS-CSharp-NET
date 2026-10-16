@@ -8,12 +8,17 @@ namespace Lims.Desktop.ViewModels;
 
 public sealed partial class PermissionChoice(PermissionDefinition definition, bool granted) : ObservableObject
 {
+    private readonly bool _savedGranted = granted;
     public PermissionDefinition Definition { get; } = definition;
     public string ActionName => Definition.Code.Split('.').Last() switch
     {
         "view" => "Consultar", "create" => "Registrar", "edit" => "Editar", "archive" => "Archivar", "replace" => "Reemplazar", _ => Definition.Name
     };
-    [ObservableProperty] public partial bool IsGranted { get; set; } = granted;
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsChanged))]
+    public partial bool IsGranted { get; set; } = granted;
+    // Presentation only. Apply recreates choices from the server after save/discard.
+    public bool IsChanged => IsGranted != _savedGranted;
 }
 public sealed class PermissionGroup(string name, IReadOnlyList<PermissionChoice> items) : ObservableObject
 {

@@ -94,7 +94,7 @@ public sealed class StockRepository(LimsDbContext dbContext) : IStockRepository
         });
     }
 
-    public async Task<StockPage> ListAsync(string? search, int page, int pageSize, CancellationToken cancellationToken)
+    public async Task<StockPage> ListAsync(string? search, int page, int pageSize, CancellationToken cancellationToken, PreparationListFilter? filter = null)
     {
         var query = dbContext.ReferencePreparations.AsNoTracking().Where(item => item.Kind == "Stock");
         if (!string.IsNullOrWhiteSpace(search))
@@ -103,13 +103,14 @@ public sealed class StockRepository(LimsDbContext dbContext) : IStockRepository
             query = query.Where(item => EF.Functions.ILike(item.Code, term, "\\") || EF.Functions.ILike(item.Name, term, "\\") ||
                 EF.Functions.ILike(item.SourceName, term, "\\") || EF.Functions.ILike(item.SourceLot, term, "\\"));
         }
+        query = query.Filter(filter, DateOnly.FromDateTime(DateTimeOffset.UtcNow.ToOffset(TimeSpan.FromHours(-6)).DateTime));
         var count = await query.CountAsync(cancellationToken).ConfigureAwait(false);
         var items = await query.OrderByDescending(item => item.PreparationDate).ThenByDescending(item => item.Code)
             .Skip((page - 1) * pageSize).Take(pageSize).ToArrayAsync(cancellationToken).ConfigureAwait(false);
         var actorIds = items.Select(item => item.PreparedByUserId).Distinct().ToArray();
         var actors = await dbContext.Users.AsNoTracking().Where(user => actorIds.Contains(user.Id))
             .Select(user => new { user.Id, user.Name }).ToDictionaryAsync(user => user.Id, user => user.Name, cancellationToken).ConfigureAwait(false);
-        return new StockPage(items.Select(item => Summary(item, actors.GetValueOrDefault(item.PreparedByUserId) ?? "Usuario no informado")).ToArray(), page, pageSize, count);
+        return new StockPage(items.Select(item => Summary(item, actors.GetValueOrDefault(item.PreparedByUserId) ?? "Usuario no informado")).ToArray(), page, pageSize, count, true);
     }
 
     public async Task<StockDetail?> GetAsync(Guid id, CancellationToken cancellationToken)
@@ -127,7 +128,7 @@ public sealed class StockRepository(LimsDbContext dbContext) : IStockRepository
             item.ActualConcentration, item.ConcentrationUnit, item.FinalVolume, item.FinalVolumeUnit, item.Formula);
         return new StockDetail(Summary(item, actor), source, calculation,
             new StockMovement(movement.Id, movement.Quantity, movement.Unit, movement.BalanceBefore, movement.BalanceAfter, actor, movement.OccurredAt),
-            item.Notes, item.CreatedAt, item.UpdatedAt, item.Version, item.StorageTemperature);
+            item.Notes, item.CreatedAt, item.UpdatedAt, item.Version, item.StorageTemperature, await PreparationListQuery.UsageAsync(dbContext, id, cancellationToken).ConfigureAwait(false));
     }
 
     private IQueryable<ReferenceMaterial> Sources() => dbContext.ReferenceMaterials.Include(item => item.Unit).Include(item => item.Method).Include(item => item.Location);
@@ -137,6 +138,6 @@ public sealed class StockRepository(LimsDbContext dbContext) : IStockRepository
         item.ExpirationDate, item.Location.Name, item.Version, item.ReceivedDate);
     private static StockSummary Summary(ReferencePreparation item, string actor) => new(item.Id, item.Code, item.Name,
         item.SourceName, item.SourceLot, item.TargetConcentration, item.ActualConcentration, item.ConcentrationUnit,
-        item.FinalVolume, item.FinalVolumeUnit, item.PreparationDate, actor, item.ExpirationDate < DateOnly.FromDateTime(DateTimeOffset.UtcNow.ToOffset(TimeSpan.FromHours(-6)).DateTime) ? "Expired" : item.AvailableVolume == 0 ? "Depleted" : item.Status, item.ActualWeight, item.ActualWeightUnit, item.ExpirationDate, item.AvailableVolume);
+        item.FinalVolume, item.FinalVolumeUnit, item.PreparationDate, actor, item.Status == "Archived" ? "Archived" : item.ExpirationDate < DateOnly.FromDateTime(DateTimeOffset.UtcNow.ToOffset(TimeSpan.FromHours(-6)).DateTime) ? "Expired" : item.AvailableVolume == 0 ? "Depleted" : item.Status, item.ActualWeight, item.ActualWeightUnit, item.ExpirationDate, item.AvailableVolume);
     private static OperationResult<StockDetail> Failure(string message) => OperationResult.Failure<StockDetail>(new OperationError(ErrorCodes.Conflict, message));
 }

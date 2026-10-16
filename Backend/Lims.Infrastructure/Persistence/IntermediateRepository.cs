@@ -106,7 +106,7 @@ public sealed class IntermediateRepository(LimsDbContext db) : IIntermediateRepo
         });
     }
 
-    public async Task<IntermediatePage> ListAsync(string? search, int page, int pageSize, DateOnly today, CancellationToken cancellationToken)
+    public async Task<IntermediatePage> ListAsync(string? search, int page, int pageSize, DateOnly today, CancellationToken cancellationToken, PreparationListFilter? filter = null)
     {
         var query = db.ReferencePreparations.AsNoTracking().Where(p => p.Kind == "Intermedia");
         if (!string.IsNullOrWhiteSpace(search))
@@ -114,13 +114,14 @@ public sealed class IntermediateRepository(LimsDbContext db) : IIntermediateRepo
             var pattern = "%" + search.Trim().Replace("\\", "\\\\", StringComparison.Ordinal).Replace("%", "\\%", StringComparison.Ordinal).Replace("_", "\\_", StringComparison.Ordinal) + "%";
             query = query.Where(p => EF.Functions.ILike(p.Code, pattern, "\\") || EF.Functions.ILike(p.Name, pattern, "\\") || EF.Functions.ILike(p.SourceMethod, pattern, "\\"));
         }
+        query = query.Filter(filter, today);
         var count = await query.CountAsync(cancellationToken).ConfigureAwait(false);
         var items = await query.OrderByDescending(p => p.PreparationDate).ThenByDescending(p => p.CreatedAt).Skip((page - 1) * pageSize).Take(pageSize).ToArrayAsync(cancellationToken).ConfigureAwait(false);
         var ids = items.Select(p => p.Id).ToArray();
         var components = await db.ReferencePreparationComponents.AsNoTracking().Where(c => ids.Contains(c.PreparationId)).GroupBy(c => c.PreparationId)
             .Select(g => new { Id = g.Key, Count = g.Count() }).ToDictionaryAsync(g => g.Id, g => g.Count, cancellationToken).ConfigureAwait(false);
         var actors = await Actors(items.Select(p => p.PreparedByUserId), cancellationToken).ConfigureAwait(false);
-        return new(items.Select(p => Summary(p, components.GetValueOrDefault(p.Id), actors.GetValueOrDefault(p.PreparedByUserId) ?? "Usuario no informado", today)).ToArray(), page, pageSize, count);
+        return new(items.Select(p => Summary(p, components.GetValueOrDefault(p.Id), actors.GetValueOrDefault(p.PreparedByUserId) ?? "Usuario no informado", today)).ToArray(), page, pageSize, count, true);
     }
 
     public async Task<IntermediateDetail?> GetAsync(Guid id, DateOnly today, CancellationToken cancellationToken)
@@ -140,7 +141,7 @@ public sealed class IntermediateRepository(LimsDbContext db) : IIntermediateRepo
             m.BalanceBefore, m.BalanceAfter, actors.GetValueOrDefault(m.ActorUserId) ?? "Usuario no informado", m.OccurredAt)).ToArray();
         return new(Summary(preparation, components.Length, actors[preparation.PreparedByUserId], today), calculation, consumptions,
             preparation.DilutedPreparationId, preparation.Notes, preparation.CreatedAt, preparation.UpdatedAt,
-            actors.GetValueOrDefault(preparation.UpdatedByUserId ?? preparation.PreparedByUserId) ?? "Usuario no informado", preparation.Version);
+            actors.GetValueOrDefault(preparation.UpdatedByUserId ?? preparation.PreparedByUserId) ?? "Usuario no informado", preparation.Version, await PreparationListQuery.UsageAsync(db, id, cancellationToken).ConfigureAwait(false));
     }
 
     private Task<Dictionary<int, string>> Actors(IEnumerable<int> ids, CancellationToken cancellationToken)
@@ -159,6 +160,6 @@ public sealed class IntermediateRepository(LimsDbContext db) : IIntermediateRepo
         : JsonSerializer.Deserialize<IntermediateAnalyte[]>(p.ResultsJson)!;
     private static IntermediateSummary Summary(ReferencePreparation p, int count, string actor, DateOnly today) => new(p.Id, p.Code, p.Name,
         p.SourceMethod, count, p.FinalVolume, p.FinalVolumeUnit, p.AvailableVolume, Results(p), p.PreparationDate, p.ExpirationDate, actor,
-        p.Status != "Active" ? p.Status : p.ExpirationDate < today ? "Expired" : p.AvailableVolume == 0 ? "Depleted" : "Active");
+        p.Status == "Archived" ? "Archived" : p.ExpirationDate < today ? "Expired" : p.AvailableVolume == 0 ? "Depleted" : p.Status);
     private static OperationResult<IntermediateDetail> Fail(string message, string code = ErrorCodes.Conflict) => OperationResult.Failure<IntermediateDetail>(new(code, message));
 }

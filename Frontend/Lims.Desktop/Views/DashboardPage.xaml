@@ -1,21 +1,19 @@
-<Page x:Class="Lims.Desktop.Views.DashboardPage" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" Background="{ThemeResource LimsBackgroundBrush}">
+<Page x:Class="Lims.Desktop.Views.DashboardPage" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" Background="Transparent">
     <Grid RowSpacing="10">
         <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
-        <Grid ColumnSpacing="12">
-            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-            <StackPanel Spacing="3"><TextBlock x:Name="Welcome" FontSize="21" FontWeight="SemiBold" Text="Su laboratorio, de un vistazo" TextWrapping="Wrap"/><TextBlock x:Name="Identity" Foreground="{ThemeResource LimsTextSecondaryBrush}" FontSize="12" TextWrapping="Wrap"/></StackPanel>
-            <Button x:Name="RefreshButton" Grid.Column="1" Content="Actualizar" AutomationProperties.Name="Actualizar dashboard" Style="{StaticResource LimsSecondaryButtonStyle}" Click="OnRefresh" VerticalAlignment="Center"/>
-        </Grid>
+        <Border x:Name="DashboardHeader" Padding="0,8">
+            <TextBlock x:Name="DashboardTitle" Text="Resumen dashboard" FontSize="22" FontWeight="SemiBold" Foreground="{ThemeResource LimsTextPrimaryBrush}"/>
+        </Border>
         <ScrollViewer x:Name="DashboardScroll" Grid.Row="1" HorizontalScrollBarVisibility="Disabled" HorizontalScrollMode="Disabled" VerticalScrollBarVisibility="Auto">
-            <StackPanel x:Name="ContentStack" Spacing="16" Padding="0,6,4,16">
-                <ProgressBar x:Name="LoadingIndicator" IsIndeterminate="True" Visibility="Collapsed" AutomationProperties.Name="Consultando dashboard"/>
-                <InfoBar x:Name="ErrorBar" IsClosable="False" Severity="Error" Title="Datos no disponibles"/>
+            <StackPanel x:Name="ContentStack" Spacing="10" Padding="0,0,0,12">
+                <InfoBar x:Name="ErrorBar" IsClosable="False" Severity="Error" Title="Datos no disponibles">
+                    <InfoBar.ActionButton><Button x:Name="RetryButton" Content="Reintentar" Click="OnRetry"/></InfoBar.ActionButton>
+                </InfoBar>
                 <StackPanel x:Name="EmptyPanel" Visibility="Collapsed"/>
                 <Grid x:Name="MetricsGrid" RowSpacing="12" ColumnSpacing="12"/>
-                <Grid x:Name="OverviewGrid" RowSpacing="16" ColumnSpacing="16"/>
-                <Grid x:Name="OperationsGrid" RowSpacing="16" ColumnSpacing="16"/>
-                <StackPanel x:Name="QuickPanel" Spacing="10"/>
-                <TextBlock x:Name="Timestamp" FontSize="11" Foreground="{ThemeResource LimsTextSecondaryBrush}" TextWrapping="Wrap"/>
+                <Grid x:Name="OverviewGrid" RowSpacing="12" ColumnSpacing="12"/>
+                <Grid x:Name="AnalyticsGrid" RowSpacing="12" ColumnSpacing="12"/>
+                <Grid x:Name="OperationsGrid" RowSpacing="12" ColumnSpacing="12"/>
             </StackPanel>
         </ScrollViewer>
     </Grid>

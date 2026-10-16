@@ -176,17 +176,18 @@ public sealed partial class ReferenceMaterialsPage : Page
 
     private void OnRowLoaded(object sender, RoutedEventArgs e)
     {
-        UpdateRowAvailability((Grid)sender);
+        UpdateRowAvailabilityLayout((Grid)sender);
         UpdateSelectedMarkers();
     }
-    private void OnRowSizeChanged(object sender, SizeChangedEventArgs e) => UpdateRowAvailability((Grid)sender);
-    private static void UpdateRowAvailability(Grid grid)
+
+    private void OnRowSizeChanged(object sender, SizeChangedEventArgs e) => UpdateRowAvailabilityLayout((Grid)sender);
+
+    private static void UpdateRowAvailabilityLayout(Grid grid)
     {
-        if (grid.DataContext is not ReferenceMaterialSummary row || grid.FindName("RowAvailability") is not Grid availability) return;
-        var percent = ReferenceMaterialVisuals.Availability(row.AvailableQuantity, row.TotalQuantity);
-        availability.Visibility = grid.ActualWidth >= 1150 && percent.HasValue ? Visibility.Visible : Visibility.Collapsed;
-        ((ProgressBar)grid.FindName("RowProgress")).Value = percent ?? 0;
-        ((TextBlock)grid.FindName("RowPercent")).Text = percent.HasValue ? $"{ReferenceMaterialPresentation.Number(decimal.Round((decimal)percent.Value, 2))} %" : string.Empty;
+        // Only responsive layout depends on row events. Availability itself is bound
+        // to the template item, which ListView updates when it recycles a container.
+        if (grid.FindName("RowAvailabilityLayout") is Grid layout)
+            layout.Visibility = grid.ActualWidth >= 1150 ? Visibility.Visible : Visibility.Collapsed;
     }
 
     private async void OnCreateClick(object sender, RoutedEventArgs e) => await OpenCreateDialogAsync();

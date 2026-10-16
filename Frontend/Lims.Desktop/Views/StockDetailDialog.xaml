@@ -1,73 +1,32 @@
-<ContentDialog xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:design="using:Lims.DesignSystem.Controls" x:Class="Lims.Desktop.Views.StockDetailDialog" Language="es-GT" Style="{StaticResource LimsEditorDialogStyle}" Title="Preparación Stock" CloseButtonText="Cerrar" Opened="OnOpened" Closed="OnClosed">
+<ContentDialog xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:design="using:Lims.DesignSystem.Controls" xmlns:contracts="using:Lims.Contracts.ReferencePreparations" x:Class="Lims.Desktop.Views.StockDetailDialog" Language="es-GT" Style="{StaticResource LimsEditorDialogStyle}" Title="Preparación Stock" CloseButtonText="Cerrar" Opened="OnOpened" Closed="OnClosed">
  <ContentDialog.Resources>
   <x:Double x:Key="ContentDialogMaxWidth">960</x:Double>
   <x:Double x:Key="ContentDialogMaxHeight">940</x:Double>
  </ContentDialog.Resources>
  <ScrollViewer x:Name="DetailScroll" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-  <StackPanel x:Name="DetailSurface" Spacing="16" Padding="2,2,12,12">
+  <StackPanel x:Name="DetailSurface" Spacing="12" Padding="2,2,12,12">
    <TextBlock Text="{x:Bind Detail.Preparation.Name}" Style="{StaticResource LimsPageTitleStyle}" TextWrapping="Wrap"/>
    <TextBlock Text="{x:Bind Detail.Preparation.Code}" Style="{StaticResource LimsCaptionStyle}"/>
    <design:StatusBadge Text="{x:Bind Detail.Preparation.StatusLabel}" Tone="{x:Bind Detail.Preparation.StatusTone}" HorizontalAlignment="Left"/>
-   <TextBlock Text="{x:Bind PreparedDisplay}" Style="{StaticResource LimsCaptionStyle}"/>
-   <Border x:Name="AvailabilityCard" Padding="18" Background="{ThemeResource LimsSurfaceSecondaryBrush}" BorderBrush="{ThemeResource LimsBorderBrush}" BorderThickness="1" CornerRadius="10">
+   <TextBlock Text="{x:Bind PreparedDisplay}" Style="{StaticResource LimsCaptionStyle}" TextWrapping="Wrap"/>
+   <TextBlock Text="{x:Bind ExpirationDisplay}" Style="{StaticResource LimsCaptionStyle}"/>
+   <Border x:Name="AvailabilityCard" Padding="14" Background="{ThemeResource LimsSurfaceSecondaryBrush}" BorderBrush="{ThemeResource LimsBorderBrush}" BorderThickness="1" CornerRadius="10">
     <StackPanel Spacing="12">
      <TextBlock Text="DISPONIBILIDAD" Style="{StaticResource LimsSectionTitleStyle}"/>
      <Grid ColumnSpacing="18" RowSpacing="12">
       <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
       <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
       <StackPanel Spacing="4"><TextBlock Text="Inicial" Style="{StaticResource LimsCaptionStyle}"/><TextBlock Text="{x:Bind Detail.Preparation.Availability.InitialDisplay}" FontWeight="SemiBold"/></StackPanel>
-      <StackPanel Grid.Column="1" Spacing="4"><TextBlock Text="Consumido acumulado" Style="{StaticResource LimsCaptionStyle}"/><TextBlock Text="{x:Bind Detail.Preparation.Availability.ConsumedDisplay}" FontWeight="SemiBold"/></StackPanel>
-      <StackPanel Grid.Row="1" Spacing="4"><TextBlock Text="Disponible" Style="{StaticResource LimsCaptionStyle}"/><TextBlock Text="{x:Bind Detail.Preparation.Availability.AvailableDisplay}" FontSize="26" FontWeight="SemiBold" TextWrapping="Wrap"/></StackPanel>
-      <StackPanel Grid.Row="1" Grid.Column="1" Spacing="4"><TextBlock Text="Restante" Style="{StaticResource LimsCaptionStyle}"/><TextBlock Text="{x:Bind Detail.Preparation.Availability.PercentDisplay}" FontSize="26" FontWeight="SemiBold"/></StackPanel>
+      <StackPanel Grid.Column="1" Spacing="4"><TextBlock Text="Consumido según saldo" Style="{StaticResource LimsCaptionStyle}"/><TextBlock Text="{x:Bind Detail.Preparation.Availability.ConsumedDisplay}" FontWeight="SemiBold"/></StackPanel>
+      <StackPanel Grid.Row="1" Spacing="4"><TextBlock Text="Disponible" Style="{StaticResource LimsCaptionStyle}"/><TextBlock Text="{x:Bind Detail.Preparation.Availability.AvailableDisplay}" FontSize="22" FontWeight="SemiBold" TextWrapping="Wrap"/></StackPanel>
+      <StackPanel Grid.Row="1" Grid.Column="1" Spacing="4"><TextBlock Text="Restante" Style="{StaticResource LimsCaptionStyle}"/><TextBlock Text="{x:Bind Detail.Preparation.Availability.PercentDisplay}" FontSize="22" FontWeight="SemiBold"/></StackPanel>
      </Grid>
      <design:LimsAvailabilityBar x:Name="AvailabilityProgress" Height="8" MinHeight="8" Value="{x:Bind Detail.Preparation.Availability.ProgressValue}" Tone="{x:Bind Detail.Preparation.Availability.Tone}" Visibility="{x:Bind Detail.Preparation.Availability.IsCalculated}" AutomationProperties.Name="Porcentaje disponible del Stock">
       <design:LimsAvailabilityBar.Resources><x:Double x:Key="ProgressBarTrackHeight">8</x:Double><CornerRadius x:Key="ProgressBarTrackCornerRadius">4</CornerRadius></design:LimsAvailabilityBar.Resources>
      </design:LimsAvailabilityBar>
     </StackPanel>
    </Border>
-   <Border Padding="18" Background="{ThemeResource LimsAccentSoftBrush}" CornerRadius="10">
-    <StackPanel Spacing="14">
-     <TextBlock Text="RESUMEN" Style="{StaticResource LimsSectionTitleStyle}"/>
-     <Grid ColumnSpacing="18" RowSpacing="14">
-      <Grid.ColumnDefinitions>
-       <ColumnDefinition Width="*"/>
-       <ColumnDefinition Width="*"/>
-      </Grid.ColumnDefinitions>
-      <Grid.RowDefinitions>
-       <RowDefinition Height="Auto"/>
-       <RowDefinition Height="Auto"/>
-       <RowDefinition Height="Auto"/>
-      </Grid.RowDefinitions>
-      <StackPanel Grid.Column="0" Grid.Row="0">
-       <StackPanel Spacing="4">
-        <TextBlock Text="CONCENTRACIÓN REAL" Style="{StaticResource LimsCaptionStyle}"/>
-        <TextBlock Text="{x:Bind Detail.Preparation.ConcentrationDisplay}" FontSize="24" FontWeight="SemiBold" TextWrapping="Wrap"/>
-       </StackPanel>
-      </StackPanel>
-      <StackPanel Grid.Column="1" Grid.Row="0">
-       <StackPanel Spacing="4">
-        <TextBlock Text="VOLUMEN FINAL" Style="{StaticResource LimsCaptionStyle}"/>
-        <TextBlock Text="{x:Bind Detail.Preparation.FinalDisplay}" FontSize="24" FontWeight="SemiBold" TextWrapping="Wrap"/>
-       </StackPanel>
-      </StackPanel>
-      <StackPanel Grid.Column="0" Grid.Row="2">
-       <StackPanel Spacing="4">
-        <TextBlock Text="PESO TOMADO" Style="{StaticResource LimsCaptionStyle}"/>
-        <TextBlock Text="{x:Bind Detail.Calculation.ConsumedDisplay}" FontWeight="SemiBold" TextWrapping="Wrap"/>
-       </StackPanel>
-      </StackPanel>
-      <StackPanel Grid.Column="1" Grid.Row="2">
-       <StackPanel Spacing="4">
-        <TextBlock Text="EXPIRACIÓN" Style="{StaticResource LimsCaptionStyle}"/>
-        <TextBlock Text="{x:Bind Detail.Preparation.ExpirationDisplay}" FontWeight="SemiBold" TextWrapping="Wrap"/>
-       </StackPanel>
-      </StackPanel>
-      <StackPanel Grid.Row="1" Spacing="4"><TextBlock Text="DISPONIBLE" Style="{StaticResource LimsCaptionStyle}"/><TextBlock Text="{x:Bind Detail.Preparation.Availability.AvailableDisplay}" FontSize="24" FontWeight="SemiBold" TextWrapping="Wrap"/></StackPanel>
-      <StackPanel Grid.Row="1" Grid.Column="1" Spacing="4"><TextBlock Text="RESTANTE" Style="{StaticResource LimsCaptionStyle}"/><TextBlock Text="{x:Bind Detail.Preparation.Availability.PercentDisplay}" FontSize="24" FontWeight="SemiBold"/></StackPanel>
-     </Grid>
-    </StackPanel>
-   </Border>
-   <Border Padding="18" Background="{ThemeResource LimsSurfaceSecondaryBrush}" CornerRadius="10">
+   <Border Padding="14" Background="{ThemeResource LimsSurfaceSecondaryBrush}" CornerRadius="10">
     <StackPanel Spacing="14">
      <TextBlock Text="ESTÁNDAR ORIGEN" Style="{StaticResource LimsSectionTitleStyle}"/>
      <StackPanel Spacing="4">
@@ -123,7 +82,7 @@
      </Grid>
     </StackPanel>
    </Border>
-   <Border Padding="18" Background="{ThemeResource LimsSurfaceSecondaryBrush}" CornerRadius="10">
+   <Border Padding="14" Background="{ThemeResource LimsSurfaceSecondaryBrush}" CornerRadius="10">
     <StackPanel Spacing="14">
      <TextBlock Text="CÁLCULO" Style="{StaticResource LimsSectionTitleStyle}"/>
      <Grid ColumnSpacing="18" RowSpacing="14">
@@ -157,7 +116,7 @@
       <StackPanel Grid.Column="1" Grid.Row="1">
        <StackPanel Spacing="4">
         <TextBlock Text="Concentración real" Style="{StaticResource LimsCaptionStyle}"/>
-        <TextBlock Text="{x:Bind Detail.Calculation.ConcentrationDisplay}" FontWeight="SemiBold" TextWrapping="Wrap"/>
+        <TextBlock Text="{x:Bind Detail.Calculation.ConcentrationDisplay}" FontSize="20" FontWeight="SemiBold" TextWrapping="Wrap"/>
        </StackPanel>
       </StackPanel>
       <StackPanel Grid.Column="0" Grid.Row="2">
@@ -170,7 +129,7 @@
      <TextBlock Text="{x:Bind Detail.Calculation.Formula}" Style="{StaticResource LimsCaptionStyle}" TextWrapping="Wrap"/>
     </StackPanel>
    </Border>
-   <Border Padding="18" Background="{ThemeResource LimsSurfaceSecondaryBrush}" CornerRadius="10">
+   <Border Padding="14" Background="{ThemeResource LimsSurfaceSecondaryBrush}" CornerRadius="10">
     <StackPanel Spacing="14">
      <TextBlock Text="CONSUMO DEL ESTÁNDAR" Style="{StaticResource LimsSectionTitleStyle}"/>
      <Grid ColumnSpacing="18" RowSpacing="14">
@@ -203,7 +162,7 @@
      </Grid>
     </StackPanel>
    </Border>
-   <Border Padding="18" Background="{ThemeResource LimsSurfaceSecondaryBrush}" CornerRadius="10">
+   <Border Padding="14" Background="{ThemeResource LimsSurfaceSecondaryBrush}" CornerRadius="10">
     <StackPanel Spacing="14">
      <TextBlock Text="TRAZABILIDAD" Style="{StaticResource LimsSectionTitleStyle}"/>
      <Grid ColumnSpacing="18" RowSpacing="14">
@@ -255,7 +214,7 @@
      </Grid>
     </StackPanel>
    </Border>
-   <Border Padding="18" Background="{ThemeResource LimsSurfaceSecondaryBrush}" CornerRadius="10">
+   <Border Padding="14" Background="{ThemeResource LimsSurfaceSecondaryBrush}" CornerRadius="10">
     <StackPanel Spacing="14">
      <TextBlock Text="ALMACENAMIENTO Y OBSERVACIONES" Style="{StaticResource LimsSectionTitleStyle}"/>
      <StackPanel Spacing="4">
@@ -266,6 +225,18 @@
       <TextBlock Text="Observaciones" Style="{StaticResource LimsCaptionStyle}"/>
       <TextBlock Text="{x:Bind Detail.NotesDisplay}" FontWeight="SemiBold" TextWrapping="Wrap"/>
      </StackPanel>
+    </StackPanel>
+   </Border>
+   <Border Padding="14" Background="{ThemeResource LimsSurfaceSecondaryBrush}" CornerRadius="8">
+    <StackPanel Spacing="10">
+     <TextBlock Text="CONSUMOS DE LA SOLUCIÓN Y DERIVADAS" Style="{StaticResource LimsSectionTitleStyle}"/>
+     <TextBlock Text="{x:Bind UsageMessage}" Style="{StaticResource LimsCaptionStyle}" TextWrapping="Wrap"/>
+     <ItemsControl ItemsSource="{x:Bind UsageHistory}"><ItemsControl.ItemTemplate><DataTemplate x:DataType="contracts:PreparationUsage">
+      <Grid Padding="0,6" ColumnSpacing="12"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+       <StackPanel Spacing="4"><TextBlock Text="{x:Bind DerivedCode}" FontWeight="SemiBold"/><TextBlock Text="{x:Bind DerivedName}" TextWrapping="Wrap"/><TextBlock Text="{x:Bind OccurredDisplay}" Style="{StaticResource LimsCaptionStyle}"/><TextBlock Text="{x:Bind Actor}" Style="{StaticResource LimsCaptionStyle}"/></StackPanel>
+       <StackPanel Grid.Column="1" Spacing="4"><TextBlock Text="Volumen consumido" Style="{StaticResource LimsCaptionStyle}"/><TextBlock Text="{x:Bind QuantityDisplay}" FontWeight="SemiBold"/><TextBlock Text="Saldo posterior" Style="{StaticResource LimsCaptionStyle}"/><TextBlock Text="{x:Bind BalanceDisplay}"/></StackPanel>
+      </Grid>
+     </DataTemplate></ItemsControl.ItemTemplate></ItemsControl>
     </StackPanel>
    </Border>
   </StackPanel>

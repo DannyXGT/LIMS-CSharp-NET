@@ -33,6 +33,7 @@ public static class LimsIconCatalog
         LimsIconKind.Availability => Available,
         LimsIconKind.SignOut => DoorArrow,
         LimsIconKind.Archive => ArchiveBox,
+        LimsIconKind.Notifications => "F0 M12,2 C8.4,2 6,4.7 6,8 L6,13 Q6,15 4,16 L4,18 20,18 20,16 Q18,15 18,13 L18,8 C18,4.7 15.6,2 12,2 Z M12,3.5 C14.8,3.5 16.5,5.6 16.5,8 L16.5,13 Q16.5,15 18,16.5 L6,16.5 Q7.5,15 7.5,13 L7.5,8 C7.5,5.6 9.2,3.5 12,3.5 Z M9,20 L10.5,19.5 Q12,22 13.5,19.5 L15,20 Q12,24 9,20 Z",
         LimsIconKind.ClearFilters => "F0 " + ClearFunnel,
         _ => null
     };

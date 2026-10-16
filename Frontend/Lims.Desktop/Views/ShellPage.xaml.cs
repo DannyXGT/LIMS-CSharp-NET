@@ -2,6 +2,7 @@ using Lims.Desktop.ViewModels;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Lims.DesignSystem.Presentation;
+using Lims.Desktop.Presentation;
 
 namespace Lims.Desktop.Views;
 
@@ -11,6 +12,7 @@ public sealed partial class ShellPage : Page
     private readonly PreparationsPage _preparationsPage;
     private readonly PermissionsPage? _permissionsPage;
     private readonly DashboardPage? _dashboard;
+    private readonly object _moduleHeader;
     private readonly Lims.Desktop.Http.IReferenceMaterialsApiClient? _dashboardReferences;
     private readonly StockPage _stockPage;
     private readonly IntermediatePage _intermediatePage;
@@ -31,6 +33,9 @@ public sealed partial class ShellPage : Page
         _dashboard = dashboard; _dashboardReferences = dashboardReferences; _stockPage = stockPage; _intermediatePage = intermediatePage;
         _preparationsPage = new PreparationsPage(stockPage, intermediatePage);
         InitializeComponent();
+        _moduleHeader = MainNavigation.Header;
+        MainNavigation.Header = null;
+        MainNavigation.AlwaysShowHeader = false;
         _preparationsPage.SelectionChanged += (_, _) => UpdatePreparationAction();
         StandardsHost.Content = referenceMaterialsPage;
         PreparationsHost.Content = _preparationsPage;
@@ -44,6 +49,11 @@ public sealed partial class ShellPage : Page
     }
 
     public ShellViewModel ViewModel { get; }
+    public void AttachSystemSearch(AutoSuggestBox search)
+    {
+        search.TextChanged += OnSystemSearchChanged;
+        search.QuerySubmitted += OnSystemSearchSubmitted;
+    }
 
     private void OnNavigationItemInvoked(NavigationView sender, NavigationViewItemInvokedEventArgs args)
     {
@@ -88,7 +98,7 @@ public sealed partial class ShellPage : Page
                 if (!ViewModel.CanViewPreparations) { Show(DeniedPanel, "Acceso denegado", "Preparaciones"); break; }
                 Show(PreparationsHost, "Preparaciones", "Materiales de Referencia");
                 UpdatePreparationAction();
-                PreparationsNewButton.Visibility = Visibility.Visible;
+                PreparationsNewButton.Visibility = _preparationsPage.CanCreate ? Visibility.Visible : Visibility.Collapsed;
                 _ = _preparationsPage.LoadAsync();
                 break;
             case "permissions":
@@ -142,6 +152,9 @@ public sealed partial class ShellPage : Page
 
     private void Show(FrameworkElement element, string title, string subtitle)
     {
+        var home = element == HomePanel;
+        MainNavigation.Header = home ? null : _moduleHeader;
+        MainNavigation.AlwaysShowHeader = !home;
         element.Visibility = Visibility.Visible;
         SectionTitle.Text = title;
         SectionSubtitle.Text = subtitle;
@@ -150,6 +163,7 @@ public sealed partial class ShellPage : Page
 
     private void OnNavigationLoaded(object sender, RoutedEventArgs e)
     {
+        MainNavigation.IsPaneOpen = false;
         Motion.ConfigureVisibility(HomePanel);
         Motion.ConfigureVisibility(StandardsHost);
         UpdatePane(MainNavigation.IsPaneOpen);
@@ -159,6 +173,8 @@ public sealed partial class ShellPage : Page
 
     private void UpdatePane(bool expanded)
     {
+        foreach (var item in new[] { HomeItem, StandardsItem, PreparationsItem, PermissionsItem })
+            ToolTipService.SetToolTip(item, expanded ? null : item.Content);
         var visibility = expanded ? Visibility.Visible : Visibility.Collapsed;
         BrandLabels.Visibility = visibility;
         MaterialsGroup.Visibility = expanded && (ViewModel.CanViewReferenceMaterials || ViewModel.CanViewPreparations) ? Visibility.Visible : Visibility.Collapsed;
@@ -175,6 +191,12 @@ public sealed partial class ShellPage : Page
 
     private async Task NavigateDashboardAsync(DashboardRoute route)
     {
+        if (_permissionsPage is not null && PermissionsHost.Visibility == Visibility.Visible && route.Module != "permissions")
+        {
+            if (!await _permissionsPage.ConfirmDiscardAsync())
+            { _restoringNavigation = true; MainNavigation.SelectedItem = PermissionsItem; _restoringNavigation = false; return; }
+            _permissionsPage.ViewModel.Clear();
+        }
         LastDashboardRoute = route; DashboardRouteStage = "authorizing";
         await RefreshAccessAsync();
         if (route.Module == "permissions") { if (ViewModel.IsAdministrator) MainNavigation.SelectedItem = PermissionsItem; return; }
@@ -253,7 +275,7 @@ public sealed partial class ShellPage : Page
             var tabs = (Lims.DesignSystem.Controls.LimsTabStrip)_preparationsPage.FindName("PreparationTabs");
             tabs.SelectedIndex = route.Module == "intermediate" ? 1 : 0;
             Show(PreparationsHost, "Preparaciones", "Materiales de Referencia");
-            PreparationsNewButton.Visibility = Visibility.Visible; UpdatePreparationAction();
+            PreparationsNewButton.Visibility = _preparationsPage.CanCreate ? Visibility.Visible : Visibility.Collapsed; UpdatePreparationAction();
             if (route.Module == "stock")
             {
                 ((TextBox)_stockPage.FindName("SearchBox")).Text = route.Search ?? string.Empty;
@@ -283,7 +305,37 @@ public sealed partial class ShellPage : Page
         PreparationsNewLabel.Text = _preparationsPage.CreateLabel;
         Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(PreparationsNewButton, _preparationsPage.CreateLabel);
         PreparationsNewButton.IsEnabled = _preparationsPage.CanCreate;
+        if (PreparationsHost.Visibility == Visibility.Visible) PreparationsNewButton.Visibility = _preparationsPage.CanCreate ? Visibility.Visible : Visibility.Collapsed;
     }
     private async void OnNewPreparationClick(object sender, RoutedEventArgs e) => await _preparationsPage.OpenCreateAsync();
+
+    private sealed record SystemSearchResult(string Label, string Module, string? Search = null, Guid? Id = null)
+    { public override string ToString() => Label; }
+
+    private void OnSystemSearchChanged(AutoSuggestBox sender, AutoSuggestBoxTextChangedEventArgs args)
+    {
+        if (args.Reason != AutoSuggestionBoxTextChangeReason.UserInput) return;
+        var options = new List<SystemSearchResult> { new("Inicio", "home") };
+        if (ViewModel.CanViewReferenceMaterials) options.Add(new("Estándares", "standards"));
+        if (ViewModel.CanViewStock) options.Add(new("Stock", "stock"));
+        if (ViewModel.CanViewIntermediate) options.Add(new("Intermedia", "intermediate"));
+        if (ViewModel.IsAdministrator) options.Add(new("Gestión de permisos", "permissions"));
+        if (_dashboard?.ViewModel.Data is {} data)
+            options.AddRange(DashboardAnalytics.PrioritySample(data).Select(m => new SystemSearchResult(m.Name, m.Kind == "Standard" ? "standards" : m.Kind == "Stock" ? "stock" : "intermediate", m.Name, m.Id)));
+        sender.ItemsSource = options.Where(o => o.Label.Contains(sender.Text.Trim(), StringComparison.CurrentCultureIgnoreCase)).Take(8).ToArray();
+    }
+    private async void OnSystemSearchSubmitted(AutoSuggestBox sender, AutoSuggestBoxQuerySubmittedEventArgs args)
+    {
+        var result = args.ChosenSuggestion as SystemSearchResult;
+        result ??= (sender.ItemsSource as IEnumerable<SystemSearchResult>)?.FirstOrDefault(o => string.Equals(o.Label, args.QueryText.Trim(), StringComparison.OrdinalIgnoreCase));
+        if (result?.Module == "home") { MainNavigation.SelectedItem = HomeItem; return; }
+        if (result is not null) await NavigateDashboardAsync(new(result.Module, Search: result.Search, RecordId: result.Id));
+        else if (!string.IsNullOrWhiteSpace(args.QueryText))
+        {
+            var module = ViewModel.CanViewReferenceMaterials ? "standards" : ViewModel.CanViewStock ? "stock" : ViewModel.CanViewIntermediate ? "intermediate" : null;
+            if (module is not null) await NavigateDashboardAsync(new(module, Search: args.QueryText.Trim()));
+        }
+        sender.Text = string.Empty;
+    }
 
 }

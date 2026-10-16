@@ -13,13 +13,13 @@ internal sealed class IntermediateApiClient(IHttpClientFactory clients) : IInter
         SendAsync<IntermediateCalculation>(HttpMethod.Post, Path + "/preview", JsonContent.Create(request), cancellationToken);
     public Task<ApiCallResult<IntermediateDetail>> CreateAsync(CreateIntermediateRequest request, CancellationToken cancellationToken) =>
         SendAsync<IntermediateDetail>(HttpMethod.Post, Path, JsonContent.Create(request), cancellationToken);
-    public Task<ApiCallResult<IntermediatePage>> ListAsync(string? search, int page, CancellationToken cancellationToken) =>
-        SendAsync<IntermediatePage>(HttpMethod.Get, Query(Path, search, page), null, cancellationToken);
+    public Task<ApiCallResult<IntermediatePage>> ListAsync(string? search, int page, CancellationToken cancellationToken, PreparationListFilter? filter = null) =>
+        SendAsync<IntermediatePage>(HttpMethod.Get, Query(Path, search, page, filter), null, cancellationToken);
     public Task<ApiCallResult<IntermediateDetail>> GetAsync(Guid id, CancellationToken cancellationToken) =>
         SendAsync<IntermediateDetail>(HttpMethod.Get, $"{Path}/{id:D}", null, cancellationToken);
 
-    private static string Query(string path, string? search, int page) =>
-        string.Create(CultureInfo.InvariantCulture, $"{path}?page={page}&pageSize=25&search={Uri.EscapeDataString(search?.Trim() ?? string.Empty)}");
+    private static string Query(string path, string? search, int page, PreparationListFilter? filter = null) =>
+        string.Create(CultureInfo.InvariantCulture, $"{path}?page={page}&pageSize=25&search={Uri.EscapeDataString(search?.Trim() ?? string.Empty)}&status={Uri.EscapeDataString(filter?.Status ?? string.Empty)}&availability={Uri.EscapeDataString(filter?.Availability ?? string.Empty)}&method={Uri.EscapeDataString(filter?.Method ?? string.Empty)}");
 
     private async Task<ApiCallResult<T>> SendAsync<T>(HttpMethod method, string path, HttpContent? content, CancellationToken cancellationToken)
     {

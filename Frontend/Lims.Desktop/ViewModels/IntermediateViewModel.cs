@@ -43,16 +43,24 @@ public sealed partial class IntermediateViewModel(IIntermediateApiClient api, IS
     [ObservableProperty] public partial bool HasLoadedList { get; set; }
     [ObservableProperty] public partial bool HasSearchCriteria { get; set; }
     public event Func<IntermediateDetail, Task>? PreparationOpened;
-    public bool ShowEmptyCreate => !HasSearchCriteria;
-    public bool HasResults => Items.Count > 0;
-    public bool HasListMessage => ListMessage.Length > 0;
-    public bool IsEmpty => HasLoadedList && !HasResults && !HasListMessage;
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "Instance property retained for XAML bindings.")]
+    [ObservableProperty] public partial bool IsLoadingList { get; set; }
+    private int _pageSize = 25;
+    public PreparationListFilter ListFilter { get; set; } = new();
+    public bool ShowSelectionAction => CanOpenSelectedPreparation && !IsLoadingList;
+    public bool ShowFooter => HasLoadedList && !IsLoadingList && !HasListMessage && HasResults;
+    partial void OnSelectedPreparationChanged(IntermediateSummary? value) => OnPropertyChanged(nameof(ShowSelectionAction));
+    partial void OnIsLoadingListChanged(bool value) => NotifyListState();
+    public bool HasResults => Items.Count > 0 && !IsLoadingList && !HasListMessage;
+    public bool HasListMessage => ListMessage.Length > 0 && !IsLoadingList;
+    public bool IsEmpty => HasLoadedList && !IsLoadingList && Items.Count == 0 && !HasListMessage;
     public string EmptyTitle => HasSearchCriteria ? "No encontramos preparaciones con estos criterios." : "No hay preparaciones Intermedia";
-    public string EmptyDescription => HasSearchCriteria ? "Cambie los criterios de búsqueda o limpie la búsqueda." : "Cree una preparación Intermedia para comenzar\no cambie los criterios de búsqueda.";
-    public bool CanOpenSelectedPreparation => CanView && SelectedPreparation is { } item && Items.Contains(item);
+    public string EmptyDescription => HasSearchCriteria ? "Cambie los criterios de búsqueda o limpie la búsqueda." : "Registra una solución intermedia a partir de preparaciones disponibles";
+    public bool CanOpenSelectedPreparation => CanView && !IsLoadingList && !HasListMessage && SelectedPreparation is { } item && Items.Contains(item);
     public void ClearSelection()
     {
         ++_listRevision;
+        IsLoadingList = false;
         SelectedPreparation = null;
         Detail = null;
     }
@@ -66,8 +74,9 @@ public sealed partial class IntermediateViewModel(IIntermediateApiClient api, IS
     }
     private void NotifyListState()
     {
-        foreach (var property in new[] { nameof(ShowEmptyCreate), nameof(HasResults), nameof(IsEmpty), nameof(HasListMessage), nameof(EmptyTitle), nameof(EmptyDescription), nameof(PageDisplay) }) OnPropertyChanged(property);
+        foreach (var property in new[] { nameof(ShowSelectionAction), nameof(ShowFooter), nameof(HasResults), nameof(IsEmpty), nameof(HasListMessage), nameof(EmptyTitle), nameof(EmptyDescription), nameof(PageDisplay) }) OnPropertyChanged(property);
         OpenSelectedPreparationCommand.NotifyCanExecuteChanged();
+        OnPropertyChanged(nameof(HasMultiplePages)); OnPropertyChanged(nameof(HasNextPage));
     }
     partial void OnListMessageChanged(string value) => NotifyListState();
 
@@ -111,10 +120,10 @@ public sealed partial class IntermediateViewModel(IIntermediateApiClient api, IS
     public bool HasDateError => DateError.Length > 0 && ExpirationDate is not null;
     public bool HasVolumeError => VolumeError.Length > 0 && FinalVolume.Length > 0;
     public bool CanAddComponent => InputsEnabled && DilutedSource is null && Components.Count < 100;
-    public bool HasMultiplePages => TotalCount > 25;
+    public bool HasMultiplePages => TotalCount > _pageSize;
     public bool HasPreviousPage => Page > 1;
-    public bool HasNextPage => Page * 25 < TotalCount;
-    public string PageDisplay => TotalCount == 0 ? "0 preparaciones" : $"Página {Page} · {TotalCount} intermedias";
+    public bool HasNextPage => Page * _pageSize < TotalCount;
+    public string PageDisplay => TotalCount == 0 ? "0 preparaciones" : $"{(Page - 1) * _pageSize + 1}–{Math.Min(Page * _pageSize, TotalCount)} de {TotalCount} · Página {Page} de {(TotalCount + _pageSize - 1) / _pageSize}";
     public decimal TotalTakenMl => Components.Where(c => c.Source is not null).Sum(c => Parse(c.Volume, out var v) ? SafeMilliliters(v, c.Unit) : 0);
     public decimal FinalMl => Parse(FinalVolume, out var v) ? SafeMilliliters(v, FinalUnit) : 0;
     public decimal OccupiedPercent => IntermediateCalculator.OccupiedPercent(TotalTakenMl, FinalMl);
@@ -261,24 +270,30 @@ public sealed partial class IntermediateViewModel(IIntermediateApiClient api, IS
     {
         if (!CanView) { Items.Clear(); ClearSelection(); ListMessage = "No tiene permiso para consultar preparaciones."; return; }
         var revision = ++_listRevision;
+        IsLoadingList = true;
+        ListMessage = string.Empty;
+        HasSearchCriteria = !string.IsNullOrWhiteSpace(search) || ListFilter.HasCriteria;
         try
         {
-            var response = await api.ListAsync(search, page, cancellationToken).ConfigureAwait(true);
+            var response = await api.ListAsync(search, page, cancellationToken, ListFilter).ConfigureAwait(true);
             if (revision != _listRevision) return;
             if (!response.IsSuccess || response.Value is null) { if (response.StatusCode == 403) { Items.Clear(); ClearSelection(); } ListMessage = ReferenceMaterialErrors.PreparationMessage(response.Error); return; }
+            if (ListFilter.HasCriteria && !response.Value.FiltersApplied) { ListMessage = "El servidor requiere una actualización para consultar estos filtros. Puede restablecerlos y continuar con la búsqueda."; return; }
             var selectedId = SelectedPreparation?.Id;
             SelectedPreparation = null;
             Replace(Items, response.Value.Items);
             SelectedPreparation = Items.FirstOrDefault(item => item.Id == selectedId);
+            _pageSize = Math.Max(1, response.Value.PageSize);
             Page = response.Value.Page; TotalCount = response.Value.TotalCount;
             HasLoadedList = true;
-            HasSearchCriteria = !string.IsNullOrWhiteSpace(search);
+            HasSearchCriteria = !string.IsNullOrWhiteSpace(search) || ListFilter.HasCriteria;
             ListMessage = string.Empty;
             NotifyListState();
             Notify();
         }
         catch (HttpRequestException) { if (revision == _listRevision) ListMessage = "No se pudo conectar con el servidor."; }
-        catch (OperationCanceledException) { }
+        catch (OperationCanceledException) { if (revision == _listRevision) ListMessage = "La consulta se canceló. Intente nuevamente."; }
+        finally { if (revision == _listRevision) { IsLoadingList = false; NotifyListState(); } }
     }
     public async Task<bool> OpenDetailAsync(Guid id, CancellationToken cancellationToken)
     {

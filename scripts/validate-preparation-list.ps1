@@ -99,11 +99,13 @@ $refreshed = Report 'refresh'
 if ($refreshed.SelectedId -ne $selected.SelectedId -or -not $refreshed.ButtonEnabled) { throw 'Refresh lost the existing selection.' }
 Send-Command @{ action = 'tabSelect'; index = 1 }
 Capture 'intermedia-active-1920'
-Assert-Disabled 'tab-change' 1
+$tabStock = Report 'tab-change'
+if ($tabStock.SelectedId -ne $selected.SelectedId) { throw 'Tab change cleared the Stock selection.' }
 $tabState = Report 'intermedia-selection'
 if ($null -ne $tabState.IntermediateSelectedId -or $tabState.IntermediateCanOpen) { throw 'Intermediate tab inherited selection.' }
 Send-Command @{ action = 'tabSelect'; index = 0 }
-Assert-Disabled 'tab-return' 1
+$returned = Report 'tab-return'
+if ($returned.SelectedId -ne $selected.SelectedId -or -not $returned.CanOpen) { throw 'Stock tab lost its own selection.' }
 Send-Command @{ action = 'size'; width = 1366; height = 768 }
 Capture 'stock-record-unselected-1366'
 Write-Output 'Preparation list: real WinUI selection, button, double click, Enter, refresh and tab reset passed. Fixture UI only; no production persistence.'

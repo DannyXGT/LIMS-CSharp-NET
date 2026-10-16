@@ -26,7 +26,7 @@
   </ItemGroup>
   <ItemGroup>
     <Page Include="../../../Frontend/Lims.Desktop/Views/DashboardPage.xaml" Link="Views/DashboardPage.xaml" />
-    <Compile Include="../../../Frontend/Lims.Desktop/Views/DashboardPage.xaml.cs;../../../Frontend/Lims.Desktop/ViewModels/DashboardViewModel.cs;../../../Frontend/Lims.Desktop/Http/IDashboardApiClient.cs;../../../Frontend/Lims.Desktop/Presentation/DashboardMotion.cs;../../../Frontend/Lims.Desktop/Controls/DashboardComponents.cs" Link="Dashboard/%(Filename)%(Extension)" />
+    <Compile Include="../../../Frontend/Lims.Desktop/Views/DashboardPage.xaml.cs;../../../Frontend/Lims.Desktop/ViewModels/DashboardViewModel.cs;../../../Frontend/Lims.Desktop/Http/IDashboardApiClient.cs;../../../Frontend/Lims.Desktop/Presentation/DashboardAnalytics.cs;../../../Frontend/Lims.Desktop/Controls/DashboardComponents.cs" Link="Dashboard/%(Filename)%(Extension)" />
   </ItemGroup>
   <!-- Compile the real presentation sources. No production startup/auth/HTTP is included. -->
   <ItemGroup>
@@ -43,6 +43,6 @@
     <Compile Include="../../../Frontend/Lims.Desktop/Http/ApiCallResult.cs;../../../Frontend/Lims.Desktop/Http/ApiOperationFailure.cs;../../../Frontend/Lims.Desktop/Http/IReferenceMaterialsApiClient.cs" Link="Http/%(Filename)%(Extension)" />
     <Compile Include="../../../Frontend/Lims.Desktop/Services/ISessionService.cs;../../../Frontend/Lims.Desktop/Services/IAuthenticationGateway.cs;../../../Frontend/Lims.Desktop/Services/INavigationService.cs;../../../Frontend/Lims.Desktop/Services/AuthenticationOutcome.cs" Link="Services/%(Filename)%(Extension)" />
     <Compile Include="../../../Frontend/Lims.Desktop/Validation/ReferenceMaterialInput.cs;../../../Frontend/Lims.Desktop/Presentation/ReferenceMaterialErrors.cs;../../../Frontend/Lims.Desktop/Presentation/ReferenceMaterialVisuals.cs" Link="Presentation/%(Filename)%(Extension)" />
-    <Content Include="../../../Frontend/Lims.Desktop/Assets/**/*" Link="Assets/%(RecursiveDir)%(Filename)%(Extension)" />
+    <Content Include="../../../Frontend/Lims.Desktop/Assets/**/*" Link="Assets/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

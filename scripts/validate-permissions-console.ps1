@@ -1,8 +1,8 @@
-﻿param([switch]$SkipStart)
+﻿param([switch]$SkipStart, [string]$EvidenceFolder = 'permissions-console')
 $ErrorActionPreference = 'Stop'
 $driver = Join-Path $PSScriptRoot 'validate-standards-visual.ps1'
-$folder = 'permissions-console'
-$evidence = Join-Path $PSScriptRoot '..\artifacts\validation\permissions-console'
+$folder = $EvidenceFolder
+$evidence = Join-Path $PSScriptRoot ('..\artifacts\validation\' + $folder)
 function Send-Command($data) { & $driver -Action Command -Command ($data | ConvertTo-Json -Compress) -EvidenceFolder $folder }
 function Capture($name) { Start-Sleep -Milliseconds 220; & $driver -Action Capture -Name $name -EvidenceFolder $folder | Out-Null }
 if (-not $SkipStart) {

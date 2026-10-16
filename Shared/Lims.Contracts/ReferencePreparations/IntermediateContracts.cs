@@ -43,17 +43,19 @@ public sealed record IntermediateSummary(Guid Id, string Code, string Name, stri
     decimal FinalVolume, string VolumeUnit, decimal AvailableVolume, IReadOnlyList<IntermediateAnalyte> Results,
     DateOnly PreparationDate, DateOnly ExpirationDate, string PreparedBy, string Status)
 {
+    [JsonIgnore] public StockAvailability Availability => new(FinalVolume, VolumeUnit, AvailableVolume);
     [JsonIgnore] public string FinalDisplay => StockPresentation.Quantity(FinalVolume, VolumeUnit);
     [JsonIgnore] public string AvailableDisplay => StockPresentation.Quantity(AvailableVolume, VolumeUnit);
     [JsonIgnore] public string ConcentrationDisplay => Results.Count == 1 ? StockPresentation.Quantity(Results[0].Concentration, Results[0].Unit) : $"{Results.Count} analitos";
     [JsonIgnore] public string ConcentrationDetails => string.Join("; ", Results.Select(a => a.Display));
     [JsonIgnore] public string DateDisplay => ReferenceMaterialPresentation.Date(PreparationDate);
     [JsonIgnore] public string ExpirationDisplay => ReferenceMaterialPresentation.Date(ExpirationDate);
-    [JsonIgnore] public string StatusLabel => Status switch { "Active" => "Disponible", "Depleted" => "Agotado", "Expired" => "Expirado", _ => "Archivado" };
-    [JsonIgnore] public string StatusTone => Status == "Active" ? "Success" : "Warning";
+    [JsonIgnore] public string StatusLabel => Status switch { "Active" or "Depleted" => "Vigente", "Expired" => "Vencido", "Archived" => "Archivado", _ => "No disponible" };
+    [JsonIgnore] public string StatusTone => Status switch { "Active" or "Depleted" => "Success", "Expired" => "Danger", _ => "Neutral" };
+    [JsonIgnore] public string InventoryLabel => !Availability.IsCalculated ? "Saldo no informado" : Availability.IsDepleted ? "Agotado" : Availability.RemainingPercent <= 60 ? "Disponibilidad baja" : "Con volumen";
     public override string ToString() => $"{Code} · {Name} · {StatusLabel}";
 }
-public sealed record IntermediatePage(IReadOnlyList<IntermediateSummary> Items, int Page, int PageSize, int TotalCount);
+public sealed record IntermediatePage(IReadOnlyList<IntermediateSummary> Items, int Page, int PageSize, int TotalCount, bool FiltersApplied = false);
 public sealed record IntermediateConsumption(Guid Id, Guid SourceId, string SourceCode, decimal Quantity, string Unit,
     decimal BalanceBefore, decimal BalanceAfter, string Actor, DateTimeOffset OccurredAt)
 {
@@ -61,7 +63,7 @@ public sealed record IntermediateConsumption(Guid Id, Guid SourceId, string Sour
 }
 public sealed record IntermediateDetail(IntermediateSummary Preparation, IntermediateCalculation Calculation,
     IReadOnlyList<IntermediateConsumption> Consumptions, Guid? DilutedPreparationId, string? Notes,
-    DateTimeOffset CreatedAt, DateTimeOffset UpdatedAt, string UpdatedBy, Guid Version)
+    DateTimeOffset CreatedAt, DateTimeOffset UpdatedAt, string UpdatedBy, Guid Version, IReadOnlyList<PreparationUsage>? UsageHistory = null)
 {
     [JsonIgnore] public string CreatedDisplay => ReferenceMaterialPresentation.LocalTimestamp(CreatedAt);
     [JsonIgnore] public string UpdatedDisplay => ReferenceMaterialPresentation.LocalTimestamp(UpdatedAt);

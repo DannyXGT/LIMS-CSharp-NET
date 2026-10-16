@@ -5,6 +5,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:contracts="using:Lims.Contracts.ReferenceMaterials"
     xmlns:design="using:Lims.DesignSystem.Controls"
+    xmlns:presentation="using:Lims.Desktop.Presentation"
     Background="Transparent"
     Loaded="OnLoaded"
     SizeChanged="OnPageSizeChanged">
@@ -151,10 +152,12 @@
                                     <design:StatusBadge Grid.Column="7" HorizontalAlignment="Left" VerticalAlignment="Center" Text="{x:Bind StatusLabel}" Tone="{x:Bind StatusTone}" />
                                     <StackPanel Grid.Column="8" VerticalAlignment="Center" Spacing="4">
                                         <TextBlock FontWeight="SemiBold" Text="{x:Bind AvailableDisplay}" ToolTipService.ToolTip="{x:Bind AvailableDisplay}" TextTrimming="CharacterEllipsis" />
-                                        <Grid x:Name="RowAvailability" ColumnSpacing="5" Visibility="Collapsed">
-                                            <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-                                            <ProgressBar x:Name="RowProgress" Height="3" Minimum="0" Maximum="100" Foreground="{ThemeResource LimsAccentBrush}" AutomationProperties.Name="Porcentaje disponible" />
-                                            <TextBlock x:Name="RowPercent" Grid.Column="1" FontSize="10" Foreground="{ThemeResource LimsTextSecondaryBrush}" />
+                                        <Grid x:Name="RowAvailabilityLayout" Visibility="Collapsed">
+                                            <Grid x:Name="RowAvailability" ColumnSpacing="5" Visibility="{x:Bind presentation:ReferenceMaterialVisuals.AvailabilityVisibility(AvailableQuantity, TotalQuantity)}">
+                                                <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                                                <ProgressBar x:Name="RowProgress" Height="3" Minimum="0" Maximum="100" Value="{x:Bind presentation:ReferenceMaterialVisuals.AvailabilityValue(AvailableQuantity, TotalQuantity)}" Foreground="{ThemeResource LimsAccentBrush}" AutomationProperties.Name="Porcentaje disponible" />
+                                                <TextBlock x:Name="RowPercent" Grid.Column="1" FontSize="10" Text="{x:Bind presentation:ReferenceMaterialVisuals.AvailabilityLabel(AvailableQuantity, TotalQuantity)}" Foreground="{ThemeResource LimsTextSecondaryBrush}" />
+                                            </Grid>
                                         </Grid>
                                     </StackPanel>
                                 </Grid>

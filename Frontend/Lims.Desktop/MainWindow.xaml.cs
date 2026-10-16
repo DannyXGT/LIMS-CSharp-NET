@@ -20,13 +20,21 @@ public sealed partial class MainWindow : Window
     {
         InitializeComponent();
         ExtendsContentIntoTitleBar = true;
-        SetTitleBar(AppTitleBar);
+        SetTitleBar(TitleBarDragArea);
+        shellPage.AttachSystemSearch(SystemSearch);
         AppWindow.SetIcon("Assets/Branding/LIMS.ico");
         ConfigureTitleBar();
         ConfigureWindow();
         shellPage.Loaded += (_, _) =>
         {
+            SystemSearch.Visibility = Visibility.Visible;
             if (AppWindow.Presenter is OverlappedPresenter presenter) presenter.Maximize();
+        };
+        loginPage.Loaded += (_, _) =>
+        {
+            SystemSearch.Visibility = Visibility.Collapsed;
+            SystemSearch.Text = string.Empty;
+            SystemSearch.ItemsSource = null;
         };
         navigation.Initialize(RootContent, loginPage, shellPage);
         navigation.ShowLogin();

@@ -96,7 +96,7 @@ public sealed class PermissionEndpointsTests : IDisposable
         public Task<OperationResult<IntermediateOptions>> OptionsAsync(CancellationToken cancellationToken) => Task.FromResult(OperationResult.Success(new IntermediateOptions([], [])));
         public Task<OperationResult<IntermediateCalculation>> PreviewAsync(IntermediateCalculationRequest request, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task<OperationResult<IntermediateDetail>> CreateAsync(CreateIntermediateRequest request, int actorUserId, CancellationToken cancellationToken) => throw new NotSupportedException();
-        public Task<OperationResult<IntermediatePage>> ListAsync(string? search, int page, int pageSize, CancellationToken cancellationToken) => throw new NotSupportedException();
+        public Task<OperationResult<IntermediatePage>> ListAsync(string? search, int page, int pageSize, CancellationToken cancellationToken, PreparationListFilter? filter = null) => throw new NotSupportedException();
         public Task<OperationResult<IntermediateDetail>> GetAsync(Guid id, CancellationToken cancellationToken) => throw new NotSupportedException();
     }
     public void Dispose() { _client.Dispose(); _webFactory.Dispose(); _factory.Dispose(); }

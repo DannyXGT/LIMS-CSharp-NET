@@ -20,6 +20,9 @@
 
   <ItemGroup>
     <Using Include="Xunit" />
+    <Content Include="../../../Frontend/Lims.Desktop/App.xaml" Link="ThemeSources/App.xaml" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="../../../Frontend/Lims.DesignSystem/Themes/LimsTheme.xaml" Link="ThemeSources/LimsTheme.xaml" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="../../../Frontend/Lims.DesignSystem/Themes/LimsControls.xaml" Link="ThemeSources/LimsControls.xaml" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>

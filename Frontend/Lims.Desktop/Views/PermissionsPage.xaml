@@ -30,11 +30,11 @@
                     <Grid Padding="11,10" ColumnSpacing="8">
                         <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="18"/></Grid.ColumnDefinitions>
                         <StackPanel Spacing="7" VerticalAlignment="Center">
-                            <ContentPresenter Content="{TemplateBinding Content}" Foreground="{ThemeResource LimsTextPrimaryBrush}" FontSize="13" FontWeight="SemiBold"/>
-                            <TextBlock x:Name="SelectionText" Text="Sin asignar" FontSize="11"/>
+                            <ContentPresenter Content="{TemplateBinding Content}" Foreground="{ThemeResource LimsTextPrimaryBrush}" FontSize="13" FontWeight="SemiBold"><ContentPresenter.ContentTemplate><DataTemplate><TextBlock Text="{Binding}" TextWrapping="Wrap"/></DataTemplate></ContentPresenter.ContentTemplate></ContentPresenter>
+                            <TextBlock x:Name="SelectionText" Text="Sin asignar" FontSize="11" TextWrapping="Wrap"/>
                         </StackPanel>
                         <Border Grid.Column="1" Width="18" Height="18" VerticalAlignment="Top" CornerRadius="9" BorderBrush="{ThemeResource LimsBorderStrongBrush}" BorderThickness="1">
-                            <TextBlock x:Name="CheckMark" Text="✓" FontSize="12" FontWeight="SemiBold" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{ThemeResource LimsAccentBrush}"/>
+                            <TextBlock x:Name="CheckMark" Text="✓" FontSize="12" FontWeight="SemiBold" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{ThemeResource LimsTextPrimaryBrush}"/>
                         </Border>
                     </Grid>
                 </Grid>
@@ -109,12 +109,12 @@
                                             <StackPanel Spacing="10" Margin="0,0,0,20">
                                                 <Grid ColumnSpacing="10"><Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                                                     <design:LimsIcon Icon="{Binding Icon}" Size="18"/>
-                                                    <TextBlock Grid.Column="1" Text="{Binding Name}" FontSize="14" FontWeight="SemiBold"/>
+                                                    <TextBlock Grid.Column="1" Text="{Binding Name}" FontSize="14" FontWeight="SemiBold" TextWrapping="Wrap"/>
                                                     <TextBlock Grid.Column="2" Text="{Binding Summary}" Style="{StaticResource LimsCaptionStyle}" FontSize="11"/>
                                                 </Grid>
                                                 <ItemsControl ItemsSource="{Binding Items}">
                                                     <ItemsControl.ItemsPanel><ItemsPanelTemplate><local:PermissionActionPanel/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
-                                                    <ItemsControl.ItemTemplate><DataTemplate><local:PermissionAction Style="{StaticResource PermissionActionStyle}" Content="{Binding ActionName}" IsChecked="{Binding IsGranted, Mode=TwoWay}" AutomationProperties.Name="{Binding Definition.Name}" ToolTipService.ToolTip="{Binding Definition.Name}"/></DataTemplate></ItemsControl.ItemTemplate>
+                                                    <ItemsControl.ItemTemplate><DataTemplate><local:PermissionAction Style="{StaticResource PermissionActionStyle}" Content="{Binding ActionName}" IsChecked="{Binding IsGranted, Mode=TwoWay}" IsChanged="{Binding IsChanged}" AutomationProperties.Name="{Binding Definition.Name}"/></DataTemplate></ItemsControl.ItemTemplate>
                                                 </ItemsControl>
                                             </StackPanel>
                                         </DataTemplate></ItemsControl.ItemTemplate>
@@ -144,9 +144,10 @@
                             <TextBlock x:Name="LoadFailure" Text="No se pudieron cargar los permisos. Pulse Recargar para volver a consultar." Style="{StaticResource LimsCaptionStyle}" TextWrapping="Wrap" HorizontalAlignment="Center" VerticalAlignment="Center" MaxWidth="340" Visibility="Collapsed"/>
                         </Grid>
                         <Grid x:Name="WorkspaceFooter" Grid.Row="3" Padding="0,12,0,0" BorderBrush="{ThemeResource LimsBorderBrush}" BorderThickness="0,1,0,0">
-                            <Grid x:Name="PermissionFooter" ColumnSpacing="10">
+                            <Grid x:Name="PermissionFooter" ColumnSpacing="10" RowSpacing="8">
+                                <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
                                 <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                                <StackPanel Spacing="5" VerticalAlignment="Center">
+                                <StackPanel x:Name="ChangeSummary" Spacing="5" VerticalAlignment="Center">
                                     <TextBlock Text="{x:Bind ViewModel.ChangeStatus, Mode=OneWay}" FontSize="11" Foreground="{ThemeResource LimsTextSecondaryBrush}" TextWrapping="Wrap" AutomationProperties.LiveSetting="Polite"/>
                                     <TextBlock Text="{x:Bind ViewModel.LocalSummary, Mode=OneWay}" FontSize="11" Foreground="{ThemeResource LimsAccentBrush}"/>
                                 </StackPanel>

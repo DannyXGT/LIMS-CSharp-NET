@@ -6,7 +6,10 @@ public sealed record DashboardResponse(string View, string Name, string Role, st
     DateTimeOffset AsOf, int? ExpirationWindowDays, IReadOnlyList<string> Permissions,
     DashboardStandards? Standards, DashboardPreparations? Stock, DashboardPreparations? Intermediate,
     IReadOnlyList<DashboardMaterial> Expirations, IReadOnlyList<DashboardMaterial> LowAvailability,
-    IReadOnlyList<DashboardActivity> Activity);
+    IReadOnlyList<DashboardActivity> Activity, DashboardMethodStatistics? MethodStatistics = null);
+public sealed record DashboardMethodStatistics(string Scope, int Total, int AvailabilityTotal,
+    IReadOnlyList<DashboardMethodSummary> Methods);
+public sealed record DashboardMethodSummary(string Method, int Count, int AvailabilityCount, decimal? AverageAvailabilityPercent);
 public sealed record DashboardStandards(int Registered, int Active, int Critical, int Low, int? ExpiringSoon,
     int Expired, IReadOnlyList<DashboardState> Distribution);
 public sealed record DashboardPreparations(int Available, int Critical, int Low, int? ExpiringSoon, int Expired);

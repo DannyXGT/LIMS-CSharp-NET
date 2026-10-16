@@ -5,6 +5,8 @@ using Lims.Desktop.Views;
 using Lims.DesignSystem.Controls;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Media;
+using Microsoft.UI.Xaml.Media.Imaging;
 using Microsoft.UI.Windowing;
 using Windows.Graphics;
 
@@ -14,14 +16,17 @@ public partial class App : Microsoft.UI.Xaml.Application
 {
     private static readonly JsonSerializerOptions ReportOptions = new() { WriteIndented = true };
     private static readonly string[] PopupFields = ["MethodBox", "UnitCombo", "StorageLocationBox", "ReceivedDatePicker", "ExpirationDatePicker"];
+    private static readonly string[] StockPopupFields = ["SourceList", "ConcentrationUnitSelect", "PreparationDatePicker", "ExpirationDatePicker"];
     private static readonly string[] DetailSectionNames = ["HeaderGrid", "KpiGrid", "GeneralSection", "AuditSection", "AvailabilityCard", "ExpiryCard", "StateCard"];
     private static readonly string[] PermissionElementNames = ["UsersPanel", "UserSearch", "UsersList", "DetailPanel", "UserHeader", "PermissionTabs", "TabContent", "PermissionScroll", "HistoryView", "WorkspaceFooter", "SaveButton", "DiscardButton", "ReloadButton"];
     private readonly FixtureDashboardApi _dashboardApi = new();
     private DashboardPage? _dashboardPage;
-    private static readonly string[] DashboardElementNames = ["MetricsGrid", "OverviewGrid", "OperationsGrid", "QuickPanel", "Timestamp"];
+    private static readonly string[] DashboardElementNames = ["DashboardHeader", "DashboardTitle", "MetricsGrid", "OverviewGrid", "AnalyticsGrid", "OperationsGrid"];
     private Window? _window;
     private ShellPage? _shell;
     private ReferenceMaterialsPage? _page;
+    private Border? _standardsTableForComparison;
+    private TextBlock? _standardsTitleForComparison;
     private StockPage? _stockPage;
     private IntermediatePage? _intermediatePage;
     private PermissionsPage? _permissionsPage;
@@ -62,15 +67,29 @@ public partial class App : Microsoft.UI.Xaml.Application
         _dashboardPage = new DashboardPage(new DashboardViewModel(_dashboardApi));
         _shell = new ShellPage(shellModel, _page, _stockPage, _intermediatePage, _permissionsPage, _dashboardPage, _api) { RequestedTheme = ElementTheme.Dark };
         var root = new Grid { RequestedTheme = ElementTheme.Dark, Style = (Style)Resources["FixtureRootStyle"] };
-        root.RowDefinitions.Add(new RowDefinition { Height = new GridLength(40) });
+        root.RowDefinitions.Add(new RowDefinition { Height = new GridLength(48) });
         root.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
-        var title = new TextBlock { Text = "LIMS · VALIDACIÓN VISUAL · DATOS FICTICIOS", Margin = new Thickness(16, 10, 0, 0) };
+        var title = new Grid { Padding = new Thickness(16, 0, 142, 0), ColumnSpacing = 16, Background = (Brush)Resources["LimsBackgroundBrush"] };
+        title.ColumnDefinitions.Add(new() { Width = new(1, GridUnitType.Star) });
+        title.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
+        title.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
+        var brand = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 10, VerticalAlignment = VerticalAlignment.Center };
+        brand.Children.Add(new Image { Width = 22, Height = 22, Source = new BitmapImage(new Uri("ms-appx:///Assets/Branding/LIMS.png")) });
+        brand.Children.Add(new TextBlock { Text = "LIMS", FontSize = 14, FontWeight = Microsoft.UI.Text.FontWeights.SemiBold, VerticalAlignment = VerticalAlignment.Center });
+        brand.Children.Add(new Border { Width = 1, Height = 18, Background = (Brush)Resources["LimsBorderBrush"] });
+        brand.Children.Add(new TextBlock { Text = "Gestión de laboratorio", FontSize = 12, Foreground = (Brush)Resources["LimsTextSecondaryBrush"], VerticalAlignment = VerticalAlignment.Center });
+        title.Children.Add(brand);
+        var fixtureLabel = new TextBlock { Text = "DATOS FICTICIOS", FontSize = 9, VerticalAlignment = VerticalAlignment.Center };
+        Grid.SetColumn(fixtureLabel, 1); title.Children.Add(fixtureLabel);
+        var systemSearch = new AutoSuggestBox { Width = 280, FontSize = 12, MinHeight = 30, VerticalAlignment = VerticalAlignment.Center, PlaceholderText = "Buscar en el sistema...", QueryIcon = new SymbolIcon(Symbol.Find) };
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetAutomationId(systemSearch, "SystemSearch");
+        _shell.AttachSystemSearch(systemSearch); Grid.SetColumn(systemSearch, 2); title.Children.Add(systemSearch);
         root.Children.Add(title);
         Grid.SetRow(_shell, 1);
         root.Children.Add(_shell);
         _window = new Window { Content = root, Title = "LIMS UX V2 — fixtures" };
         _window.ExtendsContentIntoTitleBar = true;
-        _window.SetTitleBar(title);
+        _window.SetTitleBar(brand);
         _window.AppWindow.MoveAndResize(new RectInt32(0, 0, 1920, 1080));
         _window.Activate();
         File.WriteAllText(Path.Combine(_directory, "window.json"), JsonSerializer.Serialize(new { hwnd = WinRT.Interop.WindowNative.GetWindowHandle(_window).ToInt64() }));
@@ -107,6 +126,13 @@ public partial class App : Microsoft.UI.Xaml.Application
                     var ds = (ScrollViewer)_dashboardPage!.FindName("DashboardScroll");
                     File.WriteAllText(Path.Combine(_directory, "dashboard-layout.json"), JsonSerializer.Serialize(new {
                         fixtureOnly = true, _dashboardApi.Scenario, data = _dashboardPage.ViewModel.Data, _dashboardPage.ViewModel.Error,
+                        scale = _dashboardPage.XamlRoot.RasterizationScale, theme = _dashboardPage.ActualTheme.ToString(),
+                        _dashboardPage.ViewModel.IsBusy, retryEnabled = ((Button)_dashboardPage.FindName("RetryButton")).IsEnabled,
+                        headerTitle = ((TextBlock)_dashboardPage.FindName("DashboardTitle")).Text,
+                        shellHeaderVisible = navigation.Header is not null,
+                        metricHeights = ((Grid)_dashboardPage.FindName("MetricsGrid")).Children.Cast<FrameworkElement>().Select(c => c.ActualHeight).ToArray(),
+                        analyticsPanelCount = ((Grid)_dashboardPage.FindName("AnalyticsGrid")).Children.Count,
+                        categoryCounts = _dashboardPage.ViewModel.Data is {} chartData ? Lims.Desktop.Presentation.DashboardAnalytics.MethodAvailability(chartData) : [],
                         width = _dashboardPage.ActualWidth, height = _dashboardPage.ActualHeight, ds.ScrollableHeight, ds.VerticalOffset,
                         scrollWidth = ds.ActualWidth, extentWidth = ds.ExtentWidth, animationsEnabled = Lims.DesignSystem.Presentation.Motion.Enabled,
                         module = ((NavigationViewItem)navigation.SelectedItem).Tag,
@@ -119,8 +145,28 @@ public partial class App : Microsoft.UI.Xaml.Application
                         preparationTab = ((LimsTabStrip)((PreparationsPage)((ContentControl)_shell.FindName("PreparationsHost")).Content).FindName("PreparationTabs")).SelectedIndex,
                         elements = DashboardElementNames.Select(n => {
                             var el = (FrameworkElement)_dashboardPage.FindName(n); var point = el.TransformToVisual(_dashboardPage).TransformPoint(new Windows.Foundation.Point());
-                            return new { name=n, x=point.X,y=point.Y,width=el.ActualWidth,height=el.ActualHeight };
+                            return new { name=n, x=point.X,y=point.Y,width=el.ActualWidth,height=el.ActualHeight, visibility=el.Visibility.ToString() };
                         }).ToArray()
+                    }, ReportOptions)); break;
+                case "standardsDesignReference":
+                    _standardsTableForComparison = (Border)_page.FindName("TableBorder");
+                    _standardsTitleForComparison = VisualDescendants<TextBlock>((Grid)navigation.Header).Single(t => t.Name == "SectionTitle");
+                    break;
+                case "dashboardDesignReport":
+                    var dashboardCards = ((Grid)_dashboardPage!.FindName("MetricsGrid")).Children.OfType<Border>().ToArray();
+                    var standardsTable = _standardsTableForComparison!;
+                    var dashboardTexts = VisualDescendants<TextBlock>(_dashboardPage).Where(t => t.ActualWidth > 0 && t.Text.Any(char.IsLetterOrDigit)).ToArray();
+                    File.WriteAllText(Path.Combine(_directory, "dashboard-design.json"), JsonSerializer.Serialize(new {
+                        fixtureOnly = true, dashboardTheme = _dashboardPage.ActualTheme.ToString(), standardsTheme = _page.ActualTheme.ToString(),
+                        dashboardSurface = (dashboardCards[0].Background as SolidColorBrush)?.Color.ToString(CultureInfo.InvariantCulture),
+                        standardsSurface = (standardsTable.Background as SolidColorBrush)?.Color.ToString(CultureInfo.InvariantCulture),
+                        dashboardBorder = (dashboardCards[0].BorderBrush as SolidColorBrush)?.Color.ToString(CultureInfo.InvariantCulture),
+                        standardsBorder = (standardsTable.BorderBrush as SolidColorBrush)?.Color.ToString(CultureInfo.InvariantCulture),
+                        dashboardRadius = dashboardCards[0].CornerRadius.TopLeft, standardsRadius = standardsTable.CornerRadius.TopLeft,
+                        smallestText = dashboardTexts.Min(t => t.FontSize),
+                        dashboardTitleSize = ((TextBlock)_dashboardPage.FindName("DashboardTitle")).FontSize,
+                        standardsTitleSize = _standardsTitleForComparison!.FontSize,
+                        rows = VisualDescendants<ListViewItem>(_dashboardPage).Select(Microsoft.UI.Xaml.Automation.AutomationProperties.GetName).ToArray(),
                     }, ReportOptions)); break;
                 case "dashboardScroll": ((ScrollViewer)_dashboardPage!.FindName("DashboardScroll")).ChangeView(null, data.GetProperty("offset").GetDouble(), null, true); break;
                 case "permissions": navigation.SelectedItem = _shell.FindName("PermissionsItem"); break;
@@ -251,6 +297,12 @@ public partial class App : Microsoft.UI.Xaml.Application
                         Sources = _intermediateApi.Sources.Select(src => new { src.Code, src.AvailableVolume }),
                     }, ReportOptions)); break;
                 case "preparations": navigation.SelectedItem = _shell.FindName("PreparationsItem"); break;
+                case "preparationScenario":
+                    _stockApi.Scene = data.GetProperty("scene").GetString()!;
+                    _intermediateApi.Scene = _stockApi.Scene;
+                    if (_stockApi.Scene == "Loading") { _ = _stockPage!.LoadAsync(); _ = _intermediatePage!.LoadAsync(); }
+                    else { await _stockPage!.LoadAsync(); await _intermediatePage!.LoadAsync(); }
+                    break;
                 case "preparationSelection":
                     ((ListView)_stockPage!.FindName("PreparationsList")).SelectedIndex = data.GetProperty("index").GetInt32();
                     break;
@@ -266,6 +318,14 @@ public partial class App : Microsoft.UI.Xaml.Application
                         ButtonEnabled = ((Button)_stockPage.FindName("ViewPreparationButton")).IsEnabled,
                         EmptyVisible = ((StackPanel)_stockPage.FindName("EmptyState")).Visibility.ToString(),
                         stockView.HasSearchCriteria, stockView.EmptyTitle,
+                        stockView.IsLoadingList, stockView.HasListMessage, stockView.ListMessage,
+                        stockView.HasResults, stockView.ShowSelectionAction, stockView.PageDisplay,
+                        Scale = _stockPage.XamlRoot.RasterizationScale,
+                        PageWidth = _stockPage.ActualWidth, PageHeight = _stockPage.ActualHeight,
+                        ToolbarWidth = ((Grid)_stockPage.FindName("FilterGrid")).ActualWidth,
+                        FilterRow = Grid.GetRow((StackPanel)_stockPage.FindName("Filters")),
+                        EmptyHeight = ((StackPanel)_stockPage.FindName("EmptyState")).ActualHeight,
+                        Availability = stockView.Items.Select(p => new { p.Code, p.Availability.AvailableDisplay, p.Availability.PercentDisplay, p.StatusLabel, p.InventoryLabel }),
                         DetailId = _stockPage.DetailSheet?.Detail.Preparation.Id,
                         IntermediateSelectedId = intermediateView.SelectedPreparation?.Id,
                         IntermediateCanOpen = intermediateView.OpenSelectedPreparationCommand.CanExecute(null)
@@ -291,6 +351,35 @@ public partial class App : Microsoft.UI.Xaml.Application
                     }, ReportOptions));
                     break;
                 case "size": _window.AppWindow.MoveAndResize(new RectInt32(0, 0, data.GetProperty("width").GetInt32(), data.GetProperty("height").GetInt32())); break;
+                case "themeReport":
+                    object Bounds(FrameworkElement element)
+                    {
+                        var pt = element.TransformToVisual(element.XamlRoot.Content).TransformPoint(new Windows.Foundation.Point());
+                        return new { x = pt.X, y = pt.Y, width = element.ActualWidth, height = element.ActualHeight };
+                    }
+                    var stockEditor = _stockPage!.Editor;
+                    var osBackground = new Windows.UI.ViewManagement.UISettings().GetColorValue(Windows.UI.ViewManagement.UIColorType.Background);
+                    File.WriteAllText(Path.Combine(_directory, "theme-layout.json"), JsonSerializer.Serialize(new
+                    {
+                        fixtureOnly = true, requestedTheme = RequestedTheme.ToString(), actualTheme = _shell.ActualTheme.ToString(),
+                        osBackground = osBackground.ToString(CultureInfo.InvariantCulture),
+                        scale = _shell.XamlRoot.RasterizationScale, rootSize = _shell.XamlRoot.Size,
+                        content = Bounds((FrameworkElement)_window.Content),
+                        text = ((Microsoft.UI.Xaml.Media.SolidColorBrush)Resources["LimsTextPrimaryBrush"]).Color.ToString(CultureInfo.InvariantCulture),
+                        surface = ((Microsoft.UI.Xaml.Media.SolidColorBrush)Resources["LimsSurfaceBrush"]).Color.ToString(CultureInfo.InvariantCulture),
+                        paneOpen = navigation.IsPaneOpen,
+                        dialog = stockEditor is null ? null : new
+                        {
+                            theme = stockEditor.ActualTheme.ToString(), root = Bounds((FrameworkElement)stockEditor.FindName("EditorRoot")),
+                            cancel = Bounds((FrameworkElement)stockEditor.FindName("CancelButton")), save = Bounds((FrameworkElement)stockEditor.FindName("SaveButton")),
+                            scroll = Bounds((FrameworkElement)stockEditor.FindName("StepScroll")),
+                            scrollableHeight = ((ScrollViewer)stockEditor.FindName("StepScroll")).ScrollableHeight,
+                            popup = StockPopupFields
+                                .Select(n => (LimsPopupField)stockEditor.FindName(n)).Where(f => f.IsPopupOpen)
+                                .Select(f => new { f.Name, f.Placement }).ToArray()
+                        }
+                    }, ReportOptions));
+                    break;
                 case "standards": navigation.SelectedItem = _shell.FindName("StandardsItem"); break;
                 case "home": navigation.SelectedItem = _shell.FindName("HomeItem"); break;
                 case "icons":
@@ -379,6 +468,17 @@ public partial class App : Microsoft.UI.Xaml.Application
                     }
                     break;
                 case "reload": await _page.LoadAsync(); break;
+                case "availabilityRows":
+                    if (data.TryGetProperty("offset", out var rowOffset))
+                        StandardsAvailabilityChecks.Scroll(_page).ChangeView(null, rowOffset.GetDouble(), null, true);
+                    else if (data.TryGetProperty("pageDelta", out var pageDelta))
+                    {
+                        if (pageDelta.GetInt32() > 0) await _page.ViewModel.GoToNextPageAsync(CancellationToken.None);
+                        else await _page.ViewModel.GoToPreviousPageAsync(CancellationToken.None);
+                    }
+                    else
+                        File.WriteAllText(Path.Combine(_directory, "availability-rows.json"), JsonSerializer.Serialize(StandardsAvailabilityChecks.Report(_page), ReportOptions));
+                    break;
                 case "report":
                     var surface = _editor?.FindName("EditorSurface") as FrameworkElement;
                     var scroll = _editor?.FindName("EditorScrollViewer") as ScrollViewer;
@@ -450,6 +550,16 @@ public partial class App : Microsoft.UI.Xaml.Application
             iconVisible = ((FrameworkElement)sheet.FindName("AvailabilityVial")).Visibility == Visibility.Visible,
             trackHeight = track?.ActualHeight, trackWidth = track?.ActualWidth, indicatorWidth = indicator?.ActualWidth,
         };
+    }
+
+    private static IEnumerable<T> VisualDescendants<T>(DependencyObject root) where T : DependencyObject
+    {
+        for (var i = 0; i < VisualTreeHelper.GetChildrenCount(root); i++)
+        {
+            var child = VisualTreeHelper.GetChild(root, i);
+            if (child is T match) yield return match;
+            foreach (var descendant in VisualDescendants<T>(child)) yield return descendant;
+        }
     }
 
     private static FrameworkElement? FindNamedElement(DependencyObject parent, string name)

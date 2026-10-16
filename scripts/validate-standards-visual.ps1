@@ -3,6 +3,7 @@
     [string]$Action = 'Inspect',
     [string]$Command,
     [string]$Name = 'capture',
+    [string]$CaptureName,
     [string]$Keys,
     [switch]$SkipBuild,
     [switch]$PopupOnly,
@@ -200,7 +201,10 @@ Start-Sleep -Milliseconds 180
 if ($Action -in @('PressCapture', 'HoverCapture')) {
     $nameCondition = [System.Windows.Automation.PropertyCondition]::new([System.Windows.Automation.AutomationElement]::NameProperty, $Name)
     $buttonCondition = [System.Windows.Automation.PropertyCondition]::new([System.Windows.Automation.AutomationElement]::ControlTypeProperty, [System.Windows.Automation.ControlType]::Button)
-    $pressedCondition = [System.Windows.Automation.AndCondition]::new($processCondition, $nameCondition, $buttonCondition)
+    $checkBoxCondition = [System.Windows.Automation.PropertyCondition]::new([System.Windows.Automation.AutomationElement]::ControlTypeProperty, [System.Windows.Automation.ControlType]::CheckBox)
+    $listItemCondition = [System.Windows.Automation.PropertyCondition]::new([System.Windows.Automation.AutomationElement]::ControlTypeProperty, [System.Windows.Automation.ControlType]::ListItem)
+    $interactiveCondition = [System.Windows.Automation.OrCondition]::new([System.Windows.Automation.Condition[]]@($buttonCondition, $checkBoxCondition, $listItemCondition))
+    $pressedCondition = [System.Windows.Automation.AndCondition]::new($processCondition, $nameCondition, $interactiveCondition)
     $pressedButton = [System.Windows.Automation.AutomationElement]::RootElement.FindFirst([System.Windows.Automation.TreeScope]::Descendants, $pressedCondition)
     if ($null -eq $pressedButton -or -not $pressedButton.Current.IsEnabled) { throw "Enabled button not found: $Name" }
     $pressedButton.SetFocus()
@@ -222,7 +226,8 @@ if ($PopupOnly -or $IncludePopups -or $Section) {
         if (-not [LimsVisualCapture]::PrintWindow($handle, $captureDc, 2)) { throw 'The fixture window could not be captured.' }
     } finally { $graphics.ReleaseHdc($captureDc) }
 }
-$capturePath = Join-Path $evidence ($Name + '.png')
+$outputName = if ($CaptureName) { $CaptureName } else { $Name }
+$capturePath = Join-Path $evidence ($outputName + '.png')
 $bitmap.Save($capturePath, [Drawing.Imaging.ImageFormat]::Png)
 } finally {
     if ($Action -eq 'PressCapture') {

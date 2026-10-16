@@ -28,13 +28,17 @@ public sealed class DashboardPostgresTests
             """);
         var now = DateTimeOffset.UtcNow; var today = DateOnly.FromDateTime(now.ToOffset(TimeSpan.FromHours(-6)).DateTime);
         var method = await db.ReferenceMethods.FirstAsync(); var unit = await db.ReferenceUnits.SingleAsync(u => u.Symbol == "mg"); var location = await db.ReferenceLocations.FirstAsync();
-        ReferenceMaterial Material(string name, int days) => new(Guid.NewGuid(),name,null,null,method,100,"LOTE-TEST","Prueba",today.AddDays(-20),today.AddDays(days),100,unit,1,"Ambiente",location,42,now);
+        ReferenceMaterial Material(string name, int days, ReferenceMethod? assignedMethod = null) => new(Guid.NewGuid(),name,null,null,assignedMethod ?? method,100,"LOTE-TEST","Prueba",today.AddDays(-20),today.AddDays(days),100,unit,1,"Ambiente",location,42,now);
         var expired=Material("Expirado",-1); var depleted=Material("Agotado y vencido",-1);
         var exhausted=Material("Agotado vigente",20); exhausted.Consume(100,42,now,today);
         var archived=Material("Archivado",1); archived.Archive("Prueba",42,now);
         var near=Material("Vence hoy",0); near.Consume(80,42,now,today);
         db.ReferenceMaterials.AddRange(expired,depleted,exhausted,archived,near);
         for (var i=1;i<=10;i++) db.ReferenceMaterials.Add(Material($"Futuro {i}", i*100));
+        var otherMethod = new ReferenceMethod(await db.ReferenceMethods.MaxAsync(m => m.Id) + 1, "Otro método completo", true);
+        db.ReferenceMethods.Add(otherMethod);
+        // These 37 records are deliberately far outside the six nearest expirations.
+        for (var i=1;i<=37;i++) db.ReferenceMaterials.Add(Material($"Fuera de prioridades {i}", 4000+i, otherMethod));
         await db.SaveChangesAsync();
         await db.Database.ExecuteSqlInterpolatedAsync($"UPDATE reference_materials SET available_quantity=0 WHERE id={depleted.Id}");
         var created = await new StockService(new StockRepository(db), TimeProvider.System).CreateAsync(fixture.Request(50),42,default);
@@ -42,7 +46,7 @@ public sealed class DashboardPostgresTests
         var permissions = new PermissionRepository(db,new() { EnforceIndividualPermissions=true },TimeProvider.System);
         var repository = new DashboardRepository(db,permissions,new() { PurchasingDepartmentName="Compras de prueba" },TimeProvider.System);
         var admin=(await repository.GetAsync(42,default))!;
-        Assert.Equal("Administrator",admin.View); Assert.Equal(16,admin.Standards!.Registered);
+        Assert.Equal("Administrator",admin.View); Assert.Equal(53,admin.Standards!.Registered);
         Assert.Equal(1,admin.Standards.Expired); Assert.Equal(2,admin.Standards.Distribution.Single(s=>s.Status=="Depleted").Count);
         Assert.Equal(6,admin.Expirations.Count); Assert.Equal(near.Id,admin.Expirations[0].Id); Assert.Equal(0,admin.Expirations[0].DaysRemaining);
         Assert.Contains(admin.Expirations,r=>r.Id==exhausted.Id && r.AvailabilityPercent==0);
@@ -50,17 +54,31 @@ public sealed class DashboardPostgresTests
         Assert.Equal(20,admin.LowAvailability.Single(r=>r.Id==near.Id).AvailabilityPercent);
         Assert.Equal(1,admin.Stock!.Available); Assert.Contains(admin.Activity,a=>a.Kind=="Stock" && a.RecordId==created.Value!.Preparation.Id);
         Assert.Equal(admin.Standards.Registered,admin.Standards.Distribution.Sum(s=>s.Count));
+        var methods = Assert.IsType<Lims.Contracts.Dashboard.DashboardMethodStatistics>(admin.MethodStatistics);
+        Assert.Equal("Standards", methods.Scope); Assert.Equal(53, methods.Total);
+        Assert.Equal(methods.Total, methods.Methods.Sum(m => m.Count));
+        Assert.Equal(16, methods.Methods.Single(m => m.Method == method.Name).Count);
+        var completeMethod = methods.Methods.Single(m => m.Method == otherMethod.Name);
+        Assert.Equal(37, completeMethod.Count); Assert.Equal(37, completeMethod.AvailabilityCount);
+        Assert.Equal(100m, completeMethod.AverageAvailabilityPercent);
+        Assert.DoesNotContain(admin.Expirations, r => r.Method == otherMethod.Name);
+        Assert.Equal(admin.Standards.Active, methods.AvailabilityTotal);
+        Assert.Equal(12, methods.Methods.Single(m => m.Method == method.Name).AvailabilityCount);
+        Assert.InRange(Math.Abs(methods.Methods.Single(m => m.Method == method.Name).AverageAvailabilityPercent!.Value - 1070m / 12m), 0m, .000001m);
         await db.Database.ExecuteSqlRawAsync("UPDATE usuarios SET id_rol=2 WHERE id=42");
         db.Add(new UserPermissionSet { UserId=42,Version=Guid.NewGuid() });
         db.Add(new UserPermissionAssignment { UserId=42,Code=PermissionCatalog.StockView,IsGranted=true,ActorUserId=42,ChangedAt=now }); await db.SaveChangesAsync();
         var limited=(await repository.GetAsync(42,default))!;
         Assert.Equal("Laboratory",limited.View); Assert.Null(limited.Standards); Assert.Null(limited.Intermediate); Assert.NotNull(limited.Stock);
         Assert.All(limited.Expirations,r=>Assert.Equal("Stock",r.Kind)); Assert.All(limited.Activity,a=>Assert.Equal("Stock",a.Kind));
+        Assert.Equal("Stock", limited.MethodStatistics!.Scope); Assert.Equal(1, limited.MethodStatistics.Total);
         await db.Database.ExecuteSqlRawAsync("UPDATE user_permission_assignments SET is_granted=false WHERE user_id=42");
         var revoked=(await repository.GetAsync(42,default))!;
         Assert.Null(revoked.Stock); Assert.Empty(revoked.Activity); Assert.Empty(revoked.Expirations);
+        Assert.Null(revoked.MethodStatistics);
         await db.Database.ExecuteSqlRawAsync("UPDATE usuarios SET id_rol=3,id_departamento=8 WHERE id=42");
         var purchasing=(await repository.GetAsync(42,default))!;
         Assert.Equal("Purchasing",purchasing.View); Assert.Null(purchasing.Standards); Assert.Empty(purchasing.Activity);
+        Assert.Null(purchasing.MethodStatistics);
     }
 }

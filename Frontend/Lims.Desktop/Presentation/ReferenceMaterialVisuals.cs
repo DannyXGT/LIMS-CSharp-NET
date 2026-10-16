@@ -1,4 +1,5 @@
 using Lims.Contracts.ReferenceMaterials;
+using Microsoft.UI.Xaml;
 
 namespace Lims.Desktop.Presentation;
 
@@ -9,6 +10,16 @@ public static class ReferenceMaterialVisuals
         available.HasValue && total > 0 && available >= 0 && available <= total
             ? (double)(available.Value / total * 100)
             : null;
+
+    public static Visibility AvailabilityVisibility(decimal? available, decimal total) =>
+        Availability(available, total).HasValue ? Visibility.Visible : Visibility.Collapsed;
+
+    public static double AvailabilityValue(decimal? available, decimal total) => Availability(available, total) ?? 0;
+
+    public static string AvailabilityLabel(decimal? available, decimal total) =>
+        Availability(available, total) is { } percent
+            ? $"{ReferenceMaterialPresentation.Number(decimal.Round((decimal)percent, 2))} %"
+            : string.Empty;
 
     public static string RowName(ReferenceMaterialSummary row)
     {

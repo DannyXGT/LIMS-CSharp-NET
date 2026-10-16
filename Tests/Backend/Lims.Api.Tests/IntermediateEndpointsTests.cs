@@ -87,7 +87,7 @@ public sealed class IntermediateEndpointsTests : IDisposable
             Actor = actor; var calculation = IntermediateCalculator.Calculate(request.Calculation, [Source]);
             return Task.FromResult(OperationResult.Success(new IntermediateDetail(new(request.RequestId, "INT-TEST", request.Name, "Ensayo", 1, 100, "mL", 100, calculation.Results, request.PreparationDate, request.ExpirationDate, "Test User", "Active"), calculation, [], null, null, now, now, "Test User", Guid.NewGuid())));
         }
-        public Task<IntermediatePage> ListAsync(string? search, int page, int pageSize, DateOnly today, CancellationToken cancellationToken) => Task.FromResult(new IntermediatePage([], page, pageSize, 0));
+        public Task<IntermediatePage> ListAsync(string? search, int page, int pageSize, DateOnly today, CancellationToken cancellationToken, PreparationListFilter? filter = null) => Task.FromResult(new IntermediatePage([], page, pageSize, 0));
         public Task<IntermediateDetail?> GetAsync(Guid id, DateOnly today, CancellationToken cancellationToken) => Task.FromResult<IntermediateDetail?>(null);
     }
     public void Dispose() { _client.Dispose(); _factory.Dispose(); _base.Dispose(); }

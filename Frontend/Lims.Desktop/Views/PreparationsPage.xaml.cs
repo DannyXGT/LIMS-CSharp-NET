@@ -37,12 +37,7 @@ public sealed partial class PreparationsPage : Page
     }
     private async void OnTabChanged(object? sender, EventArgs args)
     {
-        _stock.ViewModel.ClearSelection();
-        _intermediate.ViewModel.ClearSelection();
         PreparationHost.Content = ShowIntermediate ? (Page)_intermediate : _stock;
-        PreparationDescription.Text = ShowIntermediate
-            ? "Soluciones intermedias compuestas a partir de preparaciones."
-            : "Preparaciones trazables desde un estándar.";
         SelectionChanged?.Invoke(this, EventArgs.Empty);
         Motion.Enter(PreparationHost, x: ShowIntermediate ? 6 : -6, milliseconds: 160);
         await LoadAsync();

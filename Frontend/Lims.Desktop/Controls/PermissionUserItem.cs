@@ -37,6 +37,7 @@ public sealed class PermissionUserItem : UserControl
         Loaded += (_, _) => Attach();
         Unloaded += (_, _) => Detach();
         ActualThemeChanged += (_, _) => Theme();
+        foreach (var text in new[] { _name, _email, _role }) text.SizeChanged += OnIdentitySizeChanged;
         PointerEntered += (_, _) => PermissionsMotion.Opacity(_hover, 1, 120);
         PointerExited += (_, _) => PermissionsMotion.Opacity(_hover, 0, 120);
     }
@@ -76,7 +77,16 @@ public sealed class PermissionUserItem : UserControl
     {
         _initials.Text = Row?.Initials ?? string.Empty; _name.Text = Row?.User.Name ?? string.Empty; _email.Text = Row?.User.Email ?? string.Empty;
         _role.Text = Row?.User.Role ?? string.Empty; _summary.Text = Row?.Summary ?? string.Empty;
-        ToolTipService.SetToolTip(this, Row is null ? null : $"{Row.User.Name}\n{Row.User.Email}\n{Row.User.Department}\n{Row.Summary}");
+        // Only clipped identity text needs a tooltip; the row itself already exposes its name.
+        _role.Text = Row is null ? string.Empty : $"{Row.User.Role} · {Row.User.Department}";
+        DispatcherQueue.TryEnqueue(UpdateIdentityToolTips);
+    }
+    private void OnIdentitySizeChanged(object sender, SizeChangedEventArgs e) => UpdateIdentityToolTips();
+    private void UpdateIdentityToolTips()
+    {
+        ToolTipService.SetToolTip(_name, _name.IsTextTrimmed ? _name.Text : null);
+        ToolTipService.SetToolTip(_email, _email.IsTextTrimmed ? _email.Text : null);
+        ToolTipService.SetToolTip(_role, _role.IsTextTrimmed ? _role.Text : null);
     }
     private void UpdateSelection(bool animate)
     {

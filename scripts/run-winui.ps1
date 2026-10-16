@@ -12,12 +12,14 @@ $projectPath = Join-Path $projectRoot 'Frontend\Lims.Desktop\Lims.Desktop.csproj
 $targetFramework = 'net10.0-windows10.0.26100.0'
 $runtimeIdentifier = 'win-' + $Architecture.ToLowerInvariant()
 
-dotnet build $projectPath -c $Configuration -p:Platform=$Architecture
+# Match WinAppCLI project-mode evaluation: RID selects the architecture without
+# adding a separate Platform output directory that leaves bin/Debug/AppX stale.
+dotnet build $projectPath -c $Configuration -r $runtimeIdentifier -m:1 -p:BuildInParallel=false
 if ($LASTEXITCODE -ne 0) {
     throw 'WinUI build failed.'
 }
 
-$sourcePath = Join-Path $projectRoot "Frontend\Lims.Desktop\bin\$Architecture\$Configuration\$targetFramework\$runtimeIdentifier"
+$sourcePath = Join-Path $projectRoot "Frontend\Lims.Desktop\bin\$Configuration\$targetFramework\$runtimeIdentifier"
 if (-not (Test-Path -LiteralPath (Join-Path $sourcePath 'AppxManifest.xml'))) {
     throw "Compiled AppxManifest.xml was not found at $sourcePath."
 }
@@ -31,27 +33,12 @@ if (-not (Test-Path -LiteralPath $winApp)) {
     throw "WinApp CLI was not found at $preferredWinApp or $packageWinApp."
 }
 
-$temporaryRoot = [System.IO.Path]::GetFullPath([System.IO.Path]::GetTempPath())
-$stagePath = Join-Path $temporaryRoot ('LimsWinUI-run-' + [Guid]::NewGuid().ToString('N'))
-New-Item -ItemType Directory -Path $stagePath | Out-Null
-
-try {
-    Get-ChildItem -LiteralPath $sourcePath |
-        Where-Object { $_.Name -ne 'Lims.Desktop.build.appxrecipe' -and $_.Name -ne 'publish' } |
-        Copy-Item -Destination $stagePath -Recurse
-
-    & $winApp run $stagePath `
-        --manifest (Join-Path $stagePath 'AppxManifest.xml') `
-        --exe Lims.Desktop.exe `
-        --with-alias
-    $winAppExitCode = $LASTEXITCODE
-}
-finally {
-    $resolvedStage = [System.IO.Path]::GetFullPath($stagePath)
-    if ($resolvedStage.StartsWith($temporaryRoot, [StringComparison]::OrdinalIgnoreCase) -and
-        [System.IO.Path]::GetFileName($resolvedStage).StartsWith('LimsWinUI-run-', [StringComparison]::Ordinal)) {
-        Remove-Item -LiteralPath $resolvedStage -Recurse -Force -ErrorAction SilentlyContinue
-    }
-}
-
-exit $winAppExitCode
+Write-Output ('Compiled desktop: ' + (Join-Path $sourcePath 'Lims.Desktop.dll'))
+Write-Output ('SHA256: ' + (Get-FileHash -LiteralPath (Join-Path $sourcePath 'Lims.Desktop.dll')).Hash)
+& $winApp run $projectPath `
+    --configuration $Configuration `
+    --arch $Architecture `
+    --with-alias `
+    --no-build `
+    --no-restore
+exit $LASTEXITCODE

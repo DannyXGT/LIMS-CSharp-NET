@@ -57,11 +57,12 @@ public sealed record StockSummary(Guid Id, string Code, string Name, string Sour
     [JsonIgnore] public string ConcentrationDisplay => StockPresentation.Quantity(ActualConcentration, ConcentrationUnit);
     [JsonIgnore] public string FinalDisplay => StockPresentation.Quantity(FinalVolume, FinalVolumeUnit);
     [JsonIgnore] public string DateDisplay => ReferenceMaterialPresentation.Date(PreparationDate);
-    [JsonIgnore] public string StatusLabel => Status == "Active" && Availability.IsDepleted ? "Agotado" : Status switch { "Active" => "Disponible", "Expired" => "Expirado", "Depleted" => "Agotado", _ => "No disponible" };
-    [JsonIgnore] public string StatusTone => Status == "Depleted" || Availability.IsDepleted ? "Danger" : Status == "Active" ? "Success" : "Warning";
+    [JsonIgnore] public string StatusLabel => Status switch { "Active" or "Depleted" => "Vigente", "Expired" => "Vencido", "Archived" => "Archivado", _ => "No disponible" };
+    [JsonIgnore] public string StatusTone => Status switch { "Active" or "Depleted" => "Success", "Expired" => "Danger", _ => "Neutral" };
+    [JsonIgnore] public string InventoryLabel => !Availability.IsCalculated ? "Saldo no informado" : Availability.IsDepleted ? "Agotado" : Availability.RemainingPercent <= 60 ? "Disponibilidad baja" : "Con volumen";
     public override string ToString() => $"{Code} · {Name}";
 }
-public sealed record StockPage(IReadOnlyList<StockSummary> Items, int Page, int PageSize, int TotalCount);
+public sealed record StockPage(IReadOnlyList<StockSummary> Items, int Page, int PageSize, int TotalCount, bool FiltersApplied = false);
 public sealed record StockMovement(Guid Id, decimal Quantity, string Unit, decimal BalanceBefore,
     decimal BalanceAfter, string Actor, DateTimeOffset OccurredAt)
 {
@@ -72,7 +73,7 @@ public sealed record StockMovement(Guid Id, decimal Quantity, string Unit, decim
 }
 public sealed record StockDetail(StockSummary Preparation, StockSource Source, StockCalculation Calculation,
     StockMovement Consumption, string? Notes, DateTimeOffset CreatedAt, DateTimeOffset UpdatedAt, Guid Version,
-    string? StorageTemperature = null)
+    string? StorageTemperature = null, IReadOnlyList<PreparationUsage>? UsageHistory = null)
 {
     [JsonIgnore] public string CreatedDisplay => ReferenceMaterialPresentation.LocalTimestamp(CreatedAt);
     [JsonIgnore] public string UpdatedDisplay => ReferenceMaterialPresentation.LocalTimestamp(UpdatedAt);

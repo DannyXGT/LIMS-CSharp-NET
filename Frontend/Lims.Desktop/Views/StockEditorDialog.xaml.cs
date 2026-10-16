@@ -16,6 +16,9 @@ public sealed partial class StockEditorDialog : ContentDialog
     {
         ViewModel = viewModel;
         InitializeComponent();
+        foreach (var field in new LimsPopupField[] { SourceList, ConcentrationUnitSelect, VolumeUnitSelect, ActualUnitSelect, PreparationDatePicker, ExpirationDatePicker })
+            field.PopupBoundary = StepScroll;
+        StepScroll.ViewChanged += (_, _) => LimsPopupField.CloseForRootAfterLayout(this);
         _searchTimer.Tick += async (_, _) => { _searchTimer.Stop(); await ViewModel.SearchSourcesAsync(_search, 1, CancellationToken.None); Render(); };
     }
     public StockViewModel ViewModel { get; }

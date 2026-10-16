@@ -58,7 +58,7 @@ public abstract class LimsPopupField : Button
         Click += (_, _) => { if (IsPopupOpen) ClosePopup(); else OpenPopup(); };
         Unloaded += (_, _) => CloseImmediately();
         IsEnabledChanged += (_, _) => { if (!IsEnabled) CloseImmediately(); };
-        SizeChanged += (_, _) => { if (IsPopupOpen) CloseImmediately(); };
+        SizeChanged += (_, _) => { if (IsPopupOpen) CloseForRootAfterLayout(this); };
         LostFocus += OnFocusLost;
         Surface.LostFocus += OnFocusLost;
         Surface.AddHandler(PreviewKeyDownEvent, new KeyEventHandler(OnPopupKeyDown), true);
@@ -163,7 +163,20 @@ public abstract class LimsPopupField : Button
         if (root is not null && Active.TryGetValue(root, out var active)) active.Field?.CloseImmediately();
     }
 
-    private void OnRootChanged(XamlRoot sender, XamlRootChangedEventArgs args) => CloseImmediately();
+    /// <summary>Scroll/size notifications can run inside measure; defer popup tree changes.</summary>
+    public static void CloseForRootAfterLayout(FrameworkElement context)
+    {
+        var root = context.XamlRoot;
+        if (root is null || !Active.TryGetValue(root, out var active) || active.Field is not { } field) return;
+        var version = field._version;
+        context.DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, () =>
+        {
+            // Do not close a different popup opened after the scroll notification.
+            if (active.Field == field && field._version == version) field.CloseImmediately();
+        });
+    }
+
+    private void OnRootChanged(XamlRoot sender, XamlRootChangedEventArgs args) => CloseForRootAfterLayout(this);
     private void OnFocusLost(object sender, RoutedEventArgs args) => DispatcherQueue.TryEnqueue(() =>
     {
         if (!IsPopupOpen || XamlRoot is null) return;

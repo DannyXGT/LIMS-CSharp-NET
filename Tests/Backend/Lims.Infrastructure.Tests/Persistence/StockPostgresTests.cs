@@ -157,7 +157,7 @@ public sealed class StockPostgresTests
         await context.SaveChangesAsync();
         var depleted = (await service.GetAsync(request.RequestId, CancellationToken.None)).Value!;
         Assert.Equal(0m, depleted.Preparation.AvailableVolume);
-        Assert.Equal("Agotado", depleted.Preparation.StatusLabel);
+        Assert.Equal("Agotado", depleted.Preparation.InventoryLabel);
         Assert.Equal("Danger", depleted.Preparation.Availability.Tone);
     }
     [StockPostgresFact]

@@ -13,7 +13,13 @@ public sealed partial class IntermediateEditorDialog : ContentDialog
     private bool _ready;
     private bool _syncParent;
     private Func<Task>? _confirmation;
-    public IntermediateEditorDialog(IntermediateViewModel viewModel) { ViewModel = viewModel; InitializeComponent(); }
+    public IntermediateEditorDialog(IntermediateViewModel viewModel)
+    {
+        ViewModel = viewModel; InitializeComponent();
+        foreach (var field in new LimsPopupField[] { MethodSelect, ParentSelect, PreparationPicker, ExpirationPicker })
+            field.PopupBoundary = EditorScroll;
+        EditorScroll.ViewChanged += (_, _) => LimsPopupField.CloseForRootAfterLayout(this);
+    }
     public IntermediateViewModel ViewModel { get; }
     public bool ViewCreatedDetail { get; private set; }
     private async void OnOpened(ContentDialog sender, ContentDialogOpenedEventArgs args)

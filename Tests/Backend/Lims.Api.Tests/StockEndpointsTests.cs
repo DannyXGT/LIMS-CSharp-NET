@@ -124,7 +124,7 @@ public sealed class StockEndpointsTests : IDisposable
                 new(Calculation.SourceMaterialId, "Estándar", null, null, "Lote", "Marca", "Ensayo", 100, 100, 100, "mg", new DateOnly(2027, 12, 31), "Laboratorio", Calculation.SourceVersion),
                 Result, new(Guid.NewGuid(), 100, "mg", 100, 0, "Test User", DateTimeOffset.UtcNow), request.Notes, DateTimeOffset.UtcNow, DateTimeOffset.UtcNow, Guid.NewGuid())));
         }
-        public Task<OperationResult<StockPage>> ListAsync(string? search, int page, int pageSize, CancellationToken cancellationToken) => Task.FromResult(OperationResult.Success(new StockPage([], page, pageSize, 0)));
+        public Task<OperationResult<StockPage>> ListAsync(string? search, int page, int pageSize, CancellationToken cancellationToken, PreparationListFilter? filter = null) => Task.FromResult(OperationResult.Success(new StockPage([], page, pageSize, 0)));
         public Task<OperationResult<StockDetail>> GetAsync(Guid id, CancellationToken cancellationToken) => Task.FromResult(OperationResult.Failure<StockDetail>(new(ErrorCodes.NotFound, "No existe.")));
         private static readonly StockCalculation Result = new(100, 100, "mg", 100, 0, 0, true, 100, 100, 100, "mg/L", 1000, "mL", StockCalculator.MassFormula);
     }

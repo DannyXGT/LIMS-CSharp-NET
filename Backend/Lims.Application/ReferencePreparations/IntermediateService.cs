@@ -29,10 +29,11 @@ public sealed class IntermediateService(IIntermediateRepository repository, Time
         var fingerprint = Convert.ToHexString(SHA256.HashData(JsonSerializer.SerializeToUtf8Bytes(new { request, actorUserId })));
         return repository.CreateAsync(request, actorUserId, fingerprint, clock.GetUtcNow(), cancellationToken);
     }
-    public async Task<OperationResult<IntermediatePage>> ListAsync(string? search, int page, int pageSize, CancellationToken cancellationToken)
+    public async Task<OperationResult<IntermediatePage>> ListAsync(string? search, int page, int pageSize, CancellationToken cancellationToken, PreparationListFilter? filter = null)
     {
+        if (filter?.IsValid == false) return Fail<IntermediatePage>(ErrorCodes.ValidationError, "Los filtros solicitados son inválidos.");
         if (page is < 1 or > 1000000 || pageSize is < 1 or > 100) return Fail<IntermediatePage>(ErrorCodes.ValidationError, "La página solicitada es inválida.");
-        return OperationResult.Success(await repository.ListAsync(search, page, pageSize, Today, cancellationToken).ConfigureAwait(false));
+        return OperationResult.Success(await repository.ListAsync(search, page, pageSize, Today, cancellationToken, filter).ConfigureAwait(false));
     }
     public async Task<OperationResult<IntermediateDetail>> GetAsync(Guid id, CancellationToken cancellationToken)
     {

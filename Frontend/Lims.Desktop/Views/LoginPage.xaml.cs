@@ -39,7 +39,8 @@ public sealed partial class LoginPage : Page
         HeroBrandTagline.Text = "Total Quality. Assured.";
         HeroHeadline.Text = "Gestión de\nlaboratorio,\npara un mundo\nmás seguro.";
         HeroSupport.Text = "Datos confiables.\nProcesos eficientes.\nResultados con impacto.";
-        LoginEntrance.Begin();
+        if (Lims.DesignSystem.Presentation.Motion.Enabled) LoginEntrance.Begin();
+        else LoginCard.Opacity = 1;
         IdentifierBox.Focus(FocusState.Programmatic);
     }
 
@@ -99,7 +100,8 @@ public sealed partial class LoginPage : Page
                 if (ViewModel.HasMessage)
                 {
                     LoginError.Opacity = 0;
-                    ErrorEntrance.Begin();
+                    if (Lims.DesignSystem.Presentation.Motion.Enabled) ErrorEntrance.Begin();
+                    else LoginError.Opacity = 1;
                 }
             });
         }

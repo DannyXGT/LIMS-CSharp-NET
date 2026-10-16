@@ -22,12 +22,28 @@ public sealed class DashboardRepository(LimsDbContext db, IPermissionRepository 
         var until = today.AddDays(window ?? 0);
         DashboardStandards? standards = null;
         DashboardPreparations? stock = null, intermediate = null;
+        DashboardMethodStatistics? methodStatistics = null;
+        var preparationMethods = new List<DashboardMethodSummary>();
         var expiry = new List<DashboardMaterial>(); var low = new List<DashboardMaterial>(); var activity = new List<DashboardActivity>();
         // Sequential queries: one scoped DbContext, no concurrent readers, no desktop inventory download.
         if (access.Standards)
         {
             var all = db.ReferenceMaterials.AsNoTracking();
             var usable = all.Where(m => m.Status == ReferenceMaterialStatus.Active && m.AvailableQuantity > 0 && m.ExpirationDate >= today);
+            // Whole authorized catalogue, never the limited priority lists. The left join
+            // retains legacy records whose method cannot be resolved.
+            var measures = from material in all
+                join method in db.ReferenceMethods.AsNoTracking() on material.MethodId equals method.Id into methods
+                from method in methods.DefaultIfEmpty()
+                select new MethodMeasure
+                {
+                    Method = method == null || method.Name.Trim() == "" ? "Sin método" : method.Name.Trim(),
+                    AvailabilityPercent = material.Status == ReferenceMaterialStatus.Active && material.ExpirationDate >= today &&
+                        material.AvailableQuantity > 0 && material.PresentationQuantity > 0 && material.PackageCount > 0 &&
+                        material.AvailableQuantity <= material.PresentationQuantity * material.PackageCount
+                        ? (decimal?)(material.AvailableQuantity / (material.PresentationQuantity * material.PackageCount) * 100) : null
+                };
+            methodStatistics = Statistics("Standards", await AggregateMethodsAsync(measures, ct));
             var counts = await all.GroupBy(m => m.Status == ReferenceMaterialStatus.Active ?
                     (m.AvailableQuantity <= 0 ? ReferenceMaterialStatus.Depleted : m.ExpirationDate < today ? ReferenceMaterialStatus.Expired : ReferenceMaterialStatus.Active) : m.Status)
                 .Select(g => new { Status = g.Key, Count = g.Count() }).ToArrayAsync(ct);
@@ -66,6 +82,24 @@ public sealed class DashboardRepository(LimsDbContext db, IPermissionRepository 
                 await validBalance.CountAsync(p => p.AvailableVolume <= p.FinalVolume * .60m, ct), window is null ? null : await usable.CountAsync(p => p.ExpirationDate <= until, ct),
                 await all.CountAsync(p => p.Status == "Active" && p.ExpirationDate < today, ct));
             if (kind == "Stock") stock = summary; else intermediate = summary;
+            if (!access.Standards)
+            {
+                var measures = from preparation in all
+                    join method in db.ReferenceMethods.AsNoTracking() on preparation.MethodId equals (int?)method.Id into methods
+                    from method in methods.DefaultIfEmpty()
+                    select new MethodMeasure
+                    {
+                        Method = method == null || method.Name.Trim() == "" ? "Sin método" : method.Name.Trim(),
+                        AvailabilityPercent = preparation.Status == "Active" && preparation.AvailableVolume > 0 &&
+                            preparation.ExpirationDate >= today && preparation.PreparationDate <= today &&
+                            preparation.MethodId != null && method != null && method.IsActive &&
+                            (preparation.Kind == "Intermedia" || preparation.SourceMaterial != null && preparation.SourceMaterial.Status == ReferenceMaterialStatus.Active) &&
+                            preparation.FinalVolume > 0 && (preparation.FinalVolumeUnit == "mL" || preparation.FinalVolumeUnit == "L") &&
+                            preparation.AvailableVolume <= preparation.FinalVolume
+                            ? (decimal?)(preparation.AvailableVolume / preparation.FinalVolume * 100) : null
+                    };
+                preparationMethods.AddRange(await AggregateMethodsAsync(measures, ct));
+            }
             if (kind is "Stock" or "Intermedia")
             {
                 var rows = await all.Where(p => p.Status == "Active" && p.ExpirationDate >= today && (window == null || p.ExpirationDate <= until)).OrderBy(p => p.ExpirationDate).ThenBy(p => p.Id).Take(6)
@@ -79,8 +113,27 @@ public sealed class DashboardRepository(LimsDbContext db, IPermissionRepository 
             activity.AddRange(await all.OrderByDescending(p => p.CreatedAt).ThenBy(p => p.Id).Take(6)
                 .Select(p => new DashboardActivity("Preparación " + kind + " registrada", p.Name, db.Users.Where(u => u.Id == p.PreparedByUserId).Select(u => u.Name).FirstOrDefault() ?? "Usuario no disponible", p.CreatedAt, kind, p.Id)).ToArrayAsync(ct));
         }
+        if (!access.Standards && (access.Stock || access.Intermediate))
+            methodStatistics = Statistics(access.Stock && access.Intermediate ? "Preparations" : access.Stock ? "Stock" : "Intermedia",
+                preparationMethods.GroupBy(m => m.Method, StringComparer.Ordinal).Select(g =>
+                {
+                    var valid = g.Sum(m => m.AvailabilityCount);
+                    return new DashboardMethodSummary(g.Key, g.Sum(m => m.Count), valid,
+                        valid == 0 ? null : g.Sum(m => (m.AverageAvailabilityPercent ?? 0) * m.AvailabilityCount) / valid);
+                }).ToArray());
         return new(access.View, identity.Name, effective.Role, identity.Department, now, window, effective.Permissions, standards, stock, intermediate,
             expiry.Where(p => !access.Standards || p.Kind == "Standard").OrderBy(p => p.ExpirationDate).ThenBy(p => p.Id).Take(6).ToArray(), low.OrderBy(p => p.AvailabilityPercent).ThenBy(p => p.Id).Take(6).ToArray(),
-            activity.OrderByDescending(a => a.At).ThenBy(a => a.RecordId).Take(6).ToArray());
+            activity.OrderByDescending(a => a.At).ThenBy(a => a.RecordId).Take(6).ToArray(), methodStatistics);
     }
+    private sealed class MethodMeasure
+    {
+        public string Method { get; init; } = string.Empty;
+        public decimal? AvailabilityPercent { get; init; }
+    }
+    private static Task<DashboardMethodSummary[]> AggregateMethodsAsync(IQueryable<MethodMeasure> query, CancellationToken ct) =>
+        query.GroupBy(m => m.Method).Select(g => new DashboardMethodSummary(g.Key, g.Count(),
+            g.Count(m => m.AvailabilityPercent != null), g.Average(m => m.AvailabilityPercent))).ToArrayAsync(ct);
+    private static DashboardMethodStatistics Statistics(string scope, IReadOnlyList<DashboardMethodSummary> methods) =>
+        new(scope, methods.Sum(m => m.Count), methods.Sum(m => m.AvailabilityCount),
+            methods.OrderByDescending(m => m.Count).ThenBy(m => m.Method, StringComparer.Ordinal).ToArray());
 }
