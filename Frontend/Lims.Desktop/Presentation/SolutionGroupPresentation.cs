@@ -6,7 +6,7 @@ namespace Lims.Desktop.Presentation;
 // Presentation only. Concentrations and debits always come from SolutionGroupCalculator.
 public sealed record SolutionSourceOption(IntermediateSource Source)
 {
-    public string Label => $"{Source.Code} · {ShortName(Source.Name)}";
+    public string Label => $"{Source.KindLabel} · {Source.Code} · {ShortName(Source.Name)}";
     private static string ShortName(string text) => text.Length <= 48 ? text : text[..45] + "…";
 }
 

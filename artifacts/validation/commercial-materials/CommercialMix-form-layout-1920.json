@@ -1,0 +1,180 @@
+{
+  "windowWidth": 1920,
+  "windowHeight": 1080,
+  "pageWidth": 1424.800048828125,
+  "pageHeight": 704.7999877929688,
+  "editorWidth": 960,
+  "editorHeight": 1421.5999755859375,
+  "editorViewport": 666.4000244140625,
+  "editorExtent": 1421.5999755859375,
+  "sidebarOpen": false,
+  "items": 25,
+  "sidebarIcons": [
+    {
+      "name": "HomeItem",
+      "width": 20,
+      "height": 20,
+      "centerX": 24.399999618530273,
+      "centerY": 66.80000305175781
+    },
+    {
+      "name": "StandardsItem",
+      "width": 20,
+      "height": 20,
+      "centerX": 24.399999618530273,
+      "centerY": 118.80000305175781
+    }
+  ],
+  "selectedName": "CommercialSolution - frasco de prueba aislada",
+  "saveCalls": 1,
+  "detailWidth": null,
+  "detailHeight": null,
+  "detailViewport": null,
+  "detailExtent": null,
+  "detailOpen": false,
+  "clientWidth": 1521.5999755859375,
+  "clientHeight": 856,
+  "rasterizationScale": 1.25,
+  "detailX": null,
+  "detailY": null,
+  "summaryHeight": null,
+  "generalHeight": null,
+  "storageHeight": null,
+  "auditHeight": null,
+  "headerHeight": null,
+  "bodyStacked": false,
+  "availability": null,
+  "detailSections": [
+    {
+      "name": "HeaderGrid",
+      "x": null,
+      "y": null,
+      "width": null,
+      "height": null
+    },
+    {
+      "name": "KpiGrid",
+      "x": null,
+      "y": null,
+      "width": null,
+      "height": null
+    },
+    {
+      "name": "GeneralSection",
+      "x": null,
+      "y": null,
+      "width": null,
+      "height": null
+    },
+    {
+      "name": "AuditSection",
+      "x": null,
+      "y": null,
+      "width": null,
+      "height": null
+    },
+    {
+      "name": "AvailabilityCard",
+      "x": null,
+      "y": null,
+      "width": null,
+      "height": null
+    },
+    {
+      "name": "ExpiryCard",
+      "x": null,
+      "y": null,
+      "width": null,
+      "height": null
+    },
+    {
+      "name": "StateCard",
+      "x": null,
+      "y": null,
+      "width": null,
+      "height": null
+    }
+  ],
+  "customSidebarPresenter": "NavigationViewItemPresenter",
+  "popups": [
+    {
+      "Name": "MethodBox",
+      "IsPopupOpen": false,
+      "Placement": {
+        "X": 0,
+        "Y": 0,
+        "Width": 0,
+        "Height": 0,
+        "Above": false
+      },
+      "selectedId": 1,
+      "date": null
+    },
+    {
+      "Name": "UnitCombo",
+      "IsPopupOpen": false,
+      "Placement": {
+        "X": 0,
+        "Y": 0,
+        "Width": 0,
+        "Height": 0,
+        "Above": false
+      },
+      "selectedId": 3,
+      "date": null
+    },
+    {
+      "Name": "StorageLocationBox",
+      "IsPopupOpen": false,
+      "Placement": {
+        "X": 0,
+        "Y": 0,
+        "Width": 0,
+        "Height": 0,
+        "Above": false
+      },
+      "selectedId": 1,
+      "date": null
+    },
+    {
+      "Name": "ReceivedDatePicker",
+      "IsPopupOpen": false,
+      "Placement": {
+        "X": 0,
+        "Y": 0,
+        "Width": 0,
+        "Height": 0,
+        "Above": false
+      },
+      "selectedId": null,
+      "date": "2026-10-17T00:00:00-06:00"
+    },
+    {
+      "Name": "ExpirationDatePicker",
+      "IsPopupOpen": false,
+      "Placement": {
+        "X": 0,
+        "Y": 0,
+        "Width": 0,
+        "Height": 0,
+        "Above": false
+      },
+      "selectedId": null,
+      "date": "2027-10-18T00:00:00-06:00"
+    },
+    {
+      "Name": "MethodBox",
+      "IsPopupOpen": false,
+      "Placement": {
+        "X": 0,
+        "Y": 0,
+        "Width": 0,
+        "Height": 0,
+        "Above": false
+      },
+      "selectedId": null,
+      "date": null
+    }
+  ],
+  "focusedType": "TextBox"
+}

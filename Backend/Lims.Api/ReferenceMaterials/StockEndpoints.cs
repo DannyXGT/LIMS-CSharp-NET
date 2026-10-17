@@ -9,6 +9,10 @@ internal static class StockEndpoints
     public static IEndpointRouteBuilder MapStockEndpoints(this IEndpointRouteBuilder endpoints)
     {
         var group = endpoints.MapGroup("/api/reference-materials/preparations/stock").WithTags("Stock");
+        group.MapCommercial("Stock", PermissionCatalog.StockView, PermissionCatalog.StockCreate);
+        group.MapGet("/solvents", async (string? search, IStockService service, HttpContext context, CancellationToken cancellationToken) =>
+            ReferenceMaterialEndpoints.ToResult(context, await service.SolventsAsync(search, cancellationToken).ConfigureAwait(false)))
+            .RequireAuthorization(PermissionCatalog.StockCreate);
         group.MapGet("/options", (IStockService service) => Results.Ok(service.GetOptions()))
             .RequireAuthorization(PermissionCatalog.StockCreate);
         group.MapGet("/sources", async (string? search, int? page, int? pageSize, IStockService service, HttpContext context, CancellationToken cancellationToken) =>

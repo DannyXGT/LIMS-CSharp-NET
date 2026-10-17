@@ -95,13 +95,18 @@ internal sealed class FixtureApi : IReferenceMaterialsApiClient
             (string.IsNullOrWhiteSpace(status) || d.Status == status) && (string.IsNullOrWhiteSpace(method) || d.Method == method)).ToArray();
         return ResultAsync(new ReferenceMaterialPage(filtered.Skip((page - 1) * pageSize).Take(pageSize).Select(Summary).ToArray(), page, pageSize, filtered.Length), token);
     }
-    internal static ReferenceMaterialSummary Summary(ReferenceMaterialDetail d) => new(d.Id, d.Name, d.CasNumber, d.CatalogNumber, d.Method, d.Lot, d.Brand, d.PurityPercent, d.ExpirationDate, d.Status, d.TotalQuantity, d.Unit, d.AvailableQuantity, d.Version);
+    internal static ReferenceMaterialSummary Summary(ReferenceMaterialDetail d) => new(d.Id, d.Name, d.CasNumber, d.CatalogNumber, d.Method, d.Lot, d.Brand, d.PurityPercent, d.ExpirationDate, d.Status, d.TotalQuantity, d.Unit, d.AvailableQuantity, d.Version, d.Presentation);
     public Task<ApiCallResult<ReferenceMaterialDetail>> GetAsync(Guid id, CancellationToken token) => ResultAsync(_details.Single(d => d.Id == id), token);
     public async Task<ApiCallResult<ReferenceMaterialDetail>> CreateAsync(CreateReferenceMaterialRequest request, CancellationToken token)
     {
         SaveCalls++;
-        var detail = _details[0] with { Id = Guid.NewGuid(), Name = request.Name, Lot = request.Lot, Status = "Active" };
-        _details.Add(detail);
+        var detail = _details[0] with { Id = Guid.NewGuid(), Name = request.Name, Lot = request.Lot, Brand = request.Brand, Status = "Active",
+            CatalogNumber = request.CatalogNumber, CasNumber = request.CasNumber, Presentation = request.Presentation, Commercial = request.Commercial,
+            PurityPercent = request.PurityPercent, PresentationQuantity = request.PresentationQuantity, PackageCount = request.PackageCount,
+            UnitId = request.UnitId, Unit = request.Presentation == MaterialPresentations.Solid ? "mg" : "mL", TotalQuantity = request.PresentationQuantity * request.PackageCount,
+            AvailableQuantity = request.PresentationQuantity * request.PackageCount, ReceivedDate = request.ReceivedDate, ExpirationDate = request.ExpirationDate,
+            EffectiveExpirationDate = request.ExpirationDate, StorageTemperature = request.StorageTemperature };
+        _details.Insert(0, detail);
         await Task.Delay(700, token);
         return new(true, detail, null, 201);
     }

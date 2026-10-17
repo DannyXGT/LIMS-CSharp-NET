@@ -8,6 +8,8 @@ namespace Lims.Desktop.Http;
 internal sealed class StockApiClient(IHttpClientFactory clients) : IStockApiClient
 {
     private const string Path = "api/reference-materials/preparations/stock";
+    public Task<ApiCallResult<IReadOnlyList<SolventOption>>> SolventsAsync(string? search, CancellationToken cancellationToken) =>
+        SendAsync<IReadOnlyList<SolventOption>>(HttpMethod.Get, Path + "/solvents?search=" + Uri.EscapeDataString(search?.Trim() ?? string.Empty), null, cancellationToken);
     public Task<ApiCallResult<StockOptions>> OptionsAsync(CancellationToken cancellationToken) => SendAsync<StockOptions>(HttpMethod.Get, Path + "/options", null, cancellationToken);
     public Task<ApiCallResult<StockSourcePage>> SourcesAsync(string? search, int page, CancellationToken cancellationToken) =>
         SendAsync<StockSourcePage>(HttpMethod.Get, Query(Path + "/sources", search, page), null, cancellationToken);

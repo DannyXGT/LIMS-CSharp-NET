@@ -10,6 +10,17 @@ namespace Lims.Desktop.Tests;
 public sealed class IntermediateViewModelTests
 {
     [Fact]
+    public async Task CommercialSelectionRoutesToPhysicalMaterialDetail()
+    {
+        var api = new FakeApi(); var vm = await Ready(api);
+        var commercial = new IntermediateSummary(Guid.NewGuid(), "INT-COMMERCIAL", "Mix", "Ensayo", 20, 10, "mL", 10, [],
+            new(2026, 1, 1), new(2099, 1, 1), "Ana López", "Active", true);
+        vm.Items.Add(commercial); vm.SelectedPreparation = commercial;
+        Guid? opened = null; vm.CommercialOpened += id => { opened = id; return Task.CompletedTask; };
+        await vm.OpenSelectedPreparationCommand.ExecuteAsync(null);
+        Assert.Equal(commercial.Id, opened); Assert.Null(vm.Detail); Assert.Empty(vm.ListMessage);
+    }
+    [Fact]
     public async Task DetailRequiresRealSelectionAndClearsOnTabChange()
     {
         var api = new FakeApi();

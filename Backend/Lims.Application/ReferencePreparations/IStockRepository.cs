@@ -7,6 +7,7 @@ namespace Lims.Application.ReferencePreparations;
 
 public interface IStockRepository
 {
+    Task<IReadOnlyList<SolventOption>> SolventsAsync(string? search, CancellationToken cancellationToken);
     Task<StockSourcePage> SourcesAsync(string? search, DateOnly today, int page, int pageSize, CancellationToken cancellationToken);
     Task<ReferenceMaterial?> FindSourceAsync(Guid id, CancellationToken cancellationToken);
     // Callback runs after loading a fresh source inside the transaction and execution strategy.

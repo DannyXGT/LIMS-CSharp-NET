@@ -1,0 +1,219 @@
+{
+  "implementation": "Certified commercial solutions and multicomponent Mix in existing LIMS modules",
+  "productionDatabaseModified": false,
+  "build": {
+    "solution": "passed",
+    "winuiHarness": "passed",
+    "errors": 0,
+    "warnings": 0,
+    "modelMatchesMigration": true
+  },
+  "fullSuite": {
+    "total": 388,
+    "failed": 0,
+    "skipped": 0,
+    "reports": [
+      {
+        "file": "artifacts/validation/stock-postgres/results/stock_net10.0_20261017005832.trx",
+        "total": 129,
+        "passed": 129,
+        "failed": 0,
+        "notExecuted": 0
+      },
+      {
+        "file": "artifacts/validation/stock-postgres/results/stock_net10.0_20261017005830.trx",
+        "total": 75,
+        "passed": 75,
+        "failed": 0,
+        "notExecuted": 0
+      },
+      {
+        "file": "artifacts/validation/stock-postgres/results/stock_net10.0_20261017005448.trx",
+        "total": 48,
+        "passed": 48,
+        "failed": 0,
+        "notExecuted": 0
+      },
+      {
+        "file": "artifacts/validation/stock-postgres/results/stock_net10.0_20261017005322.trx",
+        "total": 136,
+        "passed": 136,
+        "failed": 0,
+        "notExecuted": 0
+      }
+    ]
+  },
+  "finalFocusedRechecks": [
+    {
+      "file": "artifacts/validation/commercial-materials/test-results/commercial-final.trx",
+      "total": 8,
+      "passed": 8,
+      "failed": 0,
+      "notExecuted": 0
+    },
+    {
+      "file": "artifacts/validation/commercial-materials/test-results/desktop-final.trx",
+      "total": 129,
+      "passed": 129,
+      "failed": 0,
+      "notExecuted": 0
+    },
+    {
+      "file": "artifacts/validation/commercial-materials/test-results/application-final.trx",
+      "total": 136,
+      "passed": 136,
+      "failed": 0,
+      "notExecuted": 0
+    }
+  ],
+  "postgres": {
+    "isolation": "127.0.0.1:55439/lims_stock_test; separate fixture schemas",
+    "commercialTests": 8,
+    "allPassed": true,
+    "migrationScriptAppliedTwiceInTest": true
+  },
+  "visual": {
+    "fixtureOnly": true,
+    "realWinUIControls": true,
+    "rasterizationScale": 1.25,
+    "capturedFrames": [
+      {
+        "file": "CommercialMix-certificate-1366x768.png",
+        "width": 1366,
+        "height": 768,
+        "sha256": "2ca062d6d1c0669c38bfc1e52a9edcbed2f8f458ec6f093d125c9e787fa148b8"
+      },
+      {
+        "file": "CommercialMix-certificate-1920x1080.png",
+        "width": 1920,
+        "height": 1080,
+        "sha256": "16ad8e5dc9430d010b1578a33ce3cc60a6f97d18b5b3ebb30bc3debaa129a797"
+      },
+      {
+        "file": "CommercialMix-detail-1366x768.png",
+        "width": 1366,
+        "height": 768,
+        "sha256": "5bf9382c3de0cb0d255247c9bc9790e447a9d264fb49d96920dc4f8ad5665eeb"
+      },
+      {
+        "file": "CommercialMix-detail-1920x1080.png",
+        "width": 1920,
+        "height": 1080,
+        "sha256": "f20398bcbdb1d159dab2f46ce0d1189317ce3b1a62716c5ed792d2f5c74fea82"
+      },
+      {
+        "file": "CommercialMix-detail-components-1366x768.png",
+        "width": 1366,
+        "height": 768,
+        "sha256": "3f44337e8795dd2cae7308d5c5e0edcd307b167d2b6f0e409033efa8d4801edb"
+      },
+      {
+        "file": "CommercialMix-detail-components-1920x1080.png",
+        "width": 1920,
+        "height": 1080,
+        "sha256": "320b0a2d1a1bf51d9fd823d88e5670e9bab8ea23479de7e630c0445b53811446"
+      },
+      {
+        "file": "CommercialMix-form-1366x768.png",
+        "width": 1366,
+        "height": 768,
+        "sha256": "1e5aae627cc4e2efdd8cbc3a688fc46bf5c00f0ce1ae373c686bb3346158cbb3"
+      },
+      {
+        "file": "CommercialMix-form-1920x1080.png",
+        "width": 1920,
+        "height": 1080,
+        "sha256": "e270f3852d0ed37d3c64bde6edfb36d7f5b6487e8fadeac7a37b615a9e60d342"
+      },
+      {
+        "file": "CommercialSolution-certificate-1366x768.png",
+        "width": 1366,
+        "height": 768,
+        "sha256": "916bafaaa315cc558b069eaab189ae7acc8d3dfdcdfe6e55cce032fd55e5e812"
+      },
+      {
+        "file": "CommercialSolution-certificate-1920x1080.png",
+        "width": 1920,
+        "height": 1080,
+        "sha256": "057b31a7932d4afbb0f2fb15e4a374b6f5d4e2bd07af88779496daa066c88375"
+      },
+      {
+        "file": "CommercialSolution-detail-1366x768.png",
+        "width": 1366,
+        "height": 768,
+        "sha256": "6ad65a41a8ceba905a589b55292bbe0caa2334087f802dbbbd5a6c97c9ecce94"
+      },
+      {
+        "file": "CommercialSolution-detail-1920x1080.png",
+        "width": 1920,
+        "height": 1080,
+        "sha256": "a4f0bd3b717f512f769073bdf26268a46251739ed44a637b0ed1f8479f13663e"
+      },
+      {
+        "file": "CommercialSolution-detail-components-1366x768.png",
+        "width": 1366,
+        "height": 768,
+        "sha256": "f102ffcc0805401e896d52d2f764ee1450f1d69594d534913aaac9272f860490"
+      },
+      {
+        "file": "CommercialSolution-detail-components-1920x1080.png",
+        "width": 1920,
+        "height": 1080,
+        "sha256": "0bd555da51e9c369a281e48d40ba73069a19fdc7c1f32e8e5cc39fa47c48bb5c"
+      },
+      {
+        "file": "CommercialSolution-form-1366x768.png",
+        "width": 1366,
+        "height": 768,
+        "sha256": "c775532511e75ed229d6484084cbf094ddf933b10d3c513b23f4d25599406023"
+      },
+      {
+        "file": "CommercialSolution-form-1920x1080.png",
+        "width": 1920,
+        "height": 1080,
+        "sha256": "30c7a34469153c55b068a8b35a828a5f3699fd3342104f4a0267a3d01783edf2"
+      },
+      {
+        "file": "Mix-intermediate-1366x768.png",
+        "width": 1366,
+        "height": 768,
+        "sha256": "73d58deeebc901b4e11422f55de28ac7315b5bee01de24dfa976d08a8a9366b0"
+      },
+      {
+        "file": "Mix-intermediate-1920x1080.png",
+        "width": 1920,
+        "height": 1080,
+        "sha256": "ac092a07fb26507cb2644b2d29942e526fd63a739d4e66e34caf5b29e130cc7c"
+      },
+      {
+        "file": "Mix-intermediate-results-1366x768.png",
+        "width": 1366,
+        "height": 768,
+        "sha256": "ce6fb825da7f0c9c1afeb75cbace4fb5ec2a8a6e97317bb07a1d4a25d8ba1204"
+      },
+      {
+        "file": "Mix-intermediate-results-1920x1080.png",
+        "width": 1920,
+        "height": 1080,
+        "sha256": "b65ae814db7ef06c70ccc692abfb324fe9f21a6f59922f39e1e507a931ffd507"
+      }
+    ],
+    "reviewed": [
+      "CommercialMix-certificate-1920x1080.png",
+      "CommercialMix-detail-components-1920x1080.png",
+      "CommercialSolution-detail-1366x768.png",
+      "CommercialMix-certificate-1366x768.png",
+      "Mix-intermediate-results-1366x768.png"
+    ],
+    "previewResultConcentrations": [
+      5,
+      4.99,
+      5.01
+    ],
+    "previewUnit": "\u00b5g/mL",
+    "physicalAliquotMl": 1,
+    "finalVolumeMl": 10
+  },
+  "migration": "20261017063950_AddCertifiedCommercialMaterials",
+  "sql": "artifacts/sql/certified_commercial_materials.sql"
+}

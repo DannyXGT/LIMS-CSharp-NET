@@ -12,9 +12,14 @@ public sealed partial class StockDetailDialog : ContentDialog
     {
         Detail = detail;
         InitializeComponent();
+        CompositionBar.Visibility = Solvents.Count == 0 ? Visibility.Collapsed : Visibility.Visible;
+        if (Solvents.Count > 0) StockCompositionVisual.Render(CompositionBar, CompositionLegend, Solvents);
 
     }
     public StockDetail Detail { get; }
+    public IReadOnlyList<StockSolventDetail> Solvents => Detail.Solvents ?? [];
+    public string CompoundDisplay => "Compuesto: " + Detail.CompoundDisplay;
+    public string BasisDisplay => Solvents.Count == 0 ? string.Empty : StockSolventComposition.BasisLabel;
     public IReadOnlyList<PreparationUsage> UsageHistory => Detail.UsageHistory ?? [];
     public string UsageMessage => Detail.UsageHistory is null ? "Historial de consumos de esta solución no informado por el servidor." : Detail.UsageHistory.Count == 0 ? "Sin consumos de esta solución registrados." : $"{Detail.UsageHistory.Count} movimientos hacia preparaciones derivadas";
     public string ExpirationDisplay => $"Vencimiento {Detail.Preparation.ExpirationDisplay}";

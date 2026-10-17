@@ -11,9 +11,21 @@ namespace Lims.Infrastructure.Persistence;
 
 public sealed class StockRepository(LimsDbContext dbContext) : IStockRepository
 {
+    public async Task<IReadOnlyList<SolventOption>> SolventsAsync(string? search, CancellationToken cancellationToken)
+    {
+        var query = dbContext.ReferenceSolvents.AsNoTracking().Where(s => s.IsActive);
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var term = Pattern(search);
+            query = query.Where(s => EF.Functions.ILike(s.Name, term, "\\") || EF.Functions.ILike(s.Abbreviation, term, "\\"));
+        }
+        return await query.OrderBy(s => s.DisplayOrder).ThenBy(s => s.Id)
+            .Select(s => new SolventOption(s.Id, s.Name, s.Abbreviation, s.IsActive, s.DisplayOrder)).ToArrayAsync(cancellationToken).ConfigureAwait(false);
+    }
+
     public async Task<StockSourcePage> SourcesAsync(string? search, DateOnly today, int page, int pageSize, CancellationToken cancellationToken)
     {
-        var query = Sources().AsNoTracking().Where(source => source.Status == ReferenceMaterialStatus.Active &&
+        var query = Sources().AsNoTracking().Where(source => source.Presentation == "Solid" && source.Status == ReferenceMaterialStatus.Active &&
             source.AvailableQuantity > 0 && (!HistoricalEntryPolicy.EnforceCurrentExpiration || source.ExpirationDate >= today) &&
             (source.Unit.Symbol == "g" || source.Unit.Symbol == "mg" || source.Unit.Symbol == "µg" || source.Unit.Symbol == "μg" || source.Unit.Symbol == "ug"));
         if (!string.IsNullOrWhiteSpace(search))
@@ -58,6 +70,12 @@ public sealed class StockRepository(LimsDbContext dbContext) : IStockRepository
                 var prepared = prepare(source, sequence);
                 if (!prepared.IsSuccess) return OperationResult.Failure<StockDetail>(prepared.Error!);
                 var preparation = prepared.Value!;
+                var solventIds = preparation.Solvents.Select(s => s.SolventId).ToArray();
+                // Lock catalog rows until commit so deactivation cannot race the validation.
+                var solvents = await dbContext.ReferenceSolvents.FromSqlInterpolated($"SELECT * FROM reference_solvents WHERE id = ANY({solventIds}) FOR SHARE")
+                    .AsNoTracking().ToArrayAsync(cancellationToken).ConfigureAwait(false);
+                if (solvents.Length != solventIds.Length || solvents.Any(s => !s.IsActive))
+                    return OperationResult.Failure<StockDetail>(new OperationError(ErrorCodes.ValidationError, "Seleccione solventes activos del catálogo actual."));
                 var movement = new ReferenceMaterialMovement(preparation, source.AvailableQuantity, now);
                 source.Consume(preparation.ActualWeight, preparation.PreparedByUserId, now, today,
                     enforceCurrentExpiration: HistoricalEntryPolicy.EnforceCurrentExpiration);
@@ -104,13 +122,17 @@ public sealed class StockRepository(LimsDbContext dbContext) : IStockRepository
                 EF.Functions.ILike(item.SourceName, term, "\\") || EF.Functions.ILike(item.SourceLot, term, "\\"));
         }
         query = query.Filter(filter, DateOnly.FromDateTime(DateTimeOffset.UtcNow.ToOffset(TimeSpan.FromHours(-6)).DateTime));
-        var count = await query.CountAsync(cancellationToken).ConfigureAwait(false);
-        var items = await query.OrderByDescending(item => item.PreparationDate).ThenByDescending(item => item.Code)
-            .Skip((page - 1) * pageSize).Take(pageSize).ToArrayAsync(cancellationToken).ConfigureAwait(false);
-        var actorIds = items.Select(item => item.PreparedByUserId).Distinct().ToArray();
+        var today = DateOnly.FromDateTime(DateTimeOffset.UtcNow.ToOffset(TimeSpan.FromHours(-6)).DateTime);
+        var entries = await CommercialPreparationQuery.PageAsync(dbContext, query, "Stock", search, filter, today, page, pageSize, cancellationToken).ConfigureAwait(false);
+        var ids = entries.Keys.Where(k => !k.Commercial).Select(k => k.Id).ToArray();
+        var items = await dbContext.ReferencePreparations.AsNoTracking().Where(p => ids.Contains(p.Id)).ToArrayAsync(cancellationToken).ConfigureAwait(false);
+        var actorIds = items.Select(item => item.PreparedByUserId).Concat(entries.Commercial.Select(r => r.RegisteredByUserId)).Distinct().ToArray();
         var actors = await dbContext.Users.AsNoTracking().Where(user => actorIds.Contains(user.Id))
             .Select(user => new { user.Id, user.Name }).ToDictionaryAsync(user => user.Id, user => user.Name, cancellationToken).ConfigureAwait(false);
-        return new StockPage(items.Select(item => Summary(item, actors.GetValueOrDefault(item.PreparedByUserId) ?? "Usuario no informado")).ToArray(), page, pageSize, count, true);
+        var rows = entries.Keys.Select(k => k.Commercial
+            ? CommercialPreparationQuery.Stock(entries.Commercial.Single(r => r.MaterialId == k.Id), actors[entries.Commercial.Single(r => r.MaterialId == k.Id).RegisteredByUserId], today)
+            : Summary(items.Single(p => p.Id == k.Id), actors.GetValueOrDefault(items.Single(p => p.Id == k.Id).PreparedByUserId) ?? "Usuario no informado")).ToArray();
+        return new StockPage(rows, page, pageSize, entries.Total, true);
     }
 
     public async Task<StockDetail?> GetAsync(Guid id, CancellationToken cancellationToken)
@@ -126,15 +148,18 @@ public sealed class StockRepository(LimsDbContext dbContext) : IStockRepository
         var calculation = new StockCalculation(item.CalculatedWeight, item.ActualWeight, item.SourceUnit,
             movement.BalanceBefore, movement.BalanceAfter, 0, true, item.PurityPercentUsed, item.TargetConcentration,
             item.ActualConcentration, item.ConcentrationUnit, item.FinalVolume, item.FinalVolumeUnit, item.Formula);
+        var solvents = await dbContext.StockSolvents.AsNoTracking().Where(s => s.PreparationId == id).OrderBy(s => s.Position)
+            .Select(s => new StockSolventDetail(s.SolventId, s.Solvent.Name, s.Solvent.Abbreviation, s.Percent, s.Position))
+            .ToArrayAsync(cancellationToken).ConfigureAwait(false);
         return new StockDetail(Summary(item, actor), source, calculation,
             new StockMovement(movement.Id, movement.Quantity, movement.Unit, movement.BalanceBefore, movement.BalanceAfter, actor, movement.OccurredAt),
-            item.Notes, item.CreatedAt, item.UpdatedAt, item.Version, item.StorageTemperature, await PreparationListQuery.UsageAsync(dbContext, id, cancellationToken).ConfigureAwait(false));
+            item.Notes, item.CreatedAt, item.UpdatedAt, item.Version, item.StorageTemperature, await PreparationListQuery.UsageAsync(dbContext, id, cancellationToken).ConfigureAwait(false), item.Compound, solvents, item.CompositionBasis);
     }
 
     private IQueryable<ReferenceMaterial> Sources() => dbContext.ReferenceMaterials.Include(item => item.Unit).Include(item => item.Method).Include(item => item.Location);
     private static string Pattern(string value) => "%" + value.Replace("\\", "\\\\", StringComparison.Ordinal).Replace("%", "\\%", StringComparison.Ordinal).Replace("_", "\\_", StringComparison.Ordinal) + "%";
     private static StockSource ToSource(ReferenceMaterial item) => new(item.Id, item.Name, item.CasNumber, item.CatalogNumber,
-        item.Lot, item.Brand, item.Method.Name, item.PurityPercent, item.AvailableQuantity, item.TotalQuantity, item.Unit.Symbol,
+        item.Lot, item.Brand, item.Method.Name, item.PurityPercent ?? 0, item.AvailableQuantity, item.TotalQuantity, item.Unit.Symbol,
         item.ExpirationDate, item.Location.Name, item.Version, item.ReceivedDate);
     private static StockSummary Summary(ReferencePreparation item, string actor) => new(item.Id, item.Code, item.Name,
         item.SourceName, item.SourceLot, item.TargetConcentration, item.ActualConcentration, item.ConcentrationUnit,

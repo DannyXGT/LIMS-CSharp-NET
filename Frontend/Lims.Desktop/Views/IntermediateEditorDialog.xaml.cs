@@ -1,3 +1,4 @@
+using Lims.Desktop.Http;
 using System.ComponentModel;
 using Lims.Contracts.ReferencePreparations;
 using Lims.Desktop.ViewModels;
@@ -10,17 +11,48 @@ namespace Lims.Desktop.Views;
 
 public sealed partial class IntermediateEditorDialog : ContentDialog
 {
+    private readonly ICommercialPreparationApiClient? _commercialApi;
     private bool _ready;
     private bool _syncParent;
     private Func<Task>? _confirmation;
-    public IntermediateEditorDialog(IntermediateViewModel viewModel)
+    public IntermediateEditorDialog(IntermediateViewModel viewModel, ICommercialPreparationApiClient? commercialApi = null)
     {
-        ViewModel = viewModel; InitializeComponent();
+        _commercialApi = commercialApi;
+        ViewModel = viewModel; InitializeComponent(); InitializeEntry();
         foreach (var field in new LimsPopupField[] { MethodSelect, ParentSelect, PreparationPicker, ExpirationPicker })
             field.PopupBoundary = EditorScroll;
         EditorScroll.ViewChanged += (_, _) => LimsPopupField.CloseForRootAfterLayout(this);
     }
     public IntermediateViewModel ViewModel { get; }
+    public CommercialPreparationDetail? CommercialCreated { get; private set; }
+    private bool IsCommercial => EntryTypeSelect.SelectedIndex == 1;
+    private void InitializeEntry()
+    {
+        EntryTypeSelect.ItemsSource = new[] { "Preparada en laboratorio", "Comercial / comprada" };
+        EntryTypeSelect.SelectedIndex = 0;
+        EntryTypeSelect.PopupBoundary = EditorScroll;
+    }
+    private async void OnEntryTypeChanged(object? sender, EventArgs args)
+    {
+        if (!_ready) return;
+        LimsPopupField.CloseForRoot(XamlRoot);
+        FormSurface.Visibility = IsCommercial ? Visibility.Collapsed : Visibility.Visible;
+        CommercialEntry.Visibility = IsCommercial ? Visibility.Visible : Visibility.Collapsed;
+        if (IsCommercial) await CommercialEntry.InitializeAsync(_commercialApi, "Intermedia", ViewModel.PreparedBy, EditorScroll);
+        Render();
+    }
+    private void RenderCommercial()
+    {
+        Title = "Nueva Intermedia comercial";
+        EditorScroll.Visibility = Visibility.Visible; SuccessSurface.Visibility = Visibility.Collapsed;
+        FormSurface.Visibility = Visibility.Collapsed; CommercialEntry.Visibility = Visibility.Visible;
+        MessageText.Visibility = Visibility.Collapsed; ViewButton.Visibility = Visibility.Collapsed;
+        SaveButton.Visibility = Visibility.Visible; SaveButton.Content = CommercialEntry.IsBusy ? "Guardando…" : "Guardar Intermedia";
+        SaveButton.IsEnabled = ViewModel.CanCreate && CommercialEntry.IsReady && !CommercialEntry.IsBusy;
+        CancelButton.IsEnabled = EntryTypeSelect.IsEnabled = !CommercialEntry.IsBusy;
+        CancelButton.Content = "Cancelar";
+        Resize();
+    }
     public bool ViewCreatedDetail { get; private set; }
     private async void OnOpened(ContentDialog sender, ContentDialogOpenedEventArgs args)
     {
@@ -38,6 +70,9 @@ public sealed partial class IntermediateEditorDialog : ContentDialog
     private void Render()
     {
         if (!_ready) return;
+        if (IsCommercial) { RenderCommercial(); return; }
+        FormSurface.Visibility = Visibility.Visible; CommercialEntry.Visibility = Visibility.Collapsed;
+        EntryTypeSelect.IsEnabled = !ViewModel.IsBusy;
         var success = ViewModel.Created is not null;
         EditorScroll.Visibility = success ? Visibility.Collapsed : Visibility.Visible;
         SuccessSurface.Visibility = success ? Visibility.Visible : Visibility.Collapsed;
@@ -105,8 +140,9 @@ public sealed partial class IntermediateEditorDialog : ContentDialog
         if (ViewModel.DilutedSource is null) return;
         Confirm("¿Quitar la solución a diluir y su alícuota?", () => { ViewModel.SelectDilution(null); SyncParent(); return Task.CompletedTask; });
     }
-    private void OnSave(object sender, RoutedEventArgs args)
+    private async void OnSave(object sender, RoutedEventArgs args)
     {
+        if (IsCommercial) { var saving = CommercialEntry.SaveAsync(); Render(); CommercialCreated = await saving; Render(); if (CommercialCreated is not null) Hide(); return; }
         if (!ViewModel.CanSave) return;
         Confirm($"Crear solución intermedia · {ViewModel.Components.Count} componentes · Tomado {ViewModel.TotalDisplay} · Aforo {ViewModel.FinalDisplay}\n{ViewModel.ResultDisplay}", async () => { await ViewModel.SaveAsync(CancellationToken.None); });
     }
@@ -122,9 +158,9 @@ public sealed partial class IntermediateEditorDialog : ContentDialog
         await action(); Render();
     }
     private void OnDismissConfirmation(object sender, RoutedEventArgs args) { _confirmation = null; ConfirmSurface.Visibility = Visibility.Collapsed; FooterActions.Visibility = Visibility.Visible; Render(); }
-    private void OnCancel(object sender, RoutedEventArgs args) { if (!ViewModel.IsBusy) Hide(); }
+    private void OnCancel(object sender, RoutedEventArgs args) { if (!ViewModel.IsBusy && !CommercialEntry.IsBusy) Hide(); }
     private void OnViewCreated(object sender, RoutedEventArgs args) { ViewCreatedDetail = true; Hide(); }
-    private void OnClosing(ContentDialog sender, ContentDialogClosingEventArgs args) { if (ViewModel.IsBusy) args.Cancel = true; else LimsPopupField.CloseForRoot(XamlRoot); }
+    private void OnClosing(ContentDialog sender, ContentDialogClosingEventArgs args) { if (ViewModel.IsBusy || CommercialEntry.IsBusy) args.Cancel = true; else LimsPopupField.CloseForRoot(XamlRoot); }
     private void OnClosed(ContentDialog sender, ContentDialogClosedEventArgs args)
     {
         _ready = false; ViewModel.PropertyChanged -= OnModelChanged; XamlRoot.Changed -= OnRootChanged;

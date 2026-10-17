@@ -43,4 +43,15 @@ public sealed class ReferenceMaterialMovement
         Quantity = quantity; Unit = source.FinalVolumeUnit; BalanceBefore = source.AvailableVolume;
         BalanceAfter = BalanceBefore - quantity; ActorUserId = destination.PreparedByUserId; OccurredAt = now;
     }
+    public ReferenceMaterialMovement(ReferencePreparation destination, Lims.Domain.ReferenceMaterials.ReferenceMaterial source,
+        ReferencePreparationComponent component, decimal quantity, DateTimeOffset now)
+    {
+        if (quantity <= 0 || quantity > source.AvailableQuantity || component.SourceMaterialId != source.Id ||
+            component.PreparationId != destination.Id) throw new ArgumentException("Consumo comercial inválido.");
+        Id = Guid.NewGuid(); PreparationId = destination.Id; Preparation = destination;
+        SourceMaterialId = source.Id; ComponentId = component.Id; Kind = "CommercialConsumption";
+        Quantity = quantity; Unit = source.Unit.Symbol; BalanceBefore = source.AvailableQuantity;
+        BalanceAfter = BalanceBefore - quantity; ActorUserId = destination.PreparedByUserId; OccurredAt = now;
+    }
+
 }

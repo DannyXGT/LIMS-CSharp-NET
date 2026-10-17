@@ -23,7 +23,8 @@ public sealed record StockCalculationRequest(Guid SourceMaterialId, Guid SourceV
     decimal TargetConcentration, string ConcentrationUnit, decimal FinalVolume, string FinalVolumeUnit,
     decimal? ActualWeight = null, string? ActualWeightUnit = null);
 public sealed record CreateStockRequest(Guid RequestId, string Name, StockCalculationRequest Calculation,
-    DateOnly PreparationDate, string? Notes, DateOnly? ExpirationDate = null, string? StorageTemperature = null);
+    DateOnly PreparationDate, string? Notes, DateOnly? ExpirationDate = null, string? StorageTemperature = null,
+    string? Compound = null, IReadOnlyList<StockSolventInput>? Solvents = null, string? CompositionBasis = null);
 public sealed record StockCalculation(
     decimal CalculatedWeight, decimal? ActualWeight, string SourceUnit, decimal AvailableQuantity,
     decimal? RemainingQuantity, decimal ShortfallQuantity, bool HasSufficientMaterial,
@@ -47,11 +48,13 @@ public sealed record StockCalculation(
 }
 
 public sealed record StockSummary(Guid Id, string Code, string Name, string SourceName, string SourceLot,
-    decimal TargetConcentration, decimal ActualConcentration, string ConcentrationUnit,
+    decimal? TargetConcentration, decimal ActualConcentration, string ConcentrationUnit,
     decimal FinalVolume, string FinalVolumeUnit, DateOnly PreparationDate, string PreparedBy, string Status,
-    decimal ActualWeight = 0, string ActualWeightUnit = "mg", DateOnly? ExpirationDate = null, decimal? AvailableVolume = null)
+    decimal? ActualWeight = 0, string ActualWeightUnit = "mg", DateOnly? ExpirationDate = null, decimal? AvailableVolume = null, bool IsCommercial = false)
 {
     [JsonIgnore] public StockAvailability Availability => new(FinalVolume, FinalVolumeUnit, AvailableVolume);
+    [JsonIgnore] public string OriginLabel => IsCommercial ? "Comercial" : "Interna";
+    [JsonIgnore] public string EntryCodeDisplay => $"{Code} · {OriginLabel}";
     [JsonIgnore] public string WeightDisplay => StockPresentation.Quantity(ActualWeight, ActualWeightUnit);
     [JsonIgnore] public string ExpirationDisplay => ExpirationDate is { } date ? ReferenceMaterialPresentation.Date(date) : "No informada";
     [JsonIgnore] public string ConcentrationDisplay => StockPresentation.Quantity(ActualConcentration, ConcentrationUnit);
@@ -73,8 +76,11 @@ public sealed record StockMovement(Guid Id, decimal Quantity, string Unit, decim
 }
 public sealed record StockDetail(StockSummary Preparation, StockSource Source, StockCalculation Calculation,
     StockMovement Consumption, string? Notes, DateTimeOffset CreatedAt, DateTimeOffset UpdatedAt, Guid Version,
-    string? StorageTemperature = null, IReadOnlyList<PreparationUsage>? UsageHistory = null)
+    string? StorageTemperature = null, IReadOnlyList<PreparationUsage>? UsageHistory = null,
+    string? Compound = null, IReadOnlyList<StockSolventDetail>? Solvents = null, string? CompositionBasis = null)
 {
+    [JsonIgnore] public string CompoundDisplay => ReferenceMaterialPresentation.Optional(Compound);
+    [JsonIgnore] public string CompositionDisplay => StockSolventComposition.Summary(Solvents);
     [JsonIgnore] public string CreatedDisplay => ReferenceMaterialPresentation.LocalTimestamp(CreatedAt);
     [JsonIgnore] public string UpdatedDisplay => ReferenceMaterialPresentation.LocalTimestamp(UpdatedAt);
     [JsonIgnore] public string NotesDisplay => ReferenceMaterialPresentation.Optional(Notes);

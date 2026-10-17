@@ -100,11 +100,12 @@ public sealed partial class ReferenceMaterialDetailDialog : UserControl
 
     private void Refresh()
     {
+        CommercialDetails.Content = CommercialMaterialDetails.Build(Detail);
         Bindings.Update();
         AutomationProperties.SetName(this, $"Ficha técnica de {Detail.NameDisplay}");
         IdentityCatalog.Text = $"Catálogo {Detail.CatalogNumber}";
         IdentityCatalog.Visibility = Detail.HasCatalog ? Visibility.Visible : Visibility.Collapsed;
-        ExpiryHeadline.Text = ReferenceMaterialPresentation.Date(Detail.ExpirationDate);
+        ExpiryHeadline.Text = ReferenceMaterialPresentation.Date(Detail.EffectiveExpirationDate ?? Detail.ExpirationDate);
         ReceivedValue.Text = ReferenceMaterialPresentation.Date(Detail.ReceivedDate);
         AvailabilityQuantity.Text = Detail.AvailableQuantity.HasValue ? Detail.AvailableDisplay : "No informada";
         AvailabilityQualifier.Text = Detail.AvailableQuantity.HasValue ? "disponibles" : string.Empty;

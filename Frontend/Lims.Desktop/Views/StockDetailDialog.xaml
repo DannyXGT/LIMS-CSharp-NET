@@ -10,6 +10,23 @@
    <design:StatusBadge Text="{x:Bind Detail.Preparation.StatusLabel}" Tone="{x:Bind Detail.Preparation.StatusTone}" HorizontalAlignment="Left"/>
    <TextBlock Text="{x:Bind PreparedDisplay}" Style="{StaticResource LimsCaptionStyle}" TextWrapping="Wrap"/>
    <TextBlock Text="{x:Bind ExpirationDisplay}" Style="{StaticResource LimsCaptionStyle}"/>
+   <Border Padding="14" Background="{ThemeResource LimsSurfaceSecondaryBrush}" CornerRadius="10">
+    <StackPanel Spacing="8">
+     <TextBlock Text="COMPUESTO Y SOLVENTES" Style="{StaticResource LimsSectionTitleStyle}"/>
+     <TextBlock Text="{x:Bind CompoundDisplay}" FontWeight="SemiBold" TextWrapping="Wrap"/>
+     <TextBlock Text="Composición del solvente" Style="{StaticResource LimsFormLabelStyle}"/>
+     <TextBlock Text="{x:Bind BasisDisplay}" Style="{StaticResource LimsCaptionStyle}" TextWrapping="Wrap"/>
+     <Grid ColumnSpacing="8"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="100"/><ColumnDefinition Width="90"/></Grid.ColumnDefinitions><TextBlock Text="Solvente"/><TextBlock Grid.Column="1" Text="Abreviatura"/><TextBlock Grid.Column="2" Text="Proporción"/></Grid>
+     <ItemsControl ItemsSource="{x:Bind Solvents}">
+      <ItemsControl.ItemTemplate><DataTemplate x:DataType="contracts:StockSolventDetail">
+       <Grid ColumnSpacing="8" Padding="0,4"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="100"/><ColumnDefinition Width="90"/></Grid.ColumnDefinitions><TextBlock Text="{x:Bind Name}" TextWrapping="Wrap"/><TextBlock Grid.Column="1" Text="{x:Bind Abbreviation}"/><TextBlock Grid.Column="2" Text="{x:Bind PercentDisplay}"/></Grid>
+      </DataTemplate></ItemsControl.ItemTemplate>
+     </ItemsControl>
+     <Grid x:Name="CompositionBar" Height="12" ColumnSpacing="2" AutomationProperties.Name="Composición guardada del solvente"/>
+     <TextBlock x:Name="CompositionLegend" Style="{StaticResource LimsCaptionStyle}" TextWrapping="Wrap"/>
+     <TextBlock Text="{x:Bind Detail.CompositionDisplay}" FontWeight="SemiBold" TextWrapping="Wrap"/>
+    </StackPanel>
+   </Border>
    <Border x:Name="AvailabilityCard" Padding="14" Background="{ThemeResource LimsSurfaceSecondaryBrush}" BorderBrush="{ThemeResource LimsBorderBrush}" BorderThickness="1" CornerRadius="10">
     <StackPanel Spacing="12">
      <TextBlock Text="DISPONIBILIDAD" Style="{StaticResource LimsSectionTitleStyle}"/>

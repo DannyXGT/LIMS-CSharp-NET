@@ -1,0 +1,178 @@
+{
+  "FixtureOnly": true,
+  "CreateCalls": 2,
+  "Created": null,
+  "CanSave": true,
+  "Calculation": {
+    "TotalVolumeTaken": 1,
+    "FinalVolume": 10,
+    "VolumeUnit": "mL",
+    "RemainingToFill": 9,
+    "OccupiedPercent": 10.0,
+    "ExceedsFinalVolume": false,
+    "HasSufficientVolume": true,
+    "Components": [
+      {
+        "Source": {
+          "Id": "624a35d4-4bb9-438f-b1f0-d21d693eb59a",
+          "Kind": "CommercialMix",
+          "Code": "MIX-PRUEBA",
+          "Name": "Mix comercial de prueba",
+          "MethodId": 1,
+          "Method": "Aminas arom\u00E1ticas",
+          "AvailableVolume": 10,
+          "InitialVolume": 10,
+          "VolumeUnit": "mL",
+          "PreparationDate": "2026-01-01",
+          "ExpirationDate": "2027-06-01",
+          "Version": "473b66f9-c6f3-4769-8afc-3845c1aa40e1",
+          "Analytes": [
+            {
+              "MaterialId": "8904a6a9-0e21-4c5d-9b94-d7a2d59222ae",
+              "Name": "Analito A",
+              "CasNumber": null,
+              "Lot": "LOTE-MIX",
+              "Concentration": 50,
+              "Unit": "\u00B5g/mL",
+              "PhysicalMaterialId": "624a35d4-4bb9-438f-b1f0-d21d693eb59a",
+              "CertifiedComponentId": null,
+              "ExpandedUncertainty": null
+            },
+            {
+              "MaterialId": "f5eeab09-243b-4233-b26c-5a2f9f42ff1f",
+              "Name": "Analito B",
+              "CasNumber": null,
+              "Lot": "LOTE-MIX",
+              "Concentration": 49.9,
+              "Unit": "\u00B5g/mL",
+              "PhysicalMaterialId": "624a35d4-4bb9-438f-b1f0-d21d693eb59a",
+              "CertifiedComponentId": null,
+              "ExpandedUncertainty": null
+            },
+            {
+              "MaterialId": "7078bfb4-077a-49e8-9cbd-4a7406ae544f",
+              "Name": "Analito C",
+              "CasNumber": null,
+              "Lot": "LOTE-MIX",
+              "Concentration": 50.1,
+              "Unit": "\u00B5g/mL",
+              "PhysicalMaterialId": "624a35d4-4bb9-438f-b1f0-d21d693eb59a",
+              "CertifiedComponentId": null,
+              "ExpandedUncertainty": null
+            }
+          ],
+          "Lot": null,
+          "Brand": null,
+          "Catalog": null,
+          "Matrix": null,
+          "Certificate": null
+        },
+        "VolumeTaken": 1,
+        "VolumeUnit": "mL",
+        "RemainingVolume": 9,
+        "Results": [
+          {
+            "MaterialId": "8904a6a9-0e21-4c5d-9b94-d7a2d59222ae",
+            "Name": "Analito A",
+            "CasNumber": null,
+            "Lot": "LOTE-MIX",
+            "Concentration": 5,
+            "Unit": "\u00B5g/mL",
+            "PhysicalMaterialId": "624a35d4-4bb9-438f-b1f0-d21d693eb59a",
+            "CertifiedComponentId": null,
+            "ExpandedUncertainty": null
+          },
+          {
+            "MaterialId": "f5eeab09-243b-4233-b26c-5a2f9f42ff1f",
+            "Name": "Analito B",
+            "CasNumber": null,
+            "Lot": "LOTE-MIX",
+            "Concentration": 4.99,
+            "Unit": "\u00B5g/mL",
+            "PhysicalMaterialId": "624a35d4-4bb9-438f-b1f0-d21d693eb59a",
+            "CertifiedComponentId": null,
+            "ExpandedUncertainty": null
+          },
+          {
+            "MaterialId": "7078bfb4-077a-49e8-9cbd-4a7406ae544f",
+            "Name": "Analito C",
+            "CasNumber": null,
+            "Lot": "LOTE-MIX",
+            "Concentration": 5.01,
+            "Unit": "\u00B5g/mL",
+            "PhysicalMaterialId": "624a35d4-4bb9-438f-b1f0-d21d693eb59a",
+            "CertifiedComponentId": null,
+            "ExpandedUncertainty": null
+          }
+        ]
+      }
+    ],
+    "Results": [
+      {
+        "MaterialId": "8904a6a9-0e21-4c5d-9b94-d7a2d59222ae",
+        "Name": "Analito A",
+        "CasNumber": null,
+        "Lot": "LOTE-MIX",
+        "Concentration": 5,
+        "Unit": "\u00B5g/mL",
+        "PhysicalMaterialId": "624a35d4-4bb9-438f-b1f0-d21d693eb59a",
+        "CertifiedComponentId": null,
+        "ExpandedUncertainty": null
+      },
+      {
+        "MaterialId": "f5eeab09-243b-4233-b26c-5a2f9f42ff1f",
+        "Name": "Analito B",
+        "CasNumber": null,
+        "Lot": "LOTE-MIX",
+        "Concentration": 4.99,
+        "Unit": "\u00B5g/mL",
+        "PhysicalMaterialId": "624a35d4-4bb9-438f-b1f0-d21d693eb59a",
+        "CertifiedComponentId": null,
+        "ExpandedUncertainty": null
+      },
+      {
+        "MaterialId": "7078bfb4-077a-49e8-9cbd-4a7406ae544f",
+        "Name": "Analito C",
+        "CasNumber": null,
+        "Lot": "LOTE-MIX",
+        "Concentration": 5.01,
+        "Unit": "\u00B5g/mL",
+        "PhysicalMaterialId": "624a35d4-4bb9-438f-b1f0-d21d693eb59a",
+        "CertifiedComponentId": null,
+        "ExpandedUncertainty": null
+      }
+    ]
+  },
+  "OccupiedPercent": 10.0,
+  "VolumeError": "",
+  "Message": "",
+  "EditorWidth": 988.7999877929688,
+  "EditorHeight": 466.3999938964844,
+  "ResultStacked": true,
+  "Sources": [
+    {
+      "Code": "STK-20261007-001",
+      "AvailableVolume": 185
+    },
+    {
+      "Code": "STK-20261007-002",
+      "AvailableVolume": 185
+    },
+    {
+      "Code": "STK-20261007-003",
+      "AvailableVolume": 185
+    },
+    {
+      "Code": "INT-20261017-001",
+      "AvailableVolume": 100
+    },
+    {
+      "Code": "INT-20261017-002",
+      "AvailableVolume": 100
+    },
+    {
+      "Code": "MIX-PRUEBA",
+      "AvailableVolume": 10
+    }
+  ]
+}

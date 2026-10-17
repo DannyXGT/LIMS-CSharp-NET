@@ -6,6 +6,8 @@ artifacts/*
 artifacts/sql/*
 !artifacts/sql/authentication.sql
 !artifacts/sql/reference_material_catalogs.sql
+!artifacts/sql/stock_solvent_composition.sql
+!artifacts/sql/certified_commercial_materials.sql
 !artifacts/sql/reference_stock.sql
 !artifacts/sql/reference_intermediate.sql
 !artifacts/sql/reference_preparation_decimal_scale.sql
@@ -13,6 +15,17 @@ artifacts/sql/*
 !artifacts/sql/reference_curve_aqs.sql
 !artifacts/validation/
 artifacts/validation/*
+!artifacts/validation/commercial-materials/
+artifacts/validation/commercial-materials/*
+!artifacts/validation/commercial-materials/*.png
+!artifacts/validation/commercial-materials/*-request.json
+!artifacts/validation/commercial-materials/*-layout-*.json
+!artifacts/validation/commercial-materials/intermediate-report.json
+!artifacts/validation/commercial-materials/verification.json
+!artifacts/validation/stock-solvents/
+artifacts/validation/stock-solvents/*
+!artifacts/validation/stock-solvents/*.png
+!artifacts/validation/stock-solvents/verification.json
 !artifacts/validation/stock/
 artifacts/validation/stock/*
 !artifacts/validation/stock/*.png

@@ -10,7 +10,7 @@ public static class ReferenceMaterialPresentation
     private static readonly TimeZoneInfo ApplicationTimeZone = TimeZoneInfo.FindSystemTimeZoneById("America/Guatemala");
 
     public static string Number(decimal value) => value.ToString("0.############################", ApplicationCulture);
-    public static string Purity(decimal value) => $"{Number(value)} %";
+    public static string Purity(decimal? value) => value.HasValue ? $"{Number(value.Value)} %" : "No documentada";
     public static string Quantity(decimal? value, string unit) => value.HasValue
         ? $"{Number(value.Value)} {unit}".TrimEnd()
         : "No disponible";

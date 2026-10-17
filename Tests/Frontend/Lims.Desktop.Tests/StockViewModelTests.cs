@@ -10,6 +10,16 @@ namespace Lims.Desktop.Tests;
 public sealed class StockViewModelTests
 {
     [Fact]
+    public async Task CommercialSelectionOpensPhysicalMaterialWithoutRequestingInternalPreparation()
+    {
+        var api = new FakeStockApi(); var vm = Model(api);
+        var commercial = api.Created.Preparation with { IsCommercial = true, TargetConcentration = null, ActualWeight = null };
+        vm.Items.Add(commercial); vm.SelectedPreparation = commercial;
+        Guid? opened = null; vm.CommercialOpened += id => { opened = id; return Task.CompletedTask; };
+        await vm.OpenSelectedPreparationCommand.ExecuteAsync(null);
+        Assert.Equal(commercial.Id, opened); Assert.Empty(api.DetailIds); Assert.Null(vm.Detail);
+    }
+    [Fact]
     public async Task LoadingErrorsAndOlderResponsesCannotMasqueradeAsAnEmptyList()
     {
         var api = new FakeStockApi();
@@ -334,10 +344,50 @@ public sealed class StockViewModelTests
         Assert.Equal(DateOnly.FromDateTime(today.AddDays(-40).Date), request.ExpirationDate);
     }
 
+    [Fact]
+    public async Task CompositionEditorPreservesPercentagesAndBlocksIncompleteDuplicateAndRemovedRows()
+    {
+        var api = new FakeStockApi(); var vm = Model(api); await ReadyAsync(vm);
+        var original = vm.Calculation;
+        vm.SolventRows[0].Proportion = "50";
+        var water = vm.AddSolvent(); water.SelectedSolvent = vm.SolventCatalog[1]; water.Proportion = "50";
+        Assert.True(vm.CanSave);
+        Assert.Equal("50", vm.SolventRows[0].Proportion);
+        var acn = vm.AddSolvent();
+        Assert.False(vm.CanSave); Assert.Equal("50", water.Proportion);
+        acn.SelectedSolvent = vm.SolventCatalog[2]; acn.Proportion = "20";
+        vm.SolventRows[0].Proportion = "30";
+        Assert.True(vm.CanSave);
+        Assert.Equal("MeOH / H2O / ACN \u2014 30:50:20", vm.CompositionSummary);
+        acn.SelectedSolvent = water.SelectedSolvent; Assert.False(vm.CanSave);
+        acn.SelectedSolvent = vm.SolventCatalog[2]; acn.Proportion = "20.00001"; Assert.False(vm.CanSave);
+        acn.Proportion = "20"; vm.RemoveSolvent(acn); Assert.False(vm.CanSave);
+        vm.SolventRows[0].Proportion = "50"; Assert.True(vm.CanSave);
+        vm.SolventRows[0].Proportion = "50.125"; water.Proportion = "49.875"; Assert.True(vm.CanSave);
+        Assert.Same(original, vm.Calculation);
+        Assert.True(await vm.SaveAsync(default));
+        var saved = Assert.Single(api.Requests);
+        Assert.Equal(vm.Compound, saved.Compound);
+        Assert.Equal<decimal>([50.125m, 49.875m], saved.Solvents!.Select(r => r.Percent));
+    }
+
+    [Fact]
+    public async Task CompoundSuggestionIsEditableAndBeginNewClearsComposition()
+    {
+        var vm = Model(new FakeStockApi()); await ReadyAsync(vm);
+        Assert.Equal(Source.Name, vm.Compound);
+        vm.Compound = "Analito corregido";
+        vm.SelectedSource = Source with { Name = "Otro origen" };
+        Assert.Equal("Analito corregido", vm.Compound);
+        vm.BeginNew(); Assert.Empty(vm.SolventRows); Assert.Equal(string.Empty, vm.Compound); Assert.False(vm.CanSave);
+    }
+
     private static StockViewModel Model(FakeStockApi api) => new(api, new Session("Administrador", []));
     private static async Task ReadyAsync(StockViewModel vm)
     {
         vm.BeginNew();
+        await vm.LoadSolventsAsync(CancellationToken.None);
+        var solvent = vm.AddSolvent(); solvent.SelectedSolvent = vm.SolventCatalog[0]; solvent.Proportion = "100";
         await vm.SearchSourcesAsync(null, 1, CancellationToken.None);
         vm.SelectedSource = vm.Sources[0];
         vm.Concentration = "100";
@@ -367,6 +417,7 @@ public sealed class StockViewModelTests
         public StockDetail Created { get; } = new(new StockSummary(Guid.NewGuid(), "STK-20261006-001", "Stock", Source.Name, Source.Lot,
             100, 100, "mg/L", 100, "mL", new DateOnly(2026, 10, 6), "Ana López", "Active"), Source, Calculation,
             new(Guid.NewGuid(), 10, "mg", 100, 90, "Ana López", DateTimeOffset.UtcNow), null, DateTimeOffset.UtcNow, DateTimeOffset.UtcNow, Guid.NewGuid());
+        public Task<ApiCallResult<IReadOnlyList<SolventOption>>> SolventsAsync(string? search, CancellationToken cancellationToken) => Task.FromResult(Ok<IReadOnlyList<SolventOption>>([new(4, "Metanol", "MeOH", true, 3), new(8, "Agua", "H2O", true, 7), new(3, "Acetonitrilo", "ACN", true, 2)]));
         public Task<ApiCallResult<StockOptions>> OptionsAsync(CancellationToken cancellationToken) => Task.FromResult(Ok(new StockOptions(["mg/L"], ["mL"])));
         public Task<ApiCallResult<StockSourcePage>> SourcesAsync(string? search, int page, CancellationToken cancellationToken) { SourceCalls++; return Task.FromResult(Ok(new StockSourcePage([Source], page, 25, 1))); }
         public Task<ApiCallResult<StockCalculation>> PreviewAsync(StockCalculationRequest request, CancellationToken cancellationToken) { LastPreview = request; return PreviewHandler?.Invoke(request) ?? Task.FromResult(Ok(Result)); }

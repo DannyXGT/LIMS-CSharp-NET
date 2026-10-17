@@ -29,7 +29,7 @@
        <TextBlock Style="{StaticResource LimsCaptionStyle}" Text="{x:Bind Detail.CasDisplay, Mode=OneTime}" Visibility="{x:Bind Detail.HasCas, Mode=OneTime}" />
        <TextBlock x:Name="IdentityCatalog" Style="{StaticResource LimsCaptionStyle}" TextWrapping="Wrap" />
        <Grid x:Name="IdentityChips" ColumnSpacing="8" HorizontalAlignment="Left" Margin="0,4,0,0"><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
-        <Border Background="{ThemeResource LimsSurfaceSecondaryBrush}" CornerRadius="4" Padding="8,4"><TextBlock Style="{StaticResource LimsCaptionStyle}" Text="{x:Bind Detail.BrandDisplay, Mode=OneTime}" ToolTipService.ToolTip="Marca" /></Border>
+        <Border Background="{ThemeResource LimsSurfaceSecondaryBrush}" CornerRadius="4" Padding="8,4"><TextBlock Style="{StaticResource LimsCaptionStyle}" Text="{x:Bind Detail.PresentationLabel, Mode=OneTime}" ToolTipService.ToolTip="Presentación" /></Border>
         <Border Grid.Column="1" Background="{ThemeResource LimsSurfaceSecondaryBrush}" CornerRadius="4" Padding="8,4"><TextBlock Style="{StaticResource LimsCaptionStyle}" Text="{x:Bind Detail.MethodDisplay, Mode=OneTime}" ToolTipService.ToolTip="Método" /></Border>
        </Grid>
       </StackPanel>
@@ -84,6 +84,7 @@
          <Border x:Name="ExpiryCard" Grid.Column="1" Style="{StaticResource DetailPanelStyle}"><StackPanel Spacing="12"><TextBlock Style="{StaticResource LimsDetailHeadingStyle}" Text="VENCIMIENTO" /><TextBlock x:Name="ExpiryHeadline" FontSize="22" FontWeight="SemiBold" TextWrapping="Wrap" /><StackPanel Spacing="4"><TextBlock Style="{StaticResource LimsCaptionStyle}" Text="Ingreso" /><TextBlock x:Name="ReceivedValue" Style="{StaticResource DetailValueStyle}" /></StackPanel></StackPanel></Border>
          <Border x:Name="StateCard" Grid.Column="2" Style="{StaticResource DetailPanelStyle}" VerticalAlignment="Top"><StackPanel Spacing="12"><TextBlock Style="{StaticResource LimsDetailHeadingStyle}" Text="ESTADO" /><design:StatusBadge HorizontalAlignment="Left" Text="{x:Bind Detail.StatusLabel, Mode=OneTime}" Tone="{x:Bind Detail.StatusTone, Mode=OneTime}" /></StackPanel></Border>
         </Grid>
+        <ContentControl x:Name="CommercialDetails" HorizontalContentAlignment="Stretch" />
         <Border x:Name="AuditSection" Style="{StaticResource DetailPanelStyle}" Padding="16"><StackPanel Spacing="16">
          <TextBlock Style="{StaticResource LimsDetailHeadingStyle}" Text="AUDITORÍA / ACTIVIDAD DEL REGISTRO" />
          <Grid x:Name="AuditTable" ColumnSpacing="16" RowSpacing="12"><Grid.ColumnDefinitions><ColumnDefinition Width="152" /><ColumnDefinition Width="1.15*" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions><Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="1" /><RowDefinition Height="Auto" /><RowDefinition Height="1" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>

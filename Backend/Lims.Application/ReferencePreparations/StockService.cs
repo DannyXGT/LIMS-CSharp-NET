@@ -11,6 +11,9 @@ namespace Lims.Application.ReferencePreparations;
 
 public sealed class StockService(IStockRepository repository, TimeProvider timeProvider) : IStockService
 {
+    public async Task<OperationResult<IReadOnlyList<SolventOption>>> SolventsAsync(string? search, CancellationToken cancellationToken) =>
+        OperationResult.Success(await repository.SolventsAsync(search?.Trim(), cancellationToken).ConfigureAwait(false));
+
     public StockOptions GetOptions() => new(["mg/L", "g/L", "µg/L", "µg/mL"], ["mL", "L"]);
 
     public async Task<OperationResult<StockSourcePage>> SourcesAsync(string? search, int page, int pageSize, CancellationToken cancellationToken)
@@ -37,6 +40,10 @@ public sealed class StockService(IStockRepository repository, TimeProvider timeP
         if (request.RequestId == Guid.Empty || request.Calculation is null || request.Name?.Trim().Length is not (> 0 and <= 200) ||
             request.Notes?.Trim().Length > 2000 || request.PreparationDate == default || request.PreparationDate > Today() || request.ExpirationDate is null || request.ExpirationDate < request.PreparationDate || request.StorageTemperature?.Trim().Length > 200 || request.Calculation?.ActualWeight is null)
             return Task.FromResult(Failure<StockDetail>(ErrorCodes.ValidationError, "Registre el peso tomado y revise nombre, fechas, temperatura y observaciones de la preparación."));
+        if (request.Compound?.Trim().Length is not (> 0 and <= 200))
+            return Task.FromResult(Failure<StockDetail>(ErrorCodes.ValidationError, "Registre el compuesto (hasta 200 caracteres)."));
+        if (StockSolventComposition.Validate(request.Solvents, request.CompositionBasis) is { } compositionError)
+            return Task.FromResult(Failure<StockDetail>(ErrorCodes.ValidationError, compositionError));
         var now = timeProvider.GetUtcNow();
         var today = Today();
         var fingerprint = Convert.ToHexString(SHA256.HashData(JsonSerializer.SerializeToUtf8Bytes(new { request, actorUserId })));
@@ -52,10 +59,12 @@ public sealed class StockService(IStockRepository repository, TimeProvider timeP
                 if (!calculation.HasSufficientMaterial)
                     return Failure<ReferencePreparation>(ErrorCodes.InvalidState, "No hay suficiente material disponible.");
                 var code = string.Create(CultureInfo.InvariantCulture, $"STK-{request.PreparationDate:yyyyMMdd}-{sequence:D3}");
-                return OperationResult.Success(new ReferencePreparation(request.RequestId, code, request.Name!, source,
+                var preparation = new ReferencePreparation(request.RequestId, code, request.Name!, source,
                     calculation.TargetConcentration, calculation.ActualConcentration!.Value, calculation.ConcentrationUnit,
                     calculation.FinalVolume, calculation.FinalVolumeUnit, calculation.CalculatedWeight, calculation.ActualWeight!.Value,
-                    calculation.Formula, request.PreparationDate, actorUserId, request.Notes, now, fingerprint, request.ExpirationDate.Value, request.StorageTemperature));
+                    calculation.Formula, request.PreparationDate, actorUserId, request.Notes, now, fingerprint, request.ExpirationDate.Value, request.StorageTemperature);
+                preparation.SetStockComposition(request.Compound!, request.Solvents!.Select(s => (s.SolventId, s.Percent)));
+                return OperationResult.Success(preparation);
             }
             catch (ArgumentException exception) { return Failure<ReferencePreparation>(ErrorCodes.ValidationError, exception.Message); }
             catch (OverflowException) { return Failure<ReferencePreparation>(ErrorCodes.ValidationError, "Las cantidades exceden el rango admitido."); }
@@ -82,6 +91,7 @@ public sealed class StockService(IStockRepository repository, TimeProvider timeP
         if (source is null) return new(ErrorCodes.NotFound, "El estándar solicitado no existe.");
         if (request.SourceVersion == Guid.Empty || source.Version != request.SourceVersion)
             return new(ErrorCodes.Conflict, "El estándar cambió. Vuelva a seleccionarlo y calcule nuevamente.");
+        if (source.Presentation != "Solid") return new(ErrorCodes.InvalidState, "La solución comercial debe usarse directamente como origen.");
         return source.EffectiveStatus(HistoricalEntryPolicy.EnforceCurrentExpiration ? today : source.ExpirationDate) != ReferenceMaterialStatus.Active
             ? new(ErrorCodes.InvalidState, "El estándar no está disponible para uso.") : null;
     }

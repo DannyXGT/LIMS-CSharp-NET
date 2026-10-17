@@ -82,6 +82,7 @@ try
     builder.Services.AddScoped<IDashboardRepository, DashboardRepository>();
     builder.Services.AddScoped<IStockRepository, StockRepository>();
     builder.Services.AddScoped<IStockService, StockService>();
+    builder.Services.AddScoped<ICommercialPreparationService, CommercialPreparationService>();
     builder.Services.AddScoped<IIntermediateRepository, IntermediateRepository>();
     builder.Services.AddScoped<IIntermediateService, IntermediateService>();
     builder.Services.AddScoped<ISolutionGroupRepository, SolutionGroupRepository>();

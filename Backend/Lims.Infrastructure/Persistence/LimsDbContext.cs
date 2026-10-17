@@ -28,6 +28,8 @@ public sealed class LimsDbContext(DbContextOptions<LimsDbContext> options) : DbC
 
     public DbSet<ReferenceLocation> ReferenceLocations => Set<ReferenceLocation>();
 
+    public DbSet<ReferenceSolvent> ReferenceSolvents => Set<ReferenceSolvent>();
+    public DbSet<StockSolvent> StockSolvents => Set<StockSolvent>();
     public DbSet<ReferencePreparation> ReferencePreparations => Set<ReferencePreparation>();
     public DbSet<ReferencePreparationComponent> ReferencePreparationComponents => Set<ReferencePreparationComponent>();
     public DbSet<ReferenceMaterialMovement> ReferenceMaterialMovements => Set<ReferenceMaterialMovement>();
@@ -42,6 +44,8 @@ public sealed class LimsDbContext(DbContextOptions<LimsDbContext> options) : DbC
         ConfigureReferenceMaterialCatalogs(modelBuilder);
         ConfigureReferenceMaterials(modelBuilder);
         StockModel.Configure(modelBuilder);
+        StockSolventModel.Configure(modelBuilder);
+        CommercialMaterialModel.Configure(modelBuilder);
     }
 
     private static void ConfigureLegacyIdentity(ModelBuilder modelBuilder)
@@ -279,7 +283,7 @@ public sealed class LimsDbContext(DbContextOptions<LimsDbContext> options) : DbC
             {
                 table.HasCheckConstraint(
                     "ck_reference_materials_purity",
-                    "purity_percent > 0 AND purity_percent <= 100");
+                    "(presentation = 'Solid' AND purity_percent IS NOT NULL AND purity_percent > 0 AND purity_percent <= 100) OR (presentation <> 'Solid' AND (purity_percent IS NULL OR (purity_percent > 0 AND purity_percent <= 100)))");
                 table.HasCheckConstraint(
                     "ck_reference_materials_presentation_quantity",
                     "presentation_quantity > 0");
@@ -316,8 +320,7 @@ public sealed class LimsDbContext(DbContextOptions<LimsDbContext> options) : DbC
                 .IsRequired();
             builder.Property(material => material.PurityPercent)
                 .HasColumnName("purity_percent")
-                .HasPrecision(7, 4)
-                .IsRequired();
+                .HasPrecision(7, 4);
             builder.Property(material => material.Lot)
                 .HasColumnName("lot")
                 .HasMaxLength(ReferenceMaterial.LotMaximumLength)

@@ -9,6 +9,6 @@ public static class StockCalculator
     public static StockCalculation Calculate(ReferenceMaterial source, StockCalculationRequest request)
     {
         ArgumentNullException.ThrowIfNull(source);
-        return StockUnits.Calculate(source.PurityPercent, source.AvailableQuantity, source.Unit.Symbol, request);
+        return StockUnits.Calculate(source.PurityPercent ?? throw new ArgumentException("La preparación por pesada requiere un s?lido con pureza documentada."), source.AvailableQuantity, source.Unit.Symbol, request);
     }
 }

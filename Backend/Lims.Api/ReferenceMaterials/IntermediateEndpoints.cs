@@ -9,6 +9,7 @@ internal static class IntermediateEndpoints
     public static IEndpointRouteBuilder MapIntermediateEndpoints(this IEndpointRouteBuilder endpoints)
     {
         var group = endpoints.MapGroup("/api/reference-materials/preparations/intermediate").WithTags("Intermediate");
+        group.MapCommercial("Intermedia", PermissionCatalog.IntermediateView, PermissionCatalog.IntermediateCreate);
         group.MapGet("/options", async (IIntermediateService service, HttpContext context, CancellationToken cancellationToken) =>
             ReferenceMaterialEndpoints.ToResult(context, await service.OptionsAsync(cancellationToken).ConfigureAwait(false)))
             .RequireAuthorization(PermissionCatalog.IntermediateCreate);

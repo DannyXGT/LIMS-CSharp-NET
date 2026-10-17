@@ -277,6 +277,26 @@ public sealed class AuthenticationEndpointsTests : IClassFixture<AuthenticationA
         Assert.Equal(HttpStatusCode.NotFound, allowed.StatusCode);
     }
 
+    [Theory]
+    [InlineData(MaterialPresentations.Solution)]
+    [InlineData(MaterialPresentations.Mix)]
+    public async Task CommercialRegistrationUsesExistingCreatePermissionAndPreservesCertificateContract(string presentation)
+    {
+        var payload = new CreateReferenceMaterialRequest("Frasco comercial de prueba", null, "TEST", 1, null,
+            "LOT-TEST", "Marca de prueba", new(2026, 1, 1), new(2027, 1, 1), 10, 1, 1, "Ambiente", 1,
+            presentation, new("CERT-TEST", "Acetonitrilo", null, 50, "µg/mL", null, null, null,
+                [new(Guid.NewGuid(), "Analito A", null, 49.9m, "µg/mL", 0.2m)]));
+        using var denied = new HttpRequestMessage(HttpMethod.Post, "/api/reference-materials") { Content = JsonContent.Create(payload) };
+        denied.Headers.Authorization = new("Bearer", CreateAccessTokenForRole("Usuario", ReferenceMaterialPermissions.View));
+        Assert.Equal(HttpStatusCode.Forbidden, (await _client.SendAsync(denied)).StatusCode);
+        using var allowed = new HttpRequestMessage(HttpMethod.Post, "/api/reference-materials") { Content = JsonContent.Create(payload) };
+        allowed.Headers.Authorization = new("Bearer", CreateAccessTokenForRole("Usuario", ReferenceMaterialPermissions.Create));
+        Assert.Equal(HttpStatusCode.Created, (await _client.SendAsync(allowed)).StatusCode);
+        Assert.Equal(presentation, _factory.LastCreateRequest!.Presentation);
+        Assert.Null(_factory.LastCreateRequest.PurityPercent);
+        Assert.Equal(payload.Commercial!.Components, _factory.LastCreateRequest.Commercial!.Components);
+    }
+
     private string CreateAccessToken(params string[] permissions)
         => CreateAccessTokenForRole("Administrador", permissions);
 

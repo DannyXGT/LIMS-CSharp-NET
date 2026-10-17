@@ -1,0 +1,73 @@
+{
+  "fixtureOnly": true,
+  "request": {
+    "Name": "CommercialMix - frasco de prueba aislada",
+    "CasNumber": null,
+    "CatalogNumber": null,
+    "MethodId": 1,
+    "PurityPercent": null,
+    "Lot": "Fixture",
+    "Brand": "Fixture",
+    "ReceivedDate": "2026-10-17",
+    "ExpirationDate": "2027-10-18",
+    "PresentationQuantity": 10,
+    "UnitId": 3,
+    "PackageCount": 1,
+    "StorageTemperature": "Fixture",
+    "LocationId": 1,
+    "Presentation": "CommercialMix",
+    "Commercial": {
+      "Reference": "CERT-TEST-SOLO-VALIDACION",
+      "Matrix": "Acetonitrilo (dato de prueba)",
+      "Traceability": "Referencia de prueba aislada",
+      "NominalConcentration": 1000,
+      "NominalUnit": "\u00B5g/mL",
+      "CoverageFactor": 2,
+      "OpenedDate": "2026-10-17",
+      "UseAfterOpeningMonths": 15,
+      "Components": [
+        {
+          "Id": "448aea2e-6018-4cb8-b170-af0818c22b62",
+          "Name": "Analito A",
+          "CasNumber": null,
+          "CertifiedConcentration": 50,
+          "ConcentrationUnit": "\u00B5g/mL",
+          "ExpandedUncertainty": 0.2,
+          "PurityPercent": null,
+          "Lot": "COMP-TEST-0",
+          "AdditionalData": null
+        },
+        {
+          "Id": "18b66d9b-5961-4969-b62f-0d1dc2769153",
+          "Name": "Analito B",
+          "CasNumber": null,
+          "CertifiedConcentration": 49.9,
+          "ConcentrationUnit": "\u00B5g/mL",
+          "ExpandedUncertainty": 0.2,
+          "PurityPercent": null,
+          "Lot": "COMP-TEST-1",
+          "AdditionalData": null
+        },
+        {
+          "Id": "d72cbf34-b89f-48d3-af53-ca719b021b7e",
+          "Name": "Analito C",
+          "CasNumber": null,
+          "CertifiedConcentration": 50.1,
+          "ConcentrationUnit": "\u00B5g/mL",
+          "ExpandedUncertainty": 0.2,
+          "PurityPercent": null,
+          "Lot": "COMP-TEST-2",
+          "AdditionalData": null
+        }
+      ],
+      "OtherExpressions": [
+        {
+          "Value": 974,
+          "Unit": "\u00B5g/g",
+          "ExpandedUncertainty": 5
+        }
+      ],
+      "UseAfterOpeningDays": null
+    }
+  }
+}

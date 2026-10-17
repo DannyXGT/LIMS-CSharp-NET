@@ -1,3 +1,4 @@
+using Lims.Desktop.Http;
 using Lims.Contracts.ReferencePreparations;
 using Lims.Desktop.ViewModels;
 using Microsoft.UI.Xaml;
@@ -9,17 +10,21 @@ namespace Lims.Desktop.Views;
 
 public sealed partial class StockPage : Page
 {
+    private readonly ICommercialPreparationApiClient? _commercialApi;
+    public CommercialPreparationDetailDialog? CommercialDetail { get; private set; }
     private bool _dialogOpen;
     private bool _resetting;
     private readonly DispatcherTimer _searchTimer = new() { Interval = TimeSpan.FromMilliseconds(300) };
-    public StockPage(StockViewModel viewModel)
+    public StockPage(StockViewModel viewModel, ICommercialPreparationApiClient? commercialApi = null)
     {
+        _commercialApi = commercialApi;
         ViewModel = viewModel;
         InitializeComponent();
         _searchTimer.Tick += async (_, _) => { _searchTimer.Stop(); await SearchAsync(); };
         Unloaded += (_, _) => _searchTimer.Stop();
         ViewModel.PropertyChanged += (_, e) => { if (e.PropertyName == nameof(ViewModel.IsEmpty) && ViewModel.IsEmpty && IsLoaded) Lims.DesignSystem.Presentation.Motion.Enter(EmptyState, y: 4, milliseconds: 160); };
         ViewModel.PreparationOpened += ShowSelectedDetailAsync;
+        ViewModel.CommercialOpened += OpenCommercialAsync;
         // ListView can consume Enter internally; keep the detail action available to keyboard users.
         PreparationsList.AddHandler(UIElement.KeyDownEvent, new KeyEventHandler(OnListKeyDown), true);
     }
@@ -52,10 +57,12 @@ public sealed partial class StockPage : Page
         ViewModel.BeginNew();
         try
         {
-            Editor = new StockEditorDialog(ViewModel) { XamlRoot = XamlRoot, RequestedTheme = ActualTheme };
+            Editor = new StockEditorDialog(ViewModel, _commercialApi) { XamlRoot = XamlRoot, RequestedTheme = ActualTheme };
             await Editor.ShowAsync();
+            var commercial = Editor.CommercialCreated;
             var viewDetail = Editor.ViewCreatedDetail;
             Editor = null;
+            if (commercial is not null) { await LoadAsync(); await ShowCommercialAsync(commercial); }
             if (viewDetail && ViewModel.Created is { } created)
             {
                 var dialog = new StockDetailDialog(created) { XamlRoot = XamlRoot, RequestedTheme = ActualTheme };
@@ -109,4 +116,25 @@ public sealed partial class StockPage : Page
         finally { DetailSheet = null; _dialogOpen = false; }
     }
 
+    private async Task OpenCommercialAsync(Guid id)
+    {
+        if (_dialogOpen || !IsLoaded || _commercialApi is null) return;
+        _dialogOpen = true;
+        try
+        {
+            var response = await _commercialApi.GetAsync("Stock", id, CancellationToken.None);
+            if (response.IsSuccess && response.Value is { } detail) await ShowCommercialAsync(detail);
+            else ViewModel.ListMessage = response.Error?.Message ?? "No se pudo abrir el ingreso comercial.";
+        }
+        finally { _dialogOpen = false; }
+    }
+    private async Task ShowCommercialAsync(CommercialPreparationDetail detail)
+    {
+        try
+        {
+            CommercialDetail = new CommercialPreparationDetailDialog(detail) { XamlRoot = XamlRoot, RequestedTheme = ActualTheme };
+            await CommercialDetail.ShowAsync();
+        }
+        finally { CommercialDetail = null; }
+    }
 }

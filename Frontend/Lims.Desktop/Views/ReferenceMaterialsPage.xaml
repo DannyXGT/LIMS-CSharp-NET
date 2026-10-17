@@ -141,7 +141,7 @@
                                     <Border x:Name="RowSelectionMarker" Grid.ColumnSpan="9" Width="2" Margin="-8,0,0,0" HorizontalAlignment="Left" Background="{ThemeResource LimsAccentBrush}" CornerRadius="1" Opacity="0" IsHitTestVisible="False" />
                                     <StackPanel VerticalAlignment="Center" Spacing="1">
                                         <TextBlock FontWeight="SemiBold" Text="{x:Bind NameDisplay}" ToolTipService.ToolTip="{x:Bind NameDisplay}" TextTrimming="CharacterEllipsis" />
-                                        <TextBlock Style="{StaticResource LimsCaptionStyle}" Text="{x:Bind CasDisplay}" ToolTipService.ToolTip="{x:Bind CasDisplay}" TextTrimming="CharacterEllipsis" />
+                                        <TextBlock Style="{StaticResource LimsCaptionStyle}" Text="{x:Bind IdentitySubtitle}" ToolTipService.ToolTip="{x:Bind IdentitySubtitle}" TextTrimming="CharacterEllipsis" />
                                     </StackPanel>
                                     <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{x:Bind CatalogDisplay}" ToolTipService.ToolTip="{x:Bind CatalogDisplay}" TextTrimming="CharacterEllipsis" />
                                     <TextBlock Grid.Column="2" VerticalAlignment="Center" Text="{x:Bind LotDisplay}" ToolTipService.ToolTip="{x:Bind LotDisplay}" TextTrimming="CharacterEllipsis" />

@@ -68,7 +68,7 @@ internal static class StockModel
         movement.ToTable("reference_material_movements", table =>
         {
             table.HasCheckConstraint("ck_reference_material_movements_balance", "quantity > 0 AND balance_before >= quantity AND balance_after >= 0 AND balance_after = balance_before - quantity");
-            table.HasCheckConstraint("ck_reference_material_movements_kind", "(kind = 'StockConsumption' AND source_material_id IS NOT NULL AND source_preparation_id IS NULL AND component_id IS NULL) OR (kind = 'IntermediateConsumption' AND source_material_id IS NULL AND source_preparation_id IS NOT NULL AND component_id IS NOT NULL)");
+            table.HasCheckConstraint("ck_reference_material_movements_kind", "(kind = 'StockConsumption' AND source_material_id IS NOT NULL AND source_preparation_id IS NULL AND component_id IS NULL) OR (kind = 'IntermediateConsumption' AND source_material_id IS NULL AND source_preparation_id IS NOT NULL AND component_id IS NOT NULL) OR (kind = 'CommercialConsumption' AND source_material_id IS NOT NULL AND source_preparation_id IS NULL AND component_id IS NOT NULL)");
         });
         movement.HasKey(item => item.Id);
         movement.Property(item => item.Id).ValueGeneratedNever();
@@ -93,12 +93,14 @@ internal static class StockModel
         component.ToTable("reference_preparation_components", table =>
         {
             table.HasCheckConstraint("ck_reference_components_volume", "volume_taken > 0 AND volume_unit IN ('mL','L') AND position >= 0");
-            table.HasCheckConstraint("ck_reference_components_source", "preparation_id <> source_preparation_id AND source_type IN ('Stock','Intermedia')");
+            table.HasCheckConstraint("ck_reference_components_source", "(source_preparation_id IS NOT NULL AND source_material_id IS NULL AND preparation_id <> source_preparation_id AND source_type IN ('Stock','Intermedia')) OR (source_preparation_id IS NULL AND source_material_id IS NOT NULL AND source_type IN ('CommercialSolution','CommercialMix'))");
         });
         component.HasKey(c => c.Id);
         component.Property(c => c.Id).ValueGeneratedNever();
         component.HasOne<ReferencePreparation>().WithMany().HasForeignKey(c => c.PreparationId).OnDelete(DeleteBehavior.Restrict);
         component.HasOne<ReferencePreparation>().WithMany().HasForeignKey(c => c.SourcePreparationId).OnDelete(DeleteBehavior.Restrict);
+        component.HasOne<ReferenceMaterial>().WithMany().HasForeignKey(c => c.SourceMaterialId).OnDelete(DeleteBehavior.Restrict);
+        component.HasIndex(c => new { c.PreparationId, c.SourceMaterialId }).IsUnique();
         component.HasIndex(c => new { c.PreparationId, c.SourcePreparationId }).IsUnique();
         component.HasIndex(c => new { c.PreparationId, c.Position }).IsUnique();
         foreach (var property in component.Metadata.GetProperties()) component.Property(property.Name).HasColumnName(Snake(property.Name));

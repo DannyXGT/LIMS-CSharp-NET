@@ -5,6 +5,7 @@ namespace Lims.Application.ReferencePreparations;
 
 public interface IStockService
 {
+    Task<OperationResult<IReadOnlyList<SolventOption>>> SolventsAsync(string? search, CancellationToken cancellationToken);
     StockOptions GetOptions();
     Task<OperationResult<StockSourcePage>> SourcesAsync(string? search, int page, int pageSize, CancellationToken cancellationToken);
     Task<OperationResult<StockCalculation>> PreviewAsync(StockCalculationRequest request, CancellationToken cancellationToken);

@@ -86,14 +86,14 @@ public sealed class ReferenceMaterialRepository(LimsDbContext dbContext) : IRefe
             query = query.Where(material =>
                 material.Status == ReferenceMaterialStatus.Active &&
                 material.AvailableQuantity > 0 &&
-                material.ExpirationDate >= asOfDate);
+                (material.EffectiveExpirationDate ?? material.ExpirationDate) >= asOfDate);
         }
         else if (status == ReferenceMaterialStatus.Expired)
         {
             query = query.Where(material =>
                 material.Status == ReferenceMaterialStatus.Active &&
                 material.AvailableQuantity > 0 &&
-                material.ExpirationDate < asOfDate);
+                (material.EffectiveExpirationDate ?? material.ExpirationDate) < asOfDate);
         }
         else if (status == ReferenceMaterialStatus.Depleted)
         {
@@ -150,7 +150,11 @@ public sealed class ReferenceMaterialRepository(LimsDbContext dbContext) : IRefe
             names.GetValueOrDefault(material.CreatedByUserId),
             names.GetValueOrDefault(material.UpdatedByUserId),
             material.ArchivedByUserId.HasValue ? names.GetValueOrDefault(material.ArchivedByUserId.Value) : null,
-            replacementName);
+            replacementName,
+            material.Presentation == "Solid" ? [] : await dbContext.ReferenceMaterialMovements.AsNoTracking().Where(m => m.SourceMaterialId == material.Id)
+                .OrderByDescending(m => m.OccurredAt).Select(m => new Lims.Contracts.ReferenceMaterials.MaterialConsumption(
+                    m.Id, m.PreparationId, m.Preparation.Code, m.Preparation.Kind, m.Quantity, m.Unit,
+                    m.BalanceBefore, m.BalanceAfter, m.ActorUserId, m.OccurredAt)).ToArrayAsync(cancellationToken).ConfigureAwait(false));
     }
 
     public async Task<bool> SaveChangesAsync(CancellationToken cancellationToken)
@@ -174,5 +178,7 @@ public sealed class ReferenceMaterialRepository(LimsDbContext dbContext) : IRefe
     private static IQueryable<ReferenceMaterial> WithCatalogs(IQueryable<ReferenceMaterial> query) => query
         .Include(material => material.Method)
         .Include(material => material.Unit)
-        .Include(material => material.Location);
+        .Include(material => material.Location)
+        .Include(material => material.CertifiedComponents)
+        .Include(material => material.OpeningHistory);
 }

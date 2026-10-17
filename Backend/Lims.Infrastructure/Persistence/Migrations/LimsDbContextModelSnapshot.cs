@@ -408,6 +408,111 @@ namespace Lims.Infrastructure.Persistence.Migrations
                     b.ToTable("user_permission_sets", (string)null);
                 });
 
+            modelBuilder.Entity("Lims.Domain.ReferenceMaterials.CertifiedMaterialComponent", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("AdditionalData")
+                        .HasColumnType("text")
+                        .HasColumnName("additional_data");
+
+                    b.Property<string>("CasNumber")
+                        .HasColumnType("text")
+                        .HasColumnName("cas_number");
+
+                    b.Property<decimal>("CertifiedConcentration")
+                        .HasColumnType("numeric")
+                        .HasColumnName("certified_concentration");
+
+                    b.Property<string>("ConcentrationUnit")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("concentration_unit");
+
+                    b.Property<decimal?>("ExpandedUncertainty")
+                        .HasColumnType("numeric")
+                        .HasColumnName("expanded_uncertainty");
+
+                    b.Property<string>("Lot")
+                        .HasColumnType("text")
+                        .HasColumnName("lot");
+
+                    b.Property<Guid>("MaterialId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("material_id");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("name");
+
+                    b.Property<decimal?>("PurityPercent")
+                        .HasColumnType("numeric")
+                        .HasColumnName("purity_percent");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MaterialId");
+
+                    b.ToTable("reference_certified_components", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_certified_component_values", "certified_concentration > 0 AND (expanded_uncertainty IS NULL OR expanded_uncertainty >= 0) AND (purity_percent IS NULL OR (purity_percent > 0 AND purity_percent <= 100))");
+                        });
+                });
+
+            modelBuilder.Entity("Lims.Domain.ReferenceMaterials.ReferenceCommercialRole", b =>
+                {
+                    b.Property<Guid>("MaterialId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("material_id");
+
+                    b.Property<string>("Kind")
+                        .HasMaxLength(24)
+                        .HasColumnType("character varying(24)")
+                        .HasColumnName("kind");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)")
+                        .HasColumnName("code");
+
+                    b.Property<DateTimeOffset>("RegisteredAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("registered_at");
+
+                    b.Property<int>("RegisteredByUserId")
+                        .HasColumnType("integer")
+                        .HasColumnName("registered_by_user_id");
+
+                    b.Property<string>("RequestFingerprint")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("request_fingerprint");
+
+                    b.Property<Guid>("RequestId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("request_id");
+
+                    b.HasKey("MaterialId", "Kind");
+
+                    b.HasIndex("Code")
+                        .IsUnique();
+
+                    b.HasIndex("RegisteredByUserId");
+
+                    b.HasIndex("RequestId")
+                        .IsUnique();
+
+                    b.ToTable("reference_commercial_roles", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_commercial_role_kind", "kind IN ('Stock','Intermedia')");
+                        });
+                });
+
             modelBuilder.Entity("Lims.Domain.ReferenceMaterials.ReferenceLocation", b =>
                 {
                     b.Property<int>("Id")
@@ -496,6 +601,10 @@ namespace Lims.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(80)")
                         .HasColumnName("catalog_number");
 
+                    b.Property<string>("CommercialJson")
+                        .HasColumnType("jsonb")
+                        .HasColumnName("commercial_json");
+
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
@@ -503,6 +612,10 @@ namespace Lims.Infrastructure.Persistence.Migrations
                     b.Property<int>("CreatedByUserId")
                         .HasColumnType("integer")
                         .HasColumnName("created_by_user_id");
+
+                    b.Property<DateOnly?>("EffectiveExpirationDate")
+                        .HasColumnType("date")
+                        .HasColumnName("effective_expiration_date");
 
                     b.Property<DateOnly>("ExpirationDate")
                         .HasColumnType("date")
@@ -528,16 +641,32 @@ namespace Lims.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(200)")
                         .HasColumnName("name");
 
+                    b.Property<DateOnly?>("OpenedDate")
+                        .HasColumnType("date")
+                        .HasColumnName("opened_date");
+
+                    b.Property<bool>("OpeningRequired")
+                        .HasColumnType("boolean")
+                        .HasColumnName("opening_required");
+
                     b.Property<int>("PackageCount")
                         .HasColumnType("integer")
                         .HasColumnName("package_count");
+
+                    b.Property<string>("Presentation")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(24)
+                        .HasColumnType("character varying(24)")
+                        .HasDefaultValue("Solid")
+                        .HasColumnName("presentation");
 
                     b.Property<decimal>("PresentationQuantity")
                         .HasPrecision(18, 6)
                         .HasColumnType("numeric(18,6)")
                         .HasColumnName("presentation_quantity");
 
-                    b.Property<decimal>("PurityPercent")
+                    b.Property<decimal?>("PurityPercent")
                         .HasPrecision(7, 4)
                         .HasColumnType("numeric(7,4)")
                         .HasColumnName("purity_percent");
@@ -619,14 +748,51 @@ namespace Lims.Infrastructure.Persistence.Migrations
 
                             t.HasCheckConstraint("ck_reference_materials_package_count", "package_count > 0");
 
+                            t.HasCheckConstraint("ck_reference_materials_presentation", "presentation IN ('Solid','CommercialSolution','CommercialMix') AND (presentation = 'Solid' OR (commercial_json IS NOT NULL AND package_count = 1 AND effective_expiration_date <= expiration_date))");
+
                             t.HasCheckConstraint("ck_reference_materials_presentation_quantity", "presentation_quantity > 0");
 
-                            t.HasCheckConstraint("ck_reference_materials_purity", "purity_percent > 0 AND purity_percent <= 100");
+                            t.HasCheckConstraint("ck_reference_materials_purity", "(presentation = 'Solid' AND purity_percent IS NOT NULL AND purity_percent > 0 AND purity_percent <= 100) OR (presentation <> 'Solid' AND (purity_percent IS NULL OR (purity_percent > 0 AND purity_percent <= 100)))");
 
                             t.HasCheckConstraint("ck_reference_materials_replacement", "(status = 'Replaced' AND replaced_by_material_id IS NOT NULL) OR (status <> 'Replaced' AND replaced_by_material_id IS NULL)");
 
                             t.HasCheckConstraint("ck_reference_materials_status", "status IN ('Active','Depleted','Expired','Blocked','Replaced','Archived','Retired')");
                         });
+                });
+
+            modelBuilder.Entity("Lims.Domain.ReferenceMaterials.ReferenceMaterialOpeningAudit", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<int>("ActorUserId")
+                        .HasColumnType("integer")
+                        .HasColumnName("actor_user_id");
+
+                    b.Property<DateTimeOffset>("ChangedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("changed_at");
+
+                    b.Property<Guid>("MaterialId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("material_id");
+
+                    b.Property<DateOnly?>("OpenedDate")
+                        .HasColumnType("date")
+                        .HasColumnName("opened_date");
+
+                    b.Property<DateOnly?>("PreviousDate")
+                        .HasColumnType("date")
+                        .HasColumnName("previous_date");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ActorUserId");
+
+                    b.HasIndex("MaterialId");
+
+                    b.ToTable("reference_material_opening_history", (string)null);
                 });
 
             modelBuilder.Entity("Lims.Domain.ReferenceMaterials.ReferenceMethod", b =>
@@ -957,7 +1123,7 @@ namespace Lims.Infrastructure.Persistence.Migrations
                         {
                             t.HasCheckConstraint("ck_reference_material_movements_balance", "quantity > 0 AND balance_before >= quantity AND balance_after >= 0 AND balance_after = balance_before - quantity");
 
-                            t.HasCheckConstraint("ck_reference_material_movements_kind", "(kind = 'StockConsumption' AND source_material_id IS NOT NULL AND source_preparation_id IS NULL AND component_id IS NULL) OR (kind = 'IntermediateConsumption' AND source_material_id IS NULL AND source_preparation_id IS NOT NULL AND component_id IS NOT NULL)");
+                            t.HasCheckConstraint("ck_reference_material_movements_kind", "(kind = 'StockConsumption' AND source_material_id IS NOT NULL AND source_preparation_id IS NULL AND component_id IS NULL) OR (kind = 'IntermediateConsumption' AND source_material_id IS NULL AND source_preparation_id IS NOT NULL AND component_id IS NOT NULL) OR (kind = 'CommercialConsumption' AND source_material_id IS NOT NULL AND source_preparation_id IS NULL AND component_id IS NOT NULL)");
                         });
                 });
 
@@ -1008,6 +1174,16 @@ namespace Lims.Infrastructure.Persistence.Migrations
                         .HasMaxLength(40)
                         .HasColumnType("character varying(40)")
                         .HasColumnName("code");
+
+                    b.Property<string>("CompositionBasis")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("composition_basis");
+
+                    b.Property<string>("Compound")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("compound");
 
                     b.Property<string>("ConcentrationUnit")
                         .IsRequired()
@@ -1236,7 +1412,11 @@ namespace Lims.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("preparation_id");
 
-                    b.Property<Guid>("SourcePreparationId")
+                    b.Property<Guid?>("SourceMaterialId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("source_material_id");
+
+                    b.Property<Guid?>("SourcePreparationId")
                         .HasColumnType("uuid")
                         .HasColumnName("source_preparation_id");
 
@@ -1268,9 +1448,14 @@ namespace Lims.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("SourceMaterialId");
+
                     b.HasIndex("SourcePreparationId");
 
                     b.HasIndex("PreparationId", "Position")
+                        .IsUnique();
+
+                    b.HasIndex("PreparationId", "SourceMaterialId")
                         .IsUnique();
 
                     b.HasIndex("PreparationId", "SourcePreparationId")
@@ -1278,9 +1463,183 @@ namespace Lims.Infrastructure.Persistence.Migrations
 
                     b.ToTable("reference_preparation_components", null, t =>
                         {
-                            t.HasCheckConstraint("ck_reference_components_source", "preparation_id <> source_preparation_id AND source_type IN ('Stock','Intermedia')");
+                            t.HasCheckConstraint("ck_reference_components_source", "(source_preparation_id IS NOT NULL AND source_material_id IS NULL AND preparation_id <> source_preparation_id AND source_type IN ('Stock','Intermedia')) OR (source_preparation_id IS NULL AND source_material_id IS NOT NULL AND source_type IN ('CommercialSolution','CommercialMix'))");
 
                             t.HasCheckConstraint("ck_reference_components_volume", "volume_taken > 0 AND volume_unit IN ('mL','L') AND position >= 0");
+                        });
+                });
+
+            modelBuilder.Entity("Lims.Domain.ReferencePreparations.ReferenceSolvent", b =>
+                {
+                    b.Property<int>("Id")
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Abbreviation")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("abbreviation");
+
+                    b.Property<int>("DisplayOrder")
+                        .HasColumnType("integer")
+                        .HasColumnName("display_order");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("name");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Abbreviation")
+                        .IsUnique();
+
+                    b.ToTable("reference_solvents", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_reference_solvents_identity", "length(trim(name)) > 0 AND length(trim(abbreviation)) > 0 AND display_order >= 0");
+                        });
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Abbreviation = "THF",
+                            DisplayOrder = 0,
+                            IsActive = true,
+                            Name = "Tetrahidrofurano"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Abbreviation = "Hxn",
+                            DisplayOrder = 1,
+                            IsActive = true,
+                            Name = "Hexano"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            Abbreviation = "ACN",
+                            DisplayOrder = 2,
+                            IsActive = true,
+                            Name = "Acetonitrilo"
+                        },
+                        new
+                        {
+                            Id = 4,
+                            Abbreviation = "MeOH",
+                            DisplayOrder = 3,
+                            IsActive = true,
+                            Name = "Metanol"
+                        },
+                        new
+                        {
+                            Id = 5,
+                            Abbreviation = "Tolueno",
+                            DisplayOrder = 4,
+                            IsActive = true,
+                            Name = "Tolueno"
+                        },
+                        new
+                        {
+                            Id = 6,
+                            Abbreviation = "MTBE",
+                            DisplayOrder = 5,
+                            IsActive = true,
+                            Name = "Éter metil tert-butílico"
+                        },
+                        new
+                        {
+                            Id = 7,
+                            Abbreviation = "Cyclohexano",
+                            DisplayOrder = 6,
+                            IsActive = true,
+                            Name = "Ciclohexano"
+                        },
+                        new
+                        {
+                            Id = 8,
+                            Abbreviation = "H2O",
+                            DisplayOrder = 7,
+                            IsActive = true,
+                            Name = "Agua"
+                        },
+                        new
+                        {
+                            Id = 9,
+                            Abbreviation = "HNO3",
+                            DisplayOrder = 8,
+                            IsActive = true,
+                            Name = "Ácido nítrico"
+                        },
+                        new
+                        {
+                            Id = 10,
+                            Abbreviation = "HCl",
+                            DisplayOrder = 9,
+                            IsActive = true,
+                            Name = "Ácido clorhídrico"
+                        },
+                        new
+                        {
+                            Id = 11,
+                            Abbreviation = "Acetona",
+                            DisplayOrder = 10,
+                            IsActive = true,
+                            Name = "Acetona"
+                        },
+                        new
+                        {
+                            Id = 12,
+                            Abbreviation = "DMSO",
+                            DisplayOrder = 11,
+                            IsActive = true,
+                            Name = "Dimetilsulfóxido"
+                        });
+                });
+
+            modelBuilder.Entity("Lims.Domain.ReferencePreparations.StockSolvent", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<decimal>("Percent")
+                        .HasPrecision(7, 4)
+                        .HasColumnType("numeric(7,4)")
+                        .HasColumnName("percent");
+
+                    b.Property<int>("Position")
+                        .HasColumnType("integer")
+                        .HasColumnName("position");
+
+                    b.Property<Guid>("PreparationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("preparation_id");
+
+                    b.Property<int>("SolventId")
+                        .HasColumnType("integer")
+                        .HasColumnName("solvent_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SolventId");
+
+                    b.HasIndex("PreparationId", "Position")
+                        .IsUnique();
+
+                    b.HasIndex("PreparationId", "SolventId")
+                        .IsUnique();
+
+                    b.ToTable("stock_solvents", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_stock_solvents_percent", "percent > 0 AND percent <= 100 AND position >= 0");
                         });
                 });
 
@@ -1384,6 +1743,32 @@ namespace Lims.Infrastructure.Persistence.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("Lims.Domain.ReferenceMaterials.CertifiedMaterialComponent", b =>
+                {
+                    b.HasOne("Lims.Domain.ReferenceMaterials.ReferenceMaterial", null)
+                        .WithMany("CertifiedComponents")
+                        .HasForeignKey("MaterialId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Lims.Domain.ReferenceMaterials.ReferenceCommercialRole", b =>
+                {
+                    b.HasOne("Lims.Domain.ReferenceMaterials.ReferenceMaterial", "Material")
+                        .WithMany("CommercialRoles")
+                        .HasForeignKey("MaterialId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Lims.Domain.Identity.User", null)
+                        .WithMany()
+                        .HasForeignKey("RegisteredByUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Material");
+                });
+
             modelBuilder.Entity("Lims.Domain.ReferenceMaterials.ReferenceMaterial", b =>
                 {
                     b.HasOne("Lims.Domain.Identity.User", null)
@@ -1431,6 +1816,21 @@ namespace Lims.Infrastructure.Persistence.Migrations
                     b.Navigation("Method");
 
                     b.Navigation("Unit");
+                });
+
+            modelBuilder.Entity("Lims.Domain.ReferenceMaterials.ReferenceMaterialOpeningAudit", b =>
+                {
+                    b.HasOne("Lims.Domain.Identity.User", null)
+                        .WithMany()
+                        .HasForeignKey("ActorUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Lims.Domain.ReferenceMaterials.ReferenceMaterial", null)
+                        .WithMany("OpeningHistory")
+                        .HasForeignKey("MaterialId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Lims.Domain.ReferencePreparations.ReferenceMaterialMovement", b =>
@@ -1504,16 +1904,51 @@ namespace Lims.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("Lims.Domain.ReferenceMaterials.ReferenceMaterial", null)
+                        .WithMany()
+                        .HasForeignKey("SourceMaterialId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("Lims.Domain.ReferencePreparations.ReferencePreparation", null)
                         .WithMany()
                         .HasForeignKey("SourcePreparationId")
+                        .OnDelete(DeleteBehavior.Restrict);
+                });
+
+            modelBuilder.Entity("Lims.Domain.ReferencePreparations.StockSolvent", b =>
+                {
+                    b.HasOne("Lims.Domain.ReferencePreparations.ReferencePreparation", null)
+                        .WithMany("Solvents")
+                        .HasForeignKey("PreparationId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.HasOne("Lims.Domain.ReferencePreparations.ReferenceSolvent", "Solvent")
+                        .WithMany()
+                        .HasForeignKey("SolventId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Solvent");
                 });
 
             modelBuilder.Entity("Lims.Domain.Identity.User", b =>
                 {
                     b.Navigation("Permissions");
+                });
+
+            modelBuilder.Entity("Lims.Domain.ReferenceMaterials.ReferenceMaterial", b =>
+                {
+                    b.Navigation("CertifiedComponents");
+
+                    b.Navigation("CommercialRoles");
+
+                    b.Navigation("OpeningHistory");
+                });
+
+            modelBuilder.Entity("Lims.Domain.ReferencePreparations.ReferencePreparation", b =>
+                {
+                    b.Navigation("Solvents");
                 });
 #pragma warning restore 612, 618
         }

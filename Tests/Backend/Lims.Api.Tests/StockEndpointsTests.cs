@@ -1,3 +1,4 @@
+using Lims.Contracts.ReferenceMaterials;
 using System.Globalization;
 using System.IdentityModel.Tokens.Jwt;
 using System.Net;
@@ -23,11 +24,14 @@ public sealed class StockEndpointsTests : IDisposable
     private readonly AuthenticationApiFactory _baseFactory = new();
     private readonly WebApplicationFactory<Program> _factory;
     private readonly FakeStockService _service = new();
+    private readonly FakeCommercialService _commercial = new();
     private readonly HttpClient _client;
     public StockEndpointsTests()
     {
         _factory = _baseFactory.WithWebHostBuilder(builder => builder.ConfigureServices(services =>
         {
+            services.RemoveAll<ICommercialPreparationService>();
+            services.AddSingleton<ICommercialPreparationService>(_commercial);
             services.RemoveAll<IStockService>();
             services.AddSingleton<IStockService>(_service);
         }));
@@ -47,6 +51,8 @@ public sealed class StockEndpointsTests : IDisposable
         using var detail = await _client.GetAsync(Path + "/" + Guid.NewGuid());
         using var options = await _client.GetAsync(Path + "/options");
         using var preview = await _client.PostAsJsonAsync(Path + "/preview", Calculation);
+        using var solvents = await _client.GetAsync(Path + "/solvents");
+        Assert.Equal(HttpStatusCode.Forbidden, solvents.StatusCode);
         Assert.Equal(HttpStatusCode.OK, list.StatusCode);
         Assert.Equal(2, (await list.Content.ReadFromJsonAsync<StockPage>())!.Page);
         Assert.Equal(HttpStatusCode.NotFound, detail.StatusCode);
@@ -62,6 +68,8 @@ public sealed class StockEndpointsTests : IDisposable
         Assert.Equal(HttpStatusCode.OK, options.StatusCode);
         Assert.Equal("mg/L", Assert.Single((await options.Content.ReadFromJsonAsync<StockOptions>())!.ConcentrationUnits));
         Assert.Equal(HttpStatusCode.OK, sources.StatusCode);
+        using var solvents = await _client.GetAsync(Path + "/solvents?search=MeOH");
+        Assert.Equal(HttpStatusCode.OK, solvents.StatusCode);
     }
     [Fact]
     public async Task PreviewCarriesParametersAndCreateUsesAuthenticatedActorAndCreatedLocation()
@@ -88,6 +96,33 @@ public sealed class StockEndpointsTests : IDisposable
         Assert.Equal(status, response.StatusCode);
         Assert.Equal(code, (await response.Content.ReadFromJsonAsync<ApiError>())?.Code);
     }
+    [Theory]
+    [InlineData("stock", "stock.create")]
+    [InlineData("intermediate", "intermedia.create")]
+    public async Task CommercialRegistrationUsesModulePermissionAndAuthenticatedActor(string module, string permission)
+    {
+        var route = "/api/reference-materials/preparations/" + module + "/commercial";
+        var request = new RegisterCommercialPreparationRequest(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), null);
+        using (var anonymous = await _client.PostAsJsonAsync(route, request)) Assert.Equal(HttpStatusCode.Unauthorized, anonymous.StatusCode);
+        _client.DefaultRequestHeaders.Authorization = Bearer("Usuario", "reference_materials.view");
+        using (var viewer = await _client.PostAsJsonAsync(route, request)) Assert.Equal(HttpStatusCode.Forbidden, viewer.StatusCode);
+        _client.DefaultRequestHeaders.Authorization = Bearer("Usuario", permission);
+        using var options = await _client.GetAsync(route + "/options");
+        Assert.Equal(HttpStatusCode.OK, options.StatusCode);
+        using var registered = await _client.PostAsJsonAsync(route, request);
+        Assert.Equal(HttpStatusCode.NotFound, registered.StatusCode); // fake result proves authorized dispatch
+        Assert.Equal(AuthenticationApiFactory.UserId, _commercial.Actor);
+        Assert.Equal(module == "stock" ? "Stock" : "Intermedia", _commercial.Kind);
+    }
+    private sealed class FakeCommercialService : ICommercialPreparationService
+    {
+        public int Actor { get; private set; }
+        public string? Kind { get; private set; }
+        public Task<CommercialPreparationOptions> OptionsAsync(string kind, string? search, CancellationToken ct) => Task.FromResult(new CommercialPreparationOptions([], [], [], []));
+        public Task<OperationResult<CommercialPreparationDetail>> GetAsync(string kind, Guid id, CancellationToken ct) => Task.FromResult(OperationResult.Failure<CommercialPreparationDetail>(new(ErrorCodes.NotFound, "Prueba")));
+        public Task<OperationResult<CommercialPreparationDetail>> RegisterAsync(string kind, RegisterCommercialPreparationRequest request, int actor, CancellationToken ct)
+        { Actor = actor; Kind = kind; return GetAsync(kind, request.ExistingMaterialId!.Value, ct); }
+    }
     public void Dispose() { _client.Dispose(); _factory.Dispose(); _baseFactory.Dispose(); }
     private static readonly StockCalculationRequest Calculation = new(Guid.NewGuid(), Guid.NewGuid(), 100, "mg/L", 1000, "mL");
     private AuthenticationHeaderValue Bearer(string role, params string[] permissions)
@@ -109,6 +144,7 @@ public sealed class StockEndpointsTests : IDisposable
         public int ActorUserId { get; private set; }
         public StockCalculationRequest? LastPreview { get; private set; }
         public string? FailureCode { get; set; }
+        public Task<OperationResult<IReadOnlyList<SolventOption>>> SolventsAsync(string? search, CancellationToken cancellationToken) => Task.FromResult(OperationResult.Success<IReadOnlyList<SolventOption>>([]));
         public StockOptions GetOptions() => new(["mg/L"], ["mL"]);
         public Task<OperationResult<StockSourcePage>> SourcesAsync(string? search, int page, int pageSize, CancellationToken cancellationToken) => Task.FromResult(OperationResult.Success(new StockSourcePage([], page, pageSize, 0)));
         public Task<OperationResult<StockCalculation>> PreviewAsync(StockCalculationRequest request, CancellationToken cancellationToken)

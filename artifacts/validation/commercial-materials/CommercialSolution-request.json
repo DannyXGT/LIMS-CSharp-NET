@@ -1,0 +1,51 @@
+{
+  "fixtureOnly": true,
+  "request": {
+    "Name": "CommercialSolution - frasco de prueba aislada",
+    "CasNumber": null,
+    "CatalogNumber": null,
+    "MethodId": 1,
+    "PurityPercent": null,
+    "Lot": "Fixture",
+    "Brand": "Fixture",
+    "ReceivedDate": "2026-10-17",
+    "ExpirationDate": "2027-10-18",
+    "PresentationQuantity": 10,
+    "UnitId": 3,
+    "PackageCount": 1,
+    "StorageTemperature": "Fixture",
+    "LocationId": 1,
+    "Presentation": "CommercialSolution",
+    "Commercial": {
+      "Reference": "CERT-TEST-SOLO-VALIDACION",
+      "Matrix": "Acetonitrilo (dato de prueba)",
+      "Traceability": "Referencia de prueba aislada",
+      "NominalConcentration": 1000,
+      "NominalUnit": "\u00B5g/mL",
+      "CoverageFactor": 2,
+      "OpenedDate": "2026-10-17",
+      "UseAfterOpeningMonths": 15,
+      "Components": [
+        {
+          "Id": "25d00b4a-3cbe-4420-a531-b32c82c814c1",
+          "Name": "Aluminio (prueba aislada)",
+          "CasNumber": "7429-90-5",
+          "CertifiedConcentration": 999,
+          "ConcentrationUnit": "\u00B5g/mL",
+          "ExpandedUncertainty": 5,
+          "PurityPercent": null,
+          "Lot": null,
+          "AdditionalData": null
+        }
+      ],
+      "OtherExpressions": [
+        {
+          "Value": 974,
+          "Unit": "\u00B5g/g",
+          "ExpandedUncertainty": 5
+        }
+      ],
+      "UseAfterOpeningDays": null
+    }
+  }
+}

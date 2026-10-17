@@ -12,9 +12,19 @@ public sealed class ReferencePreparationComponent
         SourceType = source.Kind; SourceVersion = source.Version; Position = position;
         VolumeTaken = volume; VolumeUnit = unit; SourceSnapshotJson = snapshotJson; CreatedAt = now;
     }
+    public ReferencePreparationComponent(Guid preparationId, Lims.Domain.ReferenceMaterials.ReferenceMaterial source, int position,
+        decimal volume, string unit, string snapshotJson, DateTimeOffset now)
+    {
+        if (preparationId == Guid.Empty || source.Presentation == "Solid" || volume <= 0 || position < 0)
+            throw new ArgumentException("Componente comercial inválido.");
+        Id = Guid.NewGuid(); PreparationId = preparationId; SourceMaterialId = source.Id;
+        SourceType = source.Presentation; SourceVersion = source.Version; Position = position;
+        VolumeTaken = volume; VolumeUnit = unit; SourceSnapshotJson = snapshotJson; CreatedAt = now;
+    }
+    public Guid? SourceMaterialId { get; private set; }
     public Guid Id { get; private set; }
     public Guid PreparationId { get; private set; }
-    public Guid SourcePreparationId { get; private set; }
+    public Guid? SourcePreparationId { get; private set; }
     public string SourceType { get; private set; } = string.Empty;
     public Guid SourceVersion { get; private set; }
     public int Position { get; private set; }

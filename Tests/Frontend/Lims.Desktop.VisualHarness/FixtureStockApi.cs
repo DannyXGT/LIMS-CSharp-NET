@@ -14,8 +14,11 @@ internal sealed class FixtureStockApi : IStockApiClient
         new DateOnly(2027, 6, 24), 250m, new ReferenceUnit(3, "Miligramo", "mg", true), 1, "Ambiente",
         new ReferenceLocation(1, "Laboratorio", true), 1, DateTimeOffset.UtcNow);
     private readonly List<StockDetail> _prepared = [];
+    public Func<IEnumerable<StockSummary>>? CommercialRows { get; set; }
     public string Scene { get; set; } = "Default";
     public int CreateCalls { get; private set; }
+    public Task<ApiCallResult<IReadOnlyList<SolventOption>>> SolventsAsync(string? search, CancellationToken cancellationToken) => Task.FromResult(Ok<IReadOnlyList<SolventOption>>(
+        [new(4, "Metanol", "MeOH", true, 3), new(3, "Acetonitrilo", "ACN", true, 2), new(8, "Agua", "H2O", true, 7)]));
     public Task<ApiCallResult<StockOptions>> OptionsAsync(CancellationToken cancellationToken) => Task.FromResult(Ok(new StockOptions(["mg/L", "g/L", "µg/L", "µg/mL"], ["mL", "L"])));
     public Task<ApiCallResult<StockSourcePage>> SourcesAsync(string? search, int page, CancellationToken cancellationToken) => Task.FromResult(Ok(new StockSourcePage([Snapshot()], page, 25, 1)));
     public Task<ApiCallResult<StockCalculation>> PreviewAsync(StockCalculationRequest request, CancellationToken cancellationToken) => Task.FromResult(Ok(StockCalculator.Calculate(Source, request)));
@@ -32,7 +35,8 @@ internal sealed class FixtureStockApi : IStockApiClient
             calculation.FinalVolume, calculation.FinalVolumeUnit, request.PreparationDate, "Usuario de prueba", "Active", calculation.ActualWeight!.Value, source.Unit, request.ExpirationDate, calculation.FinalVolume);
         var detail = new StockDetail(summary, source, calculation, new(Guid.NewGuid(), calculation.ActualWeight!.Value, source.Unit,
             source.AvailableQuantity, Source.AvailableQuantity, "Usuario de prueba", DateTimeOffset.UtcNow), request.Notes,
-            DateTimeOffset.UtcNow, DateTimeOffset.UtcNow, Guid.NewGuid(), request.StorageTemperature);
+            DateTimeOffset.UtcNow, DateTimeOffset.UtcNow, Guid.NewGuid(), request.StorageTemperature, [], request.Compound,
+            request.Solvents?.Select((s, i) => { var solvent = SolventsAsync(null, cancellationToken).Result.Value!.Single(c => c.Id == s.SolventId); return new StockSolventDetail(s.SolventId, solvent.Name, solvent.Abbreviation, s.Percent, i); }).ToArray(), request.CompositionBasis);
         _prepared.Add(detail);
         return Task.FromResult(Ok(detail));
     }
@@ -41,6 +45,7 @@ internal sealed class FixtureStockApi : IStockApiClient
         if (Scene == "Loading") await Task.Delay(1800, cancellationToken);
         if (Scene == "Error") throw new HttpRequestException("Fixture: server unavailable");
         IEnumerable<StockSummary> rows = Scene == "Empty" ? [] : _prepared.Select(d => ForScene(d.Preparation));
+        if (Scene != "Empty" && CommercialRows is not null) rows = rows.Concat(CommercialRows());
         if (!string.IsNullOrWhiteSpace(search)) rows = rows.Where(p => p.Code.Contains(search, StringComparison.OrdinalIgnoreCase) || p.Name.Contains(search, StringComparison.OrdinalIgnoreCase) || p.SourceName.Contains(search, StringComparison.OrdinalIgnoreCase) || p.SourceLot.Contains(search, StringComparison.OrdinalIgnoreCase));
         if (filter?.Status is { Length: > 0 } status) rows = rows.Where(p => status == "Active" ? p.Status is "Active" or "Depleted" : p.Status == status);
         if (filter?.Availability is { Length: > 0 } availability) rows = rows.Where(p => availability switch { "Positive" => p.Availability.AvailableVolume > 0, "Low" => p.Availability.RemainingPercent is > 0 and <= 60, "Depleted" => p.Availability.IsDepleted, _ => true });
@@ -63,7 +68,7 @@ internal sealed class FixtureStockApi : IStockApiClient
         _ => row
     };
     private StockSource Snapshot() => new(Source.Id, Source.Name, Source.CasNumber, Source.CatalogNumber, Source.Lot, Source.Brand,
-        Source.Method.Name, Source.PurityPercent, Source.AvailableQuantity, Source.TotalQuantity, Source.Unit.Symbol, Source.ExpirationDate,
+        Source.Method.Name, Source.PurityPercent!.Value, Source.AvailableQuantity, Source.TotalQuantity, Source.Unit.Symbol, Source.ExpirationDate,
         Source.Location.Name, Source.Version);
     private static ApiCallResult<T> Ok<T>(T value) => new(true, value, null, 200);
 }

@@ -6,6 +6,7 @@
  <Grid x:Name="EditorRoot" RowSpacing="10">
   <Grid.RowDefinitions><RowDefinition Height="*"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
   <ScrollViewer x:Name="EditorScroll" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+   <StackPanel Spacing="12"><StackPanel Spacing="5"><TextBlock Text="Tipo de ingreso" Style="{StaticResource LimsFormLabelStyle}"/><design:LimsSelect x:Name="EntryTypeSelect" SelectionChanged="OnEntryTypeChanged" AutomationProperties.Name="Tipo de ingreso"/></StackPanel>
    <ContentControl x:Name="FormSurface" IsEnabled="{x:Bind ViewModel.InputsEnabled, Mode=OneWay}" HorizontalContentAlignment="Stretch"><StackPanel Spacing="12" Padding="2,2,12,6">
     <Grid ColumnSpacing="16"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
      <StackPanel Spacing="5"><TextBlock Text="Código" Style="{StaticResource LimsFormLabelStyle}"/><TextBlock Text="Se asignará al crear" Style="{StaticResource LimsCaptionStyle}"/><TextBlock Text="{x:Bind ViewModel.PreparedBy}" ToolTipService.ToolTip="Preparado por"/></StackPanel>
@@ -22,6 +23,7 @@
      <StackPanel Spacing="10">
       <Grid><TextBlock Text="COMPONENTES" Style="{StaticResource LimsSectionTitleStyle}"/><StackPanel HorizontalAlignment="Right" Orientation="Horizontal" Spacing="6"><Button Content="Actualizar orígenes" Style="{StaticResource LimsSecondaryButtonStyle}" Click="OnRefresh" Padding="8,3" MinHeight="28" FontSize="11"/><Button Content="Limpiar" AutomationProperties.Name="Limpiar componentes" Style="{StaticResource LimsSecondaryButtonStyle}" Click="OnClear" Padding="8,3" MinHeight="28" FontSize="11"/></StackPanel></Grid>
       <TextBlock x:Name="EmptyText" Text="Agregue un Stock o seleccione una Intermedia a diluir." Style="{StaticResource LimsCaptionStyle}" TextWrapping="Wrap"/>
+      <StackPanel Spacing="4"><TextBlock Text="Origen de la preparación" Style="{StaticResource LimsFormLabelStyle}"/><design:LimsSelect ItemsSource="{x:Bind ViewModel.SourceTypes}" SelectedItem="{x:Bind ViewModel.SourceType, Mode=TwoWay}" AutomationProperties.Name="Tipo de origen"/></StackPanel>
       <ItemsControl x:Name="ComponentList" ItemsSource="{x:Bind ViewModel.Components}"><ItemsControl.ItemTemplate><DataTemplate x:DataType="vm:IntermediateComponentViewModel">
        <Border Padding="12" Margin="0,0,0,8" CornerRadius="10" Background="{ThemeResource LimsSurfaceSecondaryBrush}" Loaded="OnComponentLoaded">
         <StackPanel Spacing="6">
@@ -54,6 +56,8 @@
     </Grid>
     <TextBox x:Name="NotesBox" Header="Observaciones" Text="{x:Bind ViewModel.Notes, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource LimsCompactTextBoxStyle}" PlaceholderText="Observaciones de la preparación" MaxLength="2000" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="64"/>
    </StackPanel></ContentControl>
+   <local:CommercialPreparationEditor x:Name="CommercialEntry" Visibility="Collapsed"/>
+   </StackPanel>
   </ScrollViewer>
   <StackPanel x:Name="SuccessSurface" Visibility="Collapsed" Spacing="10"><design:StatusBadge Text="Intermedia creada" Tone="Success"/><TextBlock x:Name="SuccessCode" FontSize="24" FontWeight="SemiBold"/><TextBlock x:Name="SuccessResult" TextWrapping="Wrap"/><TextBlock x:Name="SuccessCount" Style="{StaticResource LimsCaptionStyle}"/></StackPanel>
   <TextBlock Grid.Row="1" x:Name="MessageText" IsTextSelectionEnabled="True" Text="{x:Bind ViewModel.Message, Mode=OneWay}" Style="{StaticResource LimsValidationTextStyle}"/>

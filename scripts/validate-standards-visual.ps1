@@ -52,7 +52,7 @@ if ($Action -eq 'Start') {
 if ($Action -eq 'Command') {
     $data = $Command | ConvertFrom-Json
     $data | Add-Member -NotePropertyName sequence -NotePropertyValue ([Guid]::NewGuid().ToString('N')) -Force
-    $json = $data | ConvertTo-Json -Compress
+    $json = $data | ConvertTo-Json -Compress -Depth 16
     $writeDeadline = [DateTime]::UtcNow.AddSeconds(2)
     do {
         try {

@@ -19,7 +19,7 @@ public sealed class ReferenceMaterial
         string? casNumber,
         string? catalogNumber,
         ReferenceMethod method,
-        decimal purityPercent,
+        decimal? purityPercent,
         string lot,
         string brand,
         DateOnly receivedDate,
@@ -30,8 +30,9 @@ public sealed class ReferenceMaterial
         string storageTemperature,
         ReferenceLocation location,
         int actorUserId,
-        DateTimeOffset now)
+        DateTimeOffset now, string presentation = "Solid")
     {
+        Presentation = presentation;
         ValidateId(id);
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(actorUserId);
         EnsureActiveCatalogs(method, unit, location);
@@ -61,13 +62,56 @@ public sealed class ReferenceMaterial
         Version = Guid.NewGuid();
     }
 
+    public string Presentation { get; private set; } = "Solid";
+    public string? CommercialJson { get; private set; }
+    public DateOnly? OpenedDate { get; private set; }
+    public DateOnly? EffectiveExpirationDate { get; private set; }
+    public bool OpeningRequired { get; private set; }
+    public List<CertifiedMaterialComponent> CertifiedComponents { get; private set; } = [];
+    public List<ReferenceMaterialOpeningAudit> OpeningHistory { get; private set; } = [];
+    public List<ReferenceCommercialRole> CommercialRoles { get; private set; } = [];
+
+    public void ConfigureCommercial(string presentation, string? certificateJson, DateOnly? openedDate,
+        DateOnly? effectiveExpiration, bool openingRequired, IReadOnlyList<CertifiedMaterialComponent> components,
+        int actor, DateTimeOffset now)
+    {
+        EnsureEditable();
+        if (presentation != Presentation) throw new InvalidOperationException("La presentación física no puede cambiar. Registre el producto por separado.");
+        if (presentation == "Solid")
+        {
+            if (certificateJson is not null || components.Count != 0) throw new ArgumentException("Un sólido no admite un certificado de solución comercial.");
+            return;
+        }
+        if (presentation is not ("CommercialSolution" or "CommercialMix") || certificateJson is null ||
+            Unit.Symbol is not ("mL" or "L") || PackageCount != 1 || components.Count == 0)
+            throw new ArgumentException("Registre un frasco comercial con unidad de volumen y composición certificada.");
+        if (OpenedDate != openedDate) OpeningHistory.Add(new(Id, OpenedDate, openedDate, actor, now));
+        foreach (var old in CertifiedComponents.ToArray())
+            if (!components.Any(c => c.Id == old.Id)) CertifiedComponents.Remove(old);
+        foreach (var component in components)
+        {
+            var existing = CertifiedComponents.SingleOrDefault(c => c.Id == component.Id);
+            if (existing is null) CertifiedComponents.Add(component); else existing.Revise(component);
+        }
+        CommercialJson = certificateJson; OpenedDate = openedDate;
+        EffectiveExpirationDate = effectiveExpiration; OpeningRequired = openingRequired;
+        UpdatedByUserId = actor; UpdatedAt = now; Version = Guid.NewGuid();
+    }
+
+    public void ConsumeCommercial(decimal quantity, int actor, DateTimeOffset now, DateOnly today)
+    {
+        if (Presentation == "Solid" || OpeningRequired || EffectiveStatus(today) != ReferenceMaterialStatus.Active)
+            throw new ArgumentException("El frasco comercial no está vigente o falta registrar su apertura.");
+        Consume(quantity, actor, now, today);
+    }
+
     public Guid Id { get; private set; }
     public string Name { get; private set; } = string.Empty;
     public string? CasNumber { get; private set; }
     public string? CatalogNumber { get; private set; }
     public int MethodId { get; private set; }
     public ReferenceMethod Method { get; private set; } = null!;
-    public decimal PurityPercent { get; private set; }
+    public decimal? PurityPercent { get; private set; }
     public string Lot { get; private set; } = string.Empty;
     public string Brand { get; private set; } = string.Empty;
     public DateOnly ReceivedDate { get; private set; }
@@ -98,7 +142,7 @@ public sealed class ReferenceMaterial
         string? casNumber,
         string? catalogNumber,
         ReferenceMethod method,
-        decimal purityPercent,
+        decimal? purityPercent,
         string lot,
         string brand,
         DateOnly receivedDate,
@@ -205,7 +249,7 @@ public sealed class ReferenceMaterial
             return ReferenceMaterialStatus.Depleted;
         }
 
-        return ExpirationDate < today
+        return (EffectiveExpirationDate ?? ExpirationDate) < today
             ? ReferenceMaterialStatus.Expired
             : ReferenceMaterialStatus.Active;
     }
@@ -215,7 +259,7 @@ public sealed class ReferenceMaterial
         string? casNumber,
         string? catalogNumber,
         ReferenceMethod method,
-        decimal purityPercent,
+        decimal? purityPercent,
         string lot,
         string brand,
         DateOnly receivedDate,
@@ -238,7 +282,7 @@ public sealed class ReferenceMaterial
         }
 
         CatalogNumber = NormalizeOptional(catalogNumber, nameof(catalogNumber), IdentifierMaximumLength);
-        if (purityPercent <= 0 || purityPercent > 100)
+        if ((Presentation == "Solid" && purityPercent is null) || purityPercent is <= 0 or > 100)
         {
             throw new ArgumentOutOfRangeException(nameof(purityPercent), "Purity must be greater than 0 and at most 100.");
         }

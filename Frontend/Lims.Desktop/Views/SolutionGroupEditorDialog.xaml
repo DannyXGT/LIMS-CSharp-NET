@@ -38,7 +38,7 @@
            <Button Grid.Column="2" Tag="{x:Bind}" Click="OnRemove" Style="{StaticResource LimsSecondaryButtonStyle}" AutomationProperties.Name="Quitar solución" MinHeight="26" Padding="5"><design:LimsIcon Icon="Delete" Size="14"/></Button>
           </Grid>
           <Grid ColumnSpacing="8"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="156"/></Grid.ColumnDefinitions>
-           <design:LimsSearchSelect ItemsSource="{x:Bind SourceOptions}" SelectedItem="{x:Bind SourceOption, Mode=TwoWay}" DisplayMemberPath="Label" PlaceholderText="Seleccione Intermedia de origen" AutomationProperties.Name="Intermedia de origen" Loaded="OnPopupLoaded"/>
+           <design:LimsSearchSelect ItemsSource="{x:Bind SourceOptions}" SelectedItem="{x:Bind SourceOption, Mode=TwoWay}" DisplayMemberPath="Label" PlaceholderText="Seleccione origen interno o comercial" AutomationProperties.Name="Origen de la solución" Loaded="OnPopupLoaded"/>
            <design:LimsSelect Grid.Column="1" ItemsSource="{x:Bind Roles}" SelectedItem="{x:Bind Role, Mode=TwoWay}" AutomationProperties.Name="Rol de la solución" ToolTipService.ToolTip="{x:Bind RoleExplanation, Mode=OneWay}" Loaded="OnPopupLoaded"/>
           </Grid>
           <Grid ColumnSpacing="6"><Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="65"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="65"/></Grid.ColumnDefinitions>
@@ -49,7 +49,8 @@
            <TextBox Grid.Column="4" Text="{x:Bind FinalVolume, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource LimsCompactTextBoxStyle}" AutomationProperties.Name="Volumen de aforo" Tag="{x:Bind}" Loaded="OnVolumeLoaded"/>
            <design:LimsSelect Grid.Column="5" ItemsSource="{x:Bind Units}" SelectedItem="{x:Bind FinalUnit, Mode=TwoWay}" AutomationProperties.Name="Unidad de aforo" Loaded="OnPopupLoaded"/>
           </Grid>
-          <TextBlock Text="{x:Bind CardSummary, Mode=OneWay}" FontSize="11" Foreground="{ThemeResource LimsTextSecondaryBrush}" TextWrapping="Wrap"/>
+          <TextBlock Text="{x:Bind Source.MetadataDisplay, Mode=OneWay}" FontSize="11" TextWrapping="Wrap"/>
+           <TextBlock Text="{x:Bind CardSummary, Mode=OneWay}" FontSize="11" Foreground="{ThemeResource LimsTextSecondaryBrush}" TextWrapping="Wrap"/>
           <TextBlock Text="{x:Bind FieldError, Mode=OneWay}" Visibility="{x:Bind HasFieldError, Mode=OneWay}" Style="{StaticResource GroupErrorStyle}" TextWrapping="Wrap"/>
          </StackPanel>
         </Border>

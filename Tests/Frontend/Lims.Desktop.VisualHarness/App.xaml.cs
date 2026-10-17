@@ -27,6 +27,7 @@ public partial class App : Microsoft.UI.Xaml.Application
     private ReferenceMaterialsPage? _page;
     private Border? _standardsTableForComparison;
     private TextBlock? _standardsTitleForComparison;
+    private FixtureCommercialPreparationApi? _commercialApi;
     private StockPage? _stockPage;
     private IntermediatePage? _intermediatePage;
     private SolutionGroupWorkspace? _solutionGroups;
@@ -63,8 +64,11 @@ public partial class App : Microsoft.UI.Xaml.Application
         var shellModel = new ShellViewModel(session, new FixtureAuthentication(), new FixtureNavigation(), _permissionsApi);
         shellModel.RefreshProfile();
         _page = new ReferenceMaterialsPage(new ReferenceMaterialsViewModel(_api, session));
-        _stockPage = new StockPage(new StockViewModel(_stockApi, session));
-        _intermediatePage = new IntermediatePage(new IntermediateViewModel(_intermediateApi, session));
+        _commercialApi = new FixtureCommercialPreparationApi(_api, _intermediateApi);
+        _stockApi.CommercialRows = () => _commercialApi.Stocks;
+        _intermediateApi.CommercialRows = () => _commercialApi.Intermediates;
+        _stockPage = new StockPage(new StockViewModel(_stockApi, session), _commercialApi);
+        _intermediatePage = new IntermediatePage(new IntermediateViewModel(_intermediateApi, session), commercialApi: _commercialApi);
         _permissionsPage = new PermissionsPage(new PermissionsViewModel(_permissionsApi, session));
         _dashboardPage = new DashboardPage(new DashboardViewModel(_dashboardApi));
         _solutionApi = new FixtureSolutionGroupApi(_intermediateApi);
@@ -381,6 +385,19 @@ public partial class App : Microsoft.UI.Xaml.Application
                         IntermediateCanOpen = intermediateView.OpenSelectedPreparationCommand.CanExecute(null)
                     }, ReportOptions));
                     break;
+                case "stockMixture":
+                    var mixtureVm = _stockPage!.ViewModel;
+                    foreach (var row in mixtureVm.SolventRows.ToArray()) mixtureVm.RemoveSolvent(row);
+                    foreach (var row in data.GetProperty("rows").EnumerateArray())
+                    {
+                        mixtureVm.AddSolvent();
+                        var rowPanel = (StackPanel)_stockPage.Editor!.FindName("SolventRowsPanel");
+                        var rowGrid = (Grid)rowPanel.Children[^1];
+                        ((LimsSearchSelect)rowGrid.Children[0]).SelectedItem = mixtureVm.SolventCatalog.Single(s => s.Id == row.GetProperty("id").GetInt32());
+                        ((TextBox)rowGrid.Children[1]).Text = row.GetProperty("percent").GetString()!;
+                    }
+                    break;
+                case "stockSave": await _stockPage!.ViewModel.SaveAsync(CancellationToken.None); break;
                 case "stockEditor": _ = _stockPage!.OpenCreateAsync(); break;
                 case "stockSelect": ((LimsSearchSelect)_stockPage!.Editor!.FindName("SourceList")).SelectedIndex = data.GetProperty("index").GetInt32(); break;
                 case "stockText": ((TextBox)_stockPage!.Editor!.FindName(data.GetProperty("field").GetString()!)).Text = data.GetProperty("text").GetString()!; break;
@@ -463,6 +480,58 @@ public partial class App : Microsoft.UI.Xaml.Application
                 case "focus": if (_editor?.FindName(data.GetProperty("field").GetString()!) is Control focusTarget) focusTarget.Focus(FocusState.Keyboard); break;
                 case "enabled": if (_editor?.FindName(data.GetProperty("field").GetString()!) is Control enabledTarget) enabledTarget.IsEnabled = data.GetProperty("enabled").GetBoolean(); break;
                 case "text": if (_editor?.FindName(data.GetProperty("field").GetString()!) is TextBox textTarget) textTarget.Text = data.GetProperty("text").GetString()!; break;
+                case "entryCommercial":
+                    var entryDialog = data.GetProperty("kind").GetString() == "Stock" ? (ContentDialog)_stockPage!.Editor! : _intermediatePage!.Editor!;
+                    ((LimsSelect)entryDialog.FindName("EntryTypeSelect")).SelectedIndex = 1;
+                    break;
+                case "entryFill":
+                    var fillDialog = data.GetProperty("kind").GetString() == "Stock" ? (ContentDialog)_stockPage!.Editor! : _intermediatePage!.Editor!;
+                    var entry = (CommercialPreparationEditor)fillDialog.FindName("CommercialEntry");
+                    foreach (var field in data.GetProperty("fields").EnumerateObject()) ((TextBox)entry.FindName(field.Name)).Text = field.Value.GetString()!;
+                    ((LimsSelect)entry.FindName("MethodSelect")).SelectedIndex = 0;
+                    ((LimsSelect)entry.FindName("LocationSelect")).SelectedIndex = 0;
+                    ((LimsDatePicker)entry.FindName("ExpirationPicker")).Date = DateTimeOffset.Now.AddYears(1);
+                    ((CommercialCertificateEditor)entry.FindName("ComponentsEditor")).SetData(JsonSerializer.Deserialize<Lims.Contracts.ReferenceMaterials.CommercialCertificate>(data.GetProperty("certificate").GetRawText())!);
+                    break;
+                case "entryGeometry":
+                    var geometryDialog = data.GetProperty("kind").GetString() == "Stock" ? (ContentDialog)_stockPage!.Editor! : _intermediatePage!.Editor!;
+                    var geometryEntry = (CommercialPreparationEditor)geometryDialog.FindName("CommercialEntry");
+                    var footer = (Button)geometryDialog.FindName("SaveButton");
+                    var footerPosition = footer.TransformToVisual(null).TransformPoint(new Windows.Foundation.Point(0, 0));
+                    File.WriteAllText(Path.Combine(_directory, data.GetProperty("name").GetString()! + ".json"), JsonSerializer.Serialize(new {
+                        fixtureOnly = true, geometryEntry.IsReady, rootWidth = geometryDialog.XamlRoot.Size.Width, rootHeight = geometryDialog.XamlRoot.Size.Height,
+                        footerTop = footerPosition.Y, footerBottom = footerPosition.Y + footer.ActualHeight,
+                        footerVisible = footerPosition.Y >= 0 && footerPosition.Y + footer.ActualHeight <= geometryDialog.XamlRoot.Size.Height,
+                        internalFormCollapsed = ((FrameworkElement)geometryDialog.FindName("FormSurface")).Visibility == Visibility.Collapsed,
+                        request = geometryEntry.ReadRequest()
+                    }, ReportOptions));
+                    break;
+                case "entryReport":
+                    File.WriteAllText(Path.Combine(_directory, "commercial-entry-report.json"), JsonSerializer.Serialize(new { fixtureOnly = true, _commercialApi!.LastRequest, _commercialApi.Roles }, ReportOptions));
+                    break;
+                case "entryCloseDetail": _stockPage!.CommercialDetail?.Hide(); _intermediatePage!.CommercialDetail?.Hide(); break;
+                case "commercialData":
+                    var presentation = data.GetProperty("presentation").GetString()!;
+                    ((LimsSelect)_editor!.FindName("PresentationSelect")).SelectedIndex = presentation == "CommercialMix" ? 2 : 1;
+                    var certificate = JsonSerializer.Deserialize<Lims.Contracts.ReferenceMaterials.CommercialCertificate>(data.GetProperty("certificate").GetRawText())!;
+                    ((CommercialCertificateEditor)_editor.FindName("CommercialEditor")).SetData(certificate);
+                    break;
+                case "commercialReport":
+                    File.WriteAllText(Path.Combine(_directory, "commercial-report.json"), JsonSerializer.Serialize(new { fixtureOnly = true, request = _editor!.CreateRequest() }, ReportOptions));
+                    break;
+                case "commercialIntermediate":
+                    var commercialVm = _intermediatePage!.ViewModel;
+                    commercialVm.SourceType = "Mix comercial";
+                    commercialVm.Method = commercialVm.Methods[0]; commercialVm.Name = "Mix comercial · dilución de prueba";
+                    commercialVm.FinalVolume = "10"; commercialVm.ExpirationDate = DateTimeOffset.Now.AddDays(30);
+                    ((LimsDatePicker)_intermediatePage.Editor!.FindName("ExpirationPicker")).Date = commercialVm.ExpirationDate;
+                    var commercialBottleId = Guid.NewGuid();
+                    var commercialSource = new Lims.Contracts.ReferencePreparations.IntermediateSource(commercialBottleId, "CommercialMix", "MIX-PRUEBA", "Mix comercial de prueba", 1,
+                        commercialVm.Method.Name, 10, 10, "mL", new(2026, 1, 1), new(2027, 6, 1), Guid.NewGuid(),
+                        [new(Guid.NewGuid(), "Analito A", null, "LOTE-MIX", 50, "µg/mL", commercialBottleId), new(Guid.NewGuid(), "Analito B", null, "LOTE-MIX", 49.9m, "µg/mL", commercialBottleId), new(Guid.NewGuid(), "Analito C", null, "LOTE-MIX", 50.1m, "µg/mL", commercialBottleId)]);
+                    _intermediateApi.Sources.Add(commercialSource); await commercialVm.LoadOptionsAsync(default);
+                    var commercialRow = commercialVm.AddComponent(); commercialRow.Source = commercialSource; commercialRow.Volume = "1";
+                    break;
                 case "presentationChecks":
                     File.WriteAllText(Path.Combine(_directory, "presentation.json"), JsonSerializer.Serialize(StandardsPresentationChecks.Report(_editor!), ReportOptions));
                     break;

@@ -26,17 +26,19 @@ public sealed record ReferenceMaterialSummary(
     string Method,
     string Lot,
     string Brand,
-    decimal PurityPercent,
+    decimal? PurityPercent,
     DateOnly ExpirationDate,
     string Status,
     decimal TotalQuantity,
     string Unit,
     decimal? AvailableQuantity,
-    Guid Version)
+    Guid Version, string Presentation = MaterialPresentations.Solid)
 {
+    public string PresentationLabel => MaterialPresentations.Label(Presentation);
+    [JsonIgnore] public string IdentitySubtitle => PresentationLabel + (CasDisplay.Length == 0 ? "" : $" · {CasDisplay}");
     public string StatusLabel => ReferenceMaterialPresentation.StatusLabel(Status);
     public string AvailableDisplay => ReferenceMaterialPresentation.Quantity(AvailableQuantity, Unit);
-    [JsonIgnore] public string PurityDisplay => ReferenceMaterialPresentation.Purity(PurityPercent);
+    [JsonIgnore] public string PurityDisplay => PurityPercent.HasValue ? ReferenceMaterialPresentation.Purity(PurityPercent) : "—";
     [JsonIgnore] public string ExpirationDisplay => ReferenceMaterialPresentation.Date(ExpirationDate);
     [JsonIgnore] public string StatusTone => ReferenceMaterialPresentation.StatusTone(Status);
     [JsonIgnore] public string CasDisplay => ReferenceMaterialPresentation.HasValue(CasNumber) ? CasNumber!.Trim() : string.Empty;
@@ -54,7 +56,7 @@ public sealed record ReferenceMaterialDetail(
     string? CatalogNumber,
     int MethodId,
     string Method,
-    decimal PurityPercent,
+    decimal? PurityPercent,
     string Lot,
     string Brand,
     DateOnly ReceivedDate,
@@ -81,12 +83,17 @@ public sealed record ReferenceMaterialDetail(
     string? CreatedByName = null,
     string? UpdatedByName = null,
     string? ArchivedByName = null,
-    string? ReplacedByMaterialName = null)
+    string? ReplacedByMaterialName = null,
+    string Presentation = MaterialPresentations.Solid, CommercialCertificate? Commercial = null,
+    DateOnly? EffectiveExpirationDate = null, IReadOnlyList<MaterialOpeningAudit>? OpeningHistory = null,
+    IReadOnlyList<MaterialConsumption>? Movements = null)
 {
     public string StatusLabel => ReferenceMaterialPresentation.StatusLabel(Status);
+    public string PresentationLabel => MaterialPresentations.Label(Presentation);
     public string TotalDisplay => ReferenceMaterialPresentation.Quantity(TotalQuantity, Unit);
     public string AvailableDisplay => ReferenceMaterialPresentation.Quantity(AvailableQuantity, Unit);
     [JsonIgnore] public string NameDisplay => ReferenceMaterialPresentation.Optional(Name);
+    [JsonIgnore] public string CommercialSelectionDisplay => $"{Name} · Lote {Lot} · {AvailableDisplay} disponibles";
     [JsonIgnore] public string MethodDisplay => ReferenceMaterialPresentation.Optional(Method);
     [JsonIgnore] public string LotDisplay => ReferenceMaterialPresentation.Optional(Lot);
     [JsonIgnore] public string BrandDisplay => ReferenceMaterialPresentation.Optional(Brand);
@@ -128,7 +135,7 @@ public sealed record CreateReferenceMaterialRequest(
     string? CasNumber,
     string? CatalogNumber,
     int MethodId,
-    decimal PurityPercent,
+    decimal? PurityPercent,
     string Lot,
     string Brand,
     DateOnly ReceivedDate,
@@ -137,14 +144,14 @@ public sealed record CreateReferenceMaterialRequest(
     int UnitId,
     int PackageCount,
     string StorageTemperature,
-    int LocationId);
+    int LocationId, string Presentation = MaterialPresentations.Solid, CommercialCertificate? Commercial = null);
 
 public sealed record UpdateReferenceMaterialRequest(
     string Name,
     string? CasNumber,
     string? CatalogNumber,
     int MethodId,
-    decimal PurityPercent,
+    decimal? PurityPercent,
     string Lot,
     string Brand,
     DateOnly ReceivedDate,
@@ -154,7 +161,7 @@ public sealed record UpdateReferenceMaterialRequest(
     int PackageCount,
     string StorageTemperature,
     int LocationId,
-    Guid Version);
+    Guid Version, string Presentation = MaterialPresentations.Solid, CommercialCertificate? Commercial = null);
 
 public sealed record ArchiveReferenceMaterialRequest(string Reason, Guid Version);
 

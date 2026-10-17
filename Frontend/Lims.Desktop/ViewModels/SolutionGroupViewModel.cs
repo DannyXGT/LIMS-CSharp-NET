@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using Lims.Contracts.ReferenceMaterials;
 using System.ComponentModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -33,15 +34,15 @@ public sealed partial class SolutionPartViewModel : ObservableObject
     [ObservableProperty] public partial string FieldError { get; set; } = string.Empty;
     public bool HasFieldError => FieldError.Length > 0;
     [ObservableProperty] public partial string SourceBalance { get; set; } = string.Empty;
-    public string Title => $"Solución {Position + 1:00} · {(IsInternalStandard ? "Estándar interno" : "Intermedia")}";
+    public string Title => $"Solución {Position + 1:00} · {(IsInternalStandard ? "Estándar interno" : MaterialPresentations.IsCommercial(Source?.Kind ?? "") ? Source!.KindLabel : "Intermedia")}";
     public string RoleExplanation => IsInternalStandard
-        ? $"Estándar interno: {Source?.Code ?? "seleccione su Intermedia de origen"}. Esta solución conserva su propia alícuota y aforo."
-        : "Dilución de la Intermedia seleccionada; una alícuota para todos sus analitos.";
+        ? $"Estándar interno: {Source?.Code ?? "seleccione su origen"}. Esta solución conserva su propia alícuota y aforo."
+        : "Dilución del origen seleccionado; una alícuota para todos sus analitos.";
     public string CompactResult => Preview is { } p ? $"{p.Results.Count} analitos · Aforo {p.FinalDisplay}" : "Complete origen y volúmenes";
     public string CardSummary => (Preview is { } p ? $"{p.Results.Count} analitos · " : string.Empty) + SourceBalance;
     public string IdentityDisplay => Source?.ConcentrationDisplay ?? string.Empty;
     public void OnOptionsChanged() => OnPropertyChanged(nameof(SourceOption));
-    partial void OnSourceChanged(IntermediateSource? value) { OnPropertyChanged(nameof(IdentityDisplay)); OnPropertyChanged(nameof(SourceOption)); OnPropertyChanged(nameof(RoleExplanation)); }
+    partial void OnSourceChanged(IntermediateSource? value) { OnPropertyChanged(nameof(IdentityDisplay)); OnPropertyChanged(nameof(SourceOption)); OnPropertyChanged(nameof(RoleExplanation)); OnPropertyChanged(nameof(Title)); }
     partial void OnIsInternalStandardChanged(bool value) { OnPropertyChanged(nameof(Title)); OnPropertyChanged(nameof(Role)); OnPropertyChanged(nameof(RoleExplanation)); }
     partial void OnPositionChanged(int value) => OnPropertyChanged(nameof(Title));
     partial void OnFieldErrorChanged(string value) => OnPropertyChanged(nameof(HasFieldError));
@@ -62,7 +63,7 @@ public sealed partial class SolutionGroupViewModel(string kind, ISolutionGroupAp
     public string CreateLabel => Kind == "Curva" ? "Nueva Curva" : "Nuevo AQS";
     public string SaveLabel => "Guardar " + Kind;
     public bool IsCurve => Kind == "Curva";
-    public string WorkflowDescription => IsCurve ? "Preparación de soluciones de calibración · aforo independiente por solución" : "Control de calidad AQS · Intermedia principal y estándar interno de otro grupo cuando aplique";
+    public string WorkflowDescription => IsCurve ? "Preparación de soluciones de calibración · aforo independiente por solución" : "Control de calidad AQS · origen principal y estándar interno de otro grupo cuando aplique";
     public string SolutionsLabel => IsCurve ? "SOLUCIONES DE CALIBRACIÓN" : "CONTROLES DEL GRUPO AQS";
     public string CodeLabel => IsCurve ? "Código de la Curva" : "Código AQS";
     public string AddLabel => IsCurve ? "Agregar solución" : "Agregar control AQS";
@@ -114,7 +115,7 @@ public sealed partial class SolutionGroupViewModel(string kind, ISolutionGroupAp
     public bool HasListMessage => !IsLoadingList && ListMessage.Length > 0;
     public bool IsEmpty => HasLoadedList && !IsLoadingList && ListMessage.Length == 0 && Items.Count == 0;
     public string EmptyTitle => HasSearchCriteria ? "No encontramos preparaciones con estos criterios." : "No hay preparaciones " + Kind;
-    public string EmptyDescription => HasSearchCriteria ? "Cambie los filtros o limpie la búsqueda." : "Registre un grupo a partir de Intermedias disponibles.";
+    public string EmptyDescription => HasSearchCriteria ? "Cambie los filtros o limpie la búsqueda." : "Registre un grupo a partir de orígenes disponibles.";
     public bool HasMultiplePages => TotalCount > _pageSize;
     public bool HasPreviousPage => Page > 1;
     public bool HasNextPage => Page * _pageSize < TotalCount;
@@ -165,7 +166,7 @@ public sealed partial class SolutionGroupViewModel(string kind, ISolutionGroupAp
     {
         foreach (var row in Components)
         {
-            Replace(row.Sources, _sources.Where(s => s.Kind == "Intermedia" && (Method is null || s.MethodId == Method.Id)));
+            Replace(row.Sources, _sources.Where(s => (s.Kind == "Intermedia" || MaterialPresentations.IsCommercial(s.Kind)) && (Method is null || s.MethodId == Method.Id)));
             Replace(row.SourceOptions, row.Sources.Select(s => new SolutionSourceOption(s)));
             // Refresh the selected wrapper after replacing options without discarding the draft source.
             row.OnOptionsChanged();
@@ -219,7 +220,7 @@ public sealed partial class SolutionGroupViewModel(string kind, ISolutionGroupAp
                     row.SourceBalance = $"Origen: {part.Source.AvailableDisplay} · Después del grupo: {StockPresentation.Quantity(debit.RemainingVolume, part.Source.VolumeUnit)}";
                     if (PreparationDate is { } date && (DateOnly.FromDateTime(date.Date) < part.Source.PreparationDate || DateOnly.FromDateTime(date.Date) > part.Source.ExpirationDate)) Validation = "La preparación queda fuera de la vigencia de un origen.";
                 }
-                if (!Calculation.HasSufficientVolume) Validation = "El consumo acumulado supera el saldo de una Intermedia.";
+                if (!Calculation.HasSufficientVolume) Validation = "El consumo acumulado supera el saldo de un origen.";
             }
             catch (ArgumentException e) { Validation = e.Message; }
             catch (OverflowException) { Validation = "Las cantidades exceden el rango admitido."; }

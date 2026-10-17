@@ -125,7 +125,8 @@ public sealed class ReferenceMaterialService(
                 request.StorageTemperature,
                 catalogs.Location,
                 actorUserId,
-                timeProvider.GetUtcNow());
+                timeProvider.GetUtcNow(), request.Presentation);
+            CommercialMaterials.Apply(material, request.Commercial, actorUserId, timeProvider.GetUtcNow());
 
             repository.Add(material);
             if (!await repository.SaveChangesAsync(cancellationToken).ConfigureAwait(false))
@@ -175,6 +176,7 @@ public sealed class ReferenceMaterialService(
         var catalogs = catalogResult.Value!;
         try
         {
+            if (request.Presentation != material.Presentation) return InvalidState("La presentación física no puede cambiar.");
             material.Update(
                 request.Name,
                 request.CasNumber,
@@ -192,6 +194,7 @@ public sealed class ReferenceMaterialService(
                 catalogs.Location,
                 actorUserId,
                 timeProvider.GetUtcNow());
+            CommercialMaterials.Apply(material, request.Commercial, actorUserId, timeProvider.GetUtcNow());
         }
         catch (InvalidOperationException exception)
         {
@@ -299,7 +302,8 @@ public sealed class ReferenceMaterialService(
                 replacementRequest.StorageTemperature,
                 catalogs.Location,
                 actorUserId,
-                now);
+                now, replacementRequest.Presentation);
+            CommercialMaterials.Apply(replacement, replacementRequest.Commercial, actorUserId, now);
 
             source.ReplaceWith(replacement.Id, request.Reason, actorUserId, now);
             repository.Add(replacement);
@@ -379,12 +383,12 @@ public sealed class ReferenceMaterialService(
         material.Lot,
         material.Brand,
         material.PurityPercent,
-        material.ExpirationDate,
+        material.EffectiveExpirationDate ?? material.ExpirationDate,
         material.EffectiveStatus(today).ToString(),
         material.TotalQuantity,
         material.Unit.Symbol,
         material.AvailableQuantity,
-        material.Version);
+        material.Version, material.Presentation);
 
     private async Task<ReferenceMaterialDetail> ToDetailAsync(ReferenceMaterial material, CancellationToken cancellationToken)
     {
@@ -423,10 +427,11 @@ public sealed class ReferenceMaterialService(
             display.CreatedByName,
             display.UpdatedByName,
             display.ArchivedByName,
-            display.ReplacedByMaterialName);
+            display.ReplacedByMaterialName, material.Presentation, CommercialMaterials.Certificate(material),
+            material.EffectiveExpirationDate, material.OpeningHistory.OrderBy(a => a.ChangedAt).Select(a => new MaterialOpeningAudit(a.Id, a.PreviousDate, a.OpenedDate, a.ActorUserId, a.ChangedAt)).ToArray(), display.Movements);
     }
 
-    private DateOnly Today() => DateOnly.FromDateTime(timeProvider.GetUtcNow().UtcDateTime);
+    private DateOnly Today() => DateOnly.FromDateTime(timeProvider.GetUtcNow().ToOffset(TimeSpan.FromHours(-6)).DateTime);
 
     private static string? NormalizeOptional(string? value) =>
         string.IsNullOrWhiteSpace(value) ? null : value.Trim();

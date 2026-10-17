@@ -18,6 +18,64 @@ public sealed partial class StockViewModel(IStockApiClient api, ISessionService 
     private int _listRevision;
     private Guid _requestId = Guid.NewGuid();
     private CreateStockRequest? _pendingRequest;
+    public ObservableCollection<SolventOption> SolventCatalog { get; } = [];
+    public ObservableCollection<StockSolventRow> SolventRows { get; } = [];
+    [ObservableProperty] public partial string Compound { get; set; } = string.Empty;
+    [ObservableProperty] public partial bool IsSolventCatalogReady { get; set; }
+    partial void OnIsSolventCatalogReadyChanged(bool value) => NotifyActions();
+    [ObservableProperty] public partial string SolventCatalogMessage { get; set; } = string.Empty;
+    public StockSolventRow AddSolvent()
+    {
+        var row = new StockSolventRow();
+        row.PropertyChanged += OnSolventChanged;
+        SolventRows.Add(row);
+        CompositionChanged();
+        return row;
+    }
+    public void RemoveSolvent(StockSolventRow row)
+    {
+        row.PropertyChanged -= OnSolventChanged;
+        SolventRows.Remove(row);
+        CompositionChanged();
+    }
+    public IReadOnlyList<StockSolventInput> CompositionInputs => SolventRows.Select(r => new StockSolventInput(
+        r.SelectedSolvent?.Id ?? 0, r.TryPercent(out var percent) ? percent : 0)).ToArray();
+    public IReadOnlyList<StockSolventDetail> CompositionDetails => SolventRows.Select((r, i) => new StockSolventDetail(
+        r.SelectedSolvent?.Id ?? 0, r.SelectedSolvent?.Name ?? "Sin seleccionar", r.SelectedSolvent?.Abbreviation ?? "?",
+        r.TryPercent(out var percent) && percent is >= 0 and <= 100 ? percent : 0, i)).ToArray();
+    public string? CompositionError => SolventRows.Any(r => !r.TryPercent(out _))
+        ? "Complete las proporciones con hasta cuatro decimales."
+        : StockSolventComposition.Validate(CompositionInputs, StockSolventComposition.Basis);
+    public decimal CompositionTotal => CompositionDetails.Sum(r => r.Percent);
+    public string CompositionTotalDisplay => $"Proporción total: {StockSolventComposition.Percent(CompositionTotal)} %";
+    public string CompositionSummary => StockSolventComposition.Summary(CompositionDetails);
+    private void OnSolventChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs args) => CompositionChanged();
+    private void CompositionChanged()
+    {
+        _pendingRequest = null; _requestId = Guid.NewGuid();
+        foreach (var property in new[] { nameof(CompositionError), nameof(CompositionTotalDisplay), nameof(CompositionSummary), nameof(CompositionDetails) }) OnPropertyChanged(property);
+        NotifyActions();
+    }
+    public async Task LoadSolventsAsync(CancellationToken cancellationToken)
+    {
+        if (!CanCreate) return;
+        IsSolventCatalogReady = false;
+        SolventCatalogMessage = "Cargando catálogo de solventes…";
+        try
+        {
+            var result = await api.SolventsAsync(null, cancellationToken).ConfigureAwait(true);
+            if (!result.IsSuccess || result.Value is null)
+            { SolventCatalogMessage = "No se pudo cargar el catálogo de solventes. Reintente o verifique la actualización del servidor."; return; }
+            var selections = SolventRows.Select(r => (Row: r, Id: r.SelectedSolvent?.Id)).ToArray();
+            Replace(SolventCatalog, result.Value.Where(s => s.IsActive));
+            foreach (var selected in selections) selected.Row.SelectedSolvent = SolventCatalog.FirstOrDefault(s => s.Id == selected.Id);
+            IsSolventCatalogReady = SolventCatalog.Count > 0;
+            SolventCatalogMessage = SolventCatalog.Count == 0 ? "No hay solventes activos en el catálogo." : string.Empty;
+        }
+        catch (HttpRequestException) { SolventCatalogMessage = "No se pudo conectar para consultar los solventes. Reintente."; }
+        catch (OperationCanceledException) { SolventCatalogMessage = "La consulta de solventes se canceló. Reintente."; }
+        finally { NotifyActions(); }
+    }
     public ObservableCollection<StockSource> Sources { get; } = [];
     public ObservableCollection<StockSummary> Items { get; } = [];
     [ObservableProperty]
@@ -25,6 +83,7 @@ public sealed partial class StockViewModel(IStockApiClient api, ISessionService 
     public partial StockSummary? SelectedPreparation { get; set; }
     [ObservableProperty] public partial bool HasLoadedList { get; set; }
     [ObservableProperty] public partial bool HasSearchCriteria { get; set; }
+    public event Func<Guid, Task>? CommercialOpened;
     public event Func<StockDetail, Task>? PreparationOpened;
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "Instance property retained for XAML bindings.")]
     [ObservableProperty] public partial bool IsLoadingList { get; set; }
@@ -51,6 +110,7 @@ public sealed partial class StockViewModel(IStockApiClient api, ISessionService 
     private async Task OpenSelectedPreparationAsync(CancellationToken cancellationToken)
     {
         if (!CanOpenSelectedPreparation || SelectedPreparation is not { } selected) return;
+        if (selected.IsCommercial) { if (CommercialOpened is { } commercial) await commercial(selected.Id); return; }
         if (!await OpenDetailAsync(selected.Id, cancellationToken) || SelectedPreparation?.Id != selected.Id) return;
         if (Detail is { } detail && detail.Preparation.Id == selected.Id && PreparationOpened is { } show)
             await show(detail);
@@ -99,6 +159,8 @@ public sealed partial class StockViewModel(IStockApiClient api, ISessionService 
     public bool CanCreate => CanView && HasPermission(PermissionCatalog.StockCreate);
     public bool CanSave => CanCreate && Created is null && !IsBusy && !IsCalculating &&
         Calculation is { HasSufficientMaterial: true, ActualWeight: > 0, ActualConcentration: > 0 } &&
+        IsSolventCatalogReady && Compound.Trim().Length is > 0 and <= 200 && CompositionError is null &&
+        SolventRows.All(r => r.SelectedSolvent is { IsActive: true } selected && SolventCatalog.Any(s => s.Id == selected.Id)) &&
         Name.Trim().Length is > 0 and <= 200 && Notes.Trim().Length <= 2000 && StorageTemperature.Trim().Length <= 200 &&
         SelectedSource is { } source &&
         (!HistoricalEntryPolicy.EnforceCurrentExpiration || source.ExpirationDate >= DateOnly.FromDateTime(DateTimeOffset.UtcNow.ToOffset(TimeSpan.FromHours(-6)).DateTime)) &&
@@ -115,6 +177,8 @@ public sealed partial class StockViewModel(IStockApiClient api, ISessionService 
     public void BeginNew()
     {
         SelectedSource = null;
+        foreach (var row in SolventRows.ToArray()) RemoveSolvent(row);
+        Compound = string.Empty;
         Name = Concentration = FinalVolume = ActualQuantity = Notes = Message = string.Empty;
         PreparationDate = DateTimeOffset.UtcNow.ToOffset(TimeSpan.FromHours(-6));
         ExpirationDate = null;
@@ -213,7 +277,7 @@ public sealed partial class StockViewModel(IStockApiClient api, ISessionService 
         IsBusy = true;
         Message = string.Empty;
         _pendingRequest ??= new CreateStockRequest(_requestId, Name.Trim(), calculation!, DateOnly.FromDateTime(PreparationDate.DateTime), Notes,
-            DateOnly.FromDateTime(ExpirationDate!.Value.DateTime), StorageTemperature);
+            DateOnly.FromDateTime(ExpirationDate!.Value.DateTime), StorageTemperature, Compound.Trim(), CompositionInputs, StockSolventComposition.Basis);
         try
         {
             var response = await api.CreateAsync(_pendingRequest, cancellationToken).ConfigureAwait(true);
@@ -297,6 +361,7 @@ public sealed partial class StockViewModel(IStockApiClient api, ISessionService 
     private void NotifyActions() => OnPropertyChanged(nameof(CanSave));
     partial void OnSelectedSourceChanged(StockSource? oldValue, StockSource? newValue)
     {
+        if (string.IsNullOrWhiteSpace(Compound) || Compound == oldValue?.Name) Compound = newValue?.Name ?? string.Empty;
         ActualQuantity = string.Empty;
         if (newValue is not null) ActualWeightUnit = newValue.Unit;
         Invalidate();
@@ -316,6 +381,7 @@ public sealed partial class StockViewModel(IStockApiClient api, ISessionService 
     partial void OnActualWeightUnitChanged(string value) => Invalidate();
     partial void OnExpirationDateChanged(DateTimeOffset? value) { _pendingRequest = null; _requestId = Guid.NewGuid(); NotifyActions(); }
     partial void OnStorageTemperatureChanged(string value) { _pendingRequest = null; _requestId = Guid.NewGuid(); NotifyActions(); }
+    partial void OnCompoundChanged(string value) { _pendingRequest = null; _requestId = Guid.NewGuid(); NotifyActions(); }
     partial void OnNameChanged(string value) { _pendingRequest = null; _requestId = Guid.NewGuid(); NotifyActions(); }
     partial void OnNotesChanged(string value) { _pendingRequest = null; _requestId = Guid.NewGuid(); NotifyActions(); }
     partial void OnPreparationDateChanged(DateTimeOffset value) { _pendingRequest = null; _requestId = Guid.NewGuid(); NotifyActions(); }

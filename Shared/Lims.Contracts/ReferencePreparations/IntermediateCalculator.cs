@@ -27,26 +27,34 @@ public static class IntermediateCalculator
                 if (request.Components.Count != 1 || parent != source.Id || source.Kind != "Intermedia")
                     throw new ArgumentException("La dilución utiliza una alícuota de la Intermedia seleccionada.");
             }
-            else if (source.Kind != "Stock") throw new ArgumentException("Para diluir una Intermedia previa, selecciónela en Solución a diluir.");
+            else if (source.Kind != "Stock" && !Lims.Contracts.ReferenceMaterials.MaterialPresentations.IsCommercial(source.Kind)) throw new ArgumentException("Para diluir una Intermedia previa, selecciónela en Solución a diluir.");
             var debit = StockUnits.ConvertVolume(component.VolumeTaken, component.VolumeUnit, source.VolumeUnit);
             ValidateVolume(debit);
             sufficient &= debit <= source.AvailableVolume;
             var taken = StockUnits.ConvertVolume(component.VolumeTaken, component.VolumeUnit, request.FinalVolumeUnit);
             total += taken;
-            var results = source.Analytes.Select(a => a with { Concentration = a.Concentration * taken / request.FinalVolume }).ToArray();
+            var results = source.Analytes.Select(a => a with { Concentration = a.Concentration * taken / request.FinalVolume, ExpandedUncertainty = a.ExpandedUncertainty * taken / request.FinalVolume }).ToArray();
             if (results.Length == 0 || results.Any(a => a.Concentration <= 0 || a.Concentration >= 1000000000000m))
                 throw new ArgumentException("La concentración del origen queda fuera del rango admitido.");
             contributions.Add(new(source, component.VolumeTaken, component.VolumeUnit, source.AvailableVolume - debit, results));
         }
         // Distinct analyte identities are retained even when display names match. CAS allows pooling the same chemical.
         var final = contributions.SelectMany(c => c.Results).GroupBy(a => string.IsNullOrWhiteSpace(a.CasNumber) ? a.MaterialId.ToString("D") : a.CasNumber.Trim(), StringComparer.OrdinalIgnoreCase)
-            .Select(group => group.First() with { Concentration = group.Sum(a => a.Concentration * StockUnits.MilligramsPerLiter(a.Unit)), Unit = "mg/L" }).ToArray();
+            .Select(Combine).ToArray();
         if (final.Any(a => a.Concentration >= 1000000000000m)) throw new ArgumentException("La concentración resultante excede el rango admitido.");
         return new(total, request.FinalVolume, request.FinalVolumeUnit, request.FinalVolume - total,
             total / request.FinalVolume * 100m, total > request.FinalVolume, sufficient, contributions, final);
     }
 
     public static decimal OccupiedPercent(decimal taken, decimal finalVolume) => finalVolume > 0 ? taken / finalVolume * 100m : 0;
+    private static IntermediateAnalyte Combine(IGrouping<string, IntermediateAnalyte> group)
+    {
+        var first = group.First();
+        // Keep legacy internal results in mg/L and retain certified units for commercial lineage.
+        var unit = first.PhysicalMaterialId.HasValue ? first.Unit : "mg/L";
+        var concentration = group.Sum(a => a.Concentration * StockUnits.MilligramsPerLiter(a.Unit)) / StockUnits.MilligramsPerLiter(unit);
+        return first with { Concentration = concentration, Unit = unit, ExpandedUncertainty = group.Count() == 1 ? first.ExpandedUncertainty : null };
+    }
     public static void ValidateVolume(decimal value)
     {
         if (value <= 0 || value >= 1000000000000m || decimal.Round(value, 6) != value)

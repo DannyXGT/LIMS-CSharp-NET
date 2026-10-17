@@ -20,7 +20,7 @@ public sealed partial class IntermediateComponentViewModel : ObservableObject
     [ObservableProperty] public partial string Unit { get; set; } = "mL";
     [ObservableProperty] public partial string Error { get; set; } = string.Empty;
     [ObservableProperty] public partial string BalanceDisplay { get; set; } = "Seleccione un origen disponible.";
-    public string IdentityDisplay => Source is null ? string.Empty : $"{Source.KindLabel} · {Source.ConcentrationDisplay}";
+    public string IdentityDisplay => Source is null ? string.Empty : $"{Source.KindLabel} · {Source.MetadataDisplay}\n{Source.ConcentrationDisplay}";
     public string AnalytesDisplay => Source?.ConcentrationDisplay ?? string.Empty;
     public IReadOnlyList<string> Units { get; } = ["mL", "L"];
     public bool HasError => Error.Length > 0;
@@ -42,6 +42,7 @@ public sealed partial class IntermediateViewModel(IIntermediateApiClient api, IS
     public partial IntermediateSummary? SelectedPreparation { get; set; }
     [ObservableProperty] public partial bool HasLoadedList { get; set; }
     [ObservableProperty] public partial bool HasSearchCriteria { get; set; }
+    public event Func<Guid, Task>? CommercialOpened;
     public event Func<IntermediateDetail, Task>? PreparationOpened;
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "Instance property retained for XAML bindings.")]
     [ObservableProperty] public partial bool IsLoadingList { get; set; }
@@ -68,6 +69,7 @@ public sealed partial class IntermediateViewModel(IIntermediateApiClient api, IS
     private async Task OpenSelectedPreparationAsync(CancellationToken cancellationToken)
     {
         if (!CanOpenSelectedPreparation || SelectedPreparation is not { } selected) return;
+        if (selected.IsCommercial) { if (CommercialOpened is { } commercial) await commercial(selected.Id); return; }
         if (!await OpenDetailAsync(selected.Id, cancellationToken) || SelectedPreparation?.Id != selected.Id) return;
         if (Detail is { } detail && detail.Preparation.Id == selected.Id && PreparationOpened is { } show)
             await show(detail);
@@ -82,6 +84,10 @@ public sealed partial class IntermediateViewModel(IIntermediateApiClient api, IS
 
     public ObservableCollection<IntermediateMethod> Methods { get; } = [];
     public ObservableCollection<IntermediateSource> DilutionSources { get; } = [];
+    public IReadOnlyList<string> SourceTypes { get; } = ["Stock preparado", "Solución comercial", "Mix comercial"];
+    [ObservableProperty] public partial string SourceType { get; set; } = "Stock preparado";
+    partial void OnSourceTypeChanged(string value) { if (!_updating) UpdateSources(); Recalculate(); }
+    private string SourceKind => SourceType switch { "Solución comercial" => MaterialPresentations.Solution, "Mix comercial" => MaterialPresentations.Mix, _ => "Stock" };
     public IReadOnlyList<string> VolumeUnits { get; } = ["mL", "L"];
     [ObservableProperty] public partial IntermediateMethod? Method { get; set; }
     [ObservableProperty] public partial IntermediateSource? DilutedSource { get; set; }
@@ -187,7 +193,7 @@ public sealed partial class IntermediateViewModel(IIntermediateApiClient api, IS
     {
         SyncSources(DilutionSources, _sources.Where(s => s.Kind == "Intermedia" && (Method is null || s.MethodId == Method.Id)), DilutedSource);
         foreach (var row in Components)
-            SyncSources(row.Sources, DilutedSource is { } parent ? [parent] : _sources.Where(s => s.Kind == "Stock" && (Method is null || s.MethodId == Method.Id)), row.Source);
+            SyncSources(row.Sources, DilutedSource is { } parent ? [parent] : _sources.Where(s => s.Kind == SourceKind && (Method is null || s.MethodId == Method.Id)), row.Source);
     }
     private void OnComponentChanged(object? sender, PropertyChangedEventArgs e)
     {

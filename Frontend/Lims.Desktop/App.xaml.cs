@@ -65,6 +65,7 @@ public partial class App : Application
         builder.Services.AddSingleton<PermissionsViewModel>();
         builder.Services.AddSingleton<PermissionsPage>();
         builder.Services.AddSingleton<IStockApiClient, StockApiClient>();
+        builder.Services.AddSingleton<ICommercialPreparationApiClient, CommercialPreparationApiClient>();
         builder.Services.AddSingleton<IIntermediateApiClient, IntermediateApiClient>();
         builder.Services.AddSingleton<ISolutionGroupApiClient, SolutionGroupApiClient>();
         builder.Services.AddSingleton<SolutionGroupWorkspace>();

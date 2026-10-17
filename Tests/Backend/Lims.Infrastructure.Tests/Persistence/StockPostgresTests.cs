@@ -274,6 +274,7 @@ public sealed class StockPostgresTests
         await using var verify = fixture.Context();
         Assert.Empty(await verify.ReferencePreparations.ToArrayAsync());
         Assert.Empty(await verify.ReferenceMaterialMovements.ToArrayAsync());
+        Assert.Empty(await verify.StockSolvents.ToArrayAsync());
         var source = await verify.ReferenceMaterials.SingleAsync();
         Assert.Equal(100, source.AvailableQuantity);
         Assert.Equal(fixture.Source.Version, source.Version);
@@ -393,7 +394,7 @@ public sealed class StockPostgresTests
         await using var fixture = await Fixture.CreateAsync(100);
         await using var context = fixture.Context();
         // The fixture model owns these tables; remove only the two empty Stock tables in this isolated schema.
-        await context.Database.ExecuteSqlRawAsync("DROP TABLE reference_material_movements; DROP TABLE reference_preparation_components; DROP TABLE reference_preparations; DROP SEQUENCE reference_stock_code_sequence; DROP SEQUENCE reference_intermediate_code_sequence;");
+        await context.Database.ExecuteSqlRawAsync("DROP TABLE stock_solvents; DROP TABLE reference_solvents; DROP TABLE reference_material_movements; DROP TABLE reference_preparation_components; DROP TABLE reference_preparations; DROP SEQUENCE reference_stock_code_sequence; DROP SEQUENCE reference_intermediate_code_sequence;");
         await context.Database.ExecuteSqlRawAsync("CREATE TABLE \"__EFMigrationsHistory\" (\"MigrationId\" varchar(150) PRIMARY KEY, \"ProductVersion\" varchar(32) NOT NULL); INSERT INTO \"__EFMigrationsHistory\" VALUES ('20261001225215_FinalizeReferenceMaterialCatalogs', '10.0.10');");
         var scriptPath = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../../../artifacts/sql/reference_stock.sql"));
         var script = await File.ReadAllTextAsync(scriptPath);
@@ -407,8 +408,86 @@ public sealed class StockPostgresTests
         var precisionScript = await File.ReadAllTextAsync(precisionPath);
         await context.Database.ExecuteSqlRawAsync(precisionScript);
         await context.Database.ExecuteSqlRawAsync(precisionScript);
+        var solventScript = await File.ReadAllTextAsync(Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../../../artifacts/sql/stock_solvent_composition.sql")));
+        await context.Database.ExecuteSqlRawAsync(solventScript);
+        await context.Database.ExecuteSqlRawAsync(solventScript);
+        Assert.Equal(12, await context.ReferenceSolvents.CountAsync());
         Assert.False(context.Database.HasPendingModelChanges());
         Assert.True((await Service(context).CreateAsync(fixture.Request(50), 42, CancellationToken.None)).IsSuccess);
+    }
+
+    [StockPostgresFact]
+    public async Task SolventCatalogHasTwelveRealNamesAndSearchesAbbreviationAndName()
+    {
+        await using var f = await Fixture.CreateAsync(100);
+        await using var db = f.Context(); var service = Service(db);
+        var all = (await service.SolventsAsync(null, default)).Value!;
+        Assert.Equal<string>(["THF", "Hxn", "ACN", "MeOH", "Tolueno", "MTBE", "Cyclohexano", "H2O", "HNO3", "HCl", "Acetona", "DMSO"], all.Select(s => s.Abbreviation));
+        Assert.Equal("Metanol", Assert.Single((await service.SolventsAsync("meoh", default)).Value!).Name);
+        Assert.Equal("H2O", Assert.Single((await service.SolventsAsync("agua", default)).Value!).Abbreviation);
+        Assert.Empty((await service.SolventsAsync("%", default)).Value!);
+        await db.Database.ExecuteSqlRawAsync("UPDATE reference_solvents SET is_active = false WHERE id = 4");
+        Assert.Empty((await service.SolventsAsync("MeOH", default)).Value!);
+    }
+
+    [StockPostgresFact]
+    public async Task CompositionRoundTripsInUserOrderWithCompoundAndOriginalCalculation()
+    {
+        foreach (var rows in new StockSolventInput[][] { [new(3, 100)], [new(4, 50), new(8, 50)], [new(4, 30), new(3, 20), new(8, 50)], [new(8, 66.6667m), new(4, 33.3333m)] })
+        {
+            await using var f = await Fixture.CreateAsync(100);
+            var request = f.Request(50) with { Solvents = rows, Compound = "Analito corregido" };
+            await using (var db = f.Context())
+            {
+                var result = await Service(db).CreateAsync(request, 42, default);
+                Assert.True(result.IsSuccess, result.Error?.Message);
+                // Identical request cannot duplicate the Stock, ledger or composition.
+                Assert.True((await Service(db).CreateAsync(request, 42, default)).IsSuccess);
+                Assert.Equal(rows.Length, await db.StockSolvents.CountAsync());
+                Assert.Single(await db.ReferenceMaterialMovements.ToArrayAsync());
+            }
+            await using var reopened = f.Context();
+            var detail = (await Service(reopened).GetAsync(request.RequestId, default)).Value!;
+            Assert.Equal("Analito corregido", detail.Compound);
+            Assert.Equal(StockSolventComposition.Basis, detail.CompositionBasis);
+            Assert.Equal(rows.Select(r => r.SolventId), detail.Solvents!.Select(r => r.SolventId));
+            Assert.Equal(rows.Select(r => r.Percent), detail.Solvents!.Select(r => r.Percent));
+            Assert.Equal(Enumerable.Range(0, rows.Length), detail.Solvents!.Select(r => r.Position));
+            Assert.Equal(50, detail.Calculation.ActualWeight);
+            Assert.Equal(50, detail.Calculation.ActualConcentration);
+            Assert.Equal(StockCalculator.MassFormula, detail.Calculation.Formula);
+            Assert.Equal(50, (await reopened.ReferenceMaterials.SingleAsync()).AvailableQuantity);
+        }
+    }
+
+    [StockPostgresFact]
+    public async Task InvalidCompositionAndUnknownOrInactiveCatalogRowsNeverConsumeSource()
+    {
+        await using var f = await Fixture.CreateAsync(100);
+        await using var db = f.Context(); var service = Service(db); var valid = f.Request(50);
+        foreach (var rows in new StockSolventInput[][] { [], [new(4, -1), new(8, 101)], [new(4, 0), new(8, 100)], [new(4, 40), new(8, 40)], [new(4, 50), new(8, 60)], [new(4, 50), new(4, 50)], [new(0, 100)], [new(999, 100)], [new(4, 33.33333m), new(8, 66.66667m)] })
+            Assert.Equal(ErrorCodes.ValidationError, (await service.CreateAsync(valid with { Solvents = rows }, 42, default)).Error?.Code);
+        Assert.Equal(ErrorCodes.ValidationError, (await service.CreateAsync(valid with { Compound = " " }, 42, default)).Error?.Code);
+        Assert.Equal(ErrorCodes.ValidationError, (await service.CreateAsync(valid with { CompositionBasis = "v/v" }, 42, default)).Error?.Code);
+        await db.Database.ExecuteSqlRawAsync("UPDATE reference_solvents SET is_active = false WHERE id = 4");
+        Assert.Equal(ErrorCodes.ValidationError, (await service.CreateAsync(valid, 42, default)).Error?.Code);
+        Assert.Empty(await db.ReferencePreparations.ToArrayAsync()); Assert.Empty(await db.StockSolvents.ToArrayAsync());
+        Assert.Empty(await db.ReferenceMaterialMovements.ToArrayAsync());
+        Assert.Equal(100, (await db.ReferenceMaterials.AsNoTracking().SingleAsync()).AvailableQuantity);
+    }
+
+    [StockPostgresFact]
+    public async Task HistoricalStockWithoutCompositionPreservesNotesAndDoesNotInventCompound()
+    {
+        await using var f = await Fixture.CreateAsync(100);
+        await using var db = f.Context(); var request = f.Request(50); var service = Service(db);
+        Assert.True((await service.CreateAsync(request, 42, default)).IsSuccess);
+        // Simulate a pre-migration row in this isolated test schema only.
+        await db.Database.ExecuteSqlRawAsync("DELETE FROM stock_solvents; UPDATE reference_preparations SET compound = NULL, composition_basis = NULL");
+        var historical = (await service.GetAsync(request.RequestId, default)).Value!;
+        Assert.Null(historical.Compound); Assert.Empty(historical.Solvents!);
+        Assert.Equal("Sin composici\u00f3n especificada", historical.CompositionDisplay);
+        Assert.Equal(request.Notes, historical.Notes);
     }
 
     private static StockService Service(LimsDbContext context) => new(new StockRepository(context), TimeProvider.System);
@@ -424,7 +503,7 @@ public sealed class StockPostgresTests
         }
         public CreateStockRequest Request(decimal concentration) => new(Guid.NewGuid(), "Stock de prueba",
             new(Source.Id, Source.Version, concentration, "mg/L", 1000, "mL", concentration * 100m / Source.PurityPercent, "mg"),
-            DateOnly.FromDateTime(DateTimeOffset.UtcNow.ToOffset(TimeSpan.FromHours(-6)).DateTime), "Datos ficticios de validación", new DateOnly(2099, 12, 31), "Ambiente");
+            DateOnly.FromDateTime(DateTimeOffset.UtcNow.ToOffset(TimeSpan.FromHours(-6)).DateTime), "Datos ficticios de validación", new DateOnly(2099, 12, 31), "Ambiente", "Compuesto de prueba", [new(4, 100m)], StockSolventComposition.Basis);
         public static async Task<Fixture> CreateAsync(decimal available, decimal purity = 100)
         {
             var connection = new NpgsqlConnectionStringBuilder(Environment.GetEnvironmentVariable("LIMS_STOCK_TEST_CONNECTION"));

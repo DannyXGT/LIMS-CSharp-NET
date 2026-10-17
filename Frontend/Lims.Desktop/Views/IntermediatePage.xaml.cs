@@ -1,3 +1,4 @@
+using Lims.Desktop.Http;
 using Lims.Contracts.ReferencePreparations;
 using Lims.Desktop.ViewModels;
 using Microsoft.UI.Xaml;
@@ -9,12 +10,15 @@ namespace Lims.Desktop.Views;
 
 public sealed partial class IntermediatePage : Page
 {
+    private readonly ICommercialPreparationApiClient? _commercialApi;
+    public CommercialPreparationDetailDialog? CommercialDetail { get; private set; }
     private bool _dialogOpen;
     private bool _resetting;
     private readonly DispatcherTimer _searchTimer = new() { Interval = TimeSpan.FromMilliseconds(300) };
     private readonly Lims.Desktop.Http.IStockApiClient? _stockApi;
-    public IntermediatePage(IntermediateViewModel viewModel, Lims.Desktop.Http.IStockApiClient? stockApi = null)
+    public IntermediatePage(IntermediateViewModel viewModel, Lims.Desktop.Http.IStockApiClient? stockApi = null, ICommercialPreparationApiClient? commercialApi = null)
     {
+        _commercialApi = commercialApi;
         ViewModel = viewModel;
         _stockApi = stockApi;
         InitializeComponent();
@@ -22,6 +26,7 @@ public sealed partial class IntermediatePage : Page
         Unloaded += (_, _) => _searchTimer.Stop();
         ViewModel.PropertyChanged += (_, e) => { if (e.PropertyName == nameof(ViewModel.IsEmpty) && ViewModel.IsEmpty && IsLoaded) Lims.DesignSystem.Presentation.Motion.Enter(EmptyState, y: 4, milliseconds: 160); };
         ViewModel.PreparationOpened += ShowSelectedDetailAsync;
+        ViewModel.CommercialOpened += OpenCommercialAsync;
         // ListView can consume Enter internally; keep the detail action available to keyboard users.
         PreparationsList.AddHandler(UIElement.KeyDownEvent, new KeyEventHandler(OnListKeyDown), true);
     }
@@ -53,10 +58,12 @@ public sealed partial class IntermediatePage : Page
         ViewModel.BeginNew();
         try
         {
-            Editor = new IntermediateEditorDialog(ViewModel) { XamlRoot = XamlRoot, RequestedTheme = ActualTheme };
+            Editor = new IntermediateEditorDialog(ViewModel, _commercialApi) { XamlRoot = XamlRoot, RequestedTheme = ActualTheme };
             await Editor.ShowAsync();
+            var commercial = Editor.CommercialCreated;
             var viewDetail = Editor.ViewCreatedDetail;
             Editor = null;
+            if (commercial is not null) { await LoadAsync(); await ShowCommercialAsync(commercial); }
             if (viewDetail && ViewModel.Created is { } created)
             {
                 await ShowDetailAsync(created);
@@ -113,7 +120,14 @@ public sealed partial class IntermediatePage : Page
         var sheet = new IntermediateDetailDialog(detail) { XamlRoot = XamlRoot, RequestedTheme = ActualTheme };
         await sheet.ShowAsync();
         if (sheet.RequestedSource is not { } source) return;
-        if (source.Kind == "Intermedia" && await ViewModel.OpenDetailAsync(source.Id, CancellationToken.None))
+        if (Lims.Contracts.ReferenceMaterials.MaterialPresentations.IsCommercial(source.Kind) && _commercialApi is not null)
+        {
+            var response = await _commercialApi.GetAsync("Intermedia", source.Id, CancellationToken.None);
+            if (!response.IsSuccess && response.StatusCode == 404) response = await _commercialApi.GetAsync("Stock", source.Id, CancellationToken.None);
+            if (response.IsSuccess && response.Value is { } commercial) await ShowCommercialAsync(commercial);
+            else ViewModel.ListMessage = response.Error?.Message ?? "No se pudo abrir el origen comercial.";
+        }
+        else if (source.Kind == "Intermedia" && await ViewModel.OpenDetailAsync(source.Id, CancellationToken.None))
             await ShowDetailAsync(ViewModel.Detail!);
         else if (source.Kind == "Stock" && _stockApi is not null)
         {
@@ -122,5 +136,26 @@ public sealed partial class IntermediatePage : Page
                 await new StockDetailDialog(stock) { XamlRoot = XamlRoot, RequestedTheme = ActualTheme }.ShowAsync();
             else ViewModel.ListMessage = response.Error?.Message ?? "No se pudo abrir el origen.";
         }
+    }
+    private async Task OpenCommercialAsync(Guid id)
+    {
+        if (_dialogOpen || !IsLoaded || _commercialApi is null) return;
+        _dialogOpen = true;
+        try
+        {
+            var response = await _commercialApi.GetAsync("Intermedia", id, CancellationToken.None);
+            if (response.IsSuccess && response.Value is { } detail) await ShowCommercialAsync(detail);
+            else ViewModel.ListMessage = response.Error?.Message ?? "No se pudo abrir el ingreso comercial.";
+        }
+        finally { _dialogOpen = false; }
+    }
+    private async Task ShowCommercialAsync(CommercialPreparationDetail detail)
+    {
+        try
+        {
+            CommercialDetail = new CommercialPreparationDetailDialog(detail) { XamlRoot = XamlRoot, RequestedTheme = ActualTheme };
+            await CommercialDetail.ShowAsync();
+        }
+        finally { CommercialDetail = null; }
     }
 }

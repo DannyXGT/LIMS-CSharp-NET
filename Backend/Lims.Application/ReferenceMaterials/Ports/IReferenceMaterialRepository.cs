@@ -44,4 +44,5 @@ public sealed record ReferenceMaterialDisplayContext(
     string? CreatedByName,
     string? UpdatedByName,
     string? ArchivedByName,
-    string? ReplacedByMaterialName);
+    string? ReplacedByMaterialName,
+    IReadOnlyList<Lims.Contracts.ReferenceMaterials.MaterialConsumption>? Movements = null);

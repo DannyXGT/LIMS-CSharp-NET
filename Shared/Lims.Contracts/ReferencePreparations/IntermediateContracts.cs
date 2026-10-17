@@ -4,17 +4,30 @@ using Lims.Contracts.ReferenceMaterials;
 namespace Lims.Contracts.ReferencePreparations;
 
 public sealed record IntermediateMethod(int Id, string Name) { public override string ToString() => Name; }
-public sealed record IntermediateAnalyte(Guid MaterialId, string Name, string? CasNumber, string Lot, decimal Concentration, string Unit)
+public sealed record IntermediateAnalyte(Guid MaterialId, string Name, string? CasNumber, string Lot, decimal Concentration, string Unit, Guid? PhysicalMaterialId = null, Guid? CertifiedComponentId = null, decimal? ExpandedUncertainty = null)
 {
     [JsonIgnore] public string Display => $"{Name} · {StockPresentation.Quantity(Concentration, Unit)}";
 }
 public sealed record IntermediateSource(Guid Id, string Kind, string Code, string Name, int MethodId, string Method,
     decimal AvailableVolume, decimal InitialVolume, string VolumeUnit, DateOnly PreparationDate, DateOnly ExpirationDate,
-    Guid Version, IReadOnlyList<IntermediateAnalyte> Analytes)
+    Guid Version, IReadOnlyList<IntermediateAnalyte> Analytes, string? Lot = null, string? Brand = null, string? Catalog = null, string? Matrix = null, string? Certificate = null)
 {
-    [JsonIgnore] public string KindLabel => Kind == "Stock" ? "Stock" : "Intermedia";
+    [JsonIgnore] public string KindLabel => Kind switch { "Stock" => "Stock interno", "Intermedia" => "Intermedia interna", _ => MaterialPresentations.Label(Kind) };
     [JsonIgnore] public string SearchDisplay => $"{Code} · {Name} · {string.Join(" · ", Analytes.Select(a => $"{(a.Name == Name ? "" : a.Name + " · ")}CAS {ReferenceMaterialPresentation.Optional(a.CasNumber)} · Lote {a.Lot}"))}";
     [JsonIgnore] public string AvailableDisplay => StockPresentation.Quantity(AvailableVolume, VolumeUnit);
+    [JsonIgnore] public string MetadataDisplay
+    {
+        get
+        {
+            var values = new List<string>();
+            if (!string.IsNullOrWhiteSpace(Brand)) values.Add(Brand);
+            if (!string.IsNullOrWhiteSpace(Catalog)) values.Add($"Catálogo {Catalog}");
+            if (!string.IsNullOrWhiteSpace(Lot)) values.Add($"Lote {Lot}");
+            values.Add($"{AvailableDisplay} · Vence {ReferenceMaterialPresentation.Date(ExpirationDate)}");
+            if (!string.IsNullOrWhiteSpace(Matrix)) values.Add($"Matriz {Matrix}");
+            return string.Join(" · ", values);
+        }
+    }
     [JsonIgnore] public string ConcentrationDisplay => string.Join("; ", Analytes.Select(a => a.Display));
     public override string ToString() => SearchDisplay;
 }
@@ -41,8 +54,11 @@ public sealed record IntermediateCalculation(decimal TotalVolumeTaken, decimal F
 }
 public sealed record IntermediateSummary(Guid Id, string Code, string Name, string Method, int ComponentCount,
     decimal FinalVolume, string VolumeUnit, decimal AvailableVolume, IReadOnlyList<IntermediateAnalyte> Results,
-    DateOnly PreparationDate, DateOnly ExpirationDate, string PreparedBy, string Status)
+    DateOnly PreparationDate, DateOnly ExpirationDate, string PreparedBy, string Status, bool IsCommercial = false)
 {
+    [JsonIgnore] public string OriginLabel => IsCommercial ? "Comercial" : "Interna";
+    [JsonIgnore] public string EntryCodeDisplay => $"{Code} · {OriginLabel}";
+    [JsonIgnore] public string ComponentCountLabel => IsCommercial ? "analitos certificados" : "orígenes trazados";
     [JsonIgnore] public StockAvailability Availability => new(FinalVolume, VolumeUnit, AvailableVolume);
     [JsonIgnore] public string FinalDisplay => StockPresentation.Quantity(FinalVolume, VolumeUnit);
     [JsonIgnore] public string AvailableDisplay => StockPresentation.Quantity(AvailableVolume, VolumeUnit);

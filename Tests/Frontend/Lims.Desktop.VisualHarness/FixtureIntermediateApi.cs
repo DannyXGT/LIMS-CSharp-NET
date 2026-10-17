@@ -9,6 +9,7 @@ internal sealed class FixtureIntermediateApi : IIntermediateApiClient
 {
     public List<IntermediateSource> Sources { get; } = [Source("4-Aminobiphenyl", "92-67-1", 1, 1000), Source("Benzidine", "92-87-5", 2, 500), Source("2-Naphthylamine", "91-59-8", 3, 200)];
     private readonly List<IntermediateDetail> _prepared = [];
+    public Func<IEnumerable<IntermediateSummary>>? CommercialRows { get; set; }
     public string Scene { get; set; } = "Default";
     public int CreateCalls { get; private set; }
     public Task<ApiCallResult<IntermediateOptions>> OptionsAsync(CancellationToken cancellationToken) => Task.FromResult(Ok(new IntermediateOptions([new(1, "Aminas aromáticas"), new(2, "Otro método · prueba")], Sources.ToArray())));
@@ -43,6 +44,7 @@ internal sealed class FixtureIntermediateApi : IIntermediateApiClient
         if (Scene == "Loading") await Task.Delay(1800, cancellationToken);
         if (Scene == "Error") throw new HttpRequestException("Fixture: server unavailable");
         IEnumerable<IntermediateSummary> rows = Scene == "Empty" ? [] : _prepared.Select(d => d.Preparation with { AvailableVolume = Sources.Single(s => s.Id == d.Preparation.Id).AvailableVolume });
+        if (Scene != "Empty" && CommercialRows is not null) rows = rows.Concat(CommercialRows());
         if (!string.IsNullOrWhiteSpace(search)) rows = rows.Where(p => p.Code.Contains(search, StringComparison.OrdinalIgnoreCase) || p.Name.Contains(search, StringComparison.OrdinalIgnoreCase) || p.Method.Contains(search, StringComparison.OrdinalIgnoreCase));
         if (filter?.Status is { Length: > 0 } status) rows = rows.Where(p => status == "Active" ? p.Status is "Active" or "Depleted" : p.Status == status);
         if (filter?.Availability is { Length: > 0 } availability) rows = rows.Where(p => availability switch { "Positive" => p.Availability.AvailableVolume > 0, "Low" => p.Availability.RemainingPercent is > 0 and <= 60, "Depleted" => p.Availability.IsDepleted, _ => true });

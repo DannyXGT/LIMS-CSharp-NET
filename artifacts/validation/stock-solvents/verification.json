@@ -1,0 +1,154 @@
+{
+  "verifiedAt": "2026-10-16T21:29:44.551079-06:00",
+  "scope": "Nueva preparacion Stock and Stock detail only",
+  "build": {
+    "solution": "Debug x64",
+    "warnings": 0,
+    "errors": 0,
+    "visualHarnessWarnings": 0,
+    "visualHarnessErrors": 0
+  },
+  "tests": {
+    "passed": 376,
+    "failed": 0,
+    "skipped": 0,
+    "suites": [
+      {
+        "resultFile": "artifacts/validation/stock-postgres/results/stock_net10.0_20261016212249.trx",
+        "passed": 134,
+        "failed": 0,
+        "skipped": 0,
+        "stockCases": 47
+      },
+      {
+        "resultFile": "artifacts/validation/stock-postgres/results/stock_net10.0_20261016212416.trx",
+        "passed": 46,
+        "failed": 0,
+        "skipped": 0,
+        "stockCases": 7
+      },
+      {
+        "resultFile": "artifacts/validation/stock-postgres/results/stock_net10.0_20261016212716.trx",
+        "passed": 67,
+        "failed": 0,
+        "skipped": 0,
+        "stockCases": 25
+      },
+      {
+        "resultFile": "artifacts/validation/stock-postgres/results/stock_net10.0_20261016212719.trx",
+        "passed": 129,
+        "failed": 0,
+        "skipped": 0,
+        "stockCases": 24
+      }
+    ]
+  },
+  "postgres": {
+    "host": "127.0.0.1",
+    "port": 55439,
+    "database": "lims_stock_test",
+    "isolatedSchemas": true,
+    "serverStoppedAfterTests": true,
+    "migrationScriptAppliedTwice": true
+  },
+  "catalogTable": "reference_solvents",
+  "compositionTable": "stock_solvents",
+  "catalogSeedCount": 12,
+  "percentagePrecision": "numeric(7,4)",
+  "compositionBasis": "CompositionPercent; no assumed mass or volume basis",
+  "uiFixtureOnly": true,
+  "realWinUiPresentationSources": true,
+  "interDbModified": false,
+  "productionMigrationApplied": false,
+  "deployedApiVerified": false,
+  "uiSave": {
+    "createCalls": 1,
+    "compound": "4-Aminobiphenyl",
+    "solvents": [
+      {
+        "SolventId": 4,
+        "Name": "Metanol",
+        "Abbreviation": "MeOH",
+        "Percent": 30,
+        "Position": 0
+      },
+      {
+        "SolventId": 3,
+        "Name": "Acetonitrilo",
+        "Abbreviation": "ACN",
+        "Percent": 20,
+        "Position": 1
+      },
+      {
+        "SolventId": 8,
+        "Name": "Agua",
+        "Abbreviation": "H2O",
+        "Percent": 50,
+        "Position": 2
+      }
+    ]
+  },
+  "captures": [
+    {
+      "file": "detail-30-20-50-1920x1080.png",
+      "width": 1920,
+      "height": 1080,
+      "sha256": "3daf54a223541458f666a49c476acdfb079b8f36ee311642f55c30bacf28b961"
+    },
+    {
+      "file": "mixture-30-20-50-1366x768.png",
+      "width": 1366,
+      "height": 768,
+      "sha256": "207182a15b50ea1b3e3bf8dc87a43ffd27a5631f32d3be0988a8464e64f2c85d"
+    },
+    {
+      "file": "mixture-30-20-50-1920x1080.png",
+      "width": 1920,
+      "height": 1080,
+      "sha256": "9690a08794aafbe2919dc7d8f3c116feff2e5591f37f5438df49655087a6e8cb"
+    },
+    {
+      "file": "mixture-50-50-1366x768.png",
+      "width": 1366,
+      "height": 768,
+      "sha256": "ac29a35ecd1e6289385380bf7ad9eedb945a1bf5dd8772c35255ffe05404a651"
+    },
+    {
+      "file": "mixture-50-50-1920x1080.png",
+      "width": 1920,
+      "height": 1080,
+      "sha256": "d336c02ccd821741b3b4b1dbe4de755995c8e1c74a3ec5d250d42c0e1245b9e5"
+    }
+  ],
+  "layouts": [
+    {
+      "file": "layout-30-20-50-1366.json",
+      "theme": "Dark",
+      "scale": 1.25,
+      "footerVisible": true,
+      "internalScrollableHeight": 559.2000122070312
+    },
+    {
+      "file": "layout-30-20-50-1920.json",
+      "theme": "Dark",
+      "scale": 1.25,
+      "footerVisible": true,
+      "internalScrollableHeight": 311.20001220703125
+    },
+    {
+      "file": "layout-50-50-1366.json",
+      "theme": "Dark",
+      "scale": 1.25,
+      "footerVisible": true,
+      "internalScrollableHeight": 518.4000244140625
+    },
+    {
+      "file": "layout-50-50-1920.json",
+      "theme": "Dark",
+      "scale": 1.25,
+      "footerVisible": true,
+      "internalScrollableHeight": 270.4000244140625
+    }
+  ],
+  "visualInspection": "Both requested mixtures, both resolutions, and the Stock detail inspected; footer stays visible."
+}

@@ -12,9 +12,9 @@ public static class SolutionGroupCalculator
         foreach (var part in request.Parts)
         {
             var source = sources.SingleOrDefault(s => s.Id == part.SourceId)
-                ?? throw new ArgumentException("Seleccione una Intermedia disponible para cada solución.");
-            if (source.Kind != "Intermedia" || source.MethodId != request.MethodId)
-                throw new ArgumentException("El origen debe ser una Intermedia compatible con el método.");
+                ?? throw new ArgumentException("Seleccione un origen disponible para cada solución.");
+            if ((source.Kind != "Intermedia" && !Lims.Contracts.ReferenceMaterials.MaterialPresentations.IsCommercial(source.Kind)) || source.MethodId != request.MethodId)
+                throw new ArgumentException("El origen debe ser una Intermedia o solución comercial compatible con el método.");
             if (source.Version != part.SourceVersion) throw new ArgumentException("Un origen cambió. Actualice su disponibilidad.");
             IntermediateCalculator.ValidateVolume(part.VolumeTaken);
             IntermediateCalculator.ValidateVolume(part.FinalVolume);
@@ -28,7 +28,7 @@ public static class SolutionGroupCalculator
                 var concentration = a.Concentration * taken / part.FinalVolume;
                 if (concentration <= 0 || concentration >= 1000000000000m)
                     throw new ArgumentException("La concentración resultante queda fuera del rango admitido.");
-                return a with { Concentration = concentration };
+                return a with { Concentration = concentration, ExpandedUncertainty = a.ExpandedUncertainty * taken / part.FinalVolume };
             }).ToArray();
             parts.Add(new(parts.Count, source, part.VolumeTaken, part.VolumeUnit, part.FinalVolume, part.FinalVolumeUnit, part.IsInternalStandard, results));
         }

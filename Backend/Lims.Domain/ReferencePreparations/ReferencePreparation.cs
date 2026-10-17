@@ -35,7 +35,7 @@ public sealed class ReferencePreparation
         SourceLocation = source.Location.Name;
         SourceExpirationDate = source.ExpirationDate;
         SourceTotalQuantity = source.TotalQuantity;
-        PurityPercentUsed = source.PurityPercent;
+        PurityPercentUsed = source.PurityPercent ?? throw new ArgumentException("El Stock por pesada requiere pureza documentada.");
         SourceUnit = source.Unit.Symbol;
         TargetConcentration = targetConcentration;
         ActualConcentration = resultConcentration;
@@ -62,6 +62,22 @@ public sealed class ReferencePreparation
         UpdatedAt = now;
         Version = Guid.NewGuid();
         RequestFingerprint = Text(requestFingerprint, 64);
+    }
+
+    public string? Compound { get; private set; }
+    public string? CompositionBasis { get; private set; }
+    public ICollection<StockSolvent> Solvents { get; private set; } = new List<StockSolvent>();
+
+    public void SetStockComposition(string compound, IEnumerable<(int SolventId, decimal Percent)> composition)
+    {
+        if (Kind != "Stock" || Solvents.Count != 0) throw new InvalidOperationException("La composición solo se registra al crear Stock.");
+        var rows = composition.ToArray();
+        if (rows.Length == 0 || rows.Select(r => r.SolventId).Distinct().Count() != rows.Length || rows.Sum(r => r.Percent) != 100m)
+            throw new ArgumentException("La composición debe ser ?nica y sumar 100 %.");
+        Compound = Text(compound, 200);
+        CompositionBasis = "CompositionPercent";
+        foreach (var (row, position) in rows.Select((row, index) => (row, index)))
+            Solvents.Add(new StockSolvent(Id, row.SolventId, row.Percent, position));
     }
 
     public Guid Id { get; private set; }
