@@ -9,6 +9,10 @@ public static class PermissionCatalog
     public const string StockCreate = "stock.create";
     public const string IntermediateView = "intermedia.view";
     public const string IntermediateCreate = "intermedia.create";
+    public const string CurveView = "curva.view";
+    public const string CurveCreate = "curva.create";
+    public const string AqsView = "aqs.view";
+    public const string AqsCreate = "aqs.create";
     public static IReadOnlyList<PermissionDefinition> All { get; } = Array.AsReadOnly<PermissionDefinition>([
         new("reference_materials.view", "Estándares", "Consultar estándares"),
         new("reference_materials.create", "Estándares", "Registrar estándares"),
@@ -16,7 +20,9 @@ public static class PermissionCatalog
         new("reference_materials.archive", "Estándares", "Archivar estándares"),
         new(Replace, "Estándares", "Reemplazar estándares"),
         new(StockView, "Stock", "Consultar Stock"), new(StockCreate, "Stock", "Registrar Stock"),
-        new(IntermediateView, "Intermedia", "Consultar Intermedia"), new(IntermediateCreate, "Intermedia", "Registrar Intermedia")]);
+        new(IntermediateView, "Intermedia", "Consultar Intermedia"), new(IntermediateCreate, "Intermedia", "Registrar Intermedia"),
+        new(CurveView, "Curva", "Consultar Curva"), new(CurveCreate, "Curva", "Registrar Curva"),
+        new(AqsView, "AQS", "Consultar AQS"), new(AqsCreate, "AQS", "Registrar AQS")]);
 }
 public sealed record PermissionUser(int Id, string Name, string Email, string Role, string Department)
 {

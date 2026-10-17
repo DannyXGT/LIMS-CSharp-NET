@@ -14,7 +14,7 @@ internal static class StockModel
         var preparation = modelBuilder.Entity<ReferencePreparation>();
         preparation.ToTable("reference_preparations", table =>
         {
-            table.HasCheckConstraint("ck_reference_preparations_kind_status", "kind IN ('Stock','Intermedia') AND status = 'Active' AND (kind <> 'Stock' OR source_material_id IS NOT NULL) AND (kind <> 'Intermedia' OR (source_material_id IS NULL AND method_id IS NOT NULL))");
+            table.HasCheckConstraint("ck_reference_preparations_kind_status", "kind IN ('Stock','Intermedia','Curva','AQS') AND status = 'Active' AND (kind <> 'Stock' OR source_material_id IS NOT NULL) AND (kind = 'Stock' OR (source_material_id IS NULL AND method_id IS NOT NULL)) AND (kind NOT IN ('Curva','AQS') OR available_volume = 0)");
             table.HasCheckConstraint("ck_reference_preparations_quantities", "final_volume > 0 AND available_volume >= 0 AND available_volume <= final_volume AND (kind <> 'Stock' OR (target_concentration > 0 AND actual_concentration > 0 AND calculated_weight > 0 AND actual_weight > 0 AND source_total_quantity >= actual_weight))");
             table.HasCheckConstraint("ck_reference_preparations_purity", "kind <> 'Stock' OR (purity_percent_used > 0 AND purity_percent_used <= 100)");
             table.HasCheckConstraint("ck_reference_preparations_units", "final_volume_unit IN ('mL','L') AND (kind <> 'Stock' OR (concentration_unit IN ('mg/L','g/L','µg/L','µg/mL') AND calculated_weight_unit = source_unit AND actual_weight_unit = source_unit AND actual_concentration_unit = concentration_unit AND source_unit IN ('g','mg','µg','μg','ug')))");

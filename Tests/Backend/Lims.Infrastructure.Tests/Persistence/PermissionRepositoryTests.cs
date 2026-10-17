@@ -82,7 +82,7 @@ public sealed class PermissionRepositoryTests
         var assignment = await f.Db.Set<UserPermissionAssignment>().SingleAsync(a => a.UserId == 2 && a.Code == PermissionCatalog.StockCreate);
         Assert.False(assignment.IsGranted); Assert.Equal(1, assignment.ActorUserId);
         var history = (await f.Repository.HistoryAsync(1, 2, 1, default)).Value!;
-        Assert.Equal(10, history.Total);
+        Assert.Equal(PermissionCatalog.All.Count + 1, history.Total);
         Assert.Contains(history.Items, h => h.Action == "Revocado" && h.Before && !h.After && h.Actor == "Administrador existente" && h.User == "Ana López");
         Assert.Equal(ErrorCodes.Conflict, (await f.Repository.SaveAsync(1, 2, new([], saved.Version), default)).Error?.Code);
         Assert.Equal(revoked.Version, (await f.Repository.GetAsync(1, 2, default)).Value!.Version);

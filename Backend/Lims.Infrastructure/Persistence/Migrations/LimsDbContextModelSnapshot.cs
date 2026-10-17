@@ -202,6 +202,22 @@ namespace Lims.Infrastructure.Persistence.Migrations
                         new
                         {
                             Code = "intermedia.create"
+                        },
+                        new
+                        {
+                            Code = "curva.view"
+                        },
+                        new
+                        {
+                            Code = "curva.create"
+                        },
+                        new
+                        {
+                            Code = "aqs.view"
+                        },
+                        new
+                        {
+                            Code = "aqs.create"
                         });
                 });
 
@@ -1192,7 +1208,7 @@ namespace Lims.Infrastructure.Persistence.Migrations
 
                             t.HasCheckConstraint("ck_reference_preparations_identity", "length(trim(code)) > 0 AND length(trim(name)) > 0 AND length(request_fingerprint) = 64");
 
-                            t.HasCheckConstraint("ck_reference_preparations_kind_status", "kind IN ('Stock','Intermedia') AND status = 'Active' AND (kind <> 'Stock' OR source_material_id IS NOT NULL) AND (kind <> 'Intermedia' OR (source_material_id IS NULL AND method_id IS NOT NULL))");
+                            t.HasCheckConstraint("ck_reference_preparations_kind_status", "kind IN ('Stock','Intermedia','Curva','AQS') AND status = 'Active' AND (kind <> 'Stock' OR source_material_id IS NOT NULL) AND (kind = 'Stock' OR (source_material_id IS NULL AND method_id IS NOT NULL)) AND (kind NOT IN ('Curva','AQS') OR available_volume = 0)");
 
                             t.HasCheckConstraint("ck_reference_preparations_purity", "kind <> 'Stock' OR (purity_percent_used > 0 AND purity_percent_used <= 100)");
 

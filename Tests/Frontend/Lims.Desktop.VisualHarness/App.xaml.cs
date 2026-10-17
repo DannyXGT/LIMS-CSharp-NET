@@ -29,6 +29,8 @@ public partial class App : Microsoft.UI.Xaml.Application
     private TextBlock? _standardsTitleForComparison;
     private StockPage? _stockPage;
     private IntermediatePage? _intermediatePage;
+    private SolutionGroupWorkspace? _solutionGroups;
+    private FixtureSolutionGroupApi? _solutionApi;
     private PermissionsPage? _permissionsPage;
     private readonly FixturePermissionsApi _permissionsApi = new();
     private double _fourTabWidth;
@@ -65,7 +67,9 @@ public partial class App : Microsoft.UI.Xaml.Application
         _intermediatePage = new IntermediatePage(new IntermediateViewModel(_intermediateApi, session));
         _permissionsPage = new PermissionsPage(new PermissionsViewModel(_permissionsApi, session));
         _dashboardPage = new DashboardPage(new DashboardViewModel(_dashboardApi));
-        _shell = new ShellPage(shellModel, _page, _stockPage, _intermediatePage, _permissionsPage, _dashboardPage, _api) { RequestedTheme = ElementTheme.Dark };
+        _solutionApi = new FixtureSolutionGroupApi(_intermediateApi);
+        _solutionGroups = new SolutionGroupWorkspace(_solutionApi, session);
+        _shell = new ShellPage(shellModel, _page, _stockPage, _intermediatePage, _permissionsPage, _dashboardPage, _api, _solutionGroups) { RequestedTheme = ElementTheme.Dark };
         var root = new Grid { RequestedTheme = ElementTheme.Dark, Style = (Style)Resources["FixtureRootStyle"] };
         root.RowDefinitions.Add(new RowDefinition { Height = new GridLength(48) });
         root.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
@@ -113,6 +117,52 @@ public partial class App : Microsoft.UI.Xaml.Application
             var navigation = (NavigationView)_shell.FindName("MainNavigation");
             switch (action)
             {
+                case "group":
+                    navigation.SelectedItem = _shell.FindName("PreparationsItem");
+                    ((LimsTabStrip)((PreparationsPage)((ContentControl)_shell.FindName("PreparationsHost")).Content).FindName("PreparationTabs")).SelectedIndex = data.GetProperty("kind").GetString() == "Curva" ? 2 : 3;
+                    break;
+                case "groupEditor": _ = GroupPage(data).OpenCreateAsync(); break;
+                case "groupScenario":
+                    var groupVm = GroupPage(data).ViewModel;
+                    groupVm.Method = groupVm.Methods[0]; groupVm.Code = data.GetProperty("code").GetString()!;
+                    groupVm.Name = "Grupo multianalito · validación visual";
+                    foreach (var row in groupVm.Components.ToArray()) groupVm.RemoveComponent(row);
+                    foreach (var volume in data.GetProperty("volumes").EnumerateArray())
+                    {
+                        var index = groupVm.Components.Count;
+                        var row = groupVm.AddComponent(); row.Source = row.Sources[data.TryGetProperty("sourceIndices", out var sourceIndices) ? sourceIndices[index].GetInt32() : 0];
+                        row.Volume = volume.GetDecimal().ToString(CultureInfo.InvariantCulture);
+                        row.FinalVolume = data.TryGetProperty("finalVolumes", out var finals) ? finals[index].GetDecimal().ToString(CultureInfo.InvariantCulture) : "100";
+                    }
+                    if (data.TryGetProperty("internalIndex", out var internalIndex)) groupVm.Components[internalIndex.GetInt32()].IsInternalStandard = true;
+                    if (data.TryGetProperty("selectedIndex", out var selectedIndex)) groupVm.SelectedComponent = groupVm.Components[selectedIndex.GetInt32()];
+                    break;
+                case "groupEdit":
+                    var edited = GroupPage(data).ViewModel.Components[data.GetProperty("index").GetInt32()];
+                    if (data.TryGetProperty("volume", out var editedVolume)) edited.Volume = editedVolume.GetString()!;
+                    if (data.TryGetProperty("finalVolume", out var editedFinal)) edited.FinalVolume = editedFinal.GetString()!;
+                    break;
+                case "groupDetailSelect": ((ListView)GroupPage(data).DetailDialog!.FindName("SolutionsList")).SelectedIndex = data.GetProperty("index").GetInt32(); break;
+                case "groupDetailScroll": ((ScrollViewer)GroupPage(data).DetailDialog!.FindName("DetailScroll")).ChangeView(null, data.GetProperty("offset").GetDouble(), null, true); break;
+                case "groupScroll": ((ScrollViewer)GroupPage(data).Editor!.FindName("EditorScroll")).ChangeView(null, data.GetProperty("offset").GetDouble(), null, true); break;
+                case "groupSave": await GroupPage(data).ViewModel.SaveAsync(default); break;
+                case "groupClose": GroupPage(data).Editor?.Hide(); break;
+                case "groupDetail": GroupPage(data).ViewModel.SelectedPreparation = GroupPage(data).ViewModel.Items[0]; _ = GroupPage(data).OpenDetailAsync(); break;
+                case "groupScene": _solutionApi!.Scene = data.GetProperty("scene").GetString()!; _ = GroupPage(data).LoadAsync(); break;
+                case "groupReport":
+                    var gp = GroupPage(data); var ge = gp.Editor;
+                    File.WriteAllText(Path.Combine(_directory, "group-report.json"), JsonSerializer.Serialize(new {
+                        fixtureOnly = true, interDbModified = false, gp.ViewModel.Kind, gp.ViewModel.CanSave, gp.ViewModel.Validation,
+                        gp.ViewModel.VisibleValidation,
+                        rows = gp.ViewModel.Components.Select(r => new { r.Title, sourceId = r.Source?.Id, r.SourceBalance, r.FieldError, r.VolumePreview, r.Preview }).ToArray(),
+                        gp.ViewModel.Message, gp.ViewModel.Created, gp.ViewModel.Calculation, gp.ViewModel.Page, gp.ViewModel.TotalCount,
+                        sources = _intermediateApi.Sources.Where(s => s.Kind == "Intermedia").ToArray(), _solutionApi!.CreateCalls,
+                        scale = gp.XamlRoot.RasterizationScale, width = gp.XamlRoot.Size.Width, height = gp.XamlRoot.Size.Height,
+                        theme = gp.ActualTheme.ToString(), editorWidth = ge?.ActualWidth, editorHeight = ge?.ActualHeight,
+                        saveBounds = ge is null ? null : GroupBounds((FrameworkElement)ge.FindName("SaveButton"), gp.XamlRoot.Content),
+                        resultBounds = ge is null ? null : GroupBounds((FrameworkElement)ge.FindName("ResultPanel"), gp.XamlRoot.Content),
+                        editorScroll = ge is null ? null : new { ((ScrollViewer)ge.FindName("EditorScroll")).ScrollableHeight, ((ScrollViewer)ge.FindName("EditorScroll")).VerticalOffset }
+                    }, ReportOptions)); break;
                 case "dashboard":
                     _dashboardApi.ReferenceRows = _api.ConfigureDashboardFixtures();
                     _dashboardApi.Scenario = data.GetProperty("scenario").GetString()!;
@@ -552,6 +602,12 @@ public partial class App : Microsoft.UI.Xaml.Application
         };
     }
 
+    private SolutionGroupPage GroupPage(JsonElement data) => data.GetProperty("kind").GetString() == "Curva" ? _solutionGroups!.Curve : _solutionGroups!.Aqs;
+    private static object GroupBounds(FrameworkElement element, UIElement root)
+    {
+        var point = element.TransformToVisual(root).TransformPoint(new Windows.Foundation.Point());
+        return new { x = point.X, y = point.Y, width = element.ActualWidth, height = element.ActualHeight, visible = element.Visibility == Visibility.Visible };
+    }
     private static IEnumerable<T> VisualDescendants<T>(DependencyObject root) where T : DependencyObject
     {
         for (var i = 0; i < VisualTreeHelper.GetChildrenCount(root); i++)

@@ -18,7 +18,7 @@ public sealed class IntermediateRepository(LimsDbContext db) : IIntermediateRepo
         var methods = await db.ReferenceMethods.AsNoTracking().Where(m => m.IsActive).OrderBy(m => m.Name)
             .Select(m => new IntermediateMethod(m.Id, m.Name)).ToArrayAsync(cancellationToken).ConfigureAwait(false);
         var ids = methods.Select(m => m.Id).ToArray();
-        var sources = await db.ReferencePreparations.AsNoTracking().Where(p => p.Status == "Active" && p.AvailableVolume > 0 &&
+        var sources = await db.ReferencePreparations.AsNoTracking().Where(p => (p.Kind == "Stock" || p.Kind == "Intermedia") && p.Status == "Active" && p.AvailableVolume > 0 &&
             p.ExpirationDate >= today && p.PreparationDate <= today && p.MethodId != null && ids.Contains(p.MethodId.Value) &&
             (p.Kind == "Intermedia" || p.SourceMaterial!.Status == ReferenceMaterialStatus.Active))
             .OrderBy(p => p.Code).ToArrayAsync(cancellationToken).ConfigureAwait(false);

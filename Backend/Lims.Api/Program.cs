@@ -84,6 +84,8 @@ try
     builder.Services.AddScoped<IStockService, StockService>();
     builder.Services.AddScoped<IIntermediateRepository, IntermediateRepository>();
     builder.Services.AddScoped<IIntermediateService, IntermediateService>();
+    builder.Services.AddScoped<ISolutionGroupRepository, SolutionGroupRepository>();
+    builder.Services.AddScoped<SolutionGroupService>();
 
     builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
     {
@@ -187,6 +189,7 @@ try
     app.MapReferenceMaterialEndpoints();
     app.MapStockEndpoints();
     app.MapIntermediateEndpoints();
+    app.MapSolutionGroupEndpoints();
     app.MapHealthChecks("/health/live", new HealthCheckOptions
     {
         Predicate = static _ => false,

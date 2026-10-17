@@ -3,6 +3,8 @@
   <design:LimsTabStrip x:Name="PreparationTabs" SelectionChanged="OnTabChanged" AutomationProperties.Name="Tipos de preparación">
    <design:LimsTabItem x:Name="StockTab" Label="Stock"/>
    <design:LimsTabItem x:Name="IntermediateTab" Label="Intermedia"/>
+   <design:LimsTabItem x:Name="CurveTab" Label="Curva"/>
+   <design:LimsTabItem x:Name="AqsTab" Label="AQS"/>
   </design:LimsTabStrip>
   <ContentControl x:Name="PreparationHost" Grid.Row="1" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch"/>
  </Grid>

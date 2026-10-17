@@ -30,6 +30,13 @@
   </ItemGroup>
   <!-- Compile the real presentation sources. No production startup/auth/HTTP is included. -->
   <ItemGroup>
+    <Compile Include="../../../Frontend/Lims.Desktop/Controls/SolutionGroupVisuals.cs;../../../Frontend/Lims.Desktop/Presentation/SolutionGroupPresentation.cs" Link="SolutionGroups/%(Filename)%(Extension)" />
+  </ItemGroup>
+  <ItemGroup>
+    <Page Include="../../../Frontend/Lims.Desktop/Views/SolutionGroupPage.xaml;../../../Frontend/Lims.Desktop/Views/SolutionGroupEditorDialog.xaml;../../../Frontend/Lims.Desktop/Views/SolutionGroupDetailDialog.xaml" Link="Views/%(Filename)%(Extension)" />
+    <Compile Include="../../../Frontend/Lims.Desktop/Views/SolutionGroupPage.xaml.cs;../../../Frontend/Lims.Desktop/Views/SolutionGroupEditorDialog.xaml.cs;../../../Frontend/Lims.Desktop/Views/SolutionGroupDetailDialog.xaml.cs;../../../Frontend/Lims.Desktop/Views/SolutionGroupWorkspace.cs;../../../Frontend/Lims.Desktop/ViewModels/SolutionGroupViewModel.cs;../../../Frontend/Lims.Desktop/Http/ISolutionGroupApiClient.cs" Link="SolutionGroups/%(Filename)%(Extension)" />
+  </ItemGroup>
+  <ItemGroup>
     <Page Include="../../../Frontend/Lims.Desktop/Views/PermissionsPage.xaml" Link="Views/PermissionsPage.xaml" />
     <Compile Include="../../../Frontend/Lims.Desktop/Controls/PermissionAction.cs;../../../Frontend/Lims.Desktop/Controls/PermissionActionPanel.cs;../../../Frontend/Lims.Desktop/Controls/PermissionUserItem.cs;../../../Frontend/Lims.Desktop/Presentation/PermissionsMotion.cs" Link="Permissions/%(Filename)%(Extension)" />
     <Compile Include="../../../Frontend/Lims.Desktop/Views/PermissionsPage.xaml.cs;../../../Frontend/Lims.Desktop/ViewModels/PermissionsViewModel.cs;../../../Frontend/Lims.Desktop/Http/IPermissionsApiClient.cs" Link="Permissions/%(Filename)%(Extension)" />

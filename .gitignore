@@ -10,6 +10,7 @@ artifacts/sql/*
 !artifacts/sql/reference_intermediate.sql
 !artifacts/sql/reference_preparation_decimal_scale.sql
 !artifacts/sql/preflight_reference_preparation_decimal_scale.sql
+!artifacts/sql/reference_curve_aqs.sql
 !artifacts/validation/
 artifacts/validation/*
 !artifacts/validation/stock/
@@ -20,6 +21,14 @@ artifacts/validation/stock/*
 artifacts/validation/intermediate/*
 !artifacts/validation/intermediate/*.png
 !artifacts/validation/intermediate/verification.json
+!artifacts/validation/curve-aqs/
+artifacts/validation/curve-aqs/*
+!artifacts/validation/curve-aqs/*.png
+!artifacts/validation/curve-aqs/Curva-*.json
+!artifacts/validation/curve-aqs/AQS-*.json
+!artifacts/validation/curve-aqs/shared-balance.json
+!artifacts/validation/curve-aqs/verification.json
+!artifacts/validation/curve-aqs/popup-verification.json
 TestResults/
 
 ## Visual Studio and user-specific files

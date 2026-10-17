@@ -66,6 +66,8 @@ public partial class App : Application
         builder.Services.AddSingleton<PermissionsPage>();
         builder.Services.AddSingleton<IStockApiClient, StockApiClient>();
         builder.Services.AddSingleton<IIntermediateApiClient, IntermediateApiClient>();
+        builder.Services.AddSingleton<ISolutionGroupApiClient, SolutionGroupApiClient>();
+        builder.Services.AddSingleton<SolutionGroupWorkspace>();
         builder.Services.AddSingleton<ITokenRefreshCoordinator, TokenRefreshCoordinator>();
         builder.Services.AddTransient<CorrelationIdHandler>();
         builder.Services.AddTransient<AuthorizedApiHandler>();

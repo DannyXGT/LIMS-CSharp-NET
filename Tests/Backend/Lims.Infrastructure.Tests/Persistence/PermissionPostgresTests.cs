@@ -38,6 +38,9 @@ public sealed class PermissionPostgresTests
         var migration = new AddIndividualPermissions();
         var generator = db.GetService<IMigrationsSqlGenerator>();
         foreach (var command in generator.Generate(migration.UpOperations, db.Model)) await db.Database.ExecuteSqlRawAsync(command.CommandText);
+        // This fixture contains identity tables only. Apply the actual catalog additions from the preparation migration.
+        var newPermissions = new AddCurveAndAqsPreparations().UpOperations.OfType<Microsoft.EntityFrameworkCore.Migrations.Operations.InsertDataOperation>().ToArray();
+        foreach (var command in generator.Generate(newPermissions, db.Model)) await db.Database.ExecuteSqlRawAsync(command.CommandText);
         // Reproduce the unaccented department name shown by the shared React catalog.
         var role = new Role(1, "Administrador"); var analyst = new Role(2, "Analista"); var department = new Department(7, "Laboratorio Analitico");
         db.Users.AddRange(new User(42, "Administrador de prueba", "admin@example.invalid", "test", true, role, department), new User(84, "Ana López", "ana@example.invalid", "test", true, analyst, department));
@@ -55,7 +58,7 @@ public sealed class PermissionPostgresTests
         Assert.True(revoked.IsSuccess, revoked.Error?.Message);
         Assert.DoesNotContain(PermissionCatalog.StockCreate, (await repository.EffectiveAsync(84, default))!.Permissions);
         var history = (await repository.HistoryAsync(42, 84, 1, default)).Value!;
-        Assert.Equal(10, history.Total); Assert.Contains(history.Items, h => h.Action == "Revocado" && h.Actor == "Administrador de prueba");
+        Assert.Equal(PermissionCatalog.All.Count + 1, history.Total); Assert.Contains(history.Items, h => h.Action == "Revocado" && h.Actor == "Administrador de prueba");
         Assert.Equal(ErrorCodes.Conflict, (await repository.SaveAsync(42, 84, new([], granted.Value.Version), default)).Error?.Code);
         var tasks = new List<Task<Lims.Application.Common.OperationResult<UserPermissionState>>>();
         await using var otherDb = new LimsDbContext(new DbContextOptionsBuilder<LimsDbContext>().UseNpgsql(settings.ConnectionString, o => o.EnableRetryOnFailure()).Options);

@@ -46,7 +46,7 @@ public sealed class PermissionEndpointsTests : IDisposable
     {
         _factory.SetIdentity("Administrador"); _client.DefaultRequestHeaders.Authorization = Token("Analista");
         Assert.Equal(HttpStatusCode.OK, (await _client.GetAsync(Path + "/users")).StatusCode);
-        Assert.Equal(9, (await _client.GetFromJsonAsync<PermissionDefinition[]>(Path + "/catalog"))!.Length);
+        Assert.Equal(PermissionCatalog.All.Count, (await _client.GetFromJsonAsync<PermissionDefinition[]>(Path + "/catalog"))!.Length);
         var initial = await _client.GetFromJsonAsync<UserPermissionState>(Path + "/users/84");
         var response = await _client.PutAsJsonAsync(Path + "/users/84", new SavePermissionsRequest([PermissionCatalog.StockView], initial!.Version));
         Assert.Equal(HttpStatusCode.OK, response.StatusCode); Assert.Equal(AuthenticationApiFactory.UserId, _factory.PermissionRepository.LastActor);

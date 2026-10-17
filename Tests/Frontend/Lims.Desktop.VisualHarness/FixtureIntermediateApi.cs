@@ -42,7 +42,7 @@ internal sealed class FixtureIntermediateApi : IIntermediateApiClient
     {
         if (Scene == "Loading") await Task.Delay(1800, cancellationToken);
         if (Scene == "Error") throw new HttpRequestException("Fixture: server unavailable");
-        IEnumerable<IntermediateSummary> rows = Scene == "Empty" ? [] : _prepared.Select(d => d.Preparation);
+        IEnumerable<IntermediateSummary> rows = Scene == "Empty" ? [] : _prepared.Select(d => d.Preparation with { AvailableVolume = Sources.Single(s => s.Id == d.Preparation.Id).AvailableVolume });
         if (!string.IsNullOrWhiteSpace(search)) rows = rows.Where(p => p.Code.Contains(search, StringComparison.OrdinalIgnoreCase) || p.Name.Contains(search, StringComparison.OrdinalIgnoreCase) || p.Method.Contains(search, StringComparison.OrdinalIgnoreCase));
         if (filter?.Status is { Length: > 0 } status) rows = rows.Where(p => status == "Active" ? p.Status is "Active" or "Depleted" : p.Status == status);
         if (filter?.Availability is { Length: > 0 } availability) rows = rows.Where(p => availability switch { "Positive" => p.Availability.AvailableVolume > 0, "Low" => p.Availability.RemainingPercent is > 0 and <= 60, "Depleted" => p.Availability.IsDepleted, _ => true });

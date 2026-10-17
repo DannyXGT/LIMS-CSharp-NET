@@ -90,7 +90,7 @@ public sealed class PermissionsViewModelTests
         api.State = api.State with { IsConfigured = false };
         await vm.SelectAsync(api.State.User, true); Assert.Equal("Sin configuración individual", vm.ConfigurationLabel); Assert.True(vm.CanConfigureEmpty);
         api.State = api.State with { User = api.State.User with { Role = "Administrador" } };
-        await vm.SelectAsync(api.State.User, true); Assert.Equal("Administrador · acceso por rol", vm.ConfigurationLabel); Assert.Equal(3, vm.AccessibleModules); Assert.False(vm.CanConfigureEmpty);
+        await vm.SelectAsync(api.State.User, true); Assert.Equal("Administrador · acceso por rol", vm.ConfigurationLabel); Assert.Equal(PermissionCatalog.All.Select(p => p.Module).Distinct().Count(), vm.AccessibleModules); Assert.False(vm.CanConfigureEmpty);
         Assert.Contains("acceso completo", vm.AccessNote, StringComparison.Ordinal);
     }
     [Fact]

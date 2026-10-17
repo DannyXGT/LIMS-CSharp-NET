@@ -1,0 +1,7 @@
+﻿{
+    "passed":  true,
+    "scale":  1.25,
+    "limitations":  "Native WinUI views with fixtures; PostgreSQL persistence is validated separately. All captures use the current display DPI.",
+    "interDbModified":  false,
+    "fixtureOnly":  true
+}

@@ -25,13 +25,13 @@ public sealed partial class ShellPage : Page
     internal DashboardRoute? LastDashboardRoute { get; private set; }
     internal string DashboardRouteStage { get; private set; } = string.Empty;
 
-    public ShellPage(ShellViewModel viewModel, ReferenceMaterialsPage referenceMaterialsPage, StockPage stockPage, IntermediatePage intermediatePage, PermissionsPage? permissionsPage = null, DashboardPage? dashboard = null, Lims.Desktop.Http.IReferenceMaterialsApiClient? dashboardReferences = null)
+    public ShellPage(ShellViewModel viewModel, ReferenceMaterialsPage referenceMaterialsPage, StockPage stockPage, IntermediatePage intermediatePage, PermissionsPage? permissionsPage = null, DashboardPage? dashboard = null, Lims.Desktop.Http.IReferenceMaterialsApiClient? dashboardReferences = null, SolutionGroupWorkspace? solutionGroups = null)
     {
         ViewModel = viewModel;
         _referenceMaterialsPage = referenceMaterialsPage;
         _permissionsPage = permissionsPage;
         _dashboard = dashboard; _dashboardReferences = dashboardReferences; _stockPage = stockPage; _intermediatePage = intermediatePage;
-        _preparationsPage = new PreparationsPage(stockPage, intermediatePage);
+        _preparationsPage = new PreparationsPage(stockPage, intermediatePage, solutionGroups?.Curve, solutionGroups?.Aqs);
         InitializeComponent();
         _moduleHeader = MainNavigation.Header;
         MainNavigation.Header = null;
@@ -142,7 +142,7 @@ public sealed partial class ShellPage : Page
         PermissionsItem.Visibility = ViewModel.IsAdministrator ? Visibility.Visible : Visibility.Collapsed;
         if (!ViewModel.IsAdministrator) _permissionsPage?.ViewModel.RevokeAccess();
         AdministrationGroup.Visibility = ViewModel.IsAdministrator && MainNavigation.IsPaneOpen ? Visibility.Visible : Visibility.Collapsed;
-        _preparationsPage.RefreshAccess(ViewModel.CanViewStock, ViewModel.CanViewIntermediate);
+        _preparationsPage.RefreshAccess(ViewModel.CanViewStock, ViewModel.CanViewIntermediate, ViewModel.CanViewCurve, ViewModel.CanViewAqs);
         _referenceMaterialsPage.ViewModel.RefreshPermissions();
         StandardsNewButton.IsEnabled = _referenceMaterialsPage.ViewModel.CanCreate;
         var tag = (MainNavigation.SelectedItem as NavigationViewItem)?.Tag as string;

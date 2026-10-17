@@ -1,0 +1,18 @@
+﻿{
+    "passed":  true,
+    "reports":  [
+                    {
+                        "passed":  true,
+                        "save":  "1156,625,145,45",
+                        "calendar":  "74,20,353,247",
+                        "kind":  "Curva"
+                    },
+                    {
+                        "passed":  true,
+                        "save":  "1167,625,134,45",
+                        "calendar":  "74,20,353,247",
+                        "kind":  "AQS"
+                    }
+                ],
+    "fixtureOnly":  true
+}

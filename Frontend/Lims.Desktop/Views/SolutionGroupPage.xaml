@@ -1,0 +1,65 @@
+<Page x:Class="Lims.Desktop.Views.SolutionGroupPage"
+ xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+ xmlns:design="using:Lims.DesignSystem.Controls" xmlns:contracts="using:Lims.Contracts.ReferencePreparations"
+ Background="Transparent" Language="es-GT" SizeChanged="OnPageSizeChanged">
+ <Page.Resources><Style x:Key="PreparationRowStyle" TargetType="ListViewItem" BasedOn="{StaticResource LimsDataRowStyle}"><Setter Property="AutomationProperties.Name" Value="{Binding Code}"/></Style></Page.Resources>
+ <Grid RowSpacing="10">
+  <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+  <Border Padding="12" Background="{ThemeResource LimsSurfaceBrush}" BorderBrush="{ThemeResource LimsBorderBrush}" BorderThickness="1" CornerRadius="8">
+   <Grid x:Name="FilterGrid" ColumnSpacing="8" RowSpacing="8">
+    <Grid.ColumnDefinitions><ColumnDefinition x:Name="SearchColumn" Width="*"/><ColumnDefinition x:Name="FiltersColumn" Width="Auto"/></Grid.ColumnDefinitions>
+    <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+    <Grid x:Name="SearchField" VerticalAlignment="Center">
+     <TextBox x:Name="SearchBox" MinHeight="36" Padding="36,8,10,8" Style="{StaticResource LimsTextBoxStyle}" PlaceholderText="Buscar por código, preparación o método..." TextChanged="OnSearchChanged" KeyDown="OnSearchKeyDown" AutomationProperties.Name="Buscar preparaciones"/>
+     <design:LimsIcon Icon="Search" Size="16" Margin="12,0,0,0" HorizontalAlignment="Left" VerticalAlignment="Center" IsHitTestVisible="False"/>
+    </Grid>
+    <StackPanel x:Name="Filters" Grid.Column="1" Orientation="Horizontal" Spacing="8">
+     <ComboBox x:Name="StatusFilter" Width="135" MinHeight="36" Style="{StaticResource LimsCompactComboBoxStyle}" AutomationProperties.Name="Filtrar vigencia" SelectionChanged="OnFilterChanged" SelectedIndex="0">
+      <ComboBoxItem Content="Vigencia" Tag=""/><ComboBoxItem Content="Vigente" Tag="Active"/><ComboBoxItem Content="Vencido" Tag="Expired"/><ComboBoxItem Content="Archivado" Tag="Archived"/>
+     </ComboBox>
+     <TextBox x:Name="MethodFilter" Width="145" MinHeight="36" Style="{StaticResource LimsTextBoxStyle}" PlaceholderText="Método..." AutomationProperties.Name="Filtrar por método" TextChanged="OnSearchChanged"/>
+     <Button Style="{StaticResource LimsIconButtonStyle}" AutomationProperties.Name="Limpiar filtros" ToolTipService.ToolTip="Limpiar filtros" Click="OnClearSearch"><design:LimsIcon Icon="ClearFilters" Size="16"/></Button>
+    </StackPanel>
+   </Grid>
+  </Border>
+  <Border Grid.Row="1" Visibility="{x:Bind ViewModel.HasResults, Mode=OneWay}" Background="{ThemeResource LimsSurfaceBrush}" BorderBrush="{ThemeResource LimsBorderBrush}" BorderThickness="1" CornerRadius="8">
+   <ScrollViewer x:Name="TableViewport" SizeChanged="OnTableViewportSizeChanged" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" HorizontalScrollMode="Enabled">
+    <Grid x:Name="TableCanvas" MinWidth="954"><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+     <Grid Padding="12,10" ColumnSpacing="10" Background="{ThemeResource LimsSurfaceSecondaryBrush}"><Grid.ColumnDefinitions><ColumnDefinition Width="2.1*"/><ColumnDefinition Width="1.85*"/><ColumnDefinition Width="1.45*"/><ColumnDefinition Width="1.85*"/><ColumnDefinition Width="1.65*"/></Grid.ColumnDefinitions><TextBlock Grid.Column="0" Text="Código / Preparación" Style="{StaticResource LimsLabelStyle}" TextWrapping="Wrap"/><TextBlock Grid.Column="1" Text="Método" Style="{StaticResource LimsLabelStyle}" TextWrapping="Wrap"/><TextBlock Grid.Column="2" Text="Soluciones / Orígenes" Style="{StaticResource LimsLabelStyle}" TextWrapping="Wrap"/><TextBlock Grid.Column="3" Text="Responsable" Style="{StaticResource LimsLabelStyle}" TextWrapping="Wrap"/><TextBlock Grid.Column="4" Text="Preparación / Vencimiento" Style="{StaticResource LimsLabelStyle}" TextWrapping="Wrap"/></Grid>
+     <ListView Grid.Row="1" x:Name="PreparationsList" ItemsSource="{x:Bind ViewModel.Items}" SelectedItem="{x:Bind ViewModel.SelectedPreparation, Mode=TwoWay}" ItemContainerStyle="{StaticResource PreparationRowStyle}" DoubleTapped="OnDoubleTapped" SelectionMode="Single" AutomationProperties.Name="Grupos de preparación">
+      <ListView.ItemTemplate><DataTemplate x:DataType="contracts:SolutionGroupSummary">
+       <Grid Padding="8,10" ColumnSpacing="10"><Grid.ColumnDefinitions><ColumnDefinition Width="2.1*"/><ColumnDefinition Width="1.85*"/><ColumnDefinition Width="1.45*"/><ColumnDefinition Width="1.85*"/><ColumnDefinition Width="1.65*"/></Grid.ColumnDefinitions>
+        <StackPanel Spacing="4" VerticalAlignment="Center"><TextBlock Text="{x:Bind Code}" FontWeight="SemiBold"/><TextBlock Text="{x:Bind Name}" Style="{StaticResource LimsCaptionStyle}" TextTrimming="CharacterEllipsis" ToolTipService.ToolTip="{x:Bind Name}"/><design:StatusBadge Text="{x:Bind StatusLabel}" Tone="{x:Bind StatusTone}" HorizontalAlignment="Left"/></StackPanel>
+        <StackPanel Grid.Column="1" Spacing="4" VerticalAlignment="Center"><TextBlock Text="{x:Bind Method}" TextTrimming="CharacterEllipsis" ToolTipService.ToolTip="{x:Bind Method}"/></StackPanel>
+        <StackPanel Grid.Column="2" Spacing="4" VerticalAlignment="Center"><TextBlock Text="{x:Bind ComponentCount}" FontWeight="SemiBold"/><TextBlock Text="{x:Bind Origins}" Style="{StaticResource LimsCaptionStyle}" TextWrapping="Wrap"/></StackPanel>
+        <StackPanel Grid.Column="3" Spacing="4" VerticalAlignment="Center" Margin="0,0,12,0">
+         <TextBlock Text="{x:Bind PreparedBy}" TextWrapping="Wrap"/>
+        </StackPanel>
+        <StackPanel Grid.Column="4" Spacing="4" VerticalAlignment="Center"><TextBlock Text="{x:Bind DateDisplay}"/><TextBlock Text="{x:Bind ExpirationDisplay}" Style="{StaticResource LimsCaptionStyle}" ToolTipService.ToolTip="Fecha de vencimiento"/></StackPanel>
+       </Grid>
+      </DataTemplate></ListView.ItemTemplate>
+     </ListView>
+    </Grid>
+   </ScrollViewer>
+  </Border>
+  <Border Grid.Row="1" Visibility="{x:Bind ViewModel.IsEmpty, Mode=OneWay}" VerticalAlignment="Top" Padding="28" MinHeight="220" Background="{ThemeResource LimsSurfaceBrush}" BorderBrush="{ThemeResource LimsBorderBrush}" BorderThickness="1" CornerRadius="8">
+   <StackPanel x:Name="EmptyState" Visibility="{x:Bind ViewModel.IsEmpty, Mode=OneWay}" MaxWidth="520" HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="12">
+    <design:LimsIcon Icon="Preparations" Size="32" HorizontalAlignment="Center"/>
+    <TextBlock Text="{x:Bind ViewModel.EmptyTitle, Mode=OneWay}" FontSize="18" FontWeight="SemiBold" TextAlignment="Center" TextWrapping="Wrap"/>
+    <TextBlock Text="{x:Bind ViewModel.EmptyDescription, Mode=OneWay}" Style="{StaticResource LimsCaptionStyle}" TextAlignment="Center" TextWrapping="Wrap"/>
+    <Button Style="{StaticResource LimsSecondaryButtonStyle}" Content="Limpiar búsqueda" HorizontalAlignment="Center" Click="OnClearSearch" Visibility="{x:Bind ViewModel.HasSearchCriteria, Mode=OneWay}"/>
+   </StackPanel>
+  </Border>
+  <Border Grid.Row="1" Visibility="{x:Bind ViewModel.IsLoadingList, Mode=OneWay}" VerticalAlignment="Top" Padding="28" Background="{ThemeResource LimsSurfaceBrush}" CornerRadius="8">
+   <StackPanel Spacing="12" HorizontalAlignment="Center"><ProgressRing IsActive="{x:Bind ViewModel.IsLoadingList, Mode=OneWay}" Width="28" Height="28" AutomationProperties.Name="Consultando preparaciones"/><TextBlock Text="Cargando preparaciones..." Style="{StaticResource LimsCaptionStyle}"/></StackPanel>
+  </Border>
+  <Border Grid.Row="1" Visibility="{x:Bind ViewModel.HasListMessage, Mode=OneWay}" VerticalAlignment="Top" Padding="24" Background="{ThemeResource LimsSurfaceBrush}" BorderBrush="{ThemeResource LimsBorderBrush}" BorderThickness="1" CornerRadius="8">
+   <StackPanel Spacing="12" MaxWidth="580" HorizontalAlignment="Center"><TextBlock Text="No se pudo consultar Preparaciones" FontSize="18" FontWeight="SemiBold" TextWrapping="Wrap"/><TextBlock Text="{x:Bind ViewModel.ListMessage, Mode=OneWay}" Style="{StaticResource LimsCaptionStyle}" TextWrapping="Wrap" IsTextSelectionEnabled="True" AutomationProperties.LiveSetting="Polite"/><Button Content="Reintentar" Click="OnRetry" Style="{StaticResource LimsSecondaryButtonStyle}" HorizontalAlignment="Left"/></StackPanel>
+  </Border>
+  <Grid Grid.Row="2" Visibility="{x:Bind ViewModel.ShowFooter, Mode=OneWay}" ColumnSpacing="12"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+   <TextBlock Text="{x:Bind ViewModel.PageDisplay, Mode=OneWay}" Style="{StaticResource LimsCaptionStyle}" VerticalAlignment="Center" TextWrapping="Wrap"/>
+   <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" Visibility="{x:Bind ViewModel.HasMultiplePages, Mode=OneWay}"><Button Style="{StaticResource LimsSecondaryButtonStyle}" Content="‹" AutomationProperties.Name="Página anterior" IsEnabled="{x:Bind ViewModel.HasPreviousPage, Mode=OneWay}" Click="OnPreviousPage"/><Button Style="{StaticResource LimsSecondaryButtonStyle}" Content="›" AutomationProperties.Name="Página siguiente" IsEnabled="{x:Bind ViewModel.HasNextPage, Mode=OneWay}" Click="OnNextPage"/></StackPanel>
+   <Button Grid.Column="2" Style="{StaticResource LimsSecondaryButtonStyle}" x:Name="ViewPreparationButton" Visibility="{x:Bind ViewModel.ShowSelectionAction, Mode=OneWay}" Content="Ver preparación" Command="{x:Bind ViewModel.OpenSelectedPreparationCommand}"/>
+  </Grid>
+ </Grid>
+</Page>

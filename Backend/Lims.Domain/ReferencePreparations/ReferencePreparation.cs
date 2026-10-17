@@ -127,9 +127,24 @@ public sealed class ReferencePreparation
         };
     }
 
+    public static ReferencePreparation SolutionGroup(Guid id, string kind, string code, string name, int methodId, string methodName,
+        decimal totalProducedMl, string calculationJson, DateOnly date, DateOnly expiration, int actor, string? notes,
+        string? storageTemperature, DateTimeOffset now, string fingerprint)
+    {
+        if (kind is not ("Curva" or "AQS")) throw new ArgumentException("Tipo de preparación inválido.");
+        var group = Intermediate(id, code, name, methodId, methodName, totalProducedMl, "mL", calculationJson,
+            date, expiration, actor, notes, now, fingerprint, null);
+        group.Kind = kind;
+        // Produced solutions have no downstream inventory in the verified Works/AQS procedure.
+        group.AvailableVolume = 0;
+        group.Formula = "C₂ = C₁ × V tomado / V aforo, por analito y solución";
+        group.StorageTemperature = string.IsNullOrWhiteSpace(storageTemperature) ? null : Text(storageTemperature, 200);
+        return group;
+    }
+
     public void ConsumeVolume(decimal quantity, int actor, DateTimeOffset now, DateOnly today)
     {
-        if (Status != "Active" || ExpirationDate < today || quantity <= 0 || quantity > AvailableVolume || actor <= 0)
+        if (Kind is not ("Stock" or "Intermedia") || Status != "Active" || ExpirationDate < today || quantity <= 0 || quantity > AvailableVolume || actor <= 0)
             throw new InvalidOperationException("El origen no tiene volumen disponible suficiente.");
         AvailableVolume -= quantity;
         UpdatedAt = now;
