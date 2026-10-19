@@ -31,6 +31,28 @@ public sealed class CommercialMaterialsPostgresTests
         new(m.MethodId, [new(m.Id, m.Version, volume, "mL", 10, "mL", false)]), Today, Today.AddDays(1), null, null);
 
     [StockPostgresFact]
+    public async Task CommercialScriptsRejectMissingPrerequisitesWithoutCommittingHistoryOrApplicationChanges()
+    {
+        foreach (var (scriptName, table) in new[] { ("certified_commercial_materials.sql", "reference_preparation_components"), ("commercial_preparation_roles.sql", "reference_materials") })
+        {
+            await using var fixture = await StockPostgresTests.Fixture.CreateAsync(100);
+            await using var db = fixture.Context();
+            await db.Database.OpenConnectionAsync();
+            // Rename only fixture-owned objects; the physical row and FK relationships survive.
+            await db.Database.ExecuteSqlRawAsync(table == "reference_materials" ? "ALTER TABLE reference_materials RENAME TO preflight_hidden_table" : "ALTER TABLE reference_preparation_components RENAME TO preflight_hidden_table");
+            var path = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../../../artifacts/sql", scriptName));
+            var diagnostic = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../../../artifacts/sql/preflight_commercial_materials.sql"));
+            await db.Database.ExecuteSqlRawAsync(await File.ReadAllTextAsync(diagnostic));
+            var exception = await Assert.ThrowsAsync<Npgsql.PostgresException>(() => db.Database.ExecuteSqlRawAsync(File.ReadAllText(path)));
+            Assert.Equal("55000", exception.SqlState); Assert.Contains(table, exception.MessageText, StringComparison.Ordinal);
+            await db.Database.ExecuteSqlRawAsync("ROLLBACK;");
+            Assert.False(await db.Database.SqlQueryRaw<bool>("SELECT to_regclass('\"__EFMigrationsHistory\"') IS NOT NULL AS \"Value\"").SingleAsync());
+            await db.Database.ExecuteSqlRawAsync(table == "reference_materials" ? "ALTER TABLE preflight_hidden_table RENAME TO reference_materials" : "ALTER TABLE preflight_hidden_table RENAME TO reference_preparation_components");
+            Assert.Equal(100, (await db.ReferenceMaterials.SingleAsync()).AvailableQuantity);
+        }
+    }
+
+    [StockPostgresFact]
     public async Task DirectRegistrationHasNoPreparationAndSharesPhysicalBalanceAcrossRolesAndConsumption()
     {
         await using var fixture = await StockPostgresTests.Fixture.CreateAsync(100);
@@ -148,10 +170,11 @@ public sealed class CommercialMaterialsPostgresTests
         Assert.True(preparation.IsSuccess, preparation.Error?.Message);
         var migration = new Lims.Infrastructure.Persistence.Migrations.AddCommercialPreparationRoles();
         foreach (var command in db.GetService<IMigrationsSqlGenerator>().Generate(migration.DownOperations)) await db.Database.ExecuteSqlRawAsync(command.CommandText);
-        await db.Database.ExecuteSqlRawAsync("CREATE TABLE \"__EFMigrationsHistory\" (\"MigrationId\" varchar(150) PRIMARY KEY, \"ProductVersion\" varchar(32) NOT NULL); INSERT INTO \"__EFMigrationsHistory\" VALUES ('20261017063950_AddCertifiedCommercialMaterials', '10.0.10');");
         var path = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../../../artifacts/sql/commercial_preparation_roles.sql"));
         var script = await File.ReadAllTextAsync(path);
         await db.Database.ExecuteSqlRawAsync(script); await db.Database.ExecuteSqlRawAsync(script);
+        var applied = await db.Database.SqlQueryRaw<string>("SELECT \"MigrationId\" AS \"Value\" FROM \"__EFMigrationsHistory\"").ToArrayAsync();
+        Assert.Equal("20261017162400_AddCommercialPreparationRoles", Assert.Single(applied));
         db.ChangeTracker.Clear();
         Assert.Equal(8, (await Materials(db).GetAsync(material.Id, default)).Value!.AvailableQuantity);
         Assert.Single(await db.ReferencePreparations.ToArrayAsync()); Assert.Single(await db.ReferenceMaterialMovements.ToArrayAsync());
@@ -344,10 +367,11 @@ public sealed class CommercialMaterialsPostgresTests
         var migration = new Lims.Infrastructure.Persistence.Migrations.AddCertifiedCommercialMaterials();
         foreach (var command in db.GetService<IMigrationsSqlGenerator>().Generate(migration.DownOperations))
             await db.Database.ExecuteSqlRawAsync(command.CommandText);
-        await db.Database.ExecuteSqlRawAsync("CREATE TABLE \"__EFMigrationsHistory\" (\"MigrationId\" varchar(150) PRIMARY KEY, \"ProductVersion\" varchar(32) NOT NULL); INSERT INTO \"__EFMigrationsHistory\" VALUES ('20261017031716_AddStockSolventComposition', '10.0.10');");
         var path = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../../../artifacts/sql/certified_commercial_materials.sql"));
         var script = await File.ReadAllTextAsync(path);
         await db.Database.ExecuteSqlRawAsync(script); await db.Database.ExecuteSqlRawAsync(script);
+        var applied = await db.Database.SqlQueryRaw<string>("SELECT \"MigrationId\" AS \"Value\" FROM \"__EFMigrationsHistory\"").ToArrayAsync();
+        Assert.Equal("20261017063950_AddCertifiedCommercialMaterials", Assert.Single(applied));
         db.ChangeTracker.Clear();
         Assert.Equal(balance, (await db.ReferenceMaterials.SingleAsync()).AvailableQuantity);
         Assert.Single(await db.ReferencePreparations.ToArrayAsync());

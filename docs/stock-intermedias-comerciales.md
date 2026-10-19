@@ -50,3 +50,43 @@ Las capturas y solicitudes ficticias están en artifacts/validation/commercial-p
 - La suite de infraestructura incluye los escenarios PostgreSQL de registro directo sin datos avanzados, Mix de 30 componentes, asociación de un mismo frasco a Stock/Intermedia, listas combinadas paginadas, consumo en Intermedia/Curva/AQS, disponibilidad compartida, rollback tras escribir el rol, reintentos concurrentes sin duplicados y aplicación doble del SQL idempotente conservando inventario y movimientos.
 - Se probaron los permisos stock.create e intermedia.create sin conceder permisos de alta en Estándares, y se verificó el actor autenticado.
 - Informes y referencias a los TRX de esta ejecución: artifacts/validation/commercial-preparations/validation-summary.json.
+
+
+## Corrección de historial EF ausente
+
+Los scripts incrementales de composición Stock, materiales comerciales y roles comerciales crean ahora `__EFMigrationsHistory` si falta, dentro de su transacción. No insertan IDs de migraciones anteriores ni deducen que el esquema ya esté migrado. Solo registran su propia migración al completar todas sus operaciones.
+
+Si una ejecución anterior dejó la sesión en estado de transacción abortada, ejecutar `ROLLBACK;` antes de volver a ejecutar el archivo completo actualizado. Confirmar primero base y esquema con `SELECT current_database(), current_schema(), current_setting('search_path');` y localizar cualquier historial existente con `SELECT schemaname, tablename FROM pg_catalog.pg_tables WHERE tablename = '__EFMigrationsHistory';`. Si el historial está en otro esquema, ajustar el search_path al esquema correcto antes de ejecutar. No crear un historial paralelo para el mismo esquema de aplicación.
+
+La ausencia del historial no demuestra cuáles migraciones se aplicaron manualmente. Los scripts siguen requiriendo el esquema previo documentado. Si aparecen columnas o tablas duplicadas, detener la aplicación y conciliar el estado real; no insertar IDs ficticios ni borrar objetos para forzar el avance. Esta corrección se prepara y valida localmente; no aplica cambios a InterDB.
+
+
+## Diagnóstico de tablas base ausentes
+
+`reference_materials` se crea en `20260930060339_CreateReferenceMaterials`; `reference_preparation_components` se crea en `20261007230730_AddIntermediatePreparations`, que depende de Stock y del catálogo de materiales. Las ampliaciones comerciales no sustituyen estas migraciones base. Si alguna tabla falta o está fuera del search_path, no continuar con los scripts comerciales.
+
+`artifacts/sql/preflight_commercial_materials.sql` consulta conexión, ubicación y visibilidad de tablas, restricciones y el historial existente sin modificar estructura ni datos. Ejecutar primero `ROLLBACK;` si la sesión quedó abortada y compartir resultados y mensajes. Los scripts comerciales comprueban ahora sus tablas previas y se detienen antes de modificar objetos de aplicación si faltan requisitos. No se omiten claves foráneas ni se crean tablas base vacías para forzar el avance. La secuencia aplicable depende del estado real de la base y debe conciliarse antes de ejecutar migraciones.
+
+
+## Validación de unidades en registros nativos
+
+La migración de catálogos comparaba el texto histórico `unit` contra el catálogo incluso en registros nativos (`legacy_id IS NULL`). El modelo .NET persiste `unit_id` y no mantiene esa columna histórica, por lo que un texto vacío producía `unit mapping mismatch detected` aunque la unidad catalogada fuera válida.
+
+Se corrigió únicamente la validación de unidades en `artifacts/sql/migrate_reference_material_catalogs.sql`: todos los registros deben resolver su `unit_id` en el catálogo; los importados conservan además la comprobación contra su texto histórico. El criterio coincide con `validate_reference_material_catalog_migration.sql`. No se rellenan textos históricos, no se reasignan unidades ni se convierten cantidades o saldos para resolver este error. Antes de reintentar el archivo completo actualizado en una sesión abortada, ejecutar `ROLLBACK;`. No ejecutar la fase 7 comentada.
+
+
+## Restricciones comerciales existentes sin historial de migración
+
+Un error 42710 sobre `ck_reference_materials_presentation` indica que el script está intentando crear una restricción que ya existe. No acredita por sí solo que toda la migración esté aplicada. Se actualizó `artifacts/sql/certified_commercial_materials.sql` para conciliar esta ampliación en una única transacción:
+
+- Verifica que las tablas base y el historial resuelvan al mismo esquema y toma bloqueos con espera máxima de 10 segundos.
+- Si no está registrado el ID comercial, completa columnas, tablas e índices ausentes; comprueba tipos y nulabilidad; conserva las restricciones comerciales compatibles. Solo reemplaza las tres restricciones anteriores conocidas, comparando su expresión con la versión previa documentada. Una definición diferente aborta la transacción.
+- Verifica claves primarias, FKs, acciones de borrado, índices, defaults y restricciones validadas. No se limita a `IF NOT EXISTS` para aceptar un objeto incompatible.
+- Registra únicamente `20261017063950_AddCertifiedCommercialMaterials` al finalizar todas las comprobaciones. No registra migraciones anteriores ni da por aplicado el resto de Preparaciones.
+- Si el historial ya afirma que esta migración está aplicada, el script valida el esquema sin recrear objetos de aplicación faltantes; una discrepancia aborta y requiere revisión.
+- No inserta, actualiza ni elimina materiales físicos, componentes certificados o movimientos. Los cambios incompatibles revierten junto con cualquier intento de registro de historial.
+
+En una sesión abortada ejecutar primero `ROLLBACK;`, volver a abrir el archivo actualizado y ejecutar el archivo completo. No quitar `ck_reference_materials_presentation` ni insertar manualmente el ID para sortear el error. Esta preparación no ejecuta cambios en InterDB.
+
+
+Validación de esta conciliación: compilación de Infrastructure.Tests sin errores ni advertencias y 6 pruebas PostgreSQL aisladas aprobadas, sin omisiones. Incluyen el esquema previo con Stock y movimientos existentes, esquema comercial completo sin historial, objetos parciales, restricción incompatible, historial que afirma una migración con un índice faltante y requisitos base ausentes. La prueba con material comercial compara la ficha persistida completa antes/después y conserva sus identificadores, componentes, cantidades y versión. Evidencia y SHA256 del SQL: `artifacts/validation/migration-history-fix/commercial-reconciliation.json`.

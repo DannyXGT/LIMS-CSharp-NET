@@ -72,3 +72,12 @@ La solución y el arnés WinUI compilaron con cero errores y cero advertencias. 
 Se guardaron 20 capturas de los controles WinUI reales, en ambas resoluciones, con escala de Windows de 125 %. Se revisaron las filas compactas, la tabla de certificados, la ficha individual y los resultados de Intermedia: 5, 4.99 y 5.01 µg/mL con una única alícuota física de 1 mL. Los formularios conservan desplazamiento y acciones accesibles.
 
 `artifacts/validation/commercial-materials/verification.json` registra los resultados, los informes TRX y los hashes de las capturas. La migración queda preparada para su aplicación controlada y posterior despliegue; InterDB no se modificó.
+
+
+## Corrección de historial EF ausente
+
+Los scripts incrementales de composición Stock, materiales comerciales y roles comerciales crean ahora `__EFMigrationsHistory` si falta, dentro de su transacción. No insertan IDs de migraciones anteriores ni deducen que el esquema ya esté migrado. Solo registran su propia migración al completar todas sus operaciones.
+
+Si una ejecución anterior dejó la sesión en estado de transacción abortada, ejecutar `ROLLBACK;` antes de volver a ejecutar el archivo completo actualizado. Confirmar primero base y esquema con `SELECT current_database(), current_schema(), current_setting('search_path');` y localizar cualquier historial existente con `SELECT schemaname, tablename FROM pg_catalog.pg_tables WHERE tablename = '__EFMigrationsHistory';`. Si el historial está en otro esquema, ajustar el search_path al esquema correcto antes de ejecutar. No crear un historial paralelo para el mismo esquema de aplicación.
+
+La ausencia del historial no demuestra cuáles migraciones se aplicaron manualmente. Los scripts siguen requiriendo el esquema previo documentado. Si aparecen columnas o tablas duplicadas, detener la aplicación y conciliar el estado real; no insertar IDs ficticios ni borrar objetos para forzar el avance. Esta corrección se prepara y valida localmente; no aplica cambios a InterDB.

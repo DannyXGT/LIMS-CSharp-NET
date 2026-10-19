@@ -1,4 +1,12 @@
-﻿START TRANSACTION;
+START TRANSACTION;
+
+-- Initialize EF history when this incremental script is applied to a schema without it.
+-- Do not insert baseline migration IDs: only completed operations below are recorded.
+CREATE TABLE IF NOT EXISTS "__EFMigrationsHistory" (
+    "MigrationId" character varying(150) NOT NULL,
+    "ProductVersion" character varying(32) NOT NULL,
+    CONSTRAINT "PK___EFMigrationsHistory" PRIMARY KEY ("MigrationId")
+);
 
 DO $EF$
 BEGIN
