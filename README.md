@@ -27,6 +27,16 @@ dotnet test Tests/Frontend/Lims.Desktop.Tests/Lims.Desktop.Tests.csproj -p:Platf
 
 La API exige secretos al arrancar. Consulte [desarrollo](docs/development.md) antes de ejecutarla. Para WinUI use `scripts/run-winui.ps1`; no use el fallo conocido de AUMID de `dotnet run` como diagnóstico del framework.
 
+## EXE portable y versionado
+
+Desde la raíz del repositorio:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\publish-portable.ps1
+```
+
+Genera `artifacts/publish/Lims.Desktop.exe` para Windows x64. Cada publicación correcta incrementa el último número de versión (`1.0.0` -> `1.0.1` -> `1.0.2`) y lo aplica a la versión del producto, archivo y ensamblado. La última versión publicada se guarda en `scripts/portable-version.txt`; incluye ese archivo en el control de versiones para conservar la secuencia entre equipos. Si la publicación falla, el contador no avanza. Conserva el nombre `Lims.Desktop.exe` para que WinUI encuentre sus recursos.
+
 ## Estado del checkpoint
 
 - Compilación backend y WinUI: completada sin advertencias.
