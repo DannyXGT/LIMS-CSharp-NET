@@ -41,6 +41,8 @@ public sealed partial class SolutionGroupEditorDialog : ContentDialog
         SaveButton.Visibility = ViewModel.Created is null ? Visibility.Visible : Visibility.Collapsed;
         ViewButton.Visibility = ViewModel.Created is null ? Visibility.Collapsed : Visibility.Visible;
         if (ViewModel.Created is { } created) SuccessText.Text = $"{created.Preparation.Code} · Grupo guardado con {created.Calculation.Parts.Count} soluciones.";
+        else SuccessText.Text = ViewModel.IsBusy ? "Guardando el grupo…" : ViewModel.CanSave ? "Listo para guardar" : ViewModel.Validation;
+        ToolTipService.SetToolTip(SaveButton, SuccessText.Text);
         var row = ViewModel.SelectedComponent;
         ResultView.Show(row?.Preview, row?.VolumePreview, row?.Title ?? "Seleccione una solución", row?.FieldError ?? string.Empty, row?.Source);
         DebitRows.Children.Clear();

@@ -1,0 +1,147 @@
+{
+  "fixtureOnly": true,
+  "Size": {
+    "Width": 1078.4000244140625,
+    "Height": 606.4000244140625,
+    "IsEmpty": false
+  },
+  "RasterizationScale": 1.25,
+  "windowSize": {
+    "Width": 1366,
+    "Height": 768
+  },
+  "ValidCount": 0,
+  "totalRows": 0,
+  "CanSave": false,
+  "InitialVolume": null,
+  "AvailableVolume": null,
+  "AvailabilityPercent": 0,
+  "ValidationStatus": "Complete la identificaci\u00F3n del producto",
+  "ImportMessage": "",
+  "IsReady": true,
+  "Name": "",
+  "Method": null,
+  "Location": null,
+  "VolumeUnit": {
+    "Id": 3,
+    "Name": "Mililitro",
+    "Symbol": "mL",
+    "DisplayName": "mL \u2014 Mililitro"
+  },
+  "ExpirationDate": null,
+  "Storage": "",
+  "footer": {
+    "x": 72.80000305175781,
+    "y": 536,
+    "width": 981.5999755859375,
+    "height": 46.400001525878906
+  },
+  "summary": {
+    "x": 764,
+    "y": 192.00001525878906,
+    "width": 290.3999938964844,
+    "height": 333.6000061035156
+  },
+  "header": {
+    "x": 84,
+    "y": 507.1999816894531,
+    "width": 648,
+    "height": 28
+  },
+  "viewport": {
+    "x": 84,
+    "y": 535.199951171875,
+    "width": 648,
+    "height": 171.1999969482422
+  },
+  "VerticalOffset": 0,
+  "ScrollableHeight": 0,
+  "captureOffset": 0,
+  "rows": [],
+  "focused": {
+    "Name": "TextBox",
+    "label": "",
+    "bounds": {
+      "x": 656.7999877929688,
+      "y": 8,
+      "width": 280,
+      "height": 32
+    },
+    "intersectsCapture": false
+  },
+  "fieldNames": [
+    {
+      "name": "ProductNameBox",
+      "label": "Nombre del Mix"
+    },
+    {
+      "name": "MethodSelect",
+      "label": "M\u00E9todo del Mix"
+    },
+    {
+      "name": "BrandBox",
+      "label": "Fabricante del Mix"
+    },
+    {
+      "name": "CatalogBox",
+      "label": "Cat\u00E1logo del Mix"
+    },
+    {
+      "name": "LotBox",
+      "label": "Lote del Mix"
+    },
+    {
+      "name": "VolumeBox",
+      "label": "Volumen por frasco"
+    },
+    {
+      "name": "BottleCountBox",
+      "label": "N\u00FAmero de frascos"
+    },
+    {
+      "name": "VolumeUnitSelect",
+      "label": "Unidad de volumen"
+    },
+    {
+      "name": "SolventSelect",
+      "label": "Solvente o matriz del Mix"
+    },
+    {
+      "name": "ReceivedPicker",
+      "label": "Fecha de ingreso del Mix"
+    },
+    {
+      "name": "ExpirationPicker",
+      "label": "Fecha de expiraci\u00F3n del Mix"
+    },
+    {
+      "name": "LocationSelect",
+      "label": "Ubicaci\u00F3n del Mix"
+    },
+    {
+      "name": "StorageBox",
+      "label": "Condiciones de almacenamiento del Mix"
+    },
+    {
+      "name": "SaveButton",
+      "label": "Guardar Intermedia"
+    },
+    {
+      "name": "CancelButton",
+      "label": ""
+    },
+    {
+      "name": "AddRowButton",
+      "label": "Agregar componente al Mix"
+    },
+    {
+      "name": "PasteButton",
+      "label": "Pegar componentes desde Excel"
+    },
+    {
+      "name": "ComponentSearchBox",
+      "label": "Buscar analito o CAS en el Mix"
+    }
+  ],
+  "request": null
+}

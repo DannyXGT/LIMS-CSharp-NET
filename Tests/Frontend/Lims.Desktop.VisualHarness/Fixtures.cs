@@ -33,6 +33,7 @@ internal sealed class FixtureNavigation : INavigationService
 
 internal sealed class FixtureApi : IReferenceMaterialsApiClient
 {
+    internal IReadOnlyList<ReferenceMaterialDetail> AlertVisualMaterials => _details;
     private readonly List<ReferenceMaterialDetail> _details = [];
     public int DelayMilliseconds { get; set; } = 40;
     public int SaveCalls { get; private set; }

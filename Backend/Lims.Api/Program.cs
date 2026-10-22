@@ -3,6 +3,8 @@ using System.Security.Claims;
 using System.Text;
 using System.Threading.RateLimiting;
 using Lims.Api.Authentication;
+using Lims.Api.Alerts;
+using Lims.Infrastructure.Alerts;
 using Lims.Api.Dashboard;
 using Lims.Application.Dashboard;
 using Lims.Api.Health;
@@ -87,6 +89,7 @@ try
     builder.Services.AddScoped<IIntermediateService, IntermediateService>();
     builder.Services.AddScoped<ISolutionGroupRepository, SolutionGroupRepository>();
     builder.Services.AddScoped<SolutionGroupService>();
+    builder.Services.AddLimsAlerts(builder.Configuration);
 
     builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
     {
@@ -187,6 +190,7 @@ try
     app.MapAuthenticationEndpoints();
     app.MapPermissionEndpoints();
     app.MapDashboardEndpoints();
+    app.MapAlertEndpoints();
     app.MapReferenceMaterialEndpoints();
     app.MapStockEndpoints();
     app.MapIntermediateEndpoints();

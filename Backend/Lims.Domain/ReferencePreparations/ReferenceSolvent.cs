@@ -22,7 +22,13 @@ public sealed class StockSolvent
         Id = Guid.NewGuid(); PreparationId = preparationId; SolventId = solventId; Percent = percent; Position = position;
     }
     public Guid Id { get; private set; }
-    public Guid PreparationId { get; private set; }
+    public static StockSolvent ForMaterial(Guid materialId, int solventId, decimal percent, int position)
+    {
+        var row = new StockSolvent(materialId, solventId, percent, position) { PreparationId = null, MaterialId = materialId };
+        return row;
+    }
+    public Guid? PreparationId { get; private set; }
+    public Guid? MaterialId { get; private set; }
     public int SolventId { get; private set; }
     public ReferenceSolvent Solvent { get; private set; } = null!;
     public decimal Percent { get; private set; }

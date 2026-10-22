@@ -1,40 +1,153 @@
-<UserControl x:Class="Lims.Desktop.Views.CommercialPreparationEditor"
- xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
- xmlns:design="using:Lims.DesignSystem.Controls" xmlns:local="using:Lims.Desktop.Views">
- <StackPanel x:Name="Surface" Spacing="10">
-  <Grid ColumnSpacing="12"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-   <StackPanel Spacing="4"><TextBlock Text="Producto físico" Style="{StaticResource LimsFormLabelStyle}"/><design:LimsSelect x:Name="EntrySelect" SelectionChanged="OnEntryChanged" AutomationProperties.Name="Registrar o asociar un frasco"/></StackPanel>
-   <StackPanel Grid.Column="1" Spacing="4"><TextBlock Text="Código interno" Style="{StaticResource LimsFormLabelStyle}"/><TextBlock Text="Se asignará al guardar" Style="{StaticResource LimsCaptionStyle}"/></StackPanel>
+<UserControl xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:design="using:Lims.DesignSystem.Controls" xmlns:local="using:Lims.Desktop.Views" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" x:Class="Lims.Desktop.Views.CommercialPreparationEditor">
+ <UserControl.Resources>
+  <Thickness x:Key="TextControlHeaderMargin">0,0,0,3</Thickness>
+  <DataTemplate x:Key="PreparationFieldHeader">
+   <TextBlock Text="{Binding}" Style="{StaticResource LimsFormLabelStyle}" />
+  </DataTemplate>
+ </UserControl.Resources>
+ <Grid x:Name="Surface" SizeChanged="OnSurfaceSizeChanged" RowSpacing="10">
+  <Grid.RowDefinitions>
+   <RowDefinition Height="Auto" />
+   <RowDefinition Height="*" />
+   <RowDefinition Height="Auto" />
+  </Grid.RowDefinitions>
+  <Grid ColumnSpacing="12">
+   <Grid.ColumnDefinitions>
+    <ColumnDefinition Width="*" />
+    <ColumnDefinition Width="*" />
+   </Grid.ColumnDefinitions>
+   <StackPanel Spacing="4">
+    <TextBlock Text="Producto físico" Style="{StaticResource LimsFormLabelStyle}" />
+    <design:LimsSelect x:Name="EntrySelect" SelectionChanged="OnEntryChanged" AutomationProperties.Name="Registrar o asociar un frasco" />
+   </StackPanel>
+   <StackPanel Grid.Column="1" Spacing="4">
+    <TextBlock x:Name="CodeLabel" Text="Código Stock" Style="{StaticResource LimsFormLabelStyle}" />
+    <TextBlock Text="Se genera automáticamente al guardar" Style="{StaticResource LimsCaptionStyle}" TextWrapping="Wrap" />
+   </StackPanel>
   </Grid>
-  <StackPanel x:Name="ExistingSurface" Spacing="8" Visibility="Collapsed">
-   <design:LimsSearchSelect x:Name="ExistingSelect" DisplayMemberPath="CommercialSelectionDisplay" PlaceholderText="Seleccione el mismo producto registrado en Estándares" SearchPlaceholder="Buscar producto cargado" SelectionChanged="OnExistingChanged" AutomationProperties.Name="Frasco comercial existente"/>
-   <Grid ColumnSpacing="8"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions><TextBox x:Name="RemoteSearch" PlaceholderText="Buscar otros frascos por nombre, catálogo o lote" Style="{StaticResource LimsCompactTextBoxStyle}"/><Button Grid.Column="1" Content="Buscar" Click="OnSearchExisting" Style="{StaticResource LimsSecondaryButtonStyle}"/></Grid>
-   <TextBlock x:Name="ExistingSummary" TextWrapping="Wrap" Style="{StaticResource LimsCaptionStyle}"/>
+  <StackPanel x:Name="ExistingSurface" Spacing="8" Visibility="Collapsed" Grid.Row="1">
+   <design:LimsSearchSelect x:Name="ExistingSelect" DisplayMemberPath="CommercialSelectionDisplay" PlaceholderText="Seleccione el producto comercial ya registrado" SearchPlaceholder="Buscar producto" SelectionChanged="OnExistingChanged" AutomationProperties.Name="Frasco comercial existente" />
+   <Grid ColumnSpacing="8">
+    <Grid.ColumnDefinitions>
+     <ColumnDefinition Width="*" />
+     <ColumnDefinition Width="Auto" />
+    </Grid.ColumnDefinitions>
+    <TextBox x:Name="RemoteSearch" PlaceholderText="Nombre, catálogo o lote" Style="{StaticResource LimsCompactTextBoxStyle}" />
+    <Button design:LimsAction.Icon="Search" Grid.Column="1" Content="Buscar" Click="OnSearchExisting" Style="{StaticResource LimsUtilityActionStyle}" />
+   </Grid>
+   <TextBlock x:Name="ExistingSummary" TextWrapping="Wrap" Style="{StaticResource LimsCaptionStyle}" />
   </StackPanel>
-  <StackPanel x:Name="NewSurface" Spacing="10">
-   <Grid ColumnSpacing="12" RowSpacing="8"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
-    <TextBox x:Name="ProductNameBox" Header="Nombre de la solución / Mix *" MaxLength="200" Style="{StaticResource LimsCompactTextBoxStyle}"/>
-    <StackPanel Grid.Column="1" Spacing="4"><TextBlock Text="Método *" Style="{StaticResource LimsFormLabelStyle}"/><design:LimsSearchSelect x:Name="MethodSelect" DisplayMemberPath="Name" PlaceholderText="Seleccione método" AutomationProperties.Name="Método del producto comercial"/></StackPanel>
-    <TextBox x:Name="BrandBox" Grid.Row="1" Header="Marca / fabricante *" MaxLength="120" Style="{StaticResource LimsCompactTextBoxStyle}"/>
-    <TextBox x:Name="CatalogBox" Grid.Row="1" Grid.Column="1" Header="Catálogo (opcional)" MaxLength="80" Style="{StaticResource LimsCompactTextBoxStyle}"/>
-    <TextBox x:Name="LotBox" Grid.Row="2" Header="Lote *" MaxLength="120" Style="{StaticResource LimsCompactTextBoxStyle}"/>
-    <StackPanel Grid.Row="2" Grid.Column="1" Spacing="4"><TextBlock Text="Registrado por" Style="{StaticResource LimsFormLabelStyle}"/><TextBlock x:Name="ResponsibleText" Style="{StaticResource LimsCaptionStyle}"/></StackPanel>
-   </Grid>
-   <Grid ColumnSpacing="12"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="120"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-    <TextBox x:Name="VolumeBox" Header="Volumen inicial del frasco *" TextChanged="OnVolumeChanged" Style="{StaticResource LimsCompactTextBoxStyle}"/>
-    <StackPanel Grid.Column="1" Spacing="4"><TextBlock Text="Unidad *" Style="{StaticResource LimsFormLabelStyle}"/><design:LimsSelect x:Name="VolumeUnitSelect" DisplayMemberPath="Symbol" SelectionChanged="OnEntryChanged" AutomationProperties.Name="Unidad de volumen comercial"/></StackPanel>
-    <StackPanel Grid.Column="2" Spacing="4"><TextBlock Text="Disponibilidad del frasco" Style="{StaticResource LimsFormLabelStyle}"/><TextBlock x:Name="BalanceText" Style="{StaticResource LimsCaptionStyle}" TextWrapping="Wrap"/></StackPanel>
-   </Grid>
-   <Grid ColumnSpacing="12"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-    <StackPanel Spacing="4"><TextBlock Text="Fecha de ingreso *" Style="{StaticResource LimsFormLabelStyle}"/><design:LimsDatePicker x:Name="ReceivedPicker" AutomationProperties.Name="Ingreso del producto comercial"/></StackPanel>
-    <StackPanel Grid.Column="1" Spacing="4"><TextBlock Text="Fecha de expiración *" Style="{StaticResource LimsFormLabelStyle}"/><design:LimsDatePicker x:Name="ExpirationPicker" DateChanged="OnExpirationChanged" AutomationProperties.Name="Expiración del producto comercial"/></StackPanel>
-   </Grid>
-   <Grid ColumnSpacing="12"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-    <TextBox x:Name="StorageBox" Header="Condiciones de almacenamiento *" MaxLength="160" Style="{StaticResource LimsCompactTextBoxStyle}"/>
-    <StackPanel Grid.Column="1" Spacing="4"><TextBlock Text="Ubicación *" Style="{StaticResource LimsFormLabelStyle}"/><design:LimsSelect x:Name="LocationSelect" DisplayMemberPath="Name" PlaceholderText="Seleccione ubicación" AutomationProperties.Name="Ubicación del frasco comercial"/></StackPanel>
-   </Grid>
-   <local:CommercialCertificateEditor x:Name="ComponentsEditor"/>
-  </StackPanel>
-  <TextBlock x:Name="ErrorText" TextWrapping="Wrap" IsTextSelectionEnabled="True" Foreground="{ThemeResource LimsDangerBrush}"/>
- </StackPanel>
+  <Grid x:Name="EntryLayout" ColumnSpacing="16" RowSpacing="12" Grid.Row="1">
+   <Grid.ColumnDefinitions>
+    <ColumnDefinition x:Name="FieldsColumn" Width="*" />
+    <ColumnDefinition x:Name="ResultColumn" Width="260" />
+   </Grid.ColumnDefinitions>
+   <Grid.RowDefinitions>
+    <RowDefinition Height="*" />
+    <RowDefinition Height="Auto" />
+   </Grid.RowDefinitions>
+   <ScrollViewer x:Name="FieldsScroll" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+    <StackPanel x:Name="NewSurface" Spacing="10" Padding="0,0,10,6">
+     <TextBlock Text="IDENTIFICACIÓN" Style="{StaticResource LimsSectionTitleStyle}" FontSize="13" />
+     <Grid ColumnSpacing="12" RowSpacing="8">
+      <Grid.ColumnDefinitions>
+       <ColumnDefinition Width="*" />
+       <ColumnDefinition Width="*" />
+       <ColumnDefinition Width="*" />
+      </Grid.ColumnDefinitions>
+      <Grid.RowDefinitions>
+       <RowDefinition Height="Auto" />
+       <RowDefinition Height="Auto" />
+       <RowDefinition Height="Auto" />
+      </Grid.RowDefinitions>
+      <TextBox x:Name="ProductNameBox" Header="Nombre del compuesto o solución *" TextChanged="OnProductChanged" MaxLength="200" Style="{StaticResource LimsCompactTextBoxStyle}" HeaderTemplate="{StaticResource PreparationFieldHeader}" Grid.ColumnSpan="2" />
+      <StackPanel Grid.Column="2" Spacing="4">
+       <TextBlock Text="Método *" Style="{StaticResource LimsFormLabelStyle}" />
+       <design:LimsSearchSelect x:Name="MethodSelect" DisplayMemberPath="Name" PlaceholderText="Seleccione método" AutomationProperties.Name="Método del producto comercial" />
+      </StackPanel>
+      <TextBox x:Name="BrandBox" Grid.Row="1" Header="Marca / fabricante *" MaxLength="120" Style="{StaticResource LimsCompactTextBoxStyle}" HeaderTemplate="{StaticResource PreparationFieldHeader}" TextChanged="OnIdentityChanged" Grid.Column="0" />
+      <TextBox x:Name="LotBox" Grid.Row="1" Header="Lote *" MaxLength="120" Style="{StaticResource LimsCompactTextBoxStyle}" Grid.Column="2" HeaderTemplate="{StaticResource PreparationFieldHeader}" TextChanged="OnIdentityChanged" />
+      <TextBox x:Name="CatalogBox" Header="Número de catálogo" MaxLength="80" Style="{StaticResource LimsCompactTextBoxStyle}" HeaderTemplate="{StaticResource PreparationFieldHeader}" PlaceholderText="Opcional" Grid.Row="1" Grid.Column="1" />
+      <StackPanel Spacing="4" Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="3">
+       <TextBlock x:Name="ResponsibleText" Style="{StaticResource LimsCaptionStyle}" TextWrapping="Wrap" />
+      </StackPanel>
+     </Grid>
+     <Border Padding="12" CornerRadius="8" Background="{ThemeResource LimsAccentSoftBrush}">
+      <local:CommercialCertificateEditor x:Name="ComponentsEditor" />
+     </Border>
+     <TextBlock Text="INVENTARIO Y MATRIZ" Style="{StaticResource LimsSectionTitleStyle}" FontSize="13" />
+     <Grid ColumnSpacing="12">
+      <Grid.ColumnDefinitions>
+       <ColumnDefinition Width="*" />
+       <ColumnDefinition Width="90" />
+       <ColumnDefinition Width="110" />
+      </Grid.ColumnDefinitions>
+      <TextBox x:Name="VolumeBox" Header="Volumen por frasco *" TextChanged="OnVolumeChanged" Style="{StaticResource LimsCompactTextBoxStyle}" HeaderTemplate="{StaticResource PreparationFieldHeader}" />
+      <StackPanel Grid.Column="1" Spacing="4">
+       <TextBlock Text="Unidad *" Style="{StaticResource LimsFormLabelStyle}" />
+       <design:LimsSelect x:Name="VolumeUnitSelect" DisplayMemberPath="Symbol" SelectionChanged="OnEntryChanged" AutomationProperties.Name="Unidad de volumen comercial" />
+      </StackPanel>
+      <TextBox x:Name="BottleCountBox" Grid.Column="2" Header="Nº frascos *" Text="1" TextChanged="OnVolumeChanged" Style="{StaticResource LimsCompactTextBoxStyle}" HeaderTemplate="{StaticResource PreparationFieldHeader}" />
+     </Grid>
+     <local:SolventCompositionEditor x:Name="CompositionEditor" />
+     <TextBlock Text="VIGENCIA Y ALMACENAMIENTO" Style="{StaticResource LimsSectionTitleStyle}" FontSize="13" />
+     <Grid ColumnSpacing="12">
+      <Grid.ColumnDefinitions>
+       <ColumnDefinition Width="*" />
+       <ColumnDefinition Width="*" />
+      </Grid.ColumnDefinitions>
+      <StackPanel Spacing="4">
+       <TextBlock Text="Fecha de ingreso *" Style="{StaticResource LimsFormLabelStyle}" />
+       <design:LimsDatePicker x:Name="ReceivedPicker" AutomationProperties.Name="Ingreso del producto comercial" />
+      </StackPanel>
+      <StackPanel Grid.Column="1" Spacing="4">
+       <TextBlock Text="Fecha de expiración *" Style="{StaticResource LimsFormLabelStyle}" />
+       <design:LimsDatePicker x:Name="ExpirationPicker" DateChanged="OnExpirationChanged" AutomationProperties.Name="Expiración del producto comercial" />
+      </StackPanel>
+     </Grid>
+     <Grid ColumnSpacing="12">
+      <Grid.ColumnDefinitions>
+       <ColumnDefinition Width="*" />
+       <ColumnDefinition Width="*" />
+      </Grid.ColumnDefinitions>
+      <StackPanel Spacing="4">
+       <TextBlock Text="Ubicación *" Style="{StaticResource LimsFormLabelStyle}" />
+       <design:LimsSelect x:Name="LocationSelect" DisplayMemberPath="Name" PlaceholderText="Seleccione ubicación" AutomationProperties.Name="Ubicación del frasco comercial" />
+      </StackPanel>
+      <TextBox x:Name="StorageBox" Grid.Column="1" Header="Temperatura / condiciones *" MaxLength="160" Style="{StaticResource LimsCompactTextBoxStyle}" HeaderTemplate="{StaticResource PreparationFieldHeader}" />
+     </Grid>
+    </StackPanel>
+   </ScrollViewer>
+   <Border x:Name="ResultSurface" Grid.Column="1" Padding="12" CornerRadius="10" Background="{ThemeResource LimsSurfaceSecondaryBrush}" VerticalAlignment="Stretch">
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+     <StackPanel Spacing="5">
+      <TextBlock x:Name="ResultTitle" Text="PRODUCTO COMERCIAL" Style="{StaticResource LimsSectionTitleStyle}" FontSize="12" />
+      <TextBlock x:Name="ResultName" Style="{StaticResource LimsFormLabelStyle}" TextWrapping="Wrap" FontSize="16" FontWeight="SemiBold" MaxLines="2" TextTrimming="CharacterEllipsis" />
+      <TextBlock x:Name="ResultIdentity" Style="{StaticResource LimsCaptionStyle}" TextWrapping="Wrap" MaxLines="1" TextTrimming="CharacterEllipsis" FontSize="11" />
+      <TextBlock x:Name="ResultComponents" Style="{StaticResource LimsCaptionStyle}" TextWrapping="Wrap" Text="CONCENTRACIÓN COMERCIAL" FontSize="11" />
+      <ScrollViewer MaxHeight="80" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+       <TextBlock x:Name="ResultConcentrations" Style="{StaticResource LimsFormLabelStyle}" TextWrapping="Wrap" FontSize="22" FontWeight="SemiBold" Foreground="{ThemeResource LimsAccentBrush}" />
+      </ScrollViewer>
+      <Grid ColumnSpacing="10" Padding="0,4">
+       <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="42" />
+        <ColumnDefinition Width="*" />
+       </Grid.ColumnDefinitions>
+       <Viewbox Width="34" Height="64">
+        <local:CommercialBottleVisual x:Name="BottleVisual" HorizontalAlignment="Center" />
+       </Viewbox>
+       <StackPanel Grid.Column="1" Spacing="3" VerticalAlignment="Center">
+        <TextBlock Text="VOLUMEN DISPONIBLE" Style="{StaticResource LimsCaptionStyle}" FontSize="10" />
+        <TextBlock x:Name="BalanceText" TextWrapping="Wrap" FontSize="18" FontWeight="SemiBold" />
+        <TextBlock x:Name="InitialVolumeText" Style="{StaticResource LimsCaptionStyle}" TextWrapping="Wrap" FontSize="11" />
+       </StackPanel>
+      </Grid>
+      <ProgressBar x:Name="BalanceBar" Minimum="0" Maximum="100" Value="0" Height="4" Visibility="Collapsed" />
+      <TextBlock x:Name="ResultValidity" Style="{StaticResource LimsCaptionStyle}" TextWrapping="Wrap" />
+     </StackPanel>
+    </ScrollViewer>
+   </Border>
+  </Grid>
+  <TextBlock x:Name="ErrorText" TextWrapping="Wrap" IsTextSelectionEnabled="True" Foreground="{ThemeResource LimsDangerBrush}" Grid.Row="2" Visibility="Collapsed" />
+ </Grid>
 </UserControl>

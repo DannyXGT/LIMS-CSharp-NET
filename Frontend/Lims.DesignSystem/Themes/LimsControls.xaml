@@ -471,6 +471,51 @@
         <Setter Property="Width" Value="32" /><Setter Property="MinHeight" Value="32" /><Setter Property="Padding" Value="7" />
         <Setter Property="Background" Value="Transparent" /><Setter Property="BorderThickness" Value="0" />
     </Style>
+    <!-- Shared preparation actions. Preserve native Button input, focus and automation. -->
+    <Style x:Key="LimsActionButtonStyle" TargetType="Button" BasedOn="{StaticResource LimsSecondaryButtonStyle}">
+        <Setter Property="MinHeight" Value="36" /><Setter Property="Padding" Value="12,7" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="FocusVisualPrimaryBrush" Value="{ThemeResource LimsFocusBrush}" />
+        <Setter Property="FocusVisualPrimaryThickness" Value="2" />
+        <Setter Property="FocusVisualSecondaryThickness" Value="1" />
+        <Setter Property="motion:Motion.PressedScale" Value="0.985" />
+        <Setter Property="controls:LimsAction.Icon" Value="Cancel" />
+        <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="Button">
+            <Grid x:Name="ActionRoot" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
+                  BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="{TemplateBinding CornerRadius}" Control.IsTemplateFocusTarget="True">
+                <VisualStateManager.VisualStateGroups><VisualStateGroup x:Name="CommonStates">
+                    <VisualStateGroup.Transitions><VisualTransition GeneratedDuration="0:0:0.1" /></VisualStateGroup.Transitions>
+                    <VisualState x:Name="Normal" />
+                    <VisualState x:Name="PointerOver"><VisualState.Setters><Setter Target="ActionHover.Opacity" Value="0.08" /></VisualState.Setters></VisualState>
+                    <VisualState x:Name="Pressed"><VisualState.Setters><Setter Target="ActionHover.Opacity" Value="0.16" /></VisualState.Setters></VisualState>
+                    <VisualState x:Name="Disabled"><VisualState.Setters><Setter Target="ActionRoot.Opacity" Value="0.42" /></VisualState.Setters></VisualState>
+                </VisualStateGroup></VisualStateManager.VisualStateGroups>
+                <Border x:Name="ActionHover" Background="{TemplateBinding Foreground}" Opacity="0" CornerRadius="{TemplateBinding CornerRadius}" IsHitTestVisible="False" />
+                <StackPanel Orientation="Horizontal" Spacing="8" Padding="{TemplateBinding Padding}" HorizontalAlignment="Center" VerticalAlignment="Center" IsHitTestVisible="False">
+                    <controls:LimsIcon x:Name="ActionIcon" Size="16" Foreground="{TemplateBinding Foreground}" />
+                    <ContentPresenter x:Name="ActionLabel" Content="{TemplateBinding Content}" ContentTemplate="{TemplateBinding ContentTemplate}" Foreground="{TemplateBinding Foreground}" VerticalAlignment="Center" />
+                </StackPanel>
+            </Grid>
+        </ControlTemplate></Setter.Value></Setter>
+    </Style>
+    <Style x:Key="LimsPrimaryActionStyle" TargetType="Button" BasedOn="{StaticResource LimsActionButtonStyle}">
+        <Setter Property="controls:LimsAction.Icon" Value="Save" />
+        <Setter Property="Background" Value="{ThemeResource LimsAccentBrush}" /><Setter Property="Foreground" Value="{ThemeResource LimsOnAccentBrush}" />
+    </Style>
+    <Style x:Key="LimsAddActionStyle" TargetType="Button" BasedOn="{StaticResource LimsActionButtonStyle}">
+        <Setter Property="controls:LimsAction.Icon" Value="Add" />
+        <Setter Property="Background" Value="{ThemeResource LimsAccentSoftBrush}" /><Setter Property="Foreground" Value="{ThemeResource LimsAccentBrush}" />
+    </Style>
+    <Style x:Key="LimsUtilityActionStyle" TargetType="Button" BasedOn="{StaticResource LimsActionButtonStyle}">
+        <Setter Property="controls:LimsAction.Icon" Value="Refresh" /><Setter Property="Background" Value="Transparent" />
+    </Style>
+    <Style x:Key="LimsActionIconStyle" TargetType="Button" BasedOn="{StaticResource LimsUtilityActionStyle}">
+        <Setter Property="controls:LimsAction.LabelVisibility" Value="Collapsed" />
+        <Setter Property="Width" Value="36" /><Setter Property="Height" Value="36" /><Setter Property="Padding" Value="10" />
+    </Style>
+    <Style x:Key="LimsRemoveActionStyle" TargetType="Button" BasedOn="{StaticResource LimsActionIconStyle}">
+        <Setter Property="controls:LimsAction.Icon" Value="Delete" /><Setter Property="Foreground" Value="{ThemeResource LimsDangerBrush}" />
+    </Style>
     <Style x:Key="LimsDataRowStyle" TargetType="ListViewItem" BasedOn="{StaticResource DefaultListViewItemStyle}">
         <Setter Property="AutomationProperties.Name" Value="{Binding NameDisplay}" />
         <Setter Property="HorizontalContentAlignment" Value="Stretch" /><Setter Property="MinHeight" Value="52" />

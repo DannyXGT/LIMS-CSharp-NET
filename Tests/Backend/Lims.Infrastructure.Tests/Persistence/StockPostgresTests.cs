@@ -411,6 +411,9 @@ public sealed class StockPostgresTests
         var solventScript = await File.ReadAllTextAsync(Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../../../artifacts/sql/stock_solvent_composition.sql")));
         await context.Database.ExecuteSqlRawAsync(solventScript);
         await context.Database.ExecuteSqlRawAsync(solventScript);
+        var commercialSolvents = await File.ReadAllTextAsync(Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../../../artifacts/sql/commercial_solvent_composition.sql")));
+        await context.Database.ExecuteSqlRawAsync(commercialSolvents);
+        await context.Database.ExecuteSqlRawAsync(commercialSolvents);
         Assert.Equal(12, await context.ReferenceSolvents.CountAsync());
         Assert.False(context.Database.HasPendingModelChanges());
         Assert.True((await Service(context).CreateAsync(fixture.Request(50), 42, CancellationToken.None)).IsSuccess);
@@ -422,7 +425,7 @@ public sealed class StockPostgresTests
         await using var f = await Fixture.CreateAsync(100);
         await using var db = f.Context(); var service = Service(db);
         var all = (await service.SolventsAsync(null, default)).Value!;
-        Assert.Equal<string>(["THF", "Hxn", "ACN", "MeOH", "Tolueno", "MTBE", "Cyclohexano", "H2O", "HNO3", "HCl", "Acetona", "DMSO"], all.Select(s => s.Abbreviation));
+        Assert.Equal<string>(["THF", "Hxn", "ACN", "MeOH", "Tolueno", "MTBE", "Ciclohexano", "H2O", "HNO3", "HCl", "Acetona", "DMSO"], all.Select(s => s.Abbreviation));
         Assert.Equal("Metanol", Assert.Single((await service.SolventsAsync("meoh", default)).Value!).Name);
         Assert.Equal("H2O", Assert.Single((await service.SolventsAsync("agua", default)).Value!).Abbreviation);
         Assert.Empty((await service.SolventsAsync("%", default)).Value!);

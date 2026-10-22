@@ -1,0 +1,61 @@
+{
+  "fixtureOnly": true,
+  "IsReady": true,
+  "rootWidth": 1078.4000244140625,
+  "rootHeight": 606.4000244140625,
+  "footerTop": 524.7999877929688,
+  "footerBottom": 560.7999877929688,
+  "footerVisible": true,
+  "internalFormCollapsed": true,
+  "resultText": "Aluminio \u00B7 PRUEBA VISUAL \u00B7 999 \u00B5g/mL",
+  "resultBalance": "Inicial: 100 mL\nDisponible: 100 mL \u00B7 100 %",
+  "request": {
+    "RequestId": "f07bea1c-0c4f-4731-879f-421b3e14fe6b",
+    "ExistingMaterialId": null,
+    "MaterialVersion": null,
+    "NewMaterial": {
+      "Name": "Aluminio \u00B7 PRUEBA VISUAL",
+      "CasNumber": null,
+      "CatalogNumber": null,
+      "MethodId": 1,
+      "PurityPercent": null,
+      "Lot": "LOTE-VISUAL",
+      "Brand": "Fabricante de prueba",
+      "ReceivedDate": "2026-10-19",
+      "ExpirationDate": "2027-10-19",
+      "PresentationQuantity": 100,
+      "UnitId": 3,
+      "PackageCount": 1,
+      "StorageTemperature": "Ambiente",
+      "LocationId": 1,
+      "Presentation": "CommercialSolution",
+      "Commercial": {
+        "Reference": "",
+        "Matrix": "",
+        "Traceability": null,
+        "NominalConcentration": null,
+        "NominalUnit": null,
+        "CoverageFactor": null,
+        "OpenedDate": null,
+        "UseAfterOpeningMonths": null,
+        "Components": [
+          {
+            "Id": "8b5f6432-cd96-4353-8afd-fa0b5a2fd7c7",
+            "Name": "Aluminio \u00B7 PRUEBA VISUAL",
+            "CasNumber": null,
+            "CertifiedConcentration": 999,
+            "ConcentrationUnit": "\u00B5g/mL",
+            "ExpandedUncertainty": null,
+            "PurityPercent": null,
+            "Lot": null,
+            "AdditionalData": null
+          }
+        ],
+        "OtherExpressions": [],
+        "UseAfterOpeningDays": null,
+        "UseNominalConcentration": false,
+        "MatrixSolventId": null
+      }
+    }
+  }
+}

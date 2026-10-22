@@ -18,63 +18,44 @@ public sealed partial class StockViewModel(IStockApiClient api, ISessionService 
     private int _listRevision;
     private Guid _requestId = Guid.NewGuid();
     private CreateStockRequest? _pendingRequest;
-    public ObservableCollection<SolventOption> SolventCatalog { get; } = [];
-    public ObservableCollection<StockSolventRow> SolventRows { get; } = [];
+    private SolventCompositionViewModel? _composition;
+    public SolventCompositionViewModel Composition => _composition ??= CreateComposition();
+    private SolventCompositionViewModel CreateComposition()
+    {
+        var draft = new SolventCompositionViewModel();
+        draft.PropertyChanged += (_, _) =>
+        {
+            _pendingRequest = null; _requestId = Guid.NewGuid();
+            foreach (var property in new[] { nameof(IsSolventCatalogReady), nameof(SolventCatalogMessage), nameof(CompositionError), nameof(CompositionTotalDisplay), nameof(CompositionSummary), nameof(CompositionDetails) }) OnPropertyChanged(property);
+            NotifyActions();
+        };
+        return draft;
+    }
+    public ObservableCollection<SolventOption> SolventCatalog => Composition.Catalog;
+    public ObservableCollection<StockSolventRow> SolventRows => Composition.Rows;
     [ObservableProperty] public partial string Compound { get; set; } = string.Empty;
-    [ObservableProperty] public partial bool IsSolventCatalogReady { get; set; }
-    partial void OnIsSolventCatalogReadyChanged(bool value) => NotifyActions();
-    [ObservableProperty] public partial string SolventCatalogMessage { get; set; } = string.Empty;
-    public StockSolventRow AddSolvent()
-    {
-        var row = new StockSolventRow();
-        row.PropertyChanged += OnSolventChanged;
-        SolventRows.Add(row);
-        CompositionChanged();
-        return row;
-    }
-    public void RemoveSolvent(StockSolventRow row)
-    {
-        row.PropertyChanged -= OnSolventChanged;
-        SolventRows.Remove(row);
-        CompositionChanged();
-    }
-    public IReadOnlyList<StockSolventInput> CompositionInputs => SolventRows.Select(r => new StockSolventInput(
-        r.SelectedSolvent?.Id ?? 0, r.TryPercent(out var percent) ? percent : 0)).ToArray();
-    public IReadOnlyList<StockSolventDetail> CompositionDetails => SolventRows.Select((r, i) => new StockSolventDetail(
-        r.SelectedSolvent?.Id ?? 0, r.SelectedSolvent?.Name ?? "Sin seleccionar", r.SelectedSolvent?.Abbreviation ?? "?",
-        r.TryPercent(out var percent) && percent is >= 0 and <= 100 ? percent : 0, i)).ToArray();
-    public string? CompositionError => SolventRows.Any(r => !r.TryPercent(out _))
-        ? "Complete las proporciones con hasta cuatro decimales."
-        : StockSolventComposition.Validate(CompositionInputs, StockSolventComposition.Basis);
-    public decimal CompositionTotal => CompositionDetails.Sum(r => r.Percent);
-    public string CompositionTotalDisplay => $"Proporción total: {StockSolventComposition.Percent(CompositionTotal)} %";
-    public string CompositionSummary => StockSolventComposition.Summary(CompositionDetails);
-    private void OnSolventChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs args) => CompositionChanged();
-    private void CompositionChanged()
-    {
-        _pendingRequest = null; _requestId = Guid.NewGuid();
-        foreach (var property in new[] { nameof(CompositionError), nameof(CompositionTotalDisplay), nameof(CompositionSummary), nameof(CompositionDetails) }) OnPropertyChanged(property);
-        NotifyActions();
-    }
+    public bool IsSolventCatalogReady => Composition.IsReady;
+    public string SolventCatalogMessage => Composition.CatalogMessage;
+    public StockSolventRow AddSolvent() => Composition.Add();
+    public void RemoveSolvent(StockSolventRow row) => Composition.Remove(row);
+    public IReadOnlyList<StockSolventInput> CompositionInputs => Composition.Inputs;
+    public IReadOnlyList<StockSolventDetail> CompositionDetails => Composition.Details;
+    public string? CompositionError => Composition.Error;
+    public decimal CompositionTotal => Composition.Total;
+    public string CompositionTotalDisplay => Composition.TotalDisplay;
+    public string CompositionSummary => Composition.Summary;
     public async Task LoadSolventsAsync(CancellationToken cancellationToken)
     {
         if (!CanCreate) return;
-        IsSolventCatalogReady = false;
-        SolventCatalogMessage = "Cargando catálogo de solventes…";
+        Composition.Loading();
         try
         {
             var result = await api.SolventsAsync(null, cancellationToken).ConfigureAwait(true);
-            if (!result.IsSuccess || result.Value is null)
-            { SolventCatalogMessage = "No se pudo cargar el catálogo de solventes. Reintente o verifique la actualización del servidor."; return; }
-            var selections = SolventRows.Select(r => (Row: r, Id: r.SelectedSolvent?.Id)).ToArray();
-            Replace(SolventCatalog, result.Value.Where(s => s.IsActive));
-            foreach (var selected in selections) selected.Row.SelectedSolvent = SolventCatalog.FirstOrDefault(s => s.Id == selected.Id);
-            IsSolventCatalogReady = SolventCatalog.Count > 0;
-            SolventCatalogMessage = SolventCatalog.Count == 0 ? "No hay solventes activos en el catálogo." : string.Empty;
+            if (!result.IsSuccess) { Composition.Fail("No se pudo cargar el catálogo persistente de solventes. Reintente o verifique la API."); return; }
+            Composition.SetCatalog(result.Value);
         }
-        catch (HttpRequestException) { SolventCatalogMessage = "No se pudo conectar para consultar los solventes. Reintente."; }
-        catch (OperationCanceledException) { SolventCatalogMessage = "La consulta de solventes se canceló. Reintente."; }
-        finally { NotifyActions(); }
+        catch (HttpRequestException) { Composition.Fail("No se pudo conectar para consultar los solventes. Reintente."); }
+        catch (OperationCanceledException) { Composition.Fail("La consulta de solventes se canceló. Reintente."); }
     }
     public ObservableCollection<StockSource> Sources { get; } = [];
     public ObservableCollection<StockSummary> Items { get; } = [];

@@ -17,7 +17,7 @@ internal sealed class FixtureStockApi : IStockApiClient
     public Func<IEnumerable<StockSummary>>? CommercialRows { get; set; }
     public string Scene { get; set; } = "Default";
     public int CreateCalls { get; private set; }
-    public Task<ApiCallResult<IReadOnlyList<SolventOption>>> SolventsAsync(string? search, CancellationToken cancellationToken) => Task.FromResult(Ok<IReadOnlyList<SolventOption>>(
+    public Task<ApiCallResult<IReadOnlyList<SolventOption>>> SolventsAsync(string? search, CancellationToken cancellationToken) => PersistentPreparationValidation.Enabled ? PersistentPreparationValidation.CatalogAsync(search, cancellationToken) : Task.FromResult(Ok<IReadOnlyList<SolventOption>>(
         [new(4, "Metanol", "MeOH", true, 3), new(3, "Acetonitrilo", "ACN", true, 2), new(8, "Agua", "H2O", true, 7)]));
     public Task<ApiCallResult<StockOptions>> OptionsAsync(CancellationToken cancellationToken) => Task.FromResult(Ok(new StockOptions(["mg/L", "g/L", "µg/L", "µg/mL"], ["mL", "L"])));
     public Task<ApiCallResult<StockSourcePage>> SourcesAsync(string? search, int page, CancellationToken cancellationToken) => Task.FromResult(Ok(new StockSourcePage([Snapshot()], page, 25, 1)));

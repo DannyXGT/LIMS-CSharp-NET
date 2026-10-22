@@ -7,7 +7,7 @@ using Lims.Domain.ReferencePreparations;
 using Microsoft.EntityFrameworkCore;
 
 namespace Lims.Infrastructure.Persistence;
-public sealed class DashboardRepository(LimsDbContext db, IPermissionRepository permissions, DashboardOptions options, TimeProvider clock) : IDashboardRepository
+public sealed class DashboardRepository(LimsDbContext db, IPermissionRepository permissions, DashboardOptions options, TimeProvider clock, Lims.Infrastructure.Alerts.AlertDashboard? alerts = null) : IDashboardRepository
 {
     public async Task<DashboardResponse?> GetAsync(int userId, CancellationToken ct)
     {
@@ -17,8 +17,12 @@ public sealed class DashboardRepository(LimsDbContext db, IPermissionRepository 
         if (identity is null || effective is null) return null;
         var access = DashboardSelection.Resolve(effective.Role, identity.Department, effective.Permissions, options);
         var now = clock.GetUtcNow();
+        var central = alerts is null ? null : await alerts.GetAsync(userId, ct);
+        var centralEnabled = central is not null;
+        var criticalFactor = central is null ? .25m : central.CriticalPercent / 100;
+        var lowFactor = central is null ? .60m : central.LowPercent / 100;
         var today = DateOnly.FromDateTime(now.ToOffset(TimeSpan.FromHours(-6)).DateTime);
-        var window = options.ExpirationWindowDays is > 0 and <= 3660 ? options.ExpirationWindowDays : null;
+        var window = central?.ExpirationWindowDays ?? (options.ExpirationWindowDays is > 0 and <= 3660 ? options.ExpirationWindowDays : null);
         var until = today.AddDays(window ?? 0);
         DashboardStandards? standards = null;
         DashboardPreparations? stock = null, intermediate = null;
@@ -49,8 +53,8 @@ public sealed class DashboardRepository(LimsDbContext db, IPermissionRepository 
                 .Select(g => new { Status = g.Key, Count = g.Count() }).ToArrayAsync(ct);
             var states = counts.OrderBy(c => c.Status).Select(c => new DashboardState(c.Status.ToString(), c.Count)).ToArray();
             standards = new(counts.Sum(c => c.Count), counts.Where(c => c.Status == ReferenceMaterialStatus.Active).Sum(c => c.Count),
-                await usable.CountAsync(m => m.PresentationQuantity > 0 && m.PackageCount > 0 && m.AvailableQuantity < m.PresentationQuantity * m.PackageCount * .25m, ct),
-                await usable.CountAsync(m => m.PresentationQuantity > 0 && m.PackageCount > 0 && m.AvailableQuantity <= m.PresentationQuantity * m.PackageCount * .60m, ct),
+                await usable.CountAsync(m => m.PresentationQuantity > 0 && m.PackageCount > 0 && (centralEnabled ? m.AvailableQuantity <= m.PresentationQuantity * m.PackageCount * criticalFactor : m.AvailableQuantity < m.PresentationQuantity * m.PackageCount * criticalFactor), ct),
+                await usable.CountAsync(m => m.PresentationQuantity > 0 && m.PackageCount > 0 && m.AvailableQuantity <= m.PresentationQuantity * m.PackageCount * lowFactor, ct),
                 window is null ? null : await usable.CountAsync(m => m.ExpirationDate <= until, ct),
                 counts.Where(c => c.Status == ReferenceMaterialStatus.Expired).Sum(c => c.Count), states);
             if (access.Standards)
@@ -60,7 +64,7 @@ public sealed class DashboardRepository(LimsDbContext db, IPermissionRepository 
                         Percent = m.PresentationQuantity > 0 && m.PackageCount > 0 && m.AvailableQuantity <= m.PresentationQuantity * m.PackageCount ? (decimal?)(m.AvailableQuantity / (m.PresentationQuantity * m.PackageCount) * 100) : null }).ToArrayAsync(ct);
                 expiry.AddRange(rows.Select(m => new DashboardMaterial(m.Id, "Standard", m.Name, m.Lot, m.Method, m.ExpirationDate, m.ExpirationDate.DayNumber - today.DayNumber, m.Percent)));
             }
-            var lowRows = await usable.Where(m => m.PresentationQuantity > 0 && m.PackageCount > 0 && m.AvailableQuantity <= m.PresentationQuantity * m.PackageCount * .60m)
+            var lowRows = await usable.Where(m => m.PresentationQuantity > 0 && m.PackageCount > 0 && m.AvailableQuantity <= m.PresentationQuantity * m.PackageCount * lowFactor)
                 .OrderBy(m => m.AvailableQuantity / (m.PresentationQuantity * m.PackageCount)).ThenBy(m => m.Id).Take(6)
                 .Select(m => new { m.Id, m.Name, m.Lot, Method = m.Method.Name, m.ExpirationDate, Percent = m.AvailableQuantity / (m.PresentationQuantity * m.PackageCount) * 100 }).ToArrayAsync(ct);
             low.AddRange(lowRows.Select(m => new DashboardMaterial(m.Id, "Standard", m.Name, m.Lot, m.Method, m.ExpirationDate, m.ExpirationDate.DayNumber - today.DayNumber, m.Percent)));
@@ -78,8 +82,8 @@ public sealed class DashboardRepository(LimsDbContext db, IPermissionRepository 
             var usable = all.Where(p => p.Status == "Active" && p.AvailableVolume > 0 && p.ExpirationDate >= today && p.PreparationDate <= today &&
                 p.MethodId != null && db.ReferenceMethods.Any(m => m.Id == p.MethodId && m.IsActive) && (p.Kind == "Intermedia" || p.SourceMaterial != null && p.SourceMaterial.Status == ReferenceMaterialStatus.Active));
             var validBalance = usable.Where(p => p.FinalVolume > 0 && (p.FinalVolumeUnit == "mL" || p.FinalVolumeUnit == "L") && p.AvailableVolume <= p.FinalVolume);
-            var summary = new DashboardPreparations(await usable.CountAsync(ct), await validBalance.CountAsync(p => p.AvailableVolume < p.FinalVolume * .25m, ct),
-                await validBalance.CountAsync(p => p.AvailableVolume <= p.FinalVolume * .60m, ct), window is null ? null : await usable.CountAsync(p => p.ExpirationDate <= until, ct),
+            var summary = new DashboardPreparations(await usable.CountAsync(ct), await validBalance.CountAsync(p => centralEnabled ? p.AvailableVolume <= p.FinalVolume * criticalFactor : p.AvailableVolume < p.FinalVolume * criticalFactor, ct),
+                await validBalance.CountAsync(p => p.AvailableVolume <= p.FinalVolume * lowFactor, ct), window is null ? null : await usable.CountAsync(p => p.ExpirationDate <= until, ct),
                 await all.CountAsync(p => p.Status == "Active" && p.ExpirationDate < today, ct));
             if (kind == "Stock") stock = summary; else intermediate = summary;
             if (!access.Standards)
@@ -107,7 +111,7 @@ public sealed class DashboardRepository(LimsDbContext db, IPermissionRepository 
                         Percent = p.FinalVolume > 0 && (p.FinalVolumeUnit == "mL" || p.FinalVolumeUnit == "L") && p.AvailableVolume <= p.FinalVolume ? (decimal?)(p.AvailableVolume / p.FinalVolume * 100) : null }).ToArrayAsync(ct);
                 expiry.AddRange(rows.Select(p => new DashboardMaterial(p.Id, kind, p.Name, p.Lot, p.Method, p.ExpirationDate, p.ExpirationDate.DayNumber - today.DayNumber, p.Percent)));
             }
-            var lowRows = await validBalance.Where(p => p.AvailableVolume <= p.FinalVolume * .60m).OrderBy(p => p.AvailableVolume / p.FinalVolume).ThenBy(p => p.Id).Take(6)
+            var lowRows = await validBalance.Where(p => p.AvailableVolume <= p.FinalVolume * lowFactor).OrderBy(p => p.AvailableVolume / p.FinalVolume).ThenBy(p => p.Id).Take(6)
                 .Select(p => new { p.Id, p.Name, Lot = p.Kind == "Stock" ? p.SourceLot : p.Code, Method = p.SourceMethod, p.ExpirationDate, Percent = p.AvailableVolume / p.FinalVolume * 100 }).ToArrayAsync(ct);
             low.AddRange(lowRows.Select(p => new DashboardMaterial(p.Id, kind, p.Name, p.Lot, p.Method, p.ExpirationDate, p.ExpirationDate.DayNumber - today.DayNumber, p.Percent)));
             activity.AddRange(await all.OrderByDescending(p => p.CreatedAt).ThenBy(p => p.Id).Take(6)
@@ -122,8 +126,8 @@ public sealed class DashboardRepository(LimsDbContext db, IPermissionRepository 
                         valid == 0 ? null : g.Sum(m => (m.AverageAvailabilityPercent ?? 0) * m.AvailabilityCount) / valid);
                 }).ToArray());
         return new(access.View, identity.Name, effective.Role, identity.Department, now, window, effective.Permissions, standards, stock, intermediate,
-            expiry.Where(p => !access.Standards || p.Kind == "Standard").OrderBy(p => p.ExpirationDate).ThenBy(p => p.Id).Take(6).ToArray(), low.OrderBy(p => p.AvailabilityPercent).ThenBy(p => p.Id).Take(6).ToArray(),
-            activity.OrderByDescending(a => a.At).ThenBy(a => a.RecordId).Take(6).ToArray(), methodStatistics);
+            central?.Expirations ?? expiry.Where(p => !access.Standards || p.Kind == "Standard").OrderBy(p => p.ExpirationDate).ThenBy(p => p.Id).Take(6).ToArray(), central?.LowAvailability ?? low.OrderBy(p => p.AvailabilityPercent).ThenBy(p => p.Id).Take(6).ToArray(),
+            activity.OrderByDescending(a => a.At).ThenBy(a => a.RecordId).Take(6).ToArray(), methodStatistics, central);
     }
     private sealed class MethodMeasure
     {

@@ -53,6 +53,13 @@ public static class LimsIconCatalog
         LimsIconKind.Documentation or LimsIconKind.ViewDetail => "\uE8A5", // Document
         LimsIconKind.Edit => "\uE70F",
         LimsIconKind.Save => "\uE74E",
+        LimsIconKind.Add => "\uE710",
+        LimsIconKind.Refresh => "\uE72C",
+        LimsIconKind.Mail => "\uE715",
+        LimsIconKind.Check => "\uE73E",
+        LimsIconKind.Import => "\uE898",
+        LimsIconKind.Maximize => "\uE740",
+        LimsIconKind.Restore => "\uE73F",
         LimsIconKind.Cancel => "\uE711",
         LimsIconKind.Delete => "\uE74D",
         LimsIconKind.Search => "\uE721",

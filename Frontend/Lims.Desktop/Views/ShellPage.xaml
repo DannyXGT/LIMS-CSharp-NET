@@ -30,6 +30,7 @@
             <NavigationViewItemHeader x:Name="MaterialsGroup" Content="MATERIALES DE REFERENCIA" />
             <NavigationViewItem x:Name="StandardsItem" Icon="Library" Content="Estándares" AutomationProperties.Name="Estándares" ToolTipService.ToolTip="Estándares" IsEnabled="{x:Bind ViewModel.CanViewReferenceMaterials, Mode=OneWay}" Tag="standards"></NavigationViewItem>
             <NavigationViewItem x:Name="PreparationsItem" design:LimsIcon.NavigationIcon="Preparations" Content="Preparaciones" AutomationProperties.Name="Preparaciones" ToolTipService.ToolTip="Preparaciones" IsEnabled="{x:Bind ViewModel.CanViewReferenceMaterials, Mode=OneWay}" Tag="preparations" />
+            <NavigationViewItem x:Name="AlertsItem" design:LimsIcon.NavigationIcon="Alerts" Content="Alertas" Tag="alerts" AutomationProperties.Name="Alertas" ToolTipService.ToolTip="Alertas y Notificaciones" Visibility="Collapsed" />
             <NavigationViewItemHeader x:Name="AdministrationGroup" Content="ADMINISTRACIÓN" Visibility="Collapsed" />
             <NavigationViewItem x:Name="PermissionsItem" design:LimsIcon.NavigationIcon="Administration" Content="Gestión de permisos" Tag="permissions" AutomationProperties.Name="Gestión de permisos" ToolTipService.ToolTip="Gestión de permisos" Visibility="Collapsed" />
         </NavigationView.MenuItems>
@@ -86,6 +87,7 @@
             </InfoBar>
             <TextBlock Grid.Row="1" x:Name="DeniedPanel" Text="Acceso denegado. No tiene permiso para consultar esta pantalla." Style="{StaticResource LimsBodyStyle}" Visibility="Collapsed" />
             <ContentControl Grid.Row="1" x:Name="PermissionsHost" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" Visibility="Collapsed" />
+            <ContentControl Grid.Row="1" x:Name="AlertsHost" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" Visibility="Collapsed" />
             <ContentControl Grid.Row="1" x:Name="HomePanel" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" />
             <ContentControl
                 Grid.Row="1" x:Name="PreparationsHost"

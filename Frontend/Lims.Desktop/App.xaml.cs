@@ -61,6 +61,9 @@ public partial class App : Application
         builder.Services.AddSingleton<IDashboardApiClient, DashboardApiClient>();
         builder.Services.AddSingleton<DashboardViewModel>();
         builder.Services.AddSingleton<DashboardPage>();
+        builder.Services.AddSingleton<IAlertsApiClient, AlertsApiClient>();
+        builder.Services.AddSingleton<WindowsAlertNotifications>();
+        builder.Services.AddSingleton<AlertsWorkspace>();
         builder.Services.AddSingleton<IPermissionsApiClient, PermissionsApiClient>();
         builder.Services.AddSingleton<PermissionsViewModel>();
         builder.Services.AddSingleton<PermissionsPage>();

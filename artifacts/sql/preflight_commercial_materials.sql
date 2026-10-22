@@ -26,7 +26,7 @@ SELECT n.nspname AS actual_schema, c.relname AS table_name,
 FROM pg_catalog.pg_constraint k
 JOIN pg_catalog.pg_class c ON c.oid = k.conrelid
 JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
-WHERE k.conname IN ('ck_reference_components_source', 'ck_reference_materials_purity',
+WHERE k.conname IN ('ck_reference_components_source', 'ck_reference_materials_purity', 'ck_reference_materials_presentation',
     'ck_reference_material_movements_kind', 'ck_reference_preparations_kind_status')
 ORDER BY c.relname, n.nspname, k.conname;
 

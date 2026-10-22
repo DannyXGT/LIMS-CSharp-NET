@@ -13,7 +13,8 @@ public sealed partial class PreparationsPage : Page
     private bool ShowIntermediate => PreparationTabs.SelectedIndex == 1;
     private SolutionGroupPage? Group => PreparationTabs.SelectedIndex switch { 2 => _curve, 3 => _aqs, _ => null };
     public string CreateLabel => PreparationTabs.SelectedIndex switch { 1 => "Nueva Intermedia", 2 => "Nueva Curva", 3 => "Nuevo AQS", _ => "Nuevo Stock" };
-    public bool CanCreate => PreparationTabs.SelectedIndex switch { 1 => _intermediate.ViewModel.CanCreate, 2 or 3 => Group?.ViewModel.CanCreate == true, _ => _stock.ViewModel.CanCreate };
+    public bool IsCommercialWorkspaceOpen => ShowIntermediate && _intermediate.IsCommercialWorkspaceOpen;
+    public bool CanCreate => !IsCommercialWorkspaceOpen && ( PreparationTabs.SelectedIndex switch { 1 => _intermediate.ViewModel.CanCreate, 2 or 3 => Group?.ViewModel.CanCreate == true, _ => _stock.ViewModel.CanCreate });
     public event EventHandler? SelectionChanged;
     public PreparationsPage(StockPage stock, IntermediatePage intermediate, SolutionGroupPage? curve = null, SolutionGroupPage? aqs = null)
     {

@@ -33,4 +33,19 @@ public sealed class CommercialCertificateTests
         Assert.Throws<ArgumentException>(() => CommercialMaterials.Apply(bottle, Certificate with { UseAfterOpeningMonths = 15 }, 42, Now));
         Assert.Throws<ArgumentException>(() => CommercialMaterials.Apply(bottle, Certificate with { UseAfterOpeningDays = 0 }, 42, Now));
     }
+    [Fact]
+    public void NominalSelectionPreservesCertificateAndChangesOnlyConcentrationUsed()
+    {
+        var bottle = Bottle(new(2027, 10, 20));
+        CommercialMaterials.Apply(bottle, Certificate with { UseNominalConcentration = true }, 42, Now);
+        var saved = CommercialMaterials.Certificate(bottle)!;
+        Assert.True(saved.UseNominalConcentration);
+        Assert.Equal(999, saved.Components[0].CertifiedConcentration);
+        Assert.Equal(1000, Assert.Single(CommercialMaterials.Source(bottle).Analytes).Concentration);
+        Assert.Null(Assert.Single(CommercialMaterials.Source(bottle).Analytes).ExpandedUncertainty);
+        Assert.Equal(999, Assert.Single((saved with { UseNominalConcentration = false }).ComponentsForUse()).CertifiedConcentration);
+        Assert.Throws<ArgumentException>(() => CommercialMaterials.Apply(bottle, Certificate with { UseNominalConcentration = true, NominalConcentration = null }, 42, Now));
+        Assert.Throws<ArgumentException>(() => CommercialMaterials.Apply(bottle, Certificate with { UseNominalConcentration = true, NominalUnit = "ppm" }, 42, Now));
+    }
+
 }

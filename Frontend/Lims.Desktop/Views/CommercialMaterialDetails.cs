@@ -1,5 +1,6 @@
 using System.Globalization;
 using Lims.Contracts.ReferenceMaterials;
+using Lims.Contracts.ReferencePreparations;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 
@@ -7,7 +8,7 @@ namespace Lims.Desktop.Views;
 
 internal static class CommercialMaterialDetails
 {
-    public static FrameworkElement Build(ReferenceMaterialDetail material)
+    public static FrameworkElement Build(ReferenceMaterialDetail material, bool operational = false)
     {
         var panel = new StackPanel { Spacing = 10 };
         if (material.Commercial is not { } certificate) return panel;
@@ -19,8 +20,16 @@ internal static class CommercialMaterialDetails
         if ((certificate.UseAfterOpeningMonths.HasValue || certificate.UseAfterOpeningDays.HasValue) && !certificate.OpenedDate.HasValue)
             metadata.Children.Add(Text("Falta registrar la apertura para habilitar el uso de este frasco."));
         foreach (var e in certificate.OtherExpressions ?? []) metadata.Children.Add(Text($"Otra expresión certificada: {e.Value:G29} ± {e.ExpandedUncertainty?.ToString("G29", CultureInfo.CurrentCulture) ?? "no documentada"} {e.Unit}"));
-        panel.Children.Add(new Expander { Header = "Datos del fabricante (opcional)", Content = metadata, HorizontalAlignment = HorizontalAlignment.Stretch, HorizontalContentAlignment = HorizontalAlignment.Stretch });
-        panel.Children.Add(Text("COMPONENTES CERTIFICADOS", true));
+        if (!operational) panel.Children.Add(new Expander { Header = "Datos del fabricante (opcional)", Content = metadata, HorizontalAlignment = HorizontalAlignment.Stretch, HorizontalContentAlignment = HorizontalAlignment.Stretch });
+        if (certificate.SolventDetails is { Count: > 0 } solvents)
+        {
+            panel.Children.Add(Text("SOLVENTE / MATRIZ", true));
+            panel.Children.Add(Text(StockSolventComposition.Summary(solvents)));
+            var bar = new Grid { Height = 12, ColumnSpacing = 2 }; var legend = Text("");
+            StockCompositionVisual.Render(bar, legend, solvents); panel.Children.Add(bar); panel.Children.Add(legend);
+        }
+        else if (operational && !string.IsNullOrWhiteSpace(certificate.Matrix)) panel.Children.Add(Text("Solvente / matriz: " + certificate.Matrix));
+        panel.Children.Add(Text(certificate.Components.Count == 1 ? "COMPUESTO" : $"{certificate.Components.Count} ANALITOS", true));
         var search = new TextBox { PlaceholderText = "Buscar compuesto o CAS", Style = (Style)Application.Current.Resources["LimsCompactTextBoxStyle"] };
         panel.Children.Add(search);
         var rows = new StackPanel { Spacing = 4 };
@@ -29,9 +38,9 @@ internal static class CommercialMaterialDetails
         void Render()
         {
             rows.Children.Clear();
-            rows.Children.Add(Row(["Compuesto", "CAS", "Concentración", "Unidad", "Incertidumbre", "Pureza %"], true));
+            rows.Children.Add(Row(operational ? ["Compuesto", "CAS", "Concentración", "Unidad"] : ["Compuesto", "CAS", "Concentración", "Unidad", "Incertidumbre", "Pureza %"], true));
             foreach (var c in certificate.Components.Where(c => $"{c.Name} {c.CasNumber}".Contains(search.Text.Trim(), StringComparison.OrdinalIgnoreCase)))
-                rows.Children.Add(Row([c.Name, c.CasNumber ?? "—", c.CertifiedConcentration.ToString("G29", CultureInfo.CurrentCulture), c.ConcentrationUnit,
+                rows.Children.Add(Row(operational ? [c.Name, c.CasNumber ?? "—", c.CertifiedConcentration.ToString("G29", CultureInfo.CurrentCulture), c.ConcentrationUnit] : [c.Name, c.CasNumber ?? "—", c.CertifiedConcentration.ToString("G29", CultureInfo.CurrentCulture), c.ConcentrationUnit,
                     c.ExpandedUncertainty?.ToString("G29", CultureInfo.CurrentCulture) ?? "—", c.PurityPercent?.ToString("G29", CultureInfo.CurrentCulture) ?? "—"], false));
         }
         search.TextChanged += (_, _) => Render(); Render();

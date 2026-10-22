@@ -48,6 +48,7 @@ public sealed partial class ShellViewModel(
     public bool CanViewIntermediate => Has(PermissionCatalog.IntermediateView);
     public bool CanViewCurve => Has(PermissionCatalog.CurveView);
     public bool CanViewAqs => Has(PermissionCatalog.AqsView);
+    public bool CanViewAlerts => Has(PermissionCatalog.AlertsView);
     public bool CanViewPreparations => CanViewStock || CanViewIntermediate || CanViewCurve || CanViewAqs;
     private bool Has(string code) => _accessVerified && (IsAdministrator || session.Profile?.Permissions.Contains(code, StringComparer.Ordinal) == true);
     public async Task<bool> RefreshAccessAsync()
@@ -80,6 +81,7 @@ public sealed partial class ShellViewModel(
         OnPropertyChanged(nameof(CanViewIntermediate));
         OnPropertyChanged(nameof(CanViewCurve));
         OnPropertyChanged(nameof(CanViewAqs));
+        OnPropertyChanged(nameof(CanViewAlerts));
         OnPropertyChanged(nameof(CanViewPreparations));
     }
 

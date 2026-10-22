@@ -1,0 +1,125 @@
+{
+  "fixtureOnly": true,
+  "productionDatabaseTouched": false,
+  "build": {
+    "solution": "Lims.sln",
+    "errors": 0,
+    "warnings": 0
+  },
+  "desktopTests": {
+    "total": "139",
+    "executed": "139",
+    "passed": "139",
+    "failed": "0",
+    "error": "0",
+    "timeout": "0",
+    "aborted": "0",
+    "inconclusive": "0",
+    "passedButRunAborted": "0",
+    "notRunnable": "0",
+    "notExecuted": "0",
+    "disconnected": "0",
+    "warning": "0",
+    "completed": "0",
+    "inProgress": "0",
+    "pending": "0"
+  },
+  "visual": {
+    "passed": true,
+    "resolutions": [
+      "1366x768",
+      "1920x1080",
+      "960x768"
+    ],
+    "completedUtc": "2026-10-20T03:14:00.6269465Z",
+    "checks": [
+      "empty",
+      "3 and 20 components",
+      "real Windows clipboard paste",
+      "independent table scroll",
+      "sticky headers",
+      "search",
+      "keyboard arrows Tab Enter",
+      "product and inventory field access",
+      "solvent catalogue",
+      "blank row excluded",
+      "cancel context",
+      "modal origin routes to page",
+      "commercial API save"
+    ],
+    "fixtureOnly": true
+  },
+  "images": [
+    {
+      "file": "empty-1366.png",
+      "width": 1366,
+      "height": 768
+    },
+    {
+      "file": "empty-1920.png",
+      "width": 1920,
+      "height": 1080
+    },
+    {
+      "file": "three-1366.png",
+      "width": 1366,
+      "height": 768
+    },
+    {
+      "file": "three-1920.png",
+      "width": 1920,
+      "height": 1080
+    },
+    {
+      "file": "twenty-1366.png",
+      "width": 1366,
+      "height": 768
+    },
+    {
+      "file": "twenty-1920.png",
+      "width": 1920,
+      "height": 1080
+    },
+    {
+      "file": "scroll-1366.png",
+      "width": 1366,
+      "height": 768
+    },
+    {
+      "file": "scroll-1920.png",
+      "width": 1920,
+      "height": 1080
+    },
+    {
+      "file": "inventory-1366.png",
+      "width": 1366,
+      "height": 768
+    },
+    {
+      "file": "inventory-1920.png",
+      "width": 1920,
+      "height": 1080
+    },
+    {
+      "file": "composition-expiry-1366.png",
+      "width": 1366,
+      "height": 768
+    },
+    {
+      "file": "composition-expiry-1920.png",
+      "width": 1920,
+      "height": 1080
+    },
+    {
+      "file": "narrow-capture-960.png",
+      "width": 960,
+      "height": 768
+    },
+    {
+      "file": "narrow-summary-960.png",
+      "width": 960,
+      "height": 768
+    }
+  ],
+  "registrationRoles": 1
+}

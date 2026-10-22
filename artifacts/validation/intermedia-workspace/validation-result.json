@@ -1,0 +1,25 @@
+﻿{
+    "passed":  true,
+    "resolutions":  [
+                        "1366x768",
+                        "1920x1080",
+                        "960x768"
+                    ],
+    "completedUtc":  "2026-10-20T03:14:00.6269465Z",
+    "checks":  [
+                   "empty",
+                   "3 and 20 components",
+                   "real Windows clipboard paste",
+                   "independent table scroll",
+                   "sticky headers",
+                   "search",
+                   "keyboard arrows Tab Enter",
+                   "product and inventory field access",
+                   "solvent catalogue",
+                   "blank row excluded",
+                   "cancel context",
+                   "modal origin routes to page",
+                   "commercial API save"
+               ],
+    "fixtureOnly":  true
+}

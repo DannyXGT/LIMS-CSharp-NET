@@ -1,0 +1,145 @@
+﻿{
+    "productionModified":  false,
+    "checks":  {
+                   "stockVolume":  100,
+                   "stockConcentration":  999,
+                   "internalFormsCollapsedForCommercial":  true,
+                   "footerVisibleInFourCases":  true,
+                   "mixSingleBalance":  10,
+                   "standardRestored":  true,
+                   "mixComponents":  20
+               },
+    "viewportWindows":  [
+                            "1366x768",
+                            "1920x1080"
+                        ],
+    "captures":  [
+                     {
+                         "sha256":  "E24E9B0FE1036E55FD54FF7E859ACB98E79CC1DB433D0518DC4869425B810E3F",
+                         "file":  "intermedia-1366-components.png"
+                     },
+                     {
+                         "sha256":  "9F63FEA7AC2CDEAE1B53D39707B1667A53E1656605363A750B6FFDE9255AC222",
+                         "file":  "intermedia-1366-detail.png"
+                     },
+                     {
+                         "sha256":  "2B4D0737D88263CCECF14DBE40483C7C4F9C8B6F6B021A54D5D12FDB79640B19",
+                         "file":  "intermedia-1366-form.png"
+                     },
+                     {
+                         "sha256":  "A408FF700F1D10353B23140B5D1FB849F932F9B693327C8721ADBCDBD7D23E6F",
+                         "file":  "intermedia-1366-inventory.png"
+                     },
+                     {
+                         "sha256":  "3EE05A77652C335BF0D38311D430A403ED175F9366C1A51794D03251D2DA7EE0",
+                         "file":  "intermedia-1920-components.png"
+                     },
+                     {
+                         "sha256":  "E91AEE928BB99D8ED2AAE5EC73C8E1A0E615BDDF73484AFA780B9DB463DD93CD",
+                         "file":  "intermedia-1920-detail.png"
+                     },
+                     {
+                         "sha256":  "5869E3D776811560B9BDA16FDB74917B75CB644DB9BE6D1F03135ED3D988BE46",
+                         "file":  "intermedia-1920-form.png"
+                     },
+                     {
+                         "sha256":  "3B5E11C4D9AB76F16688E8C47C77C12CB735FCCE5B97CB42FC072D80D44A9B9D",
+                         "file":  "intermedia-1920-inventory.png"
+                     },
+                     {
+                         "sha256":  "8EC401116B5A196219FA1AAE9EDCE2E375913B4595BA956F2E34DEC9923FEAE7",
+                         "file":  "standard-1366-form.png"
+                     },
+                     {
+                         "sha256":  "8EC401116B5A196219FA1AAE9EDCE2E375913B4595BA956F2E34DEC9923FEAE7",
+                         "file":  "standard-1366-storage.png"
+                     },
+                     {
+                         "sha256":  "B8015A0D7E780894C42F2174E7D6F27801F9504F6DBA4EC19D5D70C1BB96F171",
+                         "file":  "standard-1920-form.png"
+                     },
+                     {
+                         "sha256":  "118B7C966B8E831F949AD47A7EEDCEB9E8DC4DC16DE63DFD41B055BE683E82AE",
+                         "file":  "standard-1920-storage.png"
+                     },
+                     {
+                         "sha256":  "3D44901644EFFF8D627E6AA1BBBE2F815093F7A64D74F3A1F1D34C8BCA51ACF3",
+                         "file":  "stock-1366-components.png"
+                     },
+                     {
+                         "sha256":  "DEB9A4881C4694C8063EBF56FC6FAF152DA475019C1215E6DDEB73BDF94B8046",
+                         "file":  "stock-1366-detail.png"
+                     },
+                     {
+                         "sha256":  "411988243C3285422643BAE6A89D2E39FEF0DAB612DAEEF7A2CC463063C77A0F",
+                         "file":  "stock-1366-form.png"
+                     },
+                     {
+                         "sha256":  "D6E2CF04343D274D65B2BB4CC09C3952BC5282A53A1AB8692E32F165BDC28946",
+                         "file":  "stock-1366-inventory.png"
+                     },
+                     {
+                         "sha256":  "F91995DCC0F098950A6A97DCF5D87A97E1CF008AB05E9B0C0828F41914709D66",
+                         "file":  "stock-1920-components.png"
+                     },
+                     {
+                         "sha256":  "E34A447578DD96A8A3674CB78015D352C37FCC6953A449EB3E52EAB370E2EB23",
+                         "file":  "stock-1920-detail.png"
+                     },
+                     {
+                         "sha256":  "04AD48F317FCED7E58BB712C93168631EDC5C70F4333FDC7581B24A65952404F",
+                         "file":  "stock-1920-form.png"
+                     },
+                     {
+                         "sha256":  "2D74C6B7DF5D211EF58FA6B536A95EA52399AFF22FA9953D0D5EF3BAC60F7B6F",
+                         "file":  "stock-1920-inventory.png"
+                     }
+                 ],
+    "captureCount":  20,
+    "sqlSha256":  "E22F448C26154C4EA2792DEAD573EBDBD43AD3E74E0BE61018809427105BBA0A",
+    "visualPassed":  true,
+    "fixtureOnly":  true,
+    "verifiedAtUtc":  "2026-10-19T23:36:59.4813366Z",
+    "migration":  "20261019232052_AllowCommercialBottleCounts",
+    "harnessSha256":  "6A416E9A0E19A66F5E718D40D786C37C71449996768B6BCCC3345F63A5CDFD08",
+    "tests":  [
+                  {
+                      "passed":  142,
+                      "failed":  0,
+                      "total":  142,
+                      "report":  "artifacts/validation/stock-postgres/results/stock_net10.0_20261019172441.trx"
+                  },
+                  {
+                      "passed":  50,
+                      "failed":  0,
+                      "total":  50,
+                      "report":  "artifacts/validation/stock-postgres/results/stock_net10.0_20261019172612.trx"
+                  },
+                  {
+                      "passed":  131,
+                      "failed":  0,
+                      "total":  131,
+                      "report":  "artifacts/validation/stock-postgres/results/stock_net10.0_20261019173012.trx"
+                  },
+                  {
+                      "passed":  88,
+                      "failed":  0,
+                      "total":  88,
+                      "report":  "artifacts/validation/commercial-fix-20261019/tests/commercial-current.trx"
+                  }
+              ],
+    "testsPassed":  411,
+    "build":  {
+                  "solutionLog":  "artifacts/build-commercial-correction.log",
+                  "harnessLog":  "artifacts/build-commercial-harness.log",
+                  "errors":  0,
+                  "warnings":  0,
+                  "solution":  "Debug x64"
+              },
+    "postgresScope":  "127.0.0.1:55439 / lims_stock_test / isolated schemas",
+    "diagnosticUpdate":  {
+                             "description":  "Prerequisite diagnostics now name missing relations and connection context. sqlSha256 above remains the version validated by the prior PostgreSQL run.",
+                             "currentSqlSha256":  "9850F317108767B1F37FCE4CB66A84C48C3EC9D4CC4844E76BB21E8160A9A393",
+                             "productionModified":  false
+                         }
+}

@@ -12,10 +12,6 @@ namespace Lims.Desktop.Views;
 
 public sealed partial class ReferenceMaterialEditorDialog : ContentDialog
 {
-    private readonly IReadOnlyList<ReferenceUnitOption> _units;
-    private string? _savedBalance;
-    private string Presentation => PresentationSelect.SelectedIndex switch { 1 => MaterialPresentations.Solution, 2 => MaterialPresentations.Mix, _ => MaterialPresentations.Solid };
-    private bool IsCommercial => MaterialPresentations.IsCommercial(Presentation);
     private bool _isSaving;
     private bool _allowImmediateClose;
     private bool _closeAnimationStarted;
@@ -28,14 +24,10 @@ public sealed partial class ReferenceMaterialEditorDialog : ContentDialog
         IReadOnlyList<ReferenceUnitOption> units,
         IReadOnlyList<ReferenceLocationOption> locations)
     {
-        _units = units;
         InitializeComponent();
-        PresentationSelect.ItemsSource = new[] { "Sólido / material individual", "Solución comercial individual", "Mix comercial multicomponente" };
-        PresentationSelect.SelectedIndex = 0;
         foreach (var child in EditorSurface.Children.OfType<FrameworkElement>())
             _formLayout.Add((child, Grid.GetRow(child), Grid.GetColumn(child), Grid.GetColumnSpan(child)));
-        foreach (var field in new LimsPopupField[] { PresentationSelect, MethodBox, UnitCombo, StorageLocationBox, ReceivedDatePicker, ExpirationDatePicker,
-            (LimsDatePicker)CommercialEditor.FindName("OpeningPicker"), (LimsSelect)CommercialEditor.FindName("PeriodUnitSelect") })
+        foreach (var field in new LimsPopupField[] { MethodBox, UnitCombo, StorageLocationBox, ReceivedDatePicker, ExpirationDatePicker })
             field.PopupBoundary = EditorScrollViewer;
         EditorScrollViewer.ViewChanged += (_, _) => LimsPopupField.CloseForRootAfterLayout(this);
         Closed += (_, _) =>
@@ -66,7 +58,8 @@ public sealed partial class ReferenceMaterialEditorDialog : ContentDialog
         IReadOnlyList<ReferenceLocationOption> locations) : this(methods, units, locations)
     {
         Title = "Editar estándar";
-        _savedBalance = detail.AvailableDisplay;
+        if (MaterialPresentations.IsCommercial(detail.Presentation))
+            throw new ArgumentException("Consulte y asocie este producto desde Preparaciones → Stock o Intermedia.", nameof(detail));
         NameBox.Text = ReferenceMaterialPresentation.Optional(detail.Name, string.Empty);
         CasBox.Text = ReferenceMaterialPresentation.Optional(detail.CasNumber, string.Empty);
         CatalogBox.Text = ReferenceMaterialPresentation.Optional(detail.CatalogNumber, string.Empty);
@@ -80,9 +73,6 @@ public sealed partial class ReferenceMaterialEditorDialog : ContentDialog
         PackageCountBox.Text = detail.PackageCount.ToString(CultureInfo.InvariantCulture);
         StorageTemperatureBox.Text = ReferenceMaterialPresentation.Optional(detail.StorageTemperature, string.Empty);
         StorageLocationBox.SelectedItem = locations.FirstOrDefault(location => location.Id == detail.LocationId);
-        PresentationSelect.SelectedIndex = detail.Presentation switch { MaterialPresentations.Solution => 1, MaterialPresentations.Mix => 2, _ => 0 };
-        PresentationSelect.IsEnabled = false;
-        if (detail.Commercial is { } commercial) CommercialEditor.SetData(commercial);
         UnitCombo.SelectedItem = units.FirstOrDefault(unit => unit.Id == detail.UnitId);
     }
 
@@ -95,8 +85,6 @@ public sealed partial class ReferenceMaterialEditorDialog : ContentDialog
     {
         if (isReplacement)
         {
-            _savedBalance = null;
-            CommercialEditor.ClearOpening();
             Title = "Reemplazar estándar";
             _idleSaveText = "Continuar";
             SaveButtonText.Text = _idleSaveText;
@@ -111,9 +99,9 @@ public sealed partial class ReferenceMaterialEditorDialog : ContentDialog
 
     public CreateReferenceMaterialRequest CreateRequest() => new(
         NameBox.Text.Trim(), EmptyToNull(CasBox.Text), EmptyToNull(CatalogBox.Text), SelectedMethodId(),
-        IsCommercial ? null : ReferenceMaterialInput.ParseDecimal(PurityBox.Text), LotBox.Text.Trim(), BrandBox.Text.Trim(), ToDateOnly(ReceivedDatePicker.Date),
+        ReferenceMaterialInput.ParseDecimal(PurityBox.Text), LotBox.Text.Trim(), BrandBox.Text.Trim(), ToDateOnly(ReceivedDatePicker.Date),
         ToDateOnly(ExpirationDatePicker.Date), ReferenceMaterialInput.ParseDecimal(PresentationBox.Text), SelectedUnitId(),
-        ReferenceMaterialInput.ParsePackageCount(PackageCountBox.Text), StorageTemperatureBox.Text.Trim(), SelectedLocationId(), Presentation, IsCommercial ? CommercialEditor.Read() : null);
+        ReferenceMaterialInput.ParsePackageCount(PackageCountBox.Text), StorageTemperatureBox.Text.Trim(), SelectedLocationId());
 
     public UpdateReferenceMaterialRequest UpdateRequest(Guid version)
     {
@@ -262,7 +250,7 @@ public sealed partial class ReferenceMaterialEditorDialog : ContentDialog
         isValid &= SetError(MethodError, SelectedMethodId() > 0, "Seleccione un método.");
         isValid &= SetRequiredError(LotError, LotBox.Text, "El lote es obligatorio.");
         isValid &= SetRequiredError(BrandError, BrandBox.Text, "La marca es obligatoria.");
-        isValid &= IsCommercial || ValidatePurity();
+        isValid &= ValidatePurity();
         isValid &= ValidateDates();
         isValid &= ValidatePresentation();
         isValid &= SetError(UnitError, SelectedUnitId() > 0, "Seleccione una unidad.");
@@ -270,40 +258,7 @@ public sealed partial class ReferenceMaterialEditorDialog : ContentDialog
         isValid &= SetError(StorageLocationError, SelectedLocationId() > 0, "Seleccione una ubicación física.");
         isValid &= SetRequiredError(StorageTemperatureError, StorageTemperatureBox.Text, "La temperatura de almacenamiento es obligatoria.");
         isValid &= ValidateCas();
-        if (IsCommercial)
-        {
-            try { _ = CommercialEditor.Read(); }
-            catch (ArgumentException e) { SaveError.Text = e.Message; SaveError.Visibility = Visibility.Visible; isValid = false; }
-        }
         return isValid;
-    }
-
-    private void OnPresentationChanged(object? sender, EventArgs e)
-    {
-        if (CommercialEditor is null || PurityField is null) return;
-        CommercialEditor.Visibility = IsCommercial ? Visibility.Visible : Visibility.Collapsed;
-        PurityField.Visibility = PackageField.Visibility = IsCommercial ? Visibility.Collapsed : Visibility.Visible;
-        CommercialBalanceField.Visibility = IsCommercial ? Visibility.Visible : Visibility.Collapsed;
-        UpdateBalance();
-        QuantityLabel.Text = IsCommercial ? "Volumen inicial del frasco *" : "Presentación por unidad *";
-        PurityError.Visibility = Visibility.Collapsed;
-        if (IsCommercial) { PackageCountBox.Text = "1"; CommercialEditor.SetPresentation(Presentation == MaterialPresentations.Mix); }
-        UnitCombo.ItemsSource = IsCommercial ? _units.Where(u => u.Symbol is "mL" or "L").ToArray() : _units;
-        UnitCombo.SelectedItem = _units.FirstOrDefault(u => u.Symbol == (IsCommercial ? "mL" : "g"));
-        UpdateBalance();
-        UpdateCommercialExpiration();
-    }
-    private void UpdateCommercialExpiration()
-    {
-        if (CommercialEditor is not null && ExpirationDatePicker.Date is { } date)
-            CommercialEditor.SetExpiration(DateOnly.FromDateTime(date.Date));
-    }
-    private void OnQuantityChanged(object sender, TextChangedEventArgs e) => UpdateBalance();
-    private void UpdateBalance()
-    {
-        if (CommercialBalanceText is null) return;
-        CommercialBalanceText.Text = _savedBalance is { } balance ? $"Saldo guardado: {balance}" :
-            $"Al registrar: {PresentationBox.Text} {(UnitCombo.SelectedItem as ReferenceUnitOption)?.Symbol}. Un único saldo para el frasco.";
     }
 
     private bool ValidatePurity()
@@ -367,7 +322,7 @@ public sealed partial class ReferenceMaterialEditorDialog : ContentDialog
     private void OnPresentationLostFocus(object sender, RoutedEventArgs e) => ValidatePresentation();
     private void OnPackageCountLostFocus(object sender, RoutedEventArgs e) => ValidatePackageCount();
     private void OnCasLostFocus(object sender, RoutedEventArgs e) => ValidateCas();
-    private void OnDateChanged(object? sender, EventArgs args) { ValidateDates(); UpdateCommercialExpiration(); }
+    private void OnDateChanged(object? sender, EventArgs args) { ValidateDates(); }
 
     private void FocusFirstInvalidField()
     {
@@ -402,8 +357,6 @@ public sealed partial class ReferenceMaterialEditorDialog : ContentDialog
             ReceivedDatePicker.IsCalendarOpen = false;
             ExpirationDatePicker.IsCalendarOpen = false;
         }
-        CommercialEditor.IsEnabled = !isSaving;
-        PresentationSelect.IsHitTestVisible = !isSaving;
         SaveButton.IsEnabled = !isSaving;
         CancelButton.IsEnabled = !isSaving;
         SaveProgressRing.IsActive = isSaving;

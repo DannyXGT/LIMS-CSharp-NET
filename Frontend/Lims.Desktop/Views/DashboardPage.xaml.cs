@@ -84,7 +84,7 @@ public sealed partial class DashboardPage : Page
         if (data.Standards is {} availability)
             AnalyticsGrid.Children.Add(AnalyticPanel("Resumen de disponibilidad", "Estándares · distribución sin duplicar materiales",
                 Donut(DashboardAnalytics.Availability(availability), "Total", ActualWidth >= 980 ? 126 : 140), () => Go("standards")));
-        OperationsGrid.Children.Add(AnalyticPanel("Materiales con disponibilidad baja", "Hasta el 60 % · umbral operativo actual",
+        OperationsGrid.Children.Add(AnalyticPanel("Materiales con disponibilidad baja", data.CentralAlerts is { } thresholds ? $"Hasta el {thresholds.LowPercent:0.##} % · motor central" : "Hasta el 60 % · umbral operativo actual",
             LowTable(data.LowAvailability)));
         OperationsGrid.Children.Add(AlertPanel(data));
         Layout();
@@ -97,10 +97,10 @@ public sealed partial class DashboardPage : Page
         {
             _metrics.Add(Metric("Estándares registrados", Number(standards.Registered), $"{Number(standards.Active)} activos y disponibles", LimsIconKind.Standards, "Information",
                 () => Go("standards"), Ratio(standards.Active, standards.Registered), "Activos / registrados"));
-            var critical = standards.Critical + (data.Stock?.Critical ?? 0) + (data.Intermediate?.Critical ?? 0);
+            var critical = data.CentralAlerts?.Summary.Critical ?? standards.Critical + (data.Stock?.Critical ?? 0) + (data.Intermediate?.Critical ?? 0);
             var usable = standards.Active + (data.Stock?.Available ?? 0) + (data.Intermediate?.Available ?? 0);
-            _metrics.Add(Metric("Disponibilidad crítica", Number(critical), "Materiales utilizables · menos del 25 %", LimsIconKind.Alerts, critical > 0 ? "Danger" : "Success",
-                percent: Ratio(critical, usable), detail: "Críticos / utilizables autorizados"));
+            _metrics.Add(Metric("Disponibilidad crítica", Number(critical), data.CentralAlerts is { } central ? $"Hasta el {central.CriticalPercent:0.##} % · incluye agotados" : "Materiales utilizables · menos del 25 %", LimsIconKind.Alerts, critical > 0 ? "Danger" : "Success",
+                data.CentralAlerts is null ? null : () => Go("alerts"), percent: Ratio(critical, data.CentralAlerts?.Summary.Active ?? usable), detail: "Condiciones críticas autorizadas"));
             NextExpiry(data);
             _metrics.Add(Metric("Estándares vencidos", Number(standards.Expired), "Fuera de vigencia", LimsIconKind.Archive, standards.Expired > 0 ? "Danger" : "Success",
                 () => Go("standards", "Expired"), Ratio(standards.Expired, standards.Registered), "Vencidos / registrados"));
@@ -119,7 +119,7 @@ public sealed partial class DashboardPage : Page
         var next = data.Expirations.Count == 0 ? null : data.Expirations[0];
         _metrics.Add(Metric("Próximo vencimiento", next is null ? "—" : next.DaysRemaining == 0 ? "Hoy" : $"{next.DaysRemaining} días",
             next?.Name ?? "Sin vencimientos futuros", LimsIconKind.Calendar, next is null ? "Neutral" : IsSoon(data, next) ? "Warning" : "Information",
-            next is null ? null : () => Go(Module(next.Kind), search: next.Name, id: next.Id),
+            next is null ? null : () => OpenMaterial(next),
             next?.AvailabilityPercent is {} p ? (double)p : null, next is null ? "Consulta actual" : $"Lote {next.Lot} · disponibilidad"));
     }
     private static bool IsSoon(DashboardResponse data, DashboardMaterial material) =>
@@ -129,7 +129,7 @@ public sealed partial class DashboardPage : Page
     private static string Module(string kind) => kind switch { "Stock" => "stock", "Intermedia" => "intermediate", _ => "standards" };
     private void Pending(string title, string description)
     { EmptyPanel.Children.Add(AnalyticPanel(title, "", Text(description, 12, "LimsTextSecondaryBrush"))); EmptyPanel.Visibility = Visibility.Visible; }
-    private Button MaterialLink(DashboardMaterial material) => Action(material.Name, LimsIconKind.ViewDetail, () => Go(Module(material.Kind), search: material.Name, id: material.Id));
+    private Button MaterialLink(DashboardMaterial material) => Action(material.Name, LimsIconKind.ViewDetail, () => OpenMaterial(material));
     private static Grid Balance(DashboardMaterial row)
     {
         var balance = new Grid { ColumnSpacing = 5 };
@@ -165,9 +165,9 @@ public sealed partial class DashboardPage : Page
     {
         if (materials.Count == 0) return EmptyStatus("Sin materiales con disponibilidad baja", "Los saldos consultados no requieren reposición por este indicador.", LimsIconKind.Availability);
         return DataTable(["Nombre", "Lote", "Disponible", "Estado"], [-1.5, -.8, 110, 64], materials.Select(row => new UIElement[]
-        { MaterialName(row), Text(row.Lot, 10, "LimsTextSecondaryBrush"), Balance(row), Badge(row.AvailabilityPercent < 25 ? "Crítico" : "Bajo", row.AvailabilityTone) }), index => OpenMaterial(materials[index]));
+        { MaterialName(row), Text(row.Lot, 10, "LimsTextSecondaryBrush"), Balance(row), Badge((row.AlertLevel is { } level ? level == "Critical" : row.AvailabilityPercent < 25) ? "Crítico" : "Bajo", row.AvailabilityTone) }), index => OpenMaterial(materials[index]));
     }
-    private void OpenMaterial(DashboardMaterial row) => Go(Module(row.Kind), search: row.Name, id: row.Id);
+    private void OpenMaterial(DashboardMaterial row) => Go(row.AlertId is null ? Module(row.Kind) : "alerts", search: row.Name, id: row.AlertId ?? row.Id);
     private static Grid MaterialName(DashboardMaterial row)
     {
         var line = new Grid();
@@ -178,7 +178,7 @@ public sealed partial class DashboardPage : Page
     private Border AlertPanel(DashboardResponse data)
     {
         var content = new StackPanel { Spacing = 3 };
-        var conditions = data.LowAvailability.Select(m => (Material: m, Label: m.AvailabilityPercent < 25 ? "Disponibilidad crítica" : "Disponibilidad baja", Tone: m.AvailabilityTone, Date: m.PercentDisplay))
+        var conditions = data.LowAvailability.Select(m => (Material: m, Label: (m.AlertLevel is { } level ? level == "Critical" : m.AvailabilityPercent < 25) ? "Disponibilidad crítica" : "Disponibilidad baja", Tone: m.AvailabilityTone, Date: m.PercentDisplay))
             .Concat(data.Expirations.Where(m => IsSoon(data, m)).Select(m => (Material: m, Label: m.DaysRemaining == 0 ? "Vence hoy" : "Vencimiento próximo", Tone: "Warning", Date: m.ExpirationDisplay))).ToArray();
         if (conditions.Length > 0)
         {

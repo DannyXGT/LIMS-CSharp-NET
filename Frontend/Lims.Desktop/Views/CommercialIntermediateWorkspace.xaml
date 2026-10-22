@@ -1,0 +1,327 @@
+<UserControl xmlns:vm="using:Lims.Desktop.ViewModels" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:design="using:Lims.DesignSystem.Controls" xmlns:local="using:Lims.Desktop.Views" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" x:Class="Lims.Desktop.Views.CommercialIntermediateWorkspace" Language="es-GT" SizeChanged="OnWorkspaceSizeChanged">
+ <UserControl.Resources>
+  <Thickness x:Key="TextControlHeaderMargin">0,0,0,3</Thickness>
+  <DataTemplate x:Key="PreparationFieldHeader">
+   <TextBlock Text="{Binding}" Style="{StaticResource LimsFormLabelStyle}" />
+  </DataTemplate>
+ </UserControl.Resources>
+ <Grid x:Name="WorkspaceRoot" RowSpacing="10">
+  <Grid.RowDefinitions>
+   <RowDefinition Height="Auto" />
+   <RowDefinition Height="*" />
+   <RowDefinition Height="Auto" />
+  </Grid.RowDefinitions>
+  <Grid RowSpacing="10">
+   <Grid.RowDefinitions>
+    <RowDefinition Height="Auto" />
+    <RowDefinition Height="Auto" />
+   </Grid.RowDefinitions>
+   <local:PreparationEditorHeader x:Name="EditorHeading" Heading="Nueva Intermedia comercial" Description="Solución adquirida · identificación, composición e inventario" />
+   <StackPanel x:Name="HeaderActions" Grid.Row="1" Orientation="Horizontal" Spacing="8">
+    <design:LimsSelect x:Name="EntryModeSelect" Width="230" AutomationProperties.Name="Modalidad del ingreso comercial" SelectionChanged="OnEntryModeChanged" IsEnabled="{x:Bind ViewModel.InputsEnabled, Mode=OneWay}" />
+    <Button design:LimsAction.Icon="ViewDetail" x:Name="SummaryToggle" Visibility="Collapsed" Content="Ver resumen" Click="OnToggleSummary" Style="{StaticResource LimsUtilityActionStyle}" />
+   </StackPanel>
+  </Grid>
+  <Grid Grid.Row="1" x:Name="BodyGrid" ColumnSpacing="14">
+   <Grid.ColumnDefinitions>
+    <ColumnDefinition x:Name="CaptureColumn" Width="7*" />
+    <ColumnDefinition x:Name="SummaryColumn" Width="3*" />
+   </Grid.ColumnDefinitions>
+   <ScrollViewer x:Name="CaptureScroll" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto" ViewChanged="OnCaptureScrolled" IsEnabled="{x:Bind ViewModel.InputsEnabled, Mode=OneWay}">
+    <StackPanel x:Name="CaptureFields" Spacing="12">
+     <StackPanel x:Name="ExistingPanel" Visibility="Collapsed" Spacing="10">
+      <TextBlock Text="Producto comercial ya registrado" Style="{StaticResource LimsSectionTitleStyle}" />
+      <TextBlock Text="Se conserva el mismo material, sus componentes y su saldo físico." Style="{StaticResource LimsCaptionStyle}" TextWrapping="Wrap" />
+      <design:LimsSearchSelect x:Name="ExistingSelect" ItemsSource="{x:Bind ViewModel.ExistingMaterials}" SelectedItem="{x:Bind ViewModel.ExistingMaterial, Mode=TwoWay}" DisplayMemberPath="CommercialSelectionDisplay" PlaceholderText="Seleccione el producto registrado" SearchPlaceholder="Buscar producto" AutomationProperties.Name="Producto comercial existente" />
+      <Grid ColumnSpacing="8">
+       <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="*" />
+        <ColumnDefinition Width="Auto" />
+       </Grid.ColumnDefinitions>
+       <TextBox x:Name="ExistingSearchBox" PlaceholderText="Nombre, catálogo o lote" Style="{StaticResource LimsCompactTextBoxStyle}" AutomationProperties.Name="Buscar otros productos comerciales" />
+       <Button design:LimsAction.Icon="Search" Grid.Column="1" Content="Buscar" Click="OnSearchExisting" Style="{StaticResource LimsUtilityActionStyle}" />
+      </Grid>
+      <TextBlock x:Name="ExistingDescription" TextWrapping="Wrap" Style="{StaticResource LimsCaptionStyle}" />
+      <ItemsControl x:Name="ExistingComponents" />
+     </StackPanel>
+     <StackPanel x:Name="NewFields" Spacing="12">
+      <Expander x:Name="ProductExpander" IsExpanded="True" MinHeight="32" Padding="10,6" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch">
+       <Expander.Header>
+        <Grid ColumnSpacing="12">
+         <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="Auto" />
+          <ColumnDefinition Width="*" />
+         </Grid.ColumnDefinitions>
+         <TextBlock Text="Identificación" FontWeight="SemiBold" />
+         <TextBlock Grid.Column="1" x:Name="ProductCaption" Text="Producto comercial" Style="{StaticResource LimsCaptionStyle}" TextTrimming="CharacterEllipsis" />
+        </Grid>
+       </Expander.Header>
+       <Grid ColumnSpacing="10" RowSpacing="8">
+        <Grid.ColumnDefinitions>
+         <ColumnDefinition Width="*" />
+         <ColumnDefinition Width="*" />
+         <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+         <RowDefinition Height="Auto" />
+         <RowDefinition Height="Auto" />
+         <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <StackPanel Grid.ColumnSpan="2" Spacing="2">
+         <TextBox x:Name="ProductNameBox" Header="Nombre del Mix *" MaxLength="200" Text="{x:Bind ViewModel.Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Tag="Name" LostFocus="OnFieldLostFocus" Style="{StaticResource LimsCompactTextBoxStyle}" AutomationProperties.Name="Nombre del Mix" HeaderTemplate="{StaticResource PreparationFieldHeader}" />
+         <TextBlock x:Name="NameError" Style="{StaticResource LimsInlineErrorStyle}" />
+        </StackPanel>
+        <StackPanel Grid.Column="2" Spacing="2">
+         <TextBlock Text="Método *" Style="{StaticResource LimsFormLabelStyle}" />
+         <design:LimsSearchSelect x:Name="MethodSelect" ItemsSource="{x:Bind ViewModel.Methods}" SelectedItem="{x:Bind ViewModel.Method, Mode=TwoWay}" DisplayMemberPath="Name" PlaceholderText="Método" Tag="Method" LostFocus="OnFieldLostFocus" AutomationProperties.Name="Método del Mix" />
+         <TextBlock x:Name="MethodError" Style="{StaticResource LimsInlineErrorStyle}" />
+        </StackPanel>
+        <StackPanel Grid.Row="1" Spacing="2">
+         <TextBox x:Name="BrandBox" Header="Fabricante *" MaxLength="120" Text="{x:Bind ViewModel.Brand, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Tag="Brand" LostFocus="OnFieldLostFocus" Style="{StaticResource LimsCompactTextBoxStyle}" AutomationProperties.Name="Fabricante del Mix" HeaderTemplate="{StaticResource PreparationFieldHeader}" />
+         <TextBlock x:Name="BrandError" Style="{StaticResource LimsInlineErrorStyle}" />
+        </StackPanel>
+        <StackPanel Grid.Row="1" Grid.Column="1" Spacing="2">
+         <TextBox x:Name="CatalogBox" Header="Número de catálogo" MaxLength="80" Text="{x:Bind ViewModel.Catalog, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Tag="Catalog" LostFocus="OnFieldLostFocus" Style="{StaticResource LimsCompactTextBoxStyle}" AutomationProperties.Name="Catálogo del Mix" HeaderTemplate="{StaticResource PreparationFieldHeader}" PlaceholderText="Opcional" />
+         <TextBlock x:Name="CatalogError" Style="{StaticResource LimsInlineErrorStyle}" />
+        </StackPanel>
+        <StackPanel Grid.Row="1" Grid.Column="2" Spacing="2">
+         <TextBox x:Name="LotBox" Header="Lote *" MaxLength="120" Text="{x:Bind ViewModel.Lot, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Tag="Lot" LostFocus="OnFieldLostFocus" Style="{StaticResource LimsCompactTextBoxStyle}" AutomationProperties.Name="Lote del Mix" HeaderTemplate="{StaticResource PreparationFieldHeader}" />
+         <TextBlock x:Name="LotError" Style="{StaticResource LimsInlineErrorStyle}" />
+        </StackPanel>
+        <Grid Grid.Row="2" Grid.ColumnSpan="3" ColumnSpacing="12">
+         <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="*" />
+          <ColumnDefinition Width="*" />
+         </Grid.ColumnDefinitions>
+         <TextBlock Text="{x:Bind ViewModel.CodeDisplay, Mode=OneWay}" Foreground="{ThemeResource LimsAccentBrush}" ToolTipService.ToolTip="Código de Intermedia generado por el servidor" />
+         <TextBlock Grid.Column="1" x:Name="ResponsibleText" Style="{StaticResource LimsCaptionStyle}" TextTrimming="CharacterEllipsis" />
+        </Grid>
+       </Grid>
+      </Expander>
+      <Border x:Name="ComponentsCard" Padding="12" CornerRadius="8" BorderThickness="1" BorderBrush="{ThemeResource LimsBorderBrush}" Background="{ThemeResource LimsSurfaceBrush}">
+       <Grid RowSpacing="8">
+        <Grid.RowDefinitions>
+         <RowDefinition Height="Auto" />
+         <RowDefinition Height="Auto" />
+         <RowDefinition Height="Auto" />
+         <RowDefinition Height="Auto" />
+         <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <Grid ColumnSpacing="8">
+         <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="*" />
+          <ColumnDefinition Width="Auto" />
+          <ColumnDefinition Width="Auto" />
+         </Grid.ColumnDefinitions>
+         <StackPanel Spacing="1">
+          <TextBlock Text="Componentes del Mix" FontWeight="SemiBold" />
+          <TextBlock x:Name="ValidCountText" Text="{x:Bind ViewModel.CountDisplay, Mode=OneWay}" Foreground="{ThemeResource LimsAccentBrush}" AutomationProperties.LiveSetting="Polite" />
+         </StackPanel>
+         <Button Grid.Column="1" x:Name="AddRowButton" Content="Agregar analito" Click="OnAddRow" Style="{StaticResource LimsAddActionStyle}" AutomationProperties.Name="Agregar componente al Mix" />
+         <Button design:LimsAction.Icon="Import" Grid.Column="2" x:Name="PasteButton" Content="Desde Excel" Click="OnPaste" Style="{StaticResource LimsUtilityActionStyle}" AutomationProperties.Name="Pegar componentes desde Excel" />
+        </Grid>
+        <TextBox Grid.Row="1" x:Name="ComponentSearchBox" PlaceholderText="Buscar analito o CAS en la tabla" TextChanged="OnComponentSearchChanged" Style="{StaticResource LimsCompactTextBoxStyle}" AutomationProperties.Name="Buscar analito o CAS en el Mix" />
+        <ScrollViewer Grid.Row="2" x:Name="TableHorizontal" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" SizeChanged="OnTableWidthChanged">
+         <Grid x:Name="ComponentTable" MinWidth="600">
+          <Grid.RowDefinitions>
+           <RowDefinition Height="Auto" />
+           <RowDefinition Height="*" />
+          </Grid.RowDefinitions>
+          <Grid x:Name="TableHeader" ColumnSpacing="6" Background="{ThemeResource LimsSurfaceSecondaryBrush}">
+           <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="28" />
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="96" />
+            <ColumnDefinition Width="100" />
+            <ColumnDefinition Width="88" />
+            <ColumnDefinition Width="40" />
+           </Grid.ColumnDefinitions>
+           <TextBlock Text="#" Style="{StaticResource LimsCaptionStyle}" />
+           <TextBlock Grid.Column="1" Text="Analito" Style="{StaticResource LimsCaptionStyle}" />
+           <TextBlock Grid.Column="2" Text="CAS" Style="{StaticResource LimsCaptionStyle}" />
+           <TextBlock Grid.Column="3" Text="Concentración" Style="{StaticResource LimsCaptionStyle}" />
+           <TextBlock Grid.Column="4" Text="Unidad" Style="{StaticResource LimsCaptionStyle}" />
+           <TextBlock Grid.Column="5" Text="Acción" Style="{StaticResource LimsCaptionStyle}" />
+          </Grid>
+          <ScrollViewer Grid.Row="1" x:Name="ComponentsScroll" Height="110" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" ViewChanged="OnTableScrolled" AutomationProperties.Name="Tabla editable de analitos">
+           <Grid>
+            <ItemsControl x:Name="ComponentRows" ItemsSource="{x:Bind ViewModel.Rows}">
+             <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="vm:CommercialComponentRow">
+               <Grid ColumnSpacing="6" RowSpacing="2" Loaded="OnRowLoaded" Tag="{x:Bind}" BorderBrush="{ThemeResource LimsBorderBrush}" BorderThickness="0,0,0,1">
+                <Grid.ColumnDefinitions>
+                 <ColumnDefinition Width="28" />
+                 <ColumnDefinition Width="*" />
+                 <ColumnDefinition Width="96" />
+                 <ColumnDefinition Width="100" />
+                 <ColumnDefinition Width="88" />
+                 <ColumnDefinition Width="40" />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                 <RowDefinition Height="Auto" />
+                 <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                <TextBlock Text="{x:Bind Number, Mode=OneWay}" Style="{StaticResource LimsCaptionStyle}" VerticalAlignment="Center" />
+                <TextBox Grid.Column="1" x:Name="AnaltyeName" Text="{x:Bind Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource LimsCompactTextBoxStyle}" MaxLength="200" LostFocus="OnRowLostFocus" AutomationProperties.Name="Nombre del analito" />
+                <TextBox Grid.Column="2" x:Name="AnalyteCas" Text="{x:Bind Cas, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource LimsCompactTextBoxStyle}" MaxLength="80" LostFocus="OnRowLostFocus" AutomationProperties.Name="CAS del analito" />
+                <TextBox Grid.Column="3" x:Name="AnalyteConcentration" Text="{x:Bind Concentration, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource LimsCompactTextBoxStyle}" LostFocus="OnRowLostFocus" AutomationProperties.Name="Concentración del analito" />
+                <design:LimsSelect Grid.Column="4" x:Name="AnalyteUnit" ItemsSource="{x:Bind Units}" SelectedItem="{x:Bind Unit, Mode=TwoWay}" LostFocus="OnRowLostFocus" AutomationProperties.Name="Unidad del analito" />
+                <Button Grid.Column="5" Click="OnRemoveRow" Tag="{x:Bind}" Style="{StaticResource LimsRemoveActionStyle}" AutomationProperties.Name="Quitar analito" ToolTipService.ToolTip="Quitar analito" />
+                <TextBlock Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="5" Text="{x:Bind VisibleError, Mode=OneWay}" Visibility="{x:Bind HasVisibleError, Mode=OneWay}" Foreground="{ThemeResource LimsDangerBrush}" FontSize="11" TextWrapping="Wrap" />
+               </Grid>
+              </DataTemplate>
+             </ItemsControl.ItemTemplate>
+            </ItemsControl>
+            <StackPanel x:Name="TableEmptyState" VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="4" Padding="8">
+             <design:LimsIcon Icon="Preparations" Size="20" HorizontalAlignment="Center" Foreground="{ThemeResource LimsTextSecondaryBrush}" Visibility="Collapsed" />
+             <TextBlock Text="Agregue los analitos del Mix" FontWeight="SemiBold" TextAlignment="Center" />
+             <TextBlock Text="Una fila por analito. También puedes pegar cuatro columnas desde Excel." Style="{StaticResource LimsCaptionStyle}" MaxWidth="450" TextWrapping="Wrap" TextAlignment="Center" />
+            </StackPanel>
+           </Grid>
+          </ScrollViewer>
+         </Grid>
+        </ScrollViewer>
+        <TextBlock Grid.Row="3" x:Name="SearchStatusText" Style="{StaticResource LimsCaptionStyle}" />
+        <TextBlock Grid.Row="4" Text="{x:Bind ViewModel.ImportMessage, Mode=OneWay}" Style="{StaticResource LimsCaptionStyle}" TextWrapping="Wrap" AutomationProperties.LiveSetting="Polite" />
+       </Grid>
+      </Border>
+      <local:SolventCompositionEditor x:Name="CompositionEditor" />
+      <Expander x:Name="InventoryExpander" MinHeight="32" Padding="10,6" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch">
+       <Expander.Header>
+        <Grid ColumnSpacing="12">
+         <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="Auto" />
+          <ColumnDefinition Width="*" />
+         </Grid.ColumnDefinitions>
+         <TextBlock Text="Inventario y almacenamiento" FontWeight="SemiBold" />
+         <TextBlock Grid.Column="1" Text="{x:Bind ViewModel.InitialDisplay, Mode=OneWay}" Style="{StaticResource LimsCaptionStyle}" />
+        </Grid>
+       </Expander.Header>
+       <Grid ColumnSpacing="10" RowSpacing="8">
+        <Grid.ColumnDefinitions>
+         <ColumnDefinition Width="*" />
+         <ColumnDefinition Width="*" />
+         <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+         <RowDefinition Height="Auto" />
+         <RowDefinition Height="Auto" />
+         <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <StackPanel Spacing="2">
+         <TextBox x:Name="VolumeBox" Header="Volumen por frasco *" Text="{x:Bind ViewModel.Volume, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Tag="Volume" LostFocus="OnFieldLostFocus" Style="{StaticResource LimsCompactTextBoxStyle}" AutomationProperties.Name="Volumen por frasco" HeaderTemplate="{StaticResource PreparationFieldHeader}" />
+         <TextBlock x:Name="VolumeError" Style="{StaticResource LimsInlineErrorStyle}" />
+        </StackPanel>
+        <Grid Grid.Column="1" ColumnSpacing="8">
+         <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="*" />
+          <ColumnDefinition Width="*" />
+         </Grid.ColumnDefinitions>
+         <StackPanel Spacing="2">
+          <TextBlock Text="Unidad *" Style="{StaticResource LimsFormLabelStyle}" />
+          <design:LimsSelect x:Name="VolumeUnitSelect" ItemsSource="{x:Bind ViewModel.VolumeUnits}" SelectedItem="{x:Bind ViewModel.VolumeUnit, Mode=TwoWay}" DisplayMemberPath="Symbol" Tag="VolumeUnit" LostFocus="OnFieldLostFocus" AutomationProperties.Name="Unidad de volumen" />
+          <TextBlock x:Name="VolumeUnitError" Style="{StaticResource LimsInlineErrorStyle}" />
+         </StackPanel>
+         <StackPanel Grid.Column="1" Spacing="2">
+          <TextBox x:Name="BottleCountBox" Header="Frascos *" Text="{x:Bind ViewModel.BottleCount, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Tag="BottleCount" LostFocus="OnFieldLostFocus" Style="{StaticResource LimsCompactTextBoxStyle}" AutomationProperties.Name="Número de frascos" HeaderTemplate="{StaticResource PreparationFieldHeader}" />
+          <TextBlock x:Name="BottleCountError" Style="{StaticResource LimsInlineErrorStyle}" />
+         </StackPanel>
+        </Grid>
+        <StackPanel Grid.Row="1" Spacing="2">
+         <TextBlock Text="Ingreso *" Style="{StaticResource LimsFormLabelStyle}" />
+         <design:LimsDatePicker x:Name="ReceivedPicker" Date="{x:Bind ViewModel.ReceivedDate, Mode=TwoWay}" Tag="ReceivedDate" LostFocus="OnFieldLostFocus" AutomationProperties.Name="Fecha de ingreso del Mix" />
+         <TextBlock x:Name="ReceivedDateError" Style="{StaticResource LimsInlineErrorStyle}" />
+        </StackPanel>
+        <StackPanel Grid.Row="1" Grid.Column="1" Spacing="2">
+         <TextBlock Text="Expiración *" Style="{StaticResource LimsFormLabelStyle}" />
+         <design:LimsDatePicker x:Name="ExpirationPicker" Date="{x:Bind ViewModel.ExpirationDate, Mode=TwoWay}" Tag="ExpirationDate" LostFocus="OnFieldLostFocus" AutomationProperties.Name="Fecha de expiración del Mix" />
+         <TextBlock x:Name="ExpirationDateError" Style="{StaticResource LimsInlineErrorStyle}" />
+        </StackPanel>
+        <StackPanel Grid.Row="1" Grid.Column="2" Spacing="2">
+         <TextBlock Text="Ubicación *" Style="{StaticResource LimsFormLabelStyle}" />
+         <design:LimsSelect x:Name="LocationSelect" ItemsSource="{x:Bind ViewModel.Locations}" SelectedItem="{x:Bind ViewModel.Location, Mode=TwoWay}" DisplayMemberPath="Name" Tag="Location" LostFocus="OnFieldLostFocus" AutomationProperties.Name="Ubicación del Mix" />
+         <TextBlock x:Name="LocationError" Style="{StaticResource LimsInlineErrorStyle}" />
+        </StackPanel>
+        <StackPanel Grid.Row="2" Grid.ColumnSpan="3" Spacing="2">
+         <TextBox x:Name="StorageBox" Header="Condiciones de almacenamiento *" MaxLength="160" Text="{x:Bind ViewModel.Storage, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Tag="Storage" LostFocus="OnFieldLostFocus" Style="{StaticResource LimsCompactTextBoxStyle}" AutomationProperties.Name="Condiciones de almacenamiento del Mix" HeaderTemplate="{StaticResource PreparationFieldHeader}" />
+         <TextBlock x:Name="StorageError" Style="{StaticResource LimsInlineErrorStyle}" />
+        </StackPanel>
+       </Grid>
+      </Expander>
+     </StackPanel>
+    </StackPanel>
+   </ScrollViewer>
+   <Border x:Name="SummaryPanel" Grid.Column="1" Padding="14" Background="{ThemeResource LimsSurfaceBrush}" BorderBrush="{ThemeResource LimsBorderBrush}" BorderThickness="1" CornerRadius="8">
+    <ScrollViewer x:Name="SummaryScroll" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+     <StackPanel Spacing="8" Padding="0,0,6,0">
+      <StackPanel Spacing="4">
+       <TextBlock x:Name="SummaryName" Text="{x:Bind ViewModel.ProductDisplay, Mode=OneWay}" FontSize="18" FontWeight="SemiBold" TextWrapping="Wrap" MaxLines="2" />
+       <TextBlock Text="{x:Bind ViewModel.MethodDisplay, Mode=OneWay}" Style="{StaticResource LimsCaptionStyle}" TextWrapping="Wrap" />
+       <TextBlock x:Name="SummaryValidCount" Text="{x:Bind ViewModel.CountDisplay, Mode=OneWay}" Foreground="{ThemeResource LimsAccentBrush}" FontWeight="SemiBold" />
+      </StackPanel>
+      <Border Height="1" Background="{ThemeResource LimsBorderBrush}" />
+      <Grid>
+       <TextBlock Text="COMPOSICIÓN" Style="{StaticResource LimsCaptionStyle}" FontSize="11" />
+       <Button design:LimsAction.Icon="ViewDetail" Content="Ver tabla" Click="OnFocusTable" HorizontalAlignment="Right" Style="{StaticResource LimsUtilityActionStyle}" />
+      </Grid>
+      <TextBlock x:Name="CompositionEmpty" Text="Sin concentraciones registradas" Style="{StaticResource LimsCaptionStyle}" />
+      <ItemsControl x:Name="CompositionPreview" />
+      <TextBlock Text="{x:Bind ViewModel.ComponentStatus, Mode=OneWay}" Style="{StaticResource LimsCaptionStyle}" TextWrapping="Wrap" Visibility="Collapsed" />
+      <TextBlock Text="INVENTARIO FÍSICO" Style="{StaticResource LimsCaptionStyle}" FontSize="11" />
+      <Grid ColumnSpacing="12">
+       <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="44" />
+        <ColumnDefinition Width="*" />
+       </Grid.ColumnDefinitions>
+       <Viewbox Width="38" Height="70">
+        <local:CommercialBottleVisual x:Name="BottleVisual" />
+       </Viewbox>
+       <StackPanel Grid.Column="1" Spacing="3" VerticalAlignment="Center">
+        <TextBlock Text="Disponible" Style="{StaticResource LimsCaptionStyle}" />
+        <TextBlock x:Name="SummaryAvailable" Text="{x:Bind ViewModel.AvailableDisplay, Mode=OneWay}" FontSize="22" FontWeight="SemiBold" Foreground="{ThemeResource LimsAccentBrush}" />
+        <TextBlock Text="{x:Bind ViewModel.BottlesDisplay, Mode=OneWay}" Style="{StaticResource LimsCaptionStyle}" />
+        <TextBlock x:Name="SummaryInitial" Style="{StaticResource LimsCaptionStyle}" TextWrapping="Wrap" />
+       </StackPanel>
+      </Grid>
+      <StackPanel Spacing="5">
+       <design:LimsAvailabilityBar x:Name="AvailabilityBar" Value="{x:Bind ViewModel.AvailabilityPercent, Mode=OneWay}" AutomationProperties.Name="Disponibilidad del inventario del Mix" />
+       <TextBlock Text="{x:Bind ViewModel.AvailabilityDisplay, Mode=OneWay}" FontSize="12" />
+       <TextBlock Text="{x:Bind ViewModel.MaterialStatus, Mode=OneWay}" Style="{StaticResource LimsCaptionStyle}" TextWrapping="Wrap" />
+       <Button design:LimsAction.Icon="Inventory" Content="Completar inventario" Click="OnFocusInventory" Style="{StaticResource LimsUtilityActionStyle}" HorizontalAlignment="Left" />
+      </StackPanel>
+      <Border Height="1" Background="{ThemeResource LimsBorderBrush}" />
+      <Border Height="1" Background="{ThemeResource LimsBorderBrush}" />
+      <Grid ColumnSpacing="8">
+       <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="*" />
+        <ColumnDefinition Width="Auto" />
+       </Grid.ColumnDefinitions>
+       <StackPanel Spacing="4">
+        <TextBlock Text="VIGENCIA" Style="{StaticResource LimsCaptionStyle}" FontSize="11" />
+        <TextBlock Text="{x:Bind ViewModel.ExpirationDisplay, Mode=OneWay}" FontWeight="SemiBold" />
+       </StackPanel>
+       <TextBlock Grid.Column="1" Text="{x:Bind ViewModel.ExpirationStatus, Mode=OneWay}" Style="{StaticResource LimsCaptionStyle}" VerticalAlignment="Bottom" />
+      </Grid>
+     </StackPanel>
+    </ScrollViewer>
+   </Border>
+  </Grid>
+  <Border Grid.Row="2" x:Name="ActionBar" BorderBrush="{ThemeResource LimsBorderBrush}" BorderThickness="0,1,0,0" Padding="0,10,0,0">
+   <Grid ColumnSpacing="10">
+    <Grid.ColumnDefinitions>
+     <ColumnDefinition Width="*" />
+     <ColumnDefinition Width="Auto" />
+     <ColumnDefinition Width="Auto" />
+     <ColumnDefinition Width="Auto" />
+    </Grid.ColumnDefinitions>
+    <StackPanel Spacing="3" VerticalAlignment="Center">
+     <TextBlock x:Name="FooterStatus" Style="{StaticResource LimsCaptionStyle}" TextWrapping="Wrap" />
+     <TextBlock x:Name="SaveMessage" Text="{x:Bind ViewModel.Message, Mode=OneWay}" TextWrapping="Wrap" Foreground="{ThemeResource LimsDangerBrush}" FontSize="12" AutomationProperties.LiveSetting="Polite" />
+    </StackPanel>
+    <Button Grid.Column="1" x:Name="RetryButton" Content="Reintentar catálogos" Click="OnRetry" Style="{StaticResource LimsUtilityActionStyle}" Visibility="Collapsed" />
+    <Button Grid.Column="2" x:Name="CancelButton" Content="Cancelar" Click="OnCancel" IsEnabled="{x:Bind ViewModel.CanCancel, Mode=OneWay}" Style="{StaticResource LimsActionButtonStyle}" />
+    <Button Grid.Column="3" x:Name="SaveButton" Content="{x:Bind ViewModel.SaveLabel, Mode=OneWay}" IsEnabled="{x:Bind ViewModel.CanSave, Mode=OneWay}" Click="OnSave" Style="{StaticResource LimsPrimaryActionStyle}" AutomationProperties.Name="Guardar Intermedia" />
+   </Grid>
+  </Border>
+ </Grid>
+</UserControl>

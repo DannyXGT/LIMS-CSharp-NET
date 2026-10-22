@@ -4,7 +4,7 @@ namespace Lims.Contracts.ReferencePreparations;
 
 public sealed record CommercialPreparationOptions(IReadOnlyList<ReferenceMethodOption> Methods,
     IReadOnlyList<ReferenceUnitOption> Units, IReadOnlyList<ReferenceLocationOption> Locations,
-    IReadOnlyList<ReferenceMaterialDetail> Materials);
+    IReadOnlyList<ReferenceMaterialDetail> Materials, IReadOnlyList<SolventOption>? Solvents = null, bool SupportsSolventComposition = false);
 public sealed record RegisterCommercialPreparationRequest(Guid RequestId, Guid? ExistingMaterialId,
     Guid? MaterialVersion, CreateReferenceMaterialRequest? NewMaterial);
 public sealed record CommercialPreparationDetail(string Kind, string Code, ReferenceMaterialDetail Material,

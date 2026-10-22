@@ -41,6 +41,9 @@ if ($Action -eq 'Start') {
         $manifestText = [IO.File]::ReadAllText($manifest).Replace('Name="Lims.VisualValidation"', ('Name="' + $identity + '"'))
         [IO.File]::WriteAllText($manifest, $manifestText, [Text.UTF8Encoding]::new($false))
         $fixtureExecutable = $identity + '.exe'
+        # COM notification activation must identify the executable actually launched with this isolated identity.
+        $manifestText = [IO.File]::ReadAllText($manifest).Replace('Executable="Lims.Desktop.VisualHarness.exe"', ('Executable="' + $fixtureExecutable + '"'))
+        [IO.File]::WriteAllText($manifest, $manifestText, [Text.UTF8Encoding]::new($false))
         Copy-Item -LiteralPath (Join-Path $stage 'Lims.Desktop.VisualHarness.exe') -Destination (Join-Path $stage $fixtureExecutable)
     }
     $arguments = @('run', ('"' + $stage + '"'), '--manifest', ('"' + $manifest + '"'), '--exe', $fixtureExecutable, '--with-alias')
@@ -203,8 +206,10 @@ if ($Action -in @('PressCapture', 'HoverCapture')) {
     $buttonCondition = [System.Windows.Automation.PropertyCondition]::new([System.Windows.Automation.AutomationElement]::ControlTypeProperty, [System.Windows.Automation.ControlType]::Button)
     $checkBoxCondition = [System.Windows.Automation.PropertyCondition]::new([System.Windows.Automation.AutomationElement]::ControlTypeProperty, [System.Windows.Automation.ControlType]::CheckBox)
     $listItemCondition = [System.Windows.Automation.PropertyCondition]::new([System.Windows.Automation.AutomationElement]::ControlTypeProperty, [System.Windows.Automation.ControlType]::ListItem)
-    $interactiveCondition = [System.Windows.Automation.OrCondition]::new([System.Windows.Automation.Condition[]]@($buttonCondition, $checkBoxCondition, $listItemCondition))
-    $pressedCondition = [System.Windows.Automation.AndCondition]::new($processCondition, $nameCondition, $interactiveCondition)
+    $comboBoxCondition = [System.Windows.Automation.PropertyCondition]::new([System.Windows.Automation.AutomationElement]::ControlTypeProperty, [System.Windows.Automation.ControlType]::ComboBox)
+    $interactiveCondition = [System.Windows.Automation.OrCondition]::new([System.Windows.Automation.Condition[]]@($buttonCondition, $checkBoxCondition, $listItemCondition, $comboBoxCondition))
+    $onScreenCondition = [System.Windows.Automation.PropertyCondition]::new([System.Windows.Automation.AutomationElement]::IsOffscreenProperty, $false)
+    $pressedCondition = [System.Windows.Automation.AndCondition]::new([System.Windows.Automation.Condition[]]@($processCondition, $nameCondition, $interactiveCondition, $onScreenCondition))
     $pressedButton = [System.Windows.Automation.AutomationElement]::RootElement.FindFirst([System.Windows.Automation.TreeScope]::Descendants, $pressedCondition)
     if ($null -eq $pressedButton -or -not $pressedButton.Current.IsEnabled) { throw "Enabled button not found: $Name" }
     $pressedButton.SetFocus()
@@ -212,13 +217,16 @@ if ($Action -in @('PressCapture', 'HoverCapture')) {
     [LimsVisualCapture]::GetWindowThreadProcessId([LimsVisualCapture]::GetForegroundWindow(), [ref]$pressedForegroundProcess) | Out-Null
     if ($pressedForegroundProcess -ne $windowElement.Current.ProcessId) { throw 'The fixture does not own pointer input. No click was sent.' }
     $pressedBounds = $pressedButton.Current.BoundingRectangle
-    [LimsVisualCapture]::SetCursorPos([int]($pressedBounds.X + $pressedBounds.Width / 2), [int]($pressedBounds.Y + $pressedBounds.Height / 2)) | Out-Null
+    [LimsVisualCapture]::SetPhysicalCursorPos([int]($pressedBounds.X + $pressedBounds.Width / 2), [int]($pressedBounds.Y + $pressedBounds.Height / 2)) | Out-Null
     if ($Action -eq 'HoverCapture') { [LimsVisualCapture]::mouse_event(1, 1, 0, 0, [UIntPtr]::Zero) }
     if ($Action -eq 'PressCapture') { [LimsVisualCapture]::mouse_event(2, 0, 0, 0, [UIntPtr]::Zero) }
     Start-Sleep -Milliseconds 100
 }
 try {
 if ($PopupOnly -or $IncludePopups -or $Section) {
+    $captureOwner = [uint32]0
+    [LimsVisualCapture]::GetWindowThreadProcessId([LimsVisualCapture]::GetForegroundWindow(), [ref]$captureOwner) | Out-Null
+    if ($captureOwner -ne $windowElement.Current.ProcessId) { throw 'The fixture does not own the foreground window. No desktop capture was saved.' }
     $graphics.CopyFromScreen($rect.Left, $rect.Top, 0, 0, $bitmap.Size)
 } else {
     $captureDc = $graphics.GetHdc()
@@ -232,7 +240,8 @@ $bitmap.Save($capturePath, [Drawing.Imaging.ImageFormat]::Png)
 } finally {
     if ($Action -eq 'PressCapture') {
         # Release away from the button so this evidence cannot submit/archive/cancel.
-        [LimsVisualCapture]::SetCursorPos($rect.Left + 30, $rect.Top + 20) | Out-Null
+        [LimsVisualCapture]::SetPhysicalCursorPos($rect.Left + 30, $rect.Top + 20) | Out-Null
+        [LimsVisualCapture]::mouse_event(1, 1, 0, 0, [UIntPtr]::Zero)
         Start-Sleep -Milliseconds 150
         [LimsVisualCapture]::mouse_event(4, 0, 0, 0, [UIntPtr]::Zero)
     }

@@ -1,0 +1,23 @@
+{
+  "fixtureOnly": true,
+  "presentationSelectorRemoved": true,
+  "commercialEditorRemoved": true,
+  "request": {
+    "Name": "Est\u00E1ndar \u00B7 PRUEBA VISUAL",
+    "CasNumber": null,
+    "CatalogNumber": null,
+    "MethodId": 1,
+    "PurityPercent": 100,
+    "Lot": "Fixture",
+    "Brand": "Fixture",
+    "ReceivedDate": "2026-10-19",
+    "ExpirationDate": "2027-10-20",
+    "PresentationQuantity": 100,
+    "UnitId": 2,
+    "PackageCount": 1,
+    "StorageTemperature": "Ambiente",
+    "LocationId": 1,
+    "Presentation": "Solid",
+    "Commercial": null
+  }
+}

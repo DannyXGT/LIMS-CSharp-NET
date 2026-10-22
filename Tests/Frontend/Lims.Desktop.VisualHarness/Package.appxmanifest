@@ -1,12 +1,18 @@
 <Package xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
  xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
- xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities" IgnorableNamespaces="uap rescap">
+ xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
+ xmlns:desktop="http://schemas.microsoft.com/appx/manifest/desktop/windows10"
+ xmlns:com="http://schemas.microsoft.com/appx/manifest/com/windows10" IgnorableNamespaces="uap rescap desktop com">
  <Identity Name="Lims.VisualValidation" Publisher="CN=AppPublisher" Version="1.0.0.0" />
  <Properties><DisplayName>LIMS Visual Validation</DisplayName><PublisherDisplayName>Local</PublisherDisplayName><Logo>Assets\StoreLogo.png</Logo></Properties>
  <Dependencies><TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.17763.0" MaxVersionTested="10.0.26100.0" /></Dependencies>
  <Resources><Resource Language="x-generate" /></Resources>
  <Applications><Application Id="App" Executable="$targetnametoken$.exe" EntryPoint="$targetentrypoint$">
   <uap:VisualElements DisplayName="LIMS Visual Validation" Description="Offline fixture validation" BackgroundColor="transparent" Square150x150Logo="Assets\Square150x150Logo.png" Square44x44Logo="Assets\Square44x44Logo.png" />
+  <Extensions>
+   <desktop:Extension Category="windows.toastNotificationActivation"><desktop:ToastNotificationActivation ToastActivatorCLSID="F167D760-2075-4B7A-A768-AD9A213CB890" /></desktop:Extension>
+   <com:Extension Category="windows.comServer"><com:ComServer><com:ExeServer Executable="Lims.Desktop.VisualHarness.exe" Arguments="----AppNotificationActivated:" DisplayName="LIMS Visual Validation"><com:Class Id="F167D760-2075-4B7A-A768-AD9A213CB890" DisplayName="LIMS Alertas Validation" /></com:ExeServer></com:ComServer></com:Extension>
+  </Extensions>
  </Application></Applications>
  <Capabilities><rescap:Capability Name="runFullTrust" /></Capabilities>
 </Package>

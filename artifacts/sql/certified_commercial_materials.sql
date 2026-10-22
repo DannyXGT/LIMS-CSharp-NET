@@ -131,7 +131,8 @@ END $columns$;
 -- column types. Only the documented pre-commercial checks may be replaced.
 CREATE FUNCTION pg_temp.__lims_cm_check(target regclass, check_name text, expression text, legacy_expression text)
 RETURNS void LANGUAGE plpgsql AS $function$
-DECLARE actual text; expected text; baseline text; kind "char"; valid boolean;
+DECLARE actual text; expected text; baseline text; successor text; quantity_check text;
+    quantity_constraint record; kind "char"; valid boolean;
     can_change boolean := NOT (SELECT applied FROM pg_temp.__lims_cm_control);
 BEGIN
     EXECUTE format('CREATE TEMP TABLE __lims_cm_probe (LIKE %s) ON COMMIT DROP', target);
@@ -143,21 +144,55 @@ BEGIN
         SELECT pg_get_expr(conbin, conrelid) INTO baseline FROM pg_constraint
             WHERE conrelid = 'pg_temp.__lims_cm_probe'::regclass AND conname = 'baseline_check';
     END IF;
+    -- A later additive migration permits multiple packages. Accept its exact known
+    -- expression without replacing it or reducing the physical inventory.
+    IF target = 'reference_materials'::regclass AND check_name = 'ck_reference_materials_presentation' THEN
+        EXECUTE 'ALTER TABLE pg_temp.__lims_cm_probe ADD CONSTRAINT successor_check CHECK (presentation IN (''Solid'',''CommercialSolution'',''CommercialMix'') AND (presentation = ''Solid'' OR (commercial_json IS NOT NULL AND effective_expiration_date <= expiration_date)))';
+        SELECT pg_get_expr(conbin, conrelid) INTO successor FROM pg_constraint
+            WHERE conrelid = 'pg_temp.__lims_cm_probe'::regclass AND conname = 'successor_check';
+        EXECUTE 'ALTER TABLE pg_temp.__lims_cm_probe ADD CONSTRAINT quantity_check CHECK (presentation_quantity > 0)';
+        SELECT pg_get_expr(conbin, conrelid) INTO quantity_check FROM pg_constraint
+            WHERE conrelid = 'pg_temp.__lims_cm_probe'::regclass AND conname = 'quantity_check';
+    END IF;
     SELECT pg_get_expr(conbin, conrelid), contype, convalidated INTO actual, kind, valid
         FROM pg_constraint WHERE conrelid = target AND conname = check_name;
     IF kind IS NULL THEN
         IF NOT can_change THEN RAISE EXCEPTION 'Recorded migration has missing constraint %.%', target, check_name USING ERRCODE = '55000'; END IF;
         EXECUTE format('ALTER TABLE %s ADD CONSTRAINT %I CHECK (%s)', target, check_name, expression);
-    ELSIF kind = 'c' AND actual = expected THEN
+    ELSIF kind = 'c' AND (actual = expected OR actual = successor) THEN
         IF NOT valid THEN
             IF NOT can_change THEN RAISE EXCEPTION 'Recorded migration has unvalidated constraint %.%', target, check_name USING ERRCODE = '55000'; END IF;
             EXECUTE format('ALTER TABLE %s VALIDATE CONSTRAINT %I', target, check_name);
         END IF;
+    ELSIF can_change AND kind = 'c' AND quantity_check IS NOT NULL AND actual = quantity_check THEN
+        -- Known legacy naming collision: this name protects positive quantity,
+        -- not the commercial presentation. Retain that protection separately.
+        SELECT contype, convalidated, pg_get_expr(conbin, conrelid) AS expression
+            INTO quantity_constraint FROM pg_constraint
+            WHERE conrelid = target AND conname = 'ck_reference_materials_presentation_quantity';
+        IF NOT FOUND THEN
+            IF NOT valid THEN
+                EXECUTE format('ALTER TABLE %s VALIDATE CONSTRAINT %I', target, check_name);
+            END IF;
+            EXECUTE format('ALTER TABLE %s RENAME CONSTRAINT %I TO ck_reference_materials_presentation_quantity', target, check_name);
+        ELSE
+            IF quantity_constraint.contype <> 'c' OR quantity_constraint.expression IS DISTINCT FROM quantity_check THEN
+                RAISE EXCEPTION 'Incompatible positive-quantity constraint on %; legacy constraint retained', target USING ERRCODE = '55000';
+            END IF;
+            IF NOT quantity_constraint.convalidated THEN
+                EXECUTE format('ALTER TABLE %s VALIDATE CONSTRAINT ck_reference_materials_presentation_quantity', target);
+            END IF;
+            EXECUTE format('ALTER TABLE %s DROP CONSTRAINT %I', target, check_name);
+        END IF;
+        EXECUTE format('ALTER TABLE %s ADD CONSTRAINT %I CHECK (%s)', target, check_name, expression);
     ELSIF can_change AND kind = 'c' AND baseline IS NOT NULL AND actual = baseline THEN
         EXECUTE format('ALTER TABLE %s DROP CONSTRAINT %I', target, check_name);
         EXECUTE format('ALTER TABLE %s ADD CONSTRAINT %I CHECK (%s)', target, check_name, expression);
     ELSE
-        RAISE EXCEPTION 'Incompatible check constraint %.%; existing definition was not replaced', target, check_name USING ERRCODE = '55000';
+        RAISE EXCEPTION USING ERRCODE = '55000',
+            MESSAGE = format('Incompatible check constraint %s.%s; existing definition was not replaced', target, check_name),
+            DETAIL = format('Existing expression: %s; expected expression: %s', coalesce(actual, '<not a CHECK expression>'), expected),
+            HINT = 'After ROLLBACK, query pg_get_constraintdef for this table and constraint. Reconcile its actual definition before retrying; existing data and constraints have not been replaced by this check.';
     END IF;
     DROP TABLE pg_temp.__lims_cm_probe;
 END $function$;

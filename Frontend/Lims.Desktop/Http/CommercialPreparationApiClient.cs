@@ -7,8 +7,15 @@ namespace Lims.Desktop.Http;
 internal sealed class CommercialPreparationApiClient(IHttpClientFactory clients) : ICommercialPreparationApiClient
 {
     private static string Path(string kind) => "api/reference-materials/preparations/" + (kind == "Stock" ? "stock" : "intermediate") + "/commercial";
-    public Task<ApiCallResult<CommercialPreparationOptions>> OptionsAsync(string kind, string? search, CancellationToken ct) =>
-        SendAsync<CommercialPreparationOptions>(HttpMethod.Get, Path(kind) + "/options?search=" + Uri.EscapeDataString(search ?? ""), null, ct);
+    public async Task<ApiCallResult<CommercialPreparationOptions>> OptionsAsync(string kind, string? search, CancellationToken ct)
+    {
+        var response = await SendAsync<CommercialPreparationOptions>(HttpMethod.Get, Path(kind) + "/options?search=" + Uri.EscapeDataString(search ?? ""), null, ct).ConfigureAwait(false);
+        if (!response.IsSuccess || response.Value is not { Solvents: null } options) return response;
+        // Older commercial endpoints omitted the catalog. Reuse the existing Stock endpoint, never UI constants.
+        var catalog = await new StockApiClient(clients).SolventsAsync(null, ct).ConfigureAwait(false);
+        if (!catalog.IsSuccess) return new(false, null, catalog.Error ?? new ApiError(ErrorCodes.UnexpectedError, "El servidor no devolvió el catálogo compartido de solventes.", ""), catalog.StatusCode);
+        return response with { Value = options with { Solvents = catalog.Value } };
+    }
     public Task<ApiCallResult<CommercialPreparationDetail>> RegisterAsync(string kind, RegisterCommercialPreparationRequest request, CancellationToken ct) =>
         SendAsync<CommercialPreparationDetail>(HttpMethod.Post, Path(kind), JsonContent.Create(request), ct);
     public Task<ApiCallResult<CommercialPreparationDetail>> GetAsync(string kind, Guid materialId, CancellationToken ct) =>

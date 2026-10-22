@@ -65,9 +65,9 @@ public sealed partial class ReferenceMaterialsViewModel(
     public bool CanEdit => HasPermission(ReferenceMaterialPermissions.Edit);
     public bool CanArchive => HasPermission(ReferenceMaterialPermissions.Archive);
     public bool CanReplace => HasPermission(PermissionCatalog.Replace);
-    public bool CanEditSelected => CanEdit && IsSelectedMutable;
+    public bool CanEditSelected => CanEdit && IsSelectedMutable && SelectedDetail?.Presentation == MaterialPresentations.Solid;
     public bool CanArchiveSelected => CanArchive && IsSelectedMutable;
-    public bool CanReplaceSelected => CanReplace && IsSelectedMutable;
+    public bool CanReplaceSelected => CanReplace && IsSelectedMutable && SelectedDetail?.Presentation == MaterialPresentations.Solid;
     public bool HasItems => Items.Count > 0;
     public bool HasNoItems => Items.Count == 0 && !IsBusy;
     public bool HasSelection => SelectedDetail is not null;

@@ -24,7 +24,7 @@ internal static class CommercialMaterialModel
         material.Property(m => m.OpeningRequired).HasColumnName("opening_required");
         material.ToTable("reference_materials", t =>
         {
-            t.HasCheckConstraint("ck_reference_materials_presentation", "presentation IN ('Solid','CommercialSolution','CommercialMix') AND (presentation = 'Solid' OR (commercial_json IS NOT NULL AND package_count = 1 AND effective_expiration_date <= expiration_date))");
+            t.HasCheckConstraint("ck_reference_materials_presentation", "presentation IN ('Solid','CommercialSolution','CommercialMix') AND (presentation = 'Solid' OR (commercial_json IS NOT NULL AND effective_expiration_date <= expiration_date))");
         });
         var component = model.Entity<CertifiedMaterialComponent>();
         component.ToTable("reference_certified_components", t => t.HasCheckConstraint("ck_certified_component_values",

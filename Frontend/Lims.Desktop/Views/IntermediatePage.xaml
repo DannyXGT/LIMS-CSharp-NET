@@ -3,11 +3,12 @@
  xmlns:design="using:Lims.DesignSystem.Controls" xmlns:contracts="using:Lims.Contracts.ReferencePreparations"
  Background="Transparent" Language="es-GT" SizeChanged="OnPageSizeChanged">
  <Page.Resources><Style x:Key="PreparationRowStyle" TargetType="ListViewItem" BasedOn="{StaticResource LimsDataRowStyle}"><Setter Property="AutomationProperties.Name" Value="{Binding Code}"/></Style></Page.Resources>
- <Grid RowSpacing="10">
+ <Grid x:Name="PageRoot">
+ <Grid x:Name="ListSurface" RowSpacing="10">
   <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
   <Border Padding="12" Background="{ThemeResource LimsSurfaceBrush}" BorderBrush="{ThemeResource LimsBorderBrush}" BorderThickness="1" CornerRadius="8">
    <Grid x:Name="FilterGrid" ColumnSpacing="8" RowSpacing="8">
-    <Grid.ColumnDefinitions><ColumnDefinition x:Name="SearchColumn" Width="*"/><ColumnDefinition x:Name="FiltersColumn" Width="Auto"/></Grid.ColumnDefinitions>
+    <Grid.ColumnDefinitions><ColumnDefinition x:Name="SearchColumn" Width="*"/><ColumnDefinition x:Name="FiltersColumn" Width="Auto"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
     <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
     <Grid x:Name="SearchField" VerticalAlignment="Center">
      <TextBox x:Name="SearchBox" MinHeight="36" Padding="36,8,10,8" Style="{StaticResource LimsTextBoxStyle}" PlaceholderText="Buscar por código, preparación o método..." TextChanged="OnSearchChanged" KeyDown="OnSearchKeyDown" AutomationProperties.Name="Buscar preparaciones"/>
@@ -23,6 +24,7 @@
      <TextBox x:Name="MethodFilter" Width="145" MinHeight="36" Style="{StaticResource LimsTextBoxStyle}" PlaceholderText="Método..." AutomationProperties.Name="Filtrar por método" TextChanged="OnSearchChanged"/>
      <Button Style="{StaticResource LimsIconButtonStyle}" AutomationProperties.Name="Limpiar filtros" ToolTipService.ToolTip="Limpiar filtros" Click="OnClearSearch"><design:LimsIcon Icon="ClearFilters" Size="16"/></Button>
     </StackPanel>
+    <Button x:Name="NewCommercialButton" Grid.Column="2" Content="Mix comprado" Click="OnNewCommercialClick" Style="{StaticResource LimsSecondaryButtonStyle}" IsEnabled="{x:Bind ViewModel.CanCreate, Mode=OneWay}" AutomationProperties.Name="Nueva Intermedia comercial"/>
    </Grid>
   </Border>
   <Border Grid.Row="1" Visibility="{x:Bind ViewModel.HasResults, Mode=OneWay}" Background="{ThemeResource LimsSurfaceBrush}" BorderBrush="{ThemeResource LimsBorderBrush}" BorderThickness="1" CornerRadius="8">
@@ -67,5 +69,7 @@
    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" Visibility="{x:Bind ViewModel.HasMultiplePages, Mode=OneWay}"><Button Style="{StaticResource LimsSecondaryButtonStyle}" Content="‹" AutomationProperties.Name="Página anterior" IsEnabled="{x:Bind ViewModel.HasPreviousPage, Mode=OneWay}" Click="OnPreviousPage"/><Button Style="{StaticResource LimsSecondaryButtonStyle}" Content="›" AutomationProperties.Name="Página siguiente" IsEnabled="{x:Bind ViewModel.HasNextPage, Mode=OneWay}" Click="OnNextPage"/></StackPanel>
    <Button Grid.Column="2" Style="{StaticResource LimsSecondaryButtonStyle}" x:Name="ViewPreparationButton" Visibility="{x:Bind ViewModel.ShowSelectionAction, Mode=OneWay}" Content="Ver preparación" Command="{x:Bind ViewModel.OpenSelectedPreparationCommand}"/>
   </Grid>
+ </Grid>
+ <ContentControl x:Name="CommercialWorkspaceHost" Visibility="Collapsed" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch"/>
  </Grid>
 </Page>

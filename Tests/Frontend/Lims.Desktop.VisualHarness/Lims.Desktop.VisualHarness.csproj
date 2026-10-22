@@ -20,6 +20,8 @@
     <ProjectReference Include="../../../Shared/Lims.Contracts/Lims.Contracts.csproj" />
     <ProjectReference Include="../../../Backend/Lims.Application/Lims.Application.csproj" Aliases="StockEngine" />
     <ProjectReference Include="../../../Backend/Lims.Domain/Lims.Domain.csproj" />
+    <ProjectReference Include="../../../Backend/Lims.Infrastructure/Lims.Infrastructure.csproj" Aliases="PersistenceEngine" />
+    <Compile Include="../../../Frontend/Lims.Desktop/ViewModels/SolventCompositionViewModel.cs;../../../Frontend/Lims.Desktop/Views/SolventCompositionEditor.cs" Link="Commercial/%(Filename)%(Extension)" />
     <PackageReference Include="CommunityToolkit.Mvvm" />
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools" />
     <PackageReference Include="Microsoft.WindowsAppSDK" />
@@ -34,7 +36,16 @@
     <Page Include="../../../Frontend/Lims.Desktop/Views/CommercialCertificateEditor.xaml" Link="Views/CommercialCertificateEditor.xaml" />
     <Compile Include="../../../Frontend/Lims.Desktop/Views/CommercialCertificateEditor.xaml.cs;../../../Frontend/Lims.Desktop/Views/CommercialMaterialDetails.cs" Link="Commercial/%(Filename)%(Extension)" />
   </ItemGroup>
+  <ItemGroup>
+    <Page Include="../../../Frontend/Lims.Desktop/Views/CommercialIntermediateWorkspace.xaml" Link="Views/CommercialIntermediateWorkspace.xaml" />
+    <Compile Include="../../../Frontend/Lims.Desktop/Views/CommercialIntermediateWorkspace.xaml.cs;../../../Frontend/Lims.Desktop/ViewModels/CommercialIntermediateViewModel.cs" Link="Commercial/%(Filename)%(Extension)" />
+  </ItemGroup>
+  <ItemGroup><Page Include="../../../Frontend/Lims.Desktop/Views/CommercialBottleVisual.xaml" Link="Views/CommercialBottleVisual.xaml" /><Compile Include="../../../Frontend/Lims.Desktop/Views/CommercialBottleVisual.xaml.cs;../../../Frontend/Lims.Desktop/Views/PreparationEditorHeader.cs;../../../Frontend/Lims.Desktop/Views/CommercialIntermediateDialog.cs" Link="Commercial/%(Filename)%(Extension)" /></ItemGroup>
   <!-- Compile the real presentation sources. No production startup/auth/HTTP is included. -->
+  <ItemGroup>
+    <Page Include="../../../Frontend/Lims.Desktop/Views/AlertsPage.xaml" Link="Views/AlertsPage.xaml" />
+    <Compile Include="../../../Frontend/Lims.Desktop/Views/AlertsPage.xaml.cs;../../../Frontend/Lims.Desktop/Views/AlertsWorkspace.cs;../../../Frontend/Lims.Desktop/Views/AlertConfigurationDialog.cs;../../../Frontend/Lims.Desktop/ViewModels/AlertsViewModel.cs;../../../Frontend/Lims.Desktop/Services/WindowsAlertNotifications.cs;../../../Frontend/Lims.Desktop/Http/IAlertsApiClient.cs" Link="Alerts/%(Filename)%(Extension)" />
+  </ItemGroup>
   <ItemGroup>
     <Compile Include="../../../Frontend/Lims.Desktop/Controls/SolutionGroupVisuals.cs;../../../Frontend/Lims.Desktop/Presentation/SolutionGroupPresentation.cs" Link="SolutionGroups/%(Filename)%(Extension)" />
   </ItemGroup>

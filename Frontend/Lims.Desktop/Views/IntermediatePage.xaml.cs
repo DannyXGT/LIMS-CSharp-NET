@@ -24,12 +24,14 @@ public sealed partial class IntermediatePage : Page
         InitializeComponent();
         _searchTimer.Tick += async (_, _) => { _searchTimer.Stop(); await SearchAsync(); };
         Unloaded += (_, _) => _searchTimer.Stop();
-        ViewModel.PropertyChanged += (_, e) => { if (e.PropertyName == nameof(ViewModel.IsEmpty) && ViewModel.IsEmpty && IsLoaded) Lims.DesignSystem.Presentation.Motion.Enter(EmptyState, y: 4, milliseconds: 160); };
+        ViewModel.PropertyChanged += (_, e) => { if (e.PropertyName == nameof(ViewModel.CanCreate)) CommercialWorkspace?.ViewModel.Refresh(); if (e.PropertyName == nameof(ViewModel.IsEmpty) && ViewModel.IsEmpty && IsLoaded) Lims.DesignSystem.Presentation.Motion.Enter(EmptyState, y: 4, milliseconds: 160); };
         ViewModel.PreparationOpened += ShowSelectedDetailAsync;
         ViewModel.CommercialOpened += OpenCommercialAsync;
         // ListView can consume Enter internally; keep the detail action available to keyboard users.
         PreparationsList.AddHandler(UIElement.KeyDownEvent, new KeyEventHandler(OnListKeyDown), true);
     }
+    public CommercialIntermediateWorkspace? CommercialWorkspace { get; private set; }
+    public bool IsCommercialWorkspaceOpen => CommercialWorkspace is not null;
     public IntermediateViewModel ViewModel { get; }
     public IntermediateEditorDialog? Editor { get; private set; }
     public Task LoadAsync() => ViewModel.LoadAsync(SearchBox.Text, ViewModel.HasLoadedList ? ViewModel.Page : 1, CancellationToken.None);
@@ -53,24 +55,61 @@ public sealed partial class IntermediatePage : Page
     }
     public async Task OpenCreateAsync()
     {
-        if (_dialogOpen || !ViewModel.CanCreate) return;
+        if (_dialogOpen || IsCommercialWorkspaceOpen || !ViewModel.CanCreate) return;
         _dialogOpen = true;
         ViewModel.BeginNew();
+        var openCommercial = false;
         try
         {
             Editor = new IntermediateEditorDialog(ViewModel, _commercialApi) { XamlRoot = XamlRoot, RequestedTheme = ActualTheme };
             await Editor.ShowAsync();
-            var commercial = Editor.CommercialCreated;
+            openCommercial = Editor.OpenCommercialWorkspace;
             var viewDetail = Editor.ViewCreatedDetail;
             Editor = null;
-            if (commercial is not null) { await LoadAsync(); await ShowCommercialAsync(commercial); }
             if (viewDetail && ViewModel.Created is { } created)
             {
                 await ShowDetailAsync(created);
             }
         }
         finally { Editor = null; _dialogOpen = false; }
+        if (openCommercial) await OpenCommercialWorkspaceAsync();
     }
+    public CommercialIntermediateDialog? CommercialEditor { get; private set; }
+    public Task OpenCommercialWorkspaceAsync()
+    {
+        if (_dialogOpen || !ViewModel.CanCreate || IsCommercialWorkspaceOpen) return Task.CompletedTask;
+        _searchTimer.Stop();
+        _dialogOpen = true;
+        var model = new CommercialIntermediateViewModel(_commercialApi, ViewModel.PreparedBy, () => ViewModel.CanCreate);
+        var workspace = new CommercialIntermediateWorkspace(model);
+        CommercialWorkspace = workspace;
+        CommercialEditor = new CommercialIntermediateDialog(workspace) { XamlRoot = XamlRoot, RequestedTheme = ActualTheme };
+        CommercialPreparationDetail? saved = null;
+        workspace.Cancelled += (_, _) => CommercialEditor?.Hide();
+        workspace.Saved += detail => { saved = detail; CommercialEditor?.Hide(); return Task.CompletedTask; };
+        Windows.Foundation.IAsyncOperation<ContentDialogResult> showing;
+        try { showing = CommercialEditor.ShowAsync(); }
+        catch { CommercialEditor = null; CommercialWorkspace = null; _dialogOpen = false; workspace.Release(); throw; }
+        _ = FinishCommercialAsync();
+        return workspace.LoadAsync();
+
+        async Task FinishCommercialAsync()
+        {
+            try { await showing; }
+            finally { CommercialWorkspace = null; CommercialEditor = null; _dialogOpen = false; }
+            if (saved is not null)
+            {
+                await LoadAsync();
+                if (IsLoaded) { _dialogOpen = true; try { await ShowCommercialAsync(saved); } finally { _dialogOpen = false; } }
+            }
+            else NewCommercialButton.Focus(FocusState.Programmatic);
+        }
+    }
+    public void CloseCommercialWorkspace()
+    {
+        if (CommercialWorkspace?.ViewModel.CanCancel == true) CommercialEditor?.Hide();
+    }
+    private async void OnNewCommercialClick(object sender, RoutedEventArgs e) => await OpenCommercialWorkspaceAsync();
     private async void OnNewClick(object sender, RoutedEventArgs e) => await OpenCreateAsync();
     private async void OnClearSearch(object sender, RoutedEventArgs e)
     {
@@ -106,7 +145,7 @@ public sealed partial class IntermediatePage : Page
         ? ViewModel.OpenSelectedPreparationCommand.ExecuteAsync(null) : Task.CompletedTask;
     private async Task ShowSelectedDetailAsync(IntermediateDetail detail)
     {
-        if (_dialogOpen || !IsLoaded) return;
+        if (_dialogOpen || IsCommercialWorkspaceOpen || !IsLoaded) return;
         _dialogOpen = true;
         try
         {
@@ -139,7 +178,7 @@ public sealed partial class IntermediatePage : Page
     }
     private async Task OpenCommercialAsync(Guid id)
     {
-        if (_dialogOpen || !IsLoaded || _commercialApi is null) return;
+        if (_dialogOpen || IsCommercialWorkspaceOpen || !IsLoaded || _commercialApi is null) return;
         _dialogOpen = true;
         try
         {

@@ -8,6 +8,7 @@ using Lims.Contracts.Errors;
 using Lims.Contracts.ReferenceMaterials;
 using Lims.Contracts.ReferencePreparations;
 using Lims.Domain.ReferenceMaterials;
+using Lims.Domain.ReferencePreparations;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
 
@@ -38,7 +39,8 @@ public sealed class CommercialPreparationService(LimsDbContext db, TimeProvider 
             m.ReplacedByMaterialId, m.Version, Presentation: m.Presentation, Commercial: CommercialMaterials.Certificate(m),
             EffectiveExpirationDate: m.EffectiveExpirationDate)).ToArray();
         return new(await Materials.GetMethodsAsync(ct).ConfigureAwait(false), await Materials.GetUnitsAsync(ct).ConfigureAwait(false),
-            await Materials.GetLocationsAsync(ct).ConfigureAwait(false), materials);
+            await Materials.GetLocationsAsync(ct).ConfigureAwait(false), materials,
+            await new StockRepository(db).SolventsAsync(null, ct).ConfigureAwait(false), true);
     }
 
     public async Task<OperationResult<CommercialPreparationDetail>> GetAsync(string kind, Guid materialId, CancellationToken ct)
@@ -47,8 +49,14 @@ public sealed class CommercialPreparationService(LimsDbContext db, TimeProvider 
         if (role is null) return Failure(ErrorCodes.NotFound, "El ingreso comercial solicitado no existe.");
         var material = await Materials.GetAsync(materialId, ct).ConfigureAwait(false);
         if (!material.IsSuccess) return OperationResult.Failure<CommercialPreparationDetail>(material.Error!);
+        var solventRows = await db.StockSolvents.AsNoTracking().Where(s => s.MaterialId == materialId).OrderBy(s => s.Position)
+            .Select(s => new StockSolventDetail(s.SolventId, s.Solvent.Name, s.Solvent.Abbreviation, s.Percent, s.Position)).ToArrayAsync(ct).ConfigureAwait(false);
+        var detail = material.Value!;
+        if (solventRows.Length > 0 && detail.Commercial is { } certificate)
+            detail = detail with { Commercial = certificate with { Solvents = solventRows.Select(r => new StockSolventInput(r.SolventId, r.Percent)).ToArray(),
+                SolventDetails = solventRows, CompositionBasis = StockSolventComposition.Basis, Matrix = StockSolventComposition.Summary(solventRows) } };
         var actor = await db.Users.Where(u => u.Id == role.RegisteredByUserId).Select(u => u.Name).SingleAsync(ct).ConfigureAwait(false);
-        return OperationResult.Success(new CommercialPreparationDetail(kind, role.Code, material.Value!, actor, role.RegisteredAt));
+        return OperationResult.Success(new CommercialPreparationDetail(kind, role.Code, detail, actor, role.RegisteredAt));
     }
 
     public Task<OperationResult<CommercialPreparationDetail>> RegisterAsync(string kind, RegisterCommercialPreparationRequest request, int actor, CancellationToken ct)
@@ -72,9 +80,23 @@ public sealed class CommercialPreparationService(LimsDbContext db, TimeProvider 
                     if (!MaterialPresentations.IsCommercial(input.Presentation) || (kind == "Stock" && input.Presentation != MaterialPresentations.Solution))
                         return Failure(ErrorCodes.ValidationError, "Stock comercial requiere una solución individual; Intermedia admite soluciones y Mix.");
                     foreach (var component in input.Commercial?.Components ?? []) _ = StockUnits.MilligramsPerLiter(component.ConcentrationUnit);
+                    var compositionError = StockSolventComposition.Validate(input.Commercial?.Solvents, input.Commercial?.CompositionBasis);
+                    if (compositionError is not null) return Failure(ErrorCodes.ValidationError, compositionError);
+                    var rows = input.Commercial!.Solvents!;
+                    if (input.Commercial.MatrixSolventId is { } matrixId && (rows.Count != 1 || rows[0].SolventId != matrixId))
+                        return Failure(ErrorCodes.ValidationError, "La matriz individual no coincide con la composición documentada.");
+                    var catalog = await new StockRepository(db).SolventsAsync(null, ct).ConfigureAwait(false);
+                    if (rows.Any(r => !catalog.Any(s => s.Id == r.SolventId))) return Failure(ErrorCodes.ValidationError, "Seleccione solventes activos del catálogo compartido.");
+                    var details = rows.Select((r, i) => { var solvent = catalog.Single(s => s.Id == r.SolventId); return new StockSolventDetail(r.SolventId, solvent.Name, solvent.Abbreviation, r.Percent, i); }).ToArray();
+                    // New operational registrations use the certified concentration. Historical certificates remain unchanged.
+                    input = input with { Commercial = input.Commercial with {
+                        Matrix = StockSolventComposition.Summary(details), MatrixSolventId = rows.Count == 1 ? rows[0].SolventId : null,
+                        SolventDetails = details, UseNominalConcentration = false } };
                     var created = await Materials.CreateAsync(input, actor, ct).ConfigureAwait(false);
                     if (!created.IsSuccess) return OperationResult.Failure<CommercialPreparationDetail>(created.Error!);
                     materialId = created.Value!.Id;
+                    db.StockSolvents.AddRange(rows.Select((row, position) => StockSolvent.ForMaterial(materialId, row.SolventId, row.Percent, position)));
+                    await db.SaveChangesAsync(ct).ConfigureAwait(false);
                 }
                 else
                 {

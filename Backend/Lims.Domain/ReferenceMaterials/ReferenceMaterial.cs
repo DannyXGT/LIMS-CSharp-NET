@@ -83,7 +83,7 @@ public sealed class ReferenceMaterial
             return;
         }
         if (presentation is not ("CommercialSolution" or "CommercialMix") || certificateJson is null ||
-            Unit.Symbol is not ("mL" or "L") || PackageCount != 1 || components.Count == 0)
+            Unit.Symbol is not ("mL" or "L") || components.Count == 0)
             throw new ArgumentException("Registre un frasco comercial con unidad de volumen y composición certificada.");
         if (OpenedDate != openedDate) OpeningHistory.Add(new(Id, OpenedDate, openedDate, actor, now));
         foreach (var old in CertifiedComponents.ToArray())

@@ -26,6 +26,383 @@ namespace Lims.Infrastructure.Persistence.Migrations
 
             modelBuilder.HasSequence("reference_stock_code_sequence");
 
+            modelBuilder.Entity("Lims.Domain.Alerts.AlertConfiguration", b =>
+                {
+                    b.Property<int>("Id")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("ActorUserId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset?>("ChangedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Json")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTimeOffset?>("LastEvaluation")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("alert_configuration", (string)null);
+                });
+
+            modelBuilder.Entity("Lims.Domain.Alerts.AlertConfigurationAudit", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)");
+
+                    b.Property<int>("ActorUserId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset>("At")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Json")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("alert_configuration_audit", (string)null);
+                });
+
+            modelBuilder.Entity("Lims.Domain.Alerts.AlertHistory", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)");
+
+                    b.Property<int?>("ActorUserId")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("AlertId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("At")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Condition")
+                        .IsRequired()
+                        .HasMaxLength(24)
+                        .HasColumnType("character varying(24)");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AlertId", "At");
+
+                    b.ToTable("alert_history", (string)null);
+                });
+
+            modelBuilder.Entity("Lims.Domain.Alerts.EmailAttempt", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("At")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("DeliveryId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Error")
+                        .HasMaxLength(400)
+                        .HasColumnType("character varying(400)");
+
+                    b.Property<int>("Number")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Outcome")
+                        .IsRequired()
+                        .HasMaxLength(24)
+                        .HasColumnType("character varying(24)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DeliveryId", "Number")
+                        .IsUnique();
+
+                    b.ToTable("alert_email_attempts", (string)null);
+                });
+
+            modelBuilder.Entity("Lims.Domain.Alerts.EmailDelivery", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("AlertId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int?>("AlertRevision")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Attempts")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("DeduplicationKey")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<int>("DepartmentId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Html")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(24)
+                        .HasColumnType("character varying(24)");
+
+                    b.Property<string>("LastError")
+                        .HasMaxLength(400)
+                        .HasColumnType("character varying(400)");
+
+                    b.Property<DateTimeOffset>("NextAttemptAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Recipient")
+                        .IsRequired()
+                        .HasMaxLength(254)
+                        .HasColumnType("character varying(254)");
+
+                    b.Property<DateTimeOffset?>("SentAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("State")
+                        .IsRequired()
+                        .HasMaxLength(24)
+                        .HasColumnType("character varying(24)");
+
+                    b.Property<string>("Subject")
+                        .IsRequired()
+                        .HasMaxLength(400)
+                        .HasColumnType("character varying(400)");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AlertId");
+
+                    b.HasIndex("DeduplicationKey")
+                        .IsUnique();
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("State", "NextAttemptAt");
+
+                    b.ToTable("alert_email_deliveries", (string)null);
+                });
+
+            modelBuilder.Entity("Lims.Domain.Alerts.MaterialAlert", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset?>("AcknowledgedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int?>("AcknowledgedBy")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal?>("AvailabilityPercent")
+                        .HasPrecision(28, 10)
+                        .HasColumnType("numeric(28,10)");
+
+                    b.Property<decimal>("Available")
+                        .HasPrecision(28, 10)
+                        .HasColumnType("numeric(28,10)");
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasMaxLength(24)
+                        .HasColumnType("character varying(24)");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("character varying(160)");
+
+                    b.Property<string>("Condition")
+                        .IsRequired()
+                        .HasMaxLength(24)
+                        .HasColumnType("character varying(24)");
+
+                    b.Property<int>("DepartmentId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(1200)
+                        .HasColumnType("character varying(1200)");
+
+                    b.Property<DateTimeOffset>("DetectedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateOnly>("Expiration")
+                        .HasColumnType("date");
+
+                    b.Property<string>("Lot")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)");
+
+                    b.Property<string>("Material")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("MaterialType")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("character varying(80)");
+
+                    b.Property<int>("Modules")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Priority")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Recommendation")
+                        .IsRequired()
+                        .HasMaxLength(1200)
+                        .HasColumnType("character varying(1200)");
+
+                    b.Property<DateTimeOffset?>("ResolvedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Revision")
+                        .IsConcurrencyToken()
+                        .HasColumnType("integer");
+
+                    b.Property<string>("SearchText")
+                        .IsRequired()
+                        .HasMaxLength(8000)
+                        .HasColumnType("character varying(8000)");
+
+                    b.Property<Guid>("SourceId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("SourceType")
+                        .IsRequired()
+                        .HasMaxLength(24)
+                        .HasColumnType("character varying(24)");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("Unit")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SourceType", "SourceId", "Category")
+                        .IsUnique()
+                        .HasFilter("\"ResolvedAt\" IS NULL");
+
+                    b.HasIndex("DepartmentId", "ResolvedAt", "Priority", "DetectedAt");
+
+                    b.ToTable("material_alerts", (string)null);
+                });
+
+            modelBuilder.Entity("Lims.Domain.Alerts.NotificationPreference", b =>
+                {
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("EmailEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("OnlyCriticalWindows")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("WindowsEnabled")
+                        .HasColumnType("boolean");
+
+                    b.HasKey("UserId");
+
+                    b.ToTable("notification_preferences", (string)null);
+                });
+
+            modelBuilder.Entity("Lims.Domain.Alerts.UserNotification", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("AlertId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasMaxLength(1200)
+                        .HasColumnType("character varying(1200)");
+
+                    b.Property<int>("Priority")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset?>("ReadAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Revision")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(400)
+                        .HasColumnType("character varying(400)");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset?>("WindowsClaimedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AlertId", "Revision", "UserId")
+                        .IsUnique();
+
+                    b.HasIndex("UserId", "ReadAt", "CreatedAt");
+
+                    b.ToTable("user_notifications", (string)null);
+                });
+
             modelBuilder.Entity("Lims.Domain.Authentication.AuthSession", b =>
                 {
                     b.Property<Guid>("Id")
@@ -218,6 +595,22 @@ namespace Lims.Infrastructure.Persistence.Migrations
                         new
                         {
                             Code = "aqs.create"
+                        },
+                        new
+                        {
+                            Code = "alerts.view"
+                        },
+                        new
+                        {
+                            Code = "alerts.manage"
+                        },
+                        new
+                        {
+                            Code = "notifications.configure"
+                        },
+                        new
+                        {
+                            Code = "notifications.history"
                         });
                 });
 
@@ -748,7 +1141,7 @@ namespace Lims.Infrastructure.Persistence.Migrations
 
                             t.HasCheckConstraint("ck_reference_materials_package_count", "package_count > 0");
 
-                            t.HasCheckConstraint("ck_reference_materials_presentation", "presentation IN ('Solid','CommercialSolution','CommercialMix') AND (presentation = 'Solid' OR (commercial_json IS NOT NULL AND package_count = 1 AND effective_expiration_date <= expiration_date))");
+                            t.HasCheckConstraint("ck_reference_materials_presentation", "presentation IN ('Solid','CommercialSolution','CommercialMix') AND (presentation = 'Solid' OR (commercial_json IS NOT NULL AND effective_expiration_date <= expiration_date))");
 
                             t.HasCheckConstraint("ck_reference_materials_presentation_quantity", "presentation_quantity > 0");
 
@@ -1557,7 +1950,7 @@ namespace Lims.Infrastructure.Persistence.Migrations
                         new
                         {
                             Id = 7,
-                            Abbreviation = "Cyclohexano",
+                            Abbreviation = "Ciclohexano",
                             DisplayOrder = 6,
                             IsActive = true,
                             Name = "Ciclohexano"
@@ -1610,6 +2003,10 @@ namespace Lims.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
+                    b.Property<Guid?>("MaterialId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("material_id");
+
                     b.Property<decimal>("Percent")
                         .HasPrecision(7, 4)
                         .HasColumnType("numeric(7,4)")
@@ -1619,7 +2016,7 @@ namespace Lims.Infrastructure.Persistence.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("position");
 
-                    b.Property<Guid>("PreparationId")
+                    b.Property<Guid?>("PreparationId")
                         .HasColumnType("uuid")
                         .HasColumnName("preparation_id");
 
@@ -1631,6 +2028,12 @@ namespace Lims.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("SolventId");
 
+                    b.HasIndex("MaterialId", "Position")
+                        .IsUnique();
+
+                    b.HasIndex("MaterialId", "SolventId")
+                        .IsUnique();
+
                     b.HasIndex("PreparationId", "Position")
                         .IsUnique();
 
@@ -1639,8 +2042,68 @@ namespace Lims.Infrastructure.Persistence.Migrations
 
                     b.ToTable("stock_solvents", null, t =>
                         {
+                            t.HasCheckConstraint("ck_stock_solvents_owner", "(preparation_id IS NOT NULL AND material_id IS NULL) OR (preparation_id IS NULL AND material_id IS NOT NULL)");
+
                             t.HasCheckConstraint("ck_stock_solvents_percent", "percent > 0 AND percent <= 100 AND position >= 0");
                         });
+                });
+
+            modelBuilder.Entity("Lims.Domain.Alerts.AlertHistory", b =>
+                {
+                    b.HasOne("Lims.Domain.Alerts.MaterialAlert", null)
+                        .WithMany()
+                        .HasForeignKey("AlertId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Lims.Domain.Alerts.EmailAttempt", b =>
+                {
+                    b.HasOne("Lims.Domain.Alerts.EmailDelivery", null)
+                        .WithMany()
+                        .HasForeignKey("DeliveryId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Lims.Domain.Alerts.EmailDelivery", b =>
+                {
+                    b.HasOne("Lims.Domain.Alerts.MaterialAlert", null)
+                        .WithMany()
+                        .HasForeignKey("AlertId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Lims.Domain.Identity.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Lims.Domain.Alerts.NotificationPreference", b =>
+                {
+                    b.HasOne("Lims.Domain.Identity.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Lims.Domain.Alerts.UserNotification", b =>
+                {
+                    b.HasOne("Lims.Domain.Alerts.MaterialAlert", "Alert")
+                        .WithMany()
+                        .HasForeignKey("AlertId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Lims.Domain.Identity.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Alert");
                 });
 
             modelBuilder.Entity("Lims.Domain.Authentication.AuthSession", b =>
@@ -1917,11 +2380,15 @@ namespace Lims.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("Lims.Domain.ReferencePreparations.StockSolvent", b =>
                 {
+                    b.HasOne("Lims.Domain.ReferenceMaterials.ReferenceMaterial", null)
+                        .WithMany()
+                        .HasForeignKey("MaterialId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("Lims.Domain.ReferencePreparations.ReferencePreparation", null)
                         .WithMany("Solvents")
                         .HasForeignKey("PreparationId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("Lims.Domain.ReferencePreparations.ReferenceSolvent", "Solvent")
                         .WithMany()

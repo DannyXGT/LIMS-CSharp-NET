@@ -1,0 +1,1944 @@
+{
+  "fixtureOnly": true,
+  "Size": {
+    "Width": 1078.4000244140625,
+    "Height": 606.4000244140625,
+    "IsEmpty": false
+  },
+  "RasterizationScale": 1.25,
+  "windowSize": {
+    "Width": 1366,
+    "Height": 768
+  },
+  "ValidCount": 20,
+  "totalRows": 21,
+  "CanSave": true,
+  "InitialVolume": 10,
+  "AvailableVolume": 10,
+  "AvailabilityPercent": 100,
+  "ValidationStatus": "Listo para registrar la Intermedia",
+  "ImportMessage": "17 analitos importados. Revise las concentraciones antes de guardar.",
+  "IsReady": true,
+  "Name": "Mix \u00B7 PRUEBA VISUAL",
+  "Method": {
+    "Id": 1,
+    "Name": "M\u00E9todo de prueba 01"
+  },
+  "Location": {
+    "Id": 1,
+    "Name": "Laboratorio de prueba"
+  },
+  "VolumeUnit": {
+    "Id": 3,
+    "Name": "Mililitro",
+    "Symbol": "mL",
+    "DisplayName": "mL \u2014 Mililitro"
+  },
+  "ExpirationDate": "2027-10-19T00:00:00-06:00",
+  "Storage": "Ambiente",
+  "footer": {
+    "x": 72.80000305175781,
+    "y": 536,
+    "width": 981.5999755859375,
+    "height": 46.400001525878906
+  },
+  "summary": {
+    "x": 764,
+    "y": 192.00001525878906,
+    "width": 290.3999938964844,
+    "height": 333.6000061035156
+  },
+  "header": {
+    "x": 84,
+    "y": 294.63311767578125,
+    "width": 648,
+    "height": 28
+  },
+  "viewport": {
+    "x": 84,
+    "y": 322.6330871582031,
+    "width": 648,
+    "height": 171.1999969482422
+  },
+  "VerticalOffset": 0,
+  "ScrollableHeight": 719.2000274658203,
+  "captureOffset": 42.099124908447266,
+  "rows": [
+    {
+      "Number": 1,
+      "Name": "o-Toluidina",
+      "visible": true,
+      "bounds": {
+        "x": 84,
+        "y": 322.6330871582031,
+        "width": 648,
+        "height": 42.400001525878906
+      },
+      "fields": [
+        {
+          "Name": "AnaltyeName",
+          "label": "Analito 1 \u00B7 Nombre",
+          "IsTabStop": true,
+          "IsEnabled": true,
+          "bounds": {
+            "x": 126.40000915527344,
+            "y": 326.6330871582031,
+            "width": 249.60000610351562,
+            "height": 32
+          }
+        },
+        {
+          "Name": "AnalyteCas",
+          "label": "Analito 1 \u00B7 CAS",
+          "IsTabStop": true,
+          "IsEnabled": true,
+          "bounds": {
+            "x": 381.6000061035156,
+            "y": 326.6330871582031,
+            "width": 96,
+            "height": 32
+          }
+        },
+        {
+          "Name": "AnalyteConcentration",
+          "label": "Analito 1 \u00B7 Concentraci\u00F3n",
+          "IsTabStop": true,
+          "IsEnabled": true,
+          "bounds": {
+            "x": 484,
+            "y": 326.6330871582031,
+            "width": 100,
+            "height": 32
+          }
+        },
+        {
+          "Name": "AnalyteUnit",
+          "label": "Analito 1 \u00B7 Unidad",
+          "IsTabStop": true,
+          "IsEnabled": true,
+          "bounds": {
+            "x": 589.5999755859375,
+            "y": 326.6330871582031,
+            "width": 88,
+            "height": 32
+          }
+        },
+        {
+          "Name": "",
+          "label": "Quitar analito",
+          "IsTabStop": true,
+          "IsEnabled": true,
+          "bounds": {
+            "x": 684,
+            "y": 326.6330871582031,
+            "width": 32,
+            "height": 32
+          }
+        }
+      ]
+    },
+    {
+      "Number": 2,
+      "Name": "2-Anisidina",
+      "visible": true,
+      "bounds": {
+        "x": 84,
+        "y": 365.0330810546875,
+        "width": 648,
+        "height": 42.400001525878906
+      },
+      "fields": [
+        {
+          "Name": "AnaltyeName",
+          "label": "Analito 2 \u00B7 Nombre",
+          "IsTabStop": true,
+          "IsEnabled": true,
+          "bounds": {
+            "x": 126.40000915527344,
+            "y": 369.0330810546875,
+            "width": 249.60000610351562,
+            "height": 32
+          }
+        },
+        {
+          "Name": "AnalyteCas",
+          "label": "Analito 2 \u00B7 CAS",
+          "IsTabStop": true,
+          "IsEnabled": true,
+          "bounds": {
+            "x": 381.6000061035156,
+            "y": 369.0330810546875,
+            "width": 96,
+            "height": 32
+          }
+        },
+        {
+          "Name": "AnalyteConcentration",
+          "label": "Analito 2 \u00B7 Concentraci\u00F3n",
+          "IsTabStop": true,
+          "IsEnabled": true,
+          "bounds": {
+            "x": 484,
+            "y": 369.0330810546875,
+            "width": 100,
+            "height": 32
+          }
+        },
+        {
+          "Name": "AnalyteUnit",
+          "label": "Analito 2 \u00B7 Unidad",
+          "IsTabStop": true,
+          "IsEnabled": true,
+          "bounds": {
+            "x": 589.5999755859375,
+            "y": 369.0330810546875,
+            "width": 88,
+            "height": 32
+          }
+        },
+        {
+          "Name": "",
+          "label": "Quitar analito",
+          "IsTabStop": true,
+          "IsEnabled": true,
+          "bounds": {
+            "x": 684,
+            "y": 369.0330810546875,
+            "width": 32,
+            "height": 32
+          }
+        }
+      ]
+    },
+    {
+      "Number": 3,
+      "Name": "4-Aminobifenilo",
+      "visible": true,
+      "bounds": {
+        "x": 84,
+        "y": 407.4330749511719,
+        "width": 648,
+        "height": 42.400001525878906
+      },
+      "fields": [
+        {
+          "Name": "AnaltyeName",
+          "label": "Analito 3 \u00B7 Nombre",
+          "IsTabStop": true,
+          "IsEnabled": true,
+          "bounds": {
+            "x": 126.40000915527344,
+            "y": 411.4330749511719,
+            "width": 249.60000610351562,
+            "height": 32
+          }
+        },
+        {
+          "Name": "AnalyteCas",
+          "label": "Analito 3 \u00B7 CAS",
+          "IsTabStop": true,
+          "IsEnabled": true,
+          "bounds": {
+            "x": 381.6000061035156,
+            "y": 411.4330749511719,
+            "width": 96,
+            "height": 32
+          }
+        },
+        {
+          "Name": "AnalyteConcentration",
+          "label": "Analito 3 \u00B7 Concentraci\u00F3n",
+          "IsTabStop": true,
+          "IsEnabled": true,
+          "bounds": {
+            "x": 484,
+            "y": 411.4330749511719,
+            "width": 100,
+            "height": 32
+          }
+        },
+        {
+          "Name": "AnalyteUnit",
+          "label": "Analito 3 \u00B7 Unidad",
+          "IsTabStop": true,
+          "IsEnabled": true,
+          "bounds": {
+            "x": 589.5999755859375,
+            "y": 411.4330749511719,
+            "width": 88,
+            "height": 32
+          }
+        },
+        {
+          "Name": "",
+          "label": "Quitar analito",
+          "IsTabStop": true,
+          "IsEnabled": true,
+          "bounds": {
+            "x": 684,
+            "y": 411.4330749511719,
+            "width": 32,
+            "height": 32
+          }
+        }
+      ]
+    },
+    {
+      "Number": 4,
+      "Name": "Analito de prueba 4",
+      "visible": true,
+      "bounds": {
+        "x": 84,
+        "y": 449.8330993652344,
+        "width": 648,
+        "height": 42.400001525878906
+      },
+      "fields": [
+        {
+          "Name": "AnaltyeName",
+          "label": "Analito 4 \u00B7 Nombre",
+          "IsTabStop": true,
+          "IsEnabled": true,
+          "bounds": {
+            "x": 126.40000915527344,
+            "y": 453.8330993652344,
+            "width": 249.60000610351562,
+            "height": 32
+          }
+        },
+        {
+          "Name": "AnalyteCas",
+          "label": "Analito 4 \u00B7 CAS",
+          "IsTabStop": true,
+          "IsEnabled": true,
+          "bounds": {
+            "x": 381.6000061035156,
+            "y": 453.8330993652344,
+            "width": 96,
+            "height": 32
+          }
+        },
+        {
+          "Name": "AnalyteConcentration",
+          "label": "Analito 4 \u00B7 Concentraci\u00F3n",
+          "IsTabStop": true,
+          "IsEnabled": true,
+          "bounds": {
+            "x": 484,
+            "y": 453.8330993652344,
+            "width": 100,
+            "height": 32
+          }
+        },
+        {
+          "Name": "AnalyteUnit",
+          "label": "Analito 4 \u00B7 Unidad",
+          "IsTabStop": true,
+          "IsEnabled": true,
+          "bounds": {
+            "x": 589.5999755859375,
+            "y": 453.8330993652344,
+            "width": 88,
+            "height": 32
+          }
+        },
+        {
+          "Name": "",
+          "label": "Quitar analito",
+          "IsTabStop": true,
+          "IsEnabled": true,
+          "bounds": {
+            "x": 684,
+            "y": 453.8330993652344,
+            "width": 32,
+            "height": 32
+          }
+        }
+      ]
+    },
+    {
+      "Number": 5,
+      "Name": "Analito de prueba 5",
+      "visible": true,
+      "bounds": {
+        "x": 84,
+        "y": 492.2331237792969,
+        "width": 648,
+        "height": 42.400001525878906
+      },
+      "fields": [
+        {
+          "Name": "AnaltyeName",
+          "label": "Analito 5 \u00B7 Nombre",
+          "IsTabStop": true,
+          "IsEnabled": true,
+          "bounds": {
+            "x": 126.40000915527344,
+            "y": 496.2331237792969,
+            "width": 249.60000610351562,
+            "height": 32
+          }
+        },
+        {
+          "Name": "AnalyteCas",
+          "label": "Analito 5 \u00B7 CAS",
+          "IsTabStop": true,
+          "IsEnabled": true,
+          "bounds": {
+            "x": 381.6000061035156,
+            "y": 496.2331237792969,
+            "width": 96,
+            "height": 32
+          }
+        },
+        {
+          "Name": "AnalyteConcentration",
+          "label": "Analito 5 \u00B7 Concentraci\u00F3n",
+          "IsTabStop": true,
+          "IsEnabled": true,
+          "bounds": {
+            "x": 484,
+            "y": 496.2331237792969,
+            "width": 100,
+            "height": 32
+          }
+        },
+        {
+          "Name": "AnalyteUnit",
+          "label": "Analito 5 \u00B7 Unidad",
+          "IsTabStop": true,
+          "IsEnabled": true,
+          "bounds": {
+            "x": 589.5999755859375,
+            "y": 496.2331237792969,
+            "width": 88,
+            "height": 32
+          }
+        },
+        {
+          "Name": "",
+          "label": "Quitar analito",
+          "IsTabStop": true,
+          "IsEnabled": true,
+          "bounds": {
+            "x": 684,
+            "y": 496.2331237792969,
+            "width": 32,
+            "height": 32
+          }
+        }
+      ]
+    },
+    {
+      "Number": 6,
+      "Name": "Analito de prueba 6",
+      "visible": false,
+      "bounds": {
+        "x": 84,
+        "y": 534.633056640625,
+        "width": 648,
+        "height": 42.400001525878906
+      },
+      "fields": [
+        {
+          "Name": "AnaltyeName",
+          "label": "Analito 6 \u00B7 Nombre",
+          "IsTabStop": true,
+          "IsEnabled": true,
+          "bounds": {
+            "x": 126.40000915527344,
+            "y": 538.633056640625,
+            "width": 249.60000610351562,
+            "height": 32
+          }
+        },
+        {
+          "Name": "AnalyteCas",
+          "label": "Analito 6 \u00B7 CAS",
+          "IsTabStop": true,
+          "IsEnabled": true,
+          "bounds": {
+            "x": 381.6000061035156,
+            "y": 538.633056640625,
+            "width": 96,
+            "height": 32
+          }
+        },
+        {
+          "Name": "AnalyteConcentration",
+          "label": "Analito 6 \u00B7 Concentraci\u00F3n",
+          "IsTabStop": true,
+          "IsEnabled": true,
+          "bounds": {
+            "x": 484,
+            "y": 538.633056640625,
+            "width": 100,
+            "height": 32
+          }
+        },
+        {
+          "Name": "AnalyteUnit",
+          "label": "Analito 6 \u00B7 Unidad",
+          "IsTabStop": true,
+          "IsEnabled": true,
+          "bounds": {
+            "x": 589.5999755859375,
+            "y": 538.633056640625,
+            "width": 88,
+            "height": 32
+          }
+        },
+        {
+          "Name": "",
+          "label": "Quitar analito",
+          "IsTabStop": true,
+          "IsEnabled": true,
+          "bounds": {
+            "x": 684,
+            "y": 538.633056640625,
+            "width": 32,
+            "height": 32
+          }
+        }
+      ]
+    },
+    {
+      "Number": 7,
+      "Name": "Analito de prueba 7",
+      "visible": false,
+      "bounds": {
+        "x": 84,
+        "y": 577.0331420898438,
+        "width": 648,
+        "height": 42.400001525878906
+      },
+      "fields": [
+        {
+          "Name": "AnaltyeName",
+          "label": "Analito 7 \u00B7 Nombre",
+          "IsTabStop": true,
+          "IsEnabled": true,
+          "bounds": {
+            "x": 126.40000915527344,
+            "y": 581.0331420898438,
+            "width": 249.60000610351562,
+            "height": 32
+          }
+        },
+        {
+          "Name": "AnalyteCas",
+          "label": "Analito 7 \u00B7 CAS",
+          "IsTabStop": true,
+          "IsEnabled": true,
+          "bounds": {
+            "x": 381.6000061035156,
+            "y": 581.0331420898438,
+            "width": 96,
+            "height": 32
+          }
+        },
+        {
+          "Name": "AnalyteConcentration",
+          "label": "Analito 7 \u00B7 Concentraci\u00F3n",
+          "IsTabStop": true,
+          "IsEnabled": true,
+          "bounds": {
+            "x": 484,
+            "y": 581.0331420898438,
+            "width": 100,
+            "height": 32
+          }
+        },
+        {
+          "Name": "AnalyteUnit",
+          "label": "Analito 7 \u00B7 Unidad",
+          "IsTabStop": true,
+          "IsEnabled": true,
+          "bounds": {
+            "x": 589.5999755859375,
+            "y": 581.0331420898438,
+            "width": 88,
+            "height": 32
+          }
+        },
+        {
+          "Name": "",
+          "label": "Quitar analito",
+          "IsTabStop": true,
+          "IsEnabled": true,
+          "bounds": {
+            "x": 684,
+            "y": 581.0331420898438,
+            "width": 32,
+            "height": 32
+          }
+        }
+      ]
+    },
+    {
+      "Number": 8,
+      "Name": "Analito de prueba 8",
+      "visible": false,
+      "bounds": {
+        "x": 84,
+        "y": 619.43310546875,
+        "width": 648,
+        "height": 42.400001525878906
+      },
+      "fields": [
+        {
+          "Name": "AnaltyeName",
+          "label": "Analito 8 \u00B7 Nombre",
+          "IsTabStop": true,
+          "IsEnabled": true,
+          "bounds": {
+            "x": 126.40000915527344,
+            "y": 623.43310546875,
+            "width": 249.60000610351562,
+            "height": 32
+          }
+        },
+        {
+          "Name": "AnalyteCas",
+          "label": "Analito 8 \u00B7 CAS",
+          "IsTabStop": true,
+          "IsEnabled": true,
+          "bounds": {
+            "x": 381.6000061035156,
+            "y": 623.43310546875,
+            "width": 96,
+            "height": 32
+          }
+        },
+        {
+          "Name": "AnalyteConcentration",
+          "label": "Analito 8 \u00B7 Concentraci\u00F3n",
+          "IsTabStop": true,
+          "IsEnabled": true,
+          "bounds": {
+            "x": 484,
+            "y": 623.43310546875,
+            "width": 100,
+            "height": 32
+          }
+        },
+        {
+          "Name": "AnalyteUnit",
+          "label": "Analito 8 \u00B7 Unidad",
+          "IsTabStop": true,
+          "IsEnabled": true,
+          "bounds": {
+            "x": 589.5999755859375,
+            "y": 623.43310546875,
+            "width": 88,
+            "height": 32
+          }
+        },
+        {
+          "Name": "",
+          "label": "Quitar analito",
+          "IsTabStop": true,
+          "IsEnabled": true,
+          "bounds": {
+            "x": 684,
+            "y": 623.43310546875,
+            "width": 32,
+            "height": 32
+          }
+        }
+      ]
+    },
+    {
+      "Number": 9,
+      "Name": "Analito de prueba 9",
+      "visible": false,
+      "bounds": {
+        "x": 84,
+        "y": 661.8331298828125,
+        "width": 648,
+        "height": 42.400001525878906
+      },
+      "fields": [
+        {
+          "Name": "AnaltyeName",
+          "label": "Analito 9 \u00B7 Nombre",
+          "IsTabStop": true,
+          "IsEnabled": true,
+          "bounds": {
+            "x": 126.40000915527344,
+            "y": 665.8331298828125,
+            "width": 249.60000610351562,
+            "height": 32
+          }
+        },
+        {
+          "Name": "AnalyteCas",
+          "label": "Analito 9 \u00B7 CAS",
+          "IsTabStop": true,
+          "IsEnabled": true,
+          "bounds": {
+            "x": 381.6000061035156,
+            "y": 665.8331298828125,
+            "width": 96,
+            "height": 32
+          }
+        },
+        {
+          "Name": "AnalyteConcentration",
+          "label": "Analito 9 \u00B7 Concentraci\u00F3n",
+          "IsTabStop": true,
+          "IsEnabled": true,
+          "bounds": {
+            "x": 484,
+            "y": 665.8331298828125,
+            "width": 100,
+            "height": 32
+          }
+        },
+        {
+          "Name": "AnalyteUnit",
+          "label": "Analito 9 \u00B7 Unidad",
+          "IsTabStop": true,
+          "IsEnabled": true,
+          "bounds": {
+            "x": 589.5999755859375,
+            "y": 665.8331298828125,
+            "width": 88,
+            "height": 32
+          }
+        },
+        {
+          "Name": "",
+          "label": "Quitar analito",
+          "IsTabStop": true,
+          "IsEnabled": true,
+          "bounds": {
+            "x": 684,
+            "y": 665.8331298828125,
+            "width": 32,
+            "height": 32
+          }
+        }
+      ]
+    },
+    {
+      "Number": 10,
+      "Name": "Analito de prueba 10",
+      "visible": false,
+      "bounds": {
+        "x": 84,
+        "y": 704.2330932617188,
+        "width": 648,
+        "height": 42.400001525878906
+      },
+      "fields": [
+        {
+          "Name": "AnaltyeName",
+          "label": "Analito 10 \u00B7 Nombre",
+          "IsTabStop": true,
+          "IsEnabled": true,
+          "bounds": {
+            "x": 126.40000915527344,
+            "y": 708.2330932617188,
+            "width": 249.60000610351562,
+            "height": 32
+          }
+        },
+        {
+          "Name": "AnalyteCas",
+          "label": "Analito 10 \u00B7 CAS",
+          "IsTabStop": true,
+          "IsEnabled": true,
+          "bounds": {
+            "x": 381.6000061035156,
+            "y": 708.2330932617188,
+            "width": 96,
+            "height": 32
+          }
+        },
+        {
+          "Name": "AnalyteConcentration",
+          "label": "Analito 10 \u00B7 Concentraci\u00F3n",
+          "IsTabStop": true,
+          "IsEnabled": true,
+          "bounds": {
+            "x": 484,
+            "y": 708.2330932617188,
+            "width": 100,
+            "height": 32
+          }
+        },
+        {
+          "Name": "AnalyteUnit",
+          "label": "Analito 10 \u00B7 Unidad",
+          "IsTabStop": true,
+          "IsEnabled": true,
+          "bounds": {
+            "x": 589.5999755859375,
+            "y": 708.2330932617188,
+            "width": 88,
+            "height": 32
+          }
+        },
+        {
+          "Name": "",
+          "label": "Quitar analito",
+          "IsTabStop": true,
+          "IsEnabled": true,
+          "bounds": {
+            "x": 684,
+            "y": 708.2330932617188,
+            "width": 32,
+            "height": 32
+          }
+        }
+      ]
+    },
+    {
+      "Number": 11,
+      "Name": "Analito de prueba 11",
+      "visible": false,
+      "bounds": {
+        "x": 84,
+        "y": 746.6331176757812,
+        "width": 648,
+        "height": 42.400001525878906
+      },
+      "fields": [
+        {
+          "Name": "AnaltyeName",
+          "label": "Analito 11 \u00B7 Nombre",
+          "IsTabStop": true,
+          "IsEnabled": true,
+          "bounds": {
+            "x": 126.40000915527344,
+            "y": 750.6331176757812,
+            "width": 249.60000610351562,
+            "height": 32
+          }
+        },
+        {
+          "Name": "AnalyteCas",
+          "label": "Analito 11 \u00B7 CAS",
+          "IsTabStop": true,
+          "IsEnabled": true,
+          "bounds": {
+            "x": 381.6000061035156,
+            "y": 750.6331176757812,
+            "width": 96,
+            "height": 32
+          }
+        },
+        {
+          "Name": "AnalyteConcentration",
+          "label": "Analito 11 \u00B7 Concentraci\u00F3n",
+          "IsTabStop": true,
+          "IsEnabled": true,
+          "bounds": {
+            "x": 484,
+            "y": 750.6331176757812,
+            "width": 100,
+            "height": 32
+          }
+        },
+        {
+          "Name": "AnalyteUnit",
+          "label": "Analito 11 \u00B7 Unidad",
+          "IsTabStop": true,
+          "IsEnabled": true,
+          "bounds": {
+            "x": 589.5999755859375,
+            "y": 750.6331176757812,
+            "width": 88,
+            "height": 32
+          }
+        },
+        {
+          "Name": "",
+          "label": "Quitar analito",
+          "IsTabStop": true,
+          "IsEnabled": true,
+          "bounds": {
+            "x": 684,
+            "y": 750.6331176757812,
+            "width": 32,
+            "height": 32
+          }
+        }
+      ]
+    },
+    {
+      "Number": 12,
+      "Name": "Analito de prueba 12",
+      "visible": false,
+      "bounds": {
+        "x": 84,
+        "y": 789.0330810546875,
+        "width": 648,
+        "height": 42.400001525878906
+      },
+      "fields": [
+        {
+          "Name": "AnaltyeName",
+          "label": "Analito 12 \u00B7 Nombre",
+          "IsTabStop": true,
+          "IsEnabled": true,
+          "bounds": {
+            "x": 126.40000915527344,
+            "y": 793.0330810546875,
+            "width": 249.60000610351562,
+            "height": 32
+          }
+        },
+        {
+          "Name": "AnalyteCas",
+          "label": "Analito 12 \u00B7 CAS",
+          "IsTabStop": true,
+          "IsEnabled": true,
+          "bounds": {
+            "x": 381.6000061035156,
+            "y": 793.0330810546875,
+            "width": 96,
+            "height": 32
+          }
+        },
+        {
+          "Name": "AnalyteConcentration",
+          "label": "Analito 12 \u00B7 Concentraci\u00F3n",
+          "IsTabStop": true,
+          "IsEnabled": true,
+          "bounds": {
+            "x": 484,
+            "y": 793.0330810546875,
+            "width": 100,
+            "height": 32
+          }
+        },
+        {
+          "Name": "AnalyteUnit",
+          "label": "Analito 12 \u00B7 Unidad",
+          "IsTabStop": true,
+          "IsEnabled": true,
+          "bounds": {
+            "x": 589.5999755859375,
+            "y": 793.0330810546875,
+            "width": 88,
+            "height": 32
+          }
+        },
+        {
+          "Name": "",
+          "label": "Quitar analito",
+          "IsTabStop": true,
+          "IsEnabled": true,
+          "bounds": {
+            "x": 684,
+            "y": 793.0330810546875,
+            "width": 32,
+            "height": 32
+          }
+        }
+      ]
+    },
+    {
+      "Number": 13,
+      "Name": "Analito de prueba 13",
+      "visible": false,
+      "bounds": {
+        "x": 84,
+        "y": 831.43310546875,
+        "width": 648,
+        "height": 42.400001525878906
+      },
+      "fields": [
+        {
+          "Name": "AnaltyeName",
+          "label": "Analito 13 \u00B7 Nombre",
+          "IsTabStop": true,
+          "IsEnabled": true,
+          "bounds": {
+            "x": 126.40000915527344,
+            "y": 835.43310546875,
+            "width": 249.60000610351562,
+            "height": 32
+          }
+        },
+        {
+          "Name": "AnalyteCas",
+          "label": "Analito 13 \u00B7 CAS",
+          "IsTabStop": true,
+          "IsEnabled": true,
+          "bounds": {
+            "x": 381.6000061035156,
+            "y": 835.43310546875,
+            "width": 96,
+            "height": 32
+          }
+        },
+        {
+          "Name": "AnalyteConcentration",
+          "label": "Analito 13 \u00B7 Concentraci\u00F3n",
+          "IsTabStop": true,
+          "IsEnabled": true,
+          "bounds": {
+            "x": 484,
+            "y": 835.43310546875,
+            "width": 100,
+            "height": 32
+          }
+        },
+        {
+          "Name": "AnalyteUnit",
+          "label": "Analito 13 \u00B7 Unidad",
+          "IsTabStop": true,
+          "IsEnabled": true,
+          "bounds": {
+            "x": 589.5999755859375,
+            "y": 835.43310546875,
+            "width": 88,
+            "height": 32
+          }
+        },
+        {
+          "Name": "",
+          "label": "Quitar analito",
+          "IsTabStop": true,
+          "IsEnabled": true,
+          "bounds": {
+            "x": 684,
+            "y": 835.43310546875,
+            "width": 32,
+            "height": 32
+          }
+        }
+      ]
+    },
+    {
+      "Number": 14,
+      "Name": "Analito de prueba 14",
+      "visible": false,
+      "bounds": {
+        "x": 84,
+        "y": 873.8331298828125,
+        "width": 648,
+        "height": 42.400001525878906
+      },
+      "fields": [
+        {
+          "Name": "AnaltyeName",
+          "label": "Analito 14 \u00B7 Nombre",
+          "IsTabStop": true,
+          "IsEnabled": true,
+          "bounds": {
+            "x": 126.40000915527344,
+            "y": 877.8331298828125,
+            "width": 249.60000610351562,
+            "height": 32
+          }
+        },
+        {
+          "Name": "AnalyteCas",
+          "label": "Analito 14 \u00B7 CAS",
+          "IsTabStop": true,
+          "IsEnabled": true,
+          "bounds": {
+            "x": 381.6000061035156,
+            "y": 877.8331298828125,
+            "width": 96,
+            "height": 32
+          }
+        },
+        {
+          "Name": "AnalyteConcentration",
+          "label": "Analito 14 \u00B7 Concentraci\u00F3n",
+          "IsTabStop": true,
+          "IsEnabled": true,
+          "bounds": {
+            "x": 484,
+            "y": 877.8331298828125,
+            "width": 100,
+            "height": 32
+          }
+        },
+        {
+          "Name": "AnalyteUnit",
+          "label": "Analito 14 \u00B7 Unidad",
+          "IsTabStop": true,
+          "IsEnabled": true,
+          "bounds": {
+            "x": 589.5999755859375,
+            "y": 877.8331298828125,
+            "width": 88,
+            "height": 32
+          }
+        },
+        {
+          "Name": "",
+          "label": "Quitar analito",
+          "IsTabStop": true,
+          "IsEnabled": true,
+          "bounds": {
+            "x": 684,
+            "y": 877.8331298828125,
+            "width": 32,
+            "height": 32
+          }
+        }
+      ]
+    },
+    {
+      "Number": 15,
+      "Name": "Analito de prueba 15",
+      "visible": false,
+      "bounds": {
+        "x": 84,
+        "y": 916.2330932617188,
+        "width": 648,
+        "height": 42.400001525878906
+      },
+      "fields": [
+        {
+          "Name": "AnaltyeName",
+          "label": "Analito 15 \u00B7 Nombre",
+          "IsTabStop": true,
+          "IsEnabled": true,
+          "bounds": {
+            "x": 126.40000915527344,
+            "y": 920.2330932617188,
+            "width": 249.60000610351562,
+            "height": 32
+          }
+        },
+        {
+          "Name": "AnalyteCas",
+          "label": "Analito 15 \u00B7 CAS",
+          "IsTabStop": true,
+          "IsEnabled": true,
+          "bounds": {
+            "x": 381.6000061035156,
+            "y": 920.2330932617188,
+            "width": 96,
+            "height": 32
+          }
+        },
+        {
+          "Name": "AnalyteConcentration",
+          "label": "Analito 15 \u00B7 Concentraci\u00F3n",
+          "IsTabStop": true,
+          "IsEnabled": true,
+          "bounds": {
+            "x": 484,
+            "y": 920.2330932617188,
+            "width": 100,
+            "height": 32
+          }
+        },
+        {
+          "Name": "AnalyteUnit",
+          "label": "Analito 15 \u00B7 Unidad",
+          "IsTabStop": true,
+          "IsEnabled": true,
+          "bounds": {
+            "x": 589.5999755859375,
+            "y": 920.2330932617188,
+            "width": 88,
+            "height": 32
+          }
+        },
+        {
+          "Name": "",
+          "label": "Quitar analito",
+          "IsTabStop": true,
+          "IsEnabled": true,
+          "bounds": {
+            "x": 684,
+            "y": 920.2330932617188,
+            "width": 32,
+            "height": 32
+          }
+        }
+      ]
+    },
+    {
+      "Number": 16,
+      "Name": "Analito de prueba 16",
+      "visible": false,
+      "bounds": {
+        "x": 84,
+        "y": 958.6331176757812,
+        "width": 648,
+        "height": 42.400001525878906
+      },
+      "fields": [
+        {
+          "Name": "AnaltyeName",
+          "label": "Analito 16 \u00B7 Nombre",
+          "IsTabStop": true,
+          "IsEnabled": true,
+          "bounds": {
+            "x": 126.40000915527344,
+            "y": 962.6331176757812,
+            "width": 249.60000610351562,
+            "height": 32
+          }
+        },
+        {
+          "Name": "AnalyteCas",
+          "label": "Analito 16 \u00B7 CAS",
+          "IsTabStop": true,
+          "IsEnabled": true,
+          "bounds": {
+            "x": 381.6000061035156,
+            "y": 962.6331176757812,
+            "width": 96,
+            "height": 32
+          }
+        },
+        {
+          "Name": "AnalyteConcentration",
+          "label": "Analito 16 \u00B7 Concentraci\u00F3n",
+          "IsTabStop": true,
+          "IsEnabled": true,
+          "bounds": {
+            "x": 484,
+            "y": 962.6331176757812,
+            "width": 100,
+            "height": 32
+          }
+        },
+        {
+          "Name": "AnalyteUnit",
+          "label": "Analito 16 \u00B7 Unidad",
+          "IsTabStop": true,
+          "IsEnabled": true,
+          "bounds": {
+            "x": 589.5999755859375,
+            "y": 962.6331176757812,
+            "width": 88,
+            "height": 32
+          }
+        },
+        {
+          "Name": "",
+          "label": "Quitar analito",
+          "IsTabStop": true,
+          "IsEnabled": true,
+          "bounds": {
+            "x": 684,
+            "y": 962.6331176757812,
+            "width": 32,
+            "height": 32
+          }
+        }
+      ]
+    },
+    {
+      "Number": 17,
+      "Name": "Analito de prueba 17",
+      "visible": false,
+      "bounds": {
+        "x": 84,
+        "y": 1001.0331420898438,
+        "width": 648,
+        "height": 42.400001525878906
+      },
+      "fields": [
+        {
+          "Name": "AnaltyeName",
+          "label": "Analito 17 \u00B7 Nombre",
+          "IsTabStop": true,
+          "IsEnabled": true,
+          "bounds": {
+            "x": 126.40000915527344,
+            "y": 1005.0331420898438,
+            "width": 249.60000610351562,
+            "height": 32
+          }
+        },
+        {
+          "Name": "AnalyteCas",
+          "label": "Analito 17 \u00B7 CAS",
+          "IsTabStop": true,
+          "IsEnabled": true,
+          "bounds": {
+            "x": 381.6000061035156,
+            "y": 1005.0331420898438,
+            "width": 96,
+            "height": 32
+          }
+        },
+        {
+          "Name": "AnalyteConcentration",
+          "label": "Analito 17 \u00B7 Concentraci\u00F3n",
+          "IsTabStop": true,
+          "IsEnabled": true,
+          "bounds": {
+            "x": 484,
+            "y": 1005.0331420898438,
+            "width": 100,
+            "height": 32
+          }
+        },
+        {
+          "Name": "AnalyteUnit",
+          "label": "Analito 17 \u00B7 Unidad",
+          "IsTabStop": true,
+          "IsEnabled": true,
+          "bounds": {
+            "x": 589.5999755859375,
+            "y": 1005.0331420898438,
+            "width": 88,
+            "height": 32
+          }
+        },
+        {
+          "Name": "",
+          "label": "Quitar analito",
+          "IsTabStop": true,
+          "IsEnabled": true,
+          "bounds": {
+            "x": 684,
+            "y": 1005.0331420898438,
+            "width": 32,
+            "height": 32
+          }
+        }
+      ]
+    },
+    {
+      "Number": 18,
+      "Name": "Analito de prueba 18",
+      "visible": false,
+      "bounds": {
+        "x": 84,
+        "y": 1043.43310546875,
+        "width": 648,
+        "height": 42.400001525878906
+      },
+      "fields": [
+        {
+          "Name": "AnaltyeName",
+          "label": "Analito 18 \u00B7 Nombre",
+          "IsTabStop": true,
+          "IsEnabled": true,
+          "bounds": {
+            "x": 126.40000915527344,
+            "y": 1047.43310546875,
+            "width": 249.60000610351562,
+            "height": 32
+          }
+        },
+        {
+          "Name": "AnalyteCas",
+          "label": "Analito 18 \u00B7 CAS",
+          "IsTabStop": true,
+          "IsEnabled": true,
+          "bounds": {
+            "x": 381.6000061035156,
+            "y": 1047.43310546875,
+            "width": 96,
+            "height": 32
+          }
+        },
+        {
+          "Name": "AnalyteConcentration",
+          "label": "Analito 18 \u00B7 Concentraci\u00F3n",
+          "IsTabStop": true,
+          "IsEnabled": true,
+          "bounds": {
+            "x": 484,
+            "y": 1047.43310546875,
+            "width": 100,
+            "height": 32
+          }
+        },
+        {
+          "Name": "AnalyteUnit",
+          "label": "Analito 18 \u00B7 Unidad",
+          "IsTabStop": true,
+          "IsEnabled": true,
+          "bounds": {
+            "x": 589.5999755859375,
+            "y": 1047.43310546875,
+            "width": 88,
+            "height": 32
+          }
+        },
+        {
+          "Name": "",
+          "label": "Quitar analito",
+          "IsTabStop": true,
+          "IsEnabled": true,
+          "bounds": {
+            "x": 684,
+            "y": 1047.43310546875,
+            "width": 32,
+            "height": 32
+          }
+        }
+      ]
+    },
+    {
+      "Number": 19,
+      "Name": "Analito de prueba 19",
+      "visible": false,
+      "bounds": {
+        "x": 84,
+        "y": 1085.833251953125,
+        "width": 648,
+        "height": 42.400001525878906
+      },
+      "fields": [
+        {
+          "Name": "AnaltyeName",
+          "label": "Analito 19 \u00B7 Nombre",
+          "IsTabStop": true,
+          "IsEnabled": true,
+          "bounds": {
+            "x": 126.40000915527344,
+            "y": 1089.833251953125,
+            "width": 249.60000610351562,
+            "height": 32
+          }
+        },
+        {
+          "Name": "AnalyteCas",
+          "label": "Analito 19 \u00B7 CAS",
+          "IsTabStop": true,
+          "IsEnabled": true,
+          "bounds": {
+            "x": 381.6000061035156,
+            "y": 1089.833251953125,
+            "width": 96,
+            "height": 32
+          }
+        },
+        {
+          "Name": "AnalyteConcentration",
+          "label": "Analito 19 \u00B7 Concentraci\u00F3n",
+          "IsTabStop": true,
+          "IsEnabled": true,
+          "bounds": {
+            "x": 484,
+            "y": 1089.833251953125,
+            "width": 100,
+            "height": 32
+          }
+        },
+        {
+          "Name": "AnalyteUnit",
+          "label": "Analito 19 \u00B7 Unidad",
+          "IsTabStop": true,
+          "IsEnabled": true,
+          "bounds": {
+            "x": 589.5999755859375,
+            "y": 1089.833251953125,
+            "width": 88,
+            "height": 32
+          }
+        },
+        {
+          "Name": "",
+          "label": "Quitar analito",
+          "IsTabStop": true,
+          "IsEnabled": true,
+          "bounds": {
+            "x": 684,
+            "y": 1089.833251953125,
+            "width": 32,
+            "height": 32
+          }
+        }
+      ]
+    },
+    {
+      "Number": 20,
+      "Name": "Analito de prueba 20",
+      "visible": false,
+      "bounds": {
+        "x": 84,
+        "y": 1128.233154296875,
+        "width": 648,
+        "height": 42.400001525878906
+      },
+      "fields": [
+        {
+          "Name": "AnaltyeName",
+          "label": "Analito 20 \u00B7 Nombre",
+          "IsTabStop": true,
+          "IsEnabled": true,
+          "bounds": {
+            "x": 126.40000915527344,
+            "y": 1132.233154296875,
+            "width": 249.60000610351562,
+            "height": 32
+          }
+        },
+        {
+          "Name": "AnalyteCas",
+          "label": "Analito 20 \u00B7 CAS",
+          "IsTabStop": true,
+          "IsEnabled": true,
+          "bounds": {
+            "x": 381.6000061035156,
+            "y": 1132.233154296875,
+            "width": 96,
+            "height": 32
+          }
+        },
+        {
+          "Name": "AnalyteConcentration",
+          "label": "Analito 20 \u00B7 Concentraci\u00F3n",
+          "IsTabStop": true,
+          "IsEnabled": true,
+          "bounds": {
+            "x": 484,
+            "y": 1132.233154296875,
+            "width": 100,
+            "height": 32
+          }
+        },
+        {
+          "Name": "AnalyteUnit",
+          "label": "Analito 20 \u00B7 Unidad",
+          "IsTabStop": true,
+          "IsEnabled": true,
+          "bounds": {
+            "x": 589.5999755859375,
+            "y": 1132.233154296875,
+            "width": 88,
+            "height": 32
+          }
+        },
+        {
+          "Name": "",
+          "label": "Quitar analito",
+          "IsTabStop": true,
+          "IsEnabled": true,
+          "bounds": {
+            "x": 684,
+            "y": 1132.233154296875,
+            "width": 32,
+            "height": 32
+          }
+        }
+      ]
+    },
+    {
+      "Number": 21,
+      "Name": "",
+      "visible": false,
+      "bounds": {
+        "x": 84,
+        "y": 1170.6331787109375,
+        "width": 648,
+        "height": 42.400001525878906
+      },
+      "fields": [
+        {
+          "Name": "AnaltyeName",
+          "label": "Analito 21 \u00B7 Nombre",
+          "IsTabStop": true,
+          "IsEnabled": true,
+          "bounds": {
+            "x": 126.40000915527344,
+            "y": 1174.63330078125,
+            "width": 249.60000610351562,
+            "height": 32
+          }
+        },
+        {
+          "Name": "AnalyteCas",
+          "label": "Analito 21 \u00B7 CAS",
+          "IsTabStop": true,
+          "IsEnabled": true,
+          "bounds": {
+            "x": 381.6000061035156,
+            "y": 1174.63330078125,
+            "width": 96,
+            "height": 32
+          }
+        },
+        {
+          "Name": "AnalyteConcentration",
+          "label": "Analito 21 \u00B7 Concentraci\u00F3n",
+          "IsTabStop": true,
+          "IsEnabled": true,
+          "bounds": {
+            "x": 484,
+            "y": 1174.63330078125,
+            "width": 100,
+            "height": 32
+          }
+        },
+        {
+          "Name": "AnalyteUnit",
+          "label": "Analito 21 \u00B7 Unidad",
+          "IsTabStop": true,
+          "IsEnabled": true,
+          "bounds": {
+            "x": 589.5999755859375,
+            "y": 1174.63330078125,
+            "width": 88,
+            "height": 32
+          }
+        },
+        {
+          "Name": "",
+          "label": "Quitar analito",
+          "IsTabStop": true,
+          "IsEnabled": true,
+          "bounds": {
+            "x": 684,
+            "y": 1174.63330078125,
+            "width": 32,
+            "height": 32
+          }
+        }
+      ]
+    }
+  ],
+  "focused": {
+    "Name": "AddRowButton",
+    "label": "Agregar componente al Mix",
+    "bounds": {
+      "x": 553.5999755859375,
+      "y": 205.83309936523438,
+      "width": 77.5999984741211,
+      "height": 36
+    },
+    "intersectsCapture": true
+  },
+  "fieldNames": [
+    {
+      "name": "ProductNameBox",
+      "label": "Nombre del Mix"
+    },
+    {
+      "name": "MethodSelect",
+      "label": "M\u00E9todo del Mix"
+    },
+    {
+      "name": "BrandBox",
+      "label": "Fabricante del Mix"
+    },
+    {
+      "name": "CatalogBox",
+      "label": "Cat\u00E1logo del Mix"
+    },
+    {
+      "name": "LotBox",
+      "label": "Lote del Mix"
+    },
+    {
+      "name": "VolumeBox",
+      "label": "Volumen por frasco"
+    },
+    {
+      "name": "BottleCountBox",
+      "label": "N\u00FAmero de frascos"
+    },
+    {
+      "name": "VolumeUnitSelect",
+      "label": "Unidad de volumen"
+    },
+    {
+      "name": "SolventSelect",
+      "label": "Solvente o matriz del Mix"
+    },
+    {
+      "name": "ReceivedPicker",
+      "label": "Fecha de ingreso del Mix"
+    },
+    {
+      "name": "ExpirationPicker",
+      "label": "Fecha de expiraci\u00F3n del Mix"
+    },
+    {
+      "name": "LocationSelect",
+      "label": "Ubicaci\u00F3n del Mix"
+    },
+    {
+      "name": "StorageBox",
+      "label": "Condiciones de almacenamiento del Mix"
+    },
+    {
+      "name": "SaveButton",
+      "label": "Guardar Intermedia"
+    },
+    {
+      "name": "CancelButton",
+      "label": ""
+    },
+    {
+      "name": "AddRowButton",
+      "label": "Agregar componente al Mix"
+    },
+    {
+      "name": "PasteButton",
+      "label": "Pegar componentes desde Excel"
+    },
+    {
+      "name": "ComponentSearchBox",
+      "label": "Buscar analito o CAS en el Mix"
+    }
+  ],
+  "request": {
+    "RequestId": "c02010b5-30ab-45f3-99a1-e99f570d8d88",
+    "ExistingMaterialId": null,
+    "MaterialVersion": null,
+    "NewMaterial": {
+      "Name": "Mix \u00B7 PRUEBA VISUAL",
+      "CasNumber": null,
+      "CatalogNumber": "CAT-VISUAL",
+      "MethodId": 1,
+      "PurityPercent": null,
+      "Lot": "LOTE-VISUAL",
+      "Brand": "Fabricante de prueba",
+      "ReceivedDate": "2026-10-19",
+      "ExpirationDate": "2027-10-19",
+      "PresentationQuantity": 10,
+      "UnitId": 3,
+      "PackageCount": 1,
+      "StorageTemperature": "Ambiente",
+      "LocationId": 1,
+      "Presentation": "CommercialMix",
+      "Commercial": {
+        "Reference": "",
+        "Matrix": "Metanol (MeOH)",
+        "Traceability": null,
+        "NominalConcentration": null,
+        "NominalUnit": null,
+        "CoverageFactor": null,
+        "OpenedDate": null,
+        "UseAfterOpeningMonths": null,
+        "Components": [
+          {
+            "Id": "522d77b6-5bfd-4ed4-8afa-4fa6856f7ee2",
+            "Name": "o-Toluidina",
+            "CasNumber": "95-53-4",
+            "CertifiedConcentration": 50,
+            "ConcentrationUnit": "\u00B5g/mL",
+            "ExpandedUncertainty": null,
+            "PurityPercent": null,
+            "Lot": null,
+            "AdditionalData": null
+          },
+          {
+            "Id": "ef0f3298-a2a1-449d-8c96-f086ce8b3993",
+            "Name": "2-Anisidina",
+            "CasNumber": "90-04-0",
+            "CertifiedConcentration": 49.9,
+            "ConcentrationUnit": "\u00B5g/mL",
+            "ExpandedUncertainty": null,
+            "PurityPercent": null,
+            "Lot": null,
+            "AdditionalData": null
+          },
+          {
+            "Id": "01d383c8-aabb-4115-9031-5fcbbfd8a981",
+            "Name": "4-Aminobifenilo",
+            "CasNumber": "92-67-1",
+            "CertifiedConcentration": 50.1,
+            "ConcentrationUnit": "\u00B5g/mL",
+            "ExpandedUncertainty": null,
+            "PurityPercent": null,
+            "Lot": null,
+            "AdditionalData": null
+          },
+          {
+            "Id": "5dcad57b-739b-4f0a-a859-cafbf6a53148",
+            "Name": "Analito de prueba 4",
+            "CasNumber": null,
+            "CertifiedConcentration": 50.1,
+            "ConcentrationUnit": "\u00B5g/mL",
+            "ExpandedUncertainty": null,
+            "PurityPercent": null,
+            "Lot": null,
+            "AdditionalData": null
+          },
+          {
+            "Id": "9d65a875-4952-418e-8919-5d0d615c9ea5",
+            "Name": "Analito de prueba 5",
+            "CasNumber": null,
+            "CertifiedConcentration": 50.1,
+            "ConcentrationUnit": "\u00B5g/mL",
+            "ExpandedUncertainty": null,
+            "PurityPercent": null,
+            "Lot": null,
+            "AdditionalData": null
+          },
+          {
+            "Id": "dd634d65-93dc-429f-975f-1c4b47a1d677",
+            "Name": "Analito de prueba 6",
+            "CasNumber": null,
+            "CertifiedConcentration": 50.1,
+            "ConcentrationUnit": "\u00B5g/mL",
+            "ExpandedUncertainty": null,
+            "PurityPercent": null,
+            "Lot": null,
+            "AdditionalData": null
+          },
+          {
+            "Id": "85618d3b-a2e8-4c6b-9e00-29bfaa46c396",
+            "Name": "Analito de prueba 7",
+            "CasNumber": null,
+            "CertifiedConcentration": 50.1,
+            "ConcentrationUnit": "\u00B5g/mL",
+            "ExpandedUncertainty": null,
+            "PurityPercent": null,
+            "Lot": null,
+            "AdditionalData": null
+          },
+          {
+            "Id": "a0313082-4518-4fdc-974c-860543e7e185",
+            "Name": "Analito de prueba 8",
+            "CasNumber": null,
+            "CertifiedConcentration": 50.1,
+            "ConcentrationUnit": "\u00B5g/mL",
+            "ExpandedUncertainty": null,
+            "PurityPercent": null,
+            "Lot": null,
+            "AdditionalData": null
+          },
+          {
+            "Id": "60de65e6-9b94-453f-8e61-fc322f8f5ba8",
+            "Name": "Analito de prueba 9",
+            "CasNumber": null,
+            "CertifiedConcentration": 50.1,
+            "ConcentrationUnit": "\u00B5g/mL",
+            "ExpandedUncertainty": null,
+            "PurityPercent": null,
+            "Lot": null,
+            "AdditionalData": null
+          },
+          {
+            "Id": "85fa5f54-9178-454a-88f8-a0def99e2073",
+            "Name": "Analito de prueba 10",
+            "CasNumber": null,
+            "CertifiedConcentration": 50.1,
+            "ConcentrationUnit": "\u00B5g/mL",
+            "ExpandedUncertainty": null,
+            "PurityPercent": null,
+            "Lot": null,
+            "AdditionalData": null
+          },
+          {
+            "Id": "009206d7-d01f-4f4e-ba8c-e5dd2280e02e",
+            "Name": "Analito de prueba 11",
+            "CasNumber": null,
+            "CertifiedConcentration": 50.1,
+            "ConcentrationUnit": "\u00B5g/mL",
+            "ExpandedUncertainty": null,
+            "PurityPercent": null,
+            "Lot": null,
+            "AdditionalData": null
+          },
+          {
+            "Id": "dd73f5eb-aeaf-4f65-8db2-8bf63766be41",
+            "Name": "Analito de prueba 12",
+            "CasNumber": null,
+            "CertifiedConcentration": 50.1,
+            "ConcentrationUnit": "\u00B5g/mL",
+            "ExpandedUncertainty": null,
+            "PurityPercent": null,
+            "Lot": null,
+            "AdditionalData": null
+          },
+          {
+            "Id": "a2fc307b-2074-4945-a89a-fb017c6454cd",
+            "Name": "Analito de prueba 13",
+            "CasNumber": null,
+            "CertifiedConcentration": 50.1,
+            "ConcentrationUnit": "\u00B5g/mL",
+            "ExpandedUncertainty": null,
+            "PurityPercent": null,
+            "Lot": null,
+            "AdditionalData": null
+          },
+          {
+            "Id": "569e9ce2-143f-47c4-b6bf-f06f00a14754",
+            "Name": "Analito de prueba 14",
+            "CasNumber": null,
+            "CertifiedConcentration": 50.1,
+            "ConcentrationUnit": "\u00B5g/mL",
+            "ExpandedUncertainty": null,
+            "PurityPercent": null,
+            "Lot": null,
+            "AdditionalData": null
+          },
+          {
+            "Id": "4f075499-bbf0-43f6-8e4e-4094489cfff7",
+            "Name": "Analito de prueba 15",
+            "CasNumber": null,
+            "CertifiedConcentration": 50.1,
+            "ConcentrationUnit": "\u00B5g/mL",
+            "ExpandedUncertainty": null,
+            "PurityPercent": null,
+            "Lot": null,
+            "AdditionalData": null
+          },
+          {
+            "Id": "441e8288-6806-45d4-b231-7c5b4b11eb90",
+            "Name": "Analito de prueba 16",
+            "CasNumber": null,
+            "CertifiedConcentration": 50.1,
+            "ConcentrationUnit": "\u00B5g/mL",
+            "ExpandedUncertainty": null,
+            "PurityPercent": null,
+            "Lot": null,
+            "AdditionalData": null
+          },
+          {
+            "Id": "fbfd7ce6-f5fd-4e9b-b37d-f71ffe8411f5",
+            "Name": "Analito de prueba 17",
+            "CasNumber": null,
+            "CertifiedConcentration": 50.1,
+            "ConcentrationUnit": "\u00B5g/mL",
+            "ExpandedUncertainty": null,
+            "PurityPercent": null,
+            "Lot": null,
+            "AdditionalData": null
+          },
+          {
+            "Id": "4b04117b-31c3-4f5d-b9e1-52782f073189",
+            "Name": "Analito de prueba 18",
+            "CasNumber": null,
+            "CertifiedConcentration": 50.1,
+            "ConcentrationUnit": "\u00B5g/mL",
+            "ExpandedUncertainty": null,
+            "PurityPercent": null,
+            "Lot": null,
+            "AdditionalData": null
+          },
+          {
+            "Id": "d013df84-6fa7-4406-a9d0-5ea29d84eac8",
+            "Name": "Analito de prueba 19",
+            "CasNumber": null,
+            "CertifiedConcentration": 50.1,
+            "ConcentrationUnit": "\u00B5g/mL",
+            "ExpandedUncertainty": null,
+            "PurityPercent": null,
+            "Lot": null,
+            "AdditionalData": null
+          },
+          {
+            "Id": "59bdc153-a6e3-4184-b285-4462bba68c81",
+            "Name": "Analito de prueba 20",
+            "CasNumber": null,
+            "CertifiedConcentration": 50.1,
+            "ConcentrationUnit": "\u00B5g/mL",
+            "ExpandedUncertainty": null,
+            "PurityPercent": null,
+            "Lot": null,
+            "AdditionalData": null
+          }
+        ],
+        "OtherExpressions": null,
+        "UseAfterOpeningDays": null,
+        "UseNominalConcentration": false,
+        "MatrixSolventId": 4
+      }
+    }
+  }
+}

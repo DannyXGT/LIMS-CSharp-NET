@@ -41,6 +41,8 @@ public sealed class PermissionPostgresTests
         // This fixture contains identity tables only. Apply the actual catalog additions from the preparation migration.
         var newPermissions = new AddCurveAndAqsPreparations().UpOperations.OfType<Microsoft.EntityFrameworkCore.Migrations.Operations.InsertDataOperation>().ToArray();
         foreach (var command in generator.Generate(newPermissions, db.Model)) await db.Database.ExecuteSqlRawAsync(command.CommandText);
+        var alertPermissions = new AddAlertsAndNotifications().UpOperations.OfType<Microsoft.EntityFrameworkCore.Migrations.Operations.InsertDataOperation>().ToArray();
+        foreach (var command in generator.Generate(alertPermissions, db.Model)) await db.Database.ExecuteSqlRawAsync(command.CommandText);
         // Reproduce the unaccented department name shown by the shared React catalog.
         var role = new Role(1, "Administrador"); var analyst = new Role(2, "Analista"); var department = new Department(7, "Laboratorio Analitico");
         db.Users.AddRange(new User(42, "Administrador de prueba", "admin@example.invalid", "test", true, role, department), new User(84, "Ana López", "ana@example.invalid", "test", true, analyst, department));

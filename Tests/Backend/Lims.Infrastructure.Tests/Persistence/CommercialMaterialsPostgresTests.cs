@@ -21,7 +21,7 @@ public sealed class CommercialMaterialsPostgresTests
         50, "µg/mL", 2, Today.AddDays(-1), 15,
         Enumerable.Range(0, count).Select(i => new CertifiedComponent(Guid.NewGuid(), $"Analito {i + 1}", null,
             i switch { 0 => 50, 1 => 49.9m, 2 => 50.1m, _ => 50 + i / 10m }, "µg/mL", 0.2m, null, $"COMP-{i}", "Dato certificado de prueba")).ToArray(),
-        [new(974, "µg/g", 5)]);
+        [new(974, "µg/g", 5)], Solvents: [new(4, 100)], CompositionBasis: StockSolventComposition.Basis);
     private static CreateReferenceMaterialRequest Request(int count = 1) => new("Frasco de prueba aislada", null, "CAT-COMMERCIAL-TEST", 1,
         null, "LOT-BOTTLE", "Marca de prueba", Today.AddMonths(-1), Today.AddMonths(20), 10, 1, 1, "Ambiente", 1,
         count == 1 ? MaterialPresentations.Solution : MaterialPresentations.Mix, Certificate(count));
@@ -29,6 +29,68 @@ public sealed class CommercialMaterialsPostgresTests
         new(material.MethodId, 10, "mL", [new(material.Id, material.Version, volume, "mL")]), Today, Today.AddDays(5), null);
     private static CreateSolutionGroupRequest Group(ReferenceMaterialDetail m, string code, decimal volume) => new(Guid.NewGuid(), code, code,
         new(m.MethodId, [new(m.Id, m.Version, volume, "mL", 10, "mL", false)]), Today, Today.AddDays(1), null, null);
+
+    [StockPostgresFact]
+    public async Task BottleCountAdaptationPreservesIdsComponentsMovementsAndBalancesWhenAppliedTwice()
+    {
+        await using var fixture = await StockPostgresTests.Fixture.CreateAsync(100);
+        await using var db = fixture.Context();
+        var input = Request();
+        var before = (await Materials(db).CreateAsync(input, 42, default)).Value!;
+        Assert.True((await Intermediates(db).CreateAsync(Dilute(before, 2), 42, default)).IsSuccess);
+        db.ChangeTracker.Clear(); // Compare persisted values at PostgreSQL timestamp precision.
+        before = (await Materials(db).GetAsync(before.Id, default)).Value!;
+        var migration = new Lims.Infrastructure.Persistence.Migrations.AllowCommercialBottleCounts();
+        foreach (var command in db.GetService<IMigrationsSqlGenerator>().Generate(migration.DownOperations))
+            await db.Database.ExecuteSqlRawAsync(command.CommandText);
+        var path = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../../../artifacts/sql/commercial_bottle_counts.sql"));
+        var sql = await File.ReadAllTextAsync(path);
+        await db.Database.ExecuteSqlRawAsync(sql); await db.Database.ExecuteSqlRawAsync(sql);
+        db.ChangeTracker.Clear();
+        var after = (await Materials(db).GetAsync(before.Id, default)).Value!;
+        Assert.Equal(System.Text.Json.JsonSerializer.Serialize(before), System.Text.Json.JsonSerializer.Serialize(after));
+        var multiple = await Materials(db).CreateAsync(input with { PackageCount = 2 }, 42, default);
+        Assert.True(multiple.IsSuccess, multiple.Error?.Message); Assert.Equal(20, multiple.Value!.AvailableQuantity);
+        Assert.Single(await db.ReferenceMaterialMovements.ToArrayAsync());
+        Assert.False(db.Database.HasPendingModelChanges());
+    }
+
+    [StockPostgresFact]
+    public async Task MultipleBottlesAndNominalSelectionPersistOneBalanceAndOneDebit()
+    {
+        await using var fixture = await StockPostgresTests.Fixture.CreateAsync(100);
+        await using var db = fixture.Context();
+        var service = new CommercialPreparationService(db, TimeProvider.System);
+        var input = Request() with { PresentationQuantity = 100, PackageCount = 2,
+            Commercial = Certificate() with { NominalConcentration = 1000, UseNominalConcentration = true, MatrixSolventId = 4 } };
+        var saved = await service.RegisterAsync("Stock", new(Guid.NewGuid(), null, null, input), 42, default);
+        Assert.True(saved.IsSuccess, saved.Error?.Message);
+        var id = saved.Value!.Material.Id;
+        db.ChangeTracker.Clear();
+        var material = (await service.GetAsync("Stock", id, default)).Value!.Material;
+        Assert.Equal(2, material.PackageCount); Assert.Equal(200, material.AvailableQuantity);
+        Assert.Equal(50, material.Commercial!.Components[0].CertifiedConcentration);
+        Assert.Equal(1000, material.Commercial.NominalConcentration);
+        Assert.False(material.Commercial.UseNominalConcentration);
+        Assert.Equal(4, material.Commercial.MatrixSolventId);
+        Assert.NotEmpty(material.Commercial.Matrix);
+        Assert.Equal(50, Assert.Single((await new StockRepository(db).ListAsync(null, 1, 25, default)).Items).ActualConcentration);
+        var options = (await Intermediates(db).OptionsAsync(default)).Value!;
+        Assert.Equal(50, Assert.Single(options.Sources.Single(s => s.Id == id).Analytes).Concentration);
+        var request = Dilute(material, 10);
+        var diluted = await Intermediates(db).CreateAsync(request, 42, default);
+        Assert.True(diluted.IsSuccess, diluted.Error?.Message);
+        Assert.True((await Intermediates(db).CreateAsync(request, 42, default)).IsSuccess);
+        db.ChangeTracker.Clear();
+        Assert.Equal(190, (await service.GetAsync("Stock", id, default)).Value!.Material.AvailableQuantity);
+        Assert.Single(await db.ReferenceMaterialMovements.ToArrayAsync());
+        Assert.Equal(2, await db.ReferenceMaterials.CountAsync());
+        Assert.Single(await db.ReferencePreparations.ToArrayAsync());
+        Assert.Single(await db.Set<ReferenceCommercialRole>().ToArrayAsync());
+        var bad = input with { Commercial = input.Commercial! with { MatrixSolventId = int.MaxValue } };
+        Assert.False((await service.RegisterAsync("Stock", new(Guid.NewGuid(), null, null, bad), 42, default)).IsSuccess);
+        Assert.Equal(2, await db.ReferenceMaterials.CountAsync());
+    }
 
     [StockPostgresFact]
     public async Task CommercialScriptsRejectMissingPrerequisitesWithoutCommittingHistoryOrApplicationChanges()
@@ -59,7 +121,7 @@ public sealed class CommercialMaterialsPostgresTests
         await using var db = fixture.Context();
         var registrations = new CommercialPreparationService(db, TimeProvider.System);
         var input = Request() with { Commercial = new("", "", null, null, null, null, null, null,
-            [new(Guid.NewGuid(), "Analito comercial", null, 50, "µg/mL")]) };
+            [new(Guid.NewGuid(), "Analito comercial", null, 50, "µg/mL")], Solvents: [new(4, 100)], CompositionBasis: StockSolventComposition.Basis) };
         var request = new RegisterCommercialPreparationRequest(Guid.NewGuid(), null, null, input);
         var saved = await registrations.RegisterAsync("Stock", request, 42, default);
         Assert.True(saved.IsSuccess, saved.Error?.Message);

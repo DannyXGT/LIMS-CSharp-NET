@@ -12,6 +12,7 @@ public sealed partial class ShellPage : Page
     private readonly PreparationsPage _preparationsPage;
     private readonly PermissionsPage? _permissionsPage;
     private readonly DashboardPage? _dashboard;
+    private readonly AlertsWorkspace? _alerts;
     private readonly object _moduleHeader;
     private readonly Lims.Desktop.Http.IReferenceMaterialsApiClient? _dashboardReferences;
     private readonly StockPage _stockPage;
@@ -25,12 +26,13 @@ public sealed partial class ShellPage : Page
     internal DashboardRoute? LastDashboardRoute { get; private set; }
     internal string DashboardRouteStage { get; private set; } = string.Empty;
 
-    public ShellPage(ShellViewModel viewModel, ReferenceMaterialsPage referenceMaterialsPage, StockPage stockPage, IntermediatePage intermediatePage, PermissionsPage? permissionsPage = null, DashboardPage? dashboard = null, Lims.Desktop.Http.IReferenceMaterialsApiClient? dashboardReferences = null, SolutionGroupWorkspace? solutionGroups = null)
+    public ShellPage(ShellViewModel viewModel, ReferenceMaterialsPage referenceMaterialsPage, StockPage stockPage, IntermediatePage intermediatePage, PermissionsPage? permissionsPage = null, DashboardPage? dashboard = null, Lims.Desktop.Http.IReferenceMaterialsApiClient? dashboardReferences = null, SolutionGroupWorkspace? solutionGroups = null, AlertsWorkspace? alerts = null)
     {
         ViewModel = viewModel;
         _referenceMaterialsPage = referenceMaterialsPage;
         _permissionsPage = permissionsPage;
         _dashboard = dashboard; _dashboardReferences = dashboardReferences; _stockPage = stockPage; _intermediatePage = intermediatePage;
+        _alerts = alerts;
         _preparationsPage = new PreparationsPage(stockPage, intermediatePage, solutionGroups?.Curve, solutionGroups?.Aqs);
         InitializeComponent();
         _moduleHeader = MainNavigation.Header;
@@ -41,14 +43,32 @@ public sealed partial class ShellPage : Page
         PreparationsHost.Content = _preparationsPage;
         PermissionsHost.Content = permissionsPage;
         HomePanel.Content = dashboard;
+        AlertsHost.Content = alerts?.Page;
+        if (alerts is not null) alerts.NavigateRequested += async (_, id) => await NavigateAlertsAsync(id);
         if (dashboard is not null) dashboard.Navigate += async (_, route) => await NavigateDashboardAsync(route);
         MainNavigation.SelectedItem = HomeItem;
         _accessTimer.Tick += async (_, _) => await RefreshAccessAsync();
-        Loaded += async (_, _) => { await RefreshAccessAsync(); _accessTimer.Start(); };
-        Unloaded += (_, _) => _accessTimer.Stop();
+        Loaded += async (_, _) => { await RefreshAccessAsync(); _accessTimer.Start(); if (_alerts is not null) await _alerts.StartAsync(); };
+        Unloaded += (_, _) => { _accessTimer.Stop(); _alerts?.Stop(); };
     }
 
     public ShellViewModel ViewModel { get; }
+    public void AttachNotifications(ContentControl host, Window window)
+    {
+        if (_alerts is null) return;
+        host.Content = _alerts.Bell; _alerts.InitializeWindow(window);
+    }
+    public async Task NavigateAlertsAsync(Guid? id = null)
+    {
+        if (_alerts is null) return;
+        if (_permissionsPage is not null && PermissionsHost.Visibility == Visibility.Visible && !await _permissionsPage.ConfirmDiscardAsync()) return;
+        await RefreshAccessAsync(); if (!ViewModel.CanViewAlerts) return;
+        _navigationRevision++;
+        _restoringNavigation = true; MainNavigation.SelectedItem = AlertsItem; _restoringNavigation = false;
+        HideAllSections(); StandardsNewButton.Visibility = PreparationsNewButton.Visibility = Visibility.Collapsed;
+        Show(AlertsHost, "Alertas y Notificaciones", "Centro de control");
+        await _alerts.Page.LoadAsync(); if (id is { } alertId) await _alerts.Page.OpenAsync(alertId);
+    }
     public void AttachSystemSearch(AutoSuggestBox search)
     {
         search.TextChanged += OnSystemSearchChanged;
@@ -82,6 +102,9 @@ public sealed partial class ShellPage : Page
         PreparationsNewButton.Visibility = Visibility.Collapsed;
         switch (tag)
         {
+            case "alerts":
+                if (!ViewModel.CanViewAlerts || _alerts is null) { Show(DeniedPanel, "Acceso denegado", "Alertas"); break; }
+                Show(AlertsHost, "Alertas y Notificaciones", "Centro de control"); await _alerts.Page.LoadAsync(); break;
             case "home":
                 StandardsNewButton.Visibility = Visibility.Collapsed;
                 Show(HomePanel, "Inicio", "Panel principal");
@@ -119,6 +142,7 @@ public sealed partial class ShellPage : Page
         StandardsHost.Visibility = Visibility.Collapsed;
         PreparationsHost.Visibility = Visibility.Collapsed;
         PermissionsHost.Visibility = Visibility.Collapsed;
+        AlertsHost.Visibility = Visibility.Collapsed;
         DeniedPanel.Visibility = Visibility.Collapsed;
     }
 
@@ -128,6 +152,8 @@ public sealed partial class ShellPage : Page
     {
         var verified = await ViewModel.RefreshAccessAsync();
         var authorization = ViewModel.AuthorizationSignature;
+        _alerts?.RefreshAuthorization(authorization, verified && ViewModel.CanViewAlerts);
+        if (!verified || _dashboardAuthorization != authorization) _alerts?.Page.ViewModel.Clear();
         if (!verified) _dashboard?.ViewModel.Clear();
         else if (_dashboardAuthorization != authorization)
         {
@@ -140,21 +166,23 @@ public sealed partial class ShellPage : Page
         PreparationsItem.IsEnabled = ViewModel.CanViewPreparations;
         PreparationsItem.Visibility = ViewModel.CanViewPreparations ? Visibility.Visible : Visibility.Collapsed;
         PermissionsItem.Visibility = ViewModel.IsAdministrator ? Visibility.Visible : Visibility.Collapsed;
+        AlertsItem.Visibility = ViewModel.CanViewAlerts && _alerts is not null ? Visibility.Visible : Visibility.Collapsed;
         if (!ViewModel.IsAdministrator) _permissionsPage?.ViewModel.RevokeAccess();
         AdministrationGroup.Visibility = ViewModel.IsAdministrator && MainNavigation.IsPaneOpen ? Visibility.Visible : Visibility.Collapsed;
         _preparationsPage.RefreshAccess(ViewModel.CanViewStock, ViewModel.CanViewIntermediate, ViewModel.CanViewCurve, ViewModel.CanViewAqs);
         _referenceMaterialsPage.ViewModel.RefreshPermissions();
         StandardsNewButton.IsEnabled = _referenceMaterialsPage.ViewModel.CanCreate;
         var tag = (MainNavigation.SelectedItem as NavigationViewItem)?.Tag as string;
-        if (tag == "standards" && !ViewModel.CanViewReferenceMaterials || tag == "preparations" && !ViewModel.CanViewPreparations || tag == "permissions" && !ViewModel.IsAdministrator)
+        if (tag == "standards" && !ViewModel.CanViewReferenceMaterials || tag == "preparations" && !ViewModel.CanViewPreparations || tag == "permissions" && !ViewModel.IsAdministrator || tag == "alerts" && !ViewModel.CanViewAlerts)
         { HideAllSections(); StandardsNewButton.Visibility = Visibility.Collapsed; PreparationsNewButton.Visibility = Visibility.Collapsed; Show(DeniedPanel, "Acceso denegado", "Sus permisos han cambiado."); }
     }
 
     private void Show(FrameworkElement element, string title, string subtitle)
     {
         var home = element == HomePanel;
-        MainNavigation.Header = home ? null : _moduleHeader;
-        MainNavigation.AlwaysShowHeader = !home;
+        var commercialWorkspace = element == PreparationsHost && _preparationsPage.IsCommercialWorkspaceOpen;
+        MainNavigation.Header = home || commercialWorkspace || element == AlertsHost ? null : _moduleHeader;
+        MainNavigation.AlwaysShowHeader = !home && !commercialWorkspace && element != AlertsHost;
         element.Visibility = Visibility.Visible;
         SectionTitle.Text = title;
         SectionSubtitle.Text = subtitle;
@@ -173,7 +201,7 @@ public sealed partial class ShellPage : Page
 
     private void UpdatePane(bool expanded)
     {
-        foreach (var item in new[] { HomeItem, StandardsItem, PreparationsItem, PermissionsItem })
+        foreach (var item in new[] { HomeItem, StandardsItem, PreparationsItem, PermissionsItem, AlertsItem })
             ToolTipService.SetToolTip(item, expanded ? null : item.Content);
         var visibility = expanded ? Visibility.Visible : Visibility.Collapsed;
         BrandLabels.Visibility = visibility;
@@ -191,6 +219,7 @@ public sealed partial class ShellPage : Page
 
     private async Task NavigateDashboardAsync(DashboardRoute route)
     {
+        if (route.Module == "alerts") { await NavigateAlertsAsync(route.RecordId); return; }
         if (_permissionsPage is not null && PermissionsHost.Visibility == Visibility.Visible && route.Module != "permissions")
         {
             if (!await _permissionsPage.ConfirmDiscardAsync())
@@ -305,7 +334,12 @@ public sealed partial class ShellPage : Page
         PreparationsNewLabel.Text = _preparationsPage.CreateLabel;
         Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(PreparationsNewButton, _preparationsPage.CreateLabel);
         PreparationsNewButton.IsEnabled = _preparationsPage.CanCreate;
-        if (PreparationsHost.Visibility == Visibility.Visible) PreparationsNewButton.Visibility = _preparationsPage.CanCreate ? Visibility.Visible : Visibility.Collapsed;
+        if (PreparationsHost.Visibility == Visibility.Visible)
+        {
+            PreparationsNewButton.Visibility = _preparationsPage.CanCreate ? Visibility.Visible : Visibility.Collapsed;
+            MainNavigation.Header = _preparationsPage.IsCommercialWorkspaceOpen ? null : _moduleHeader;
+            MainNavigation.AlwaysShowHeader = !_preparationsPage.IsCommercialWorkspaceOpen;
+        }
     }
     private async void OnNewPreparationClick(object sender, RoutedEventArgs e) => await _preparationsPage.OpenCreateAsync();
 

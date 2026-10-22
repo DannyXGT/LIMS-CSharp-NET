@@ -2,15 +2,16 @@
  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
  xmlns:design="using:Lims.DesignSystem.Controls">
  <StackPanel Spacing="10">
-  <TextBlock x:Name="ValidityHint" Style="{StaticResource LimsCaptionStyle}" TextWrapping="Wrap"/>
-  <Grid><TextBlock Text="COMPOSICIÓN CERTIFICADA" Style="{StaticResource LimsSectionTitleStyle}" VerticalAlignment="Center"/><Button x:Name="AddComponentButton" Content="Agregar componente" HorizontalAlignment="Right" Click="OnAddComponent" Style="{StaticResource LimsSecondaryButtonStyle}"/></Grid>
-  <TextBlock Text="Una fila por analito certificado; todos comparten el saldo del frasco. Los cálculos usan la concentración certificada." Style="{StaticResource LimsCaptionStyle}" TextWrapping="Wrap"/>
-  <ScrollViewer MaxHeight="270" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto"><StackPanel MinWidth="700" Spacing="4">
-   <Grid ColumnSpacing="8"><Grid.ColumnDefinitions><ColumnDefinition Width="2*"/><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/><ColumnDefinition Width="60"/><ColumnDefinition Width="35"/></Grid.ColumnDefinitions><TextBlock Text="Compuesto *" Style="{StaticResource LimsCaptionStyle}"/><TextBlock Grid.Column="1" Text="CAS" Style="{StaticResource LimsCaptionStyle}"/><TextBlock Grid.Column="2" Text="Concentración *" Style="{StaticResource LimsCaptionStyle}"/><TextBlock Grid.Column="3" Text="Unidad *" Style="{StaticResource LimsCaptionStyle}"/></Grid>
+  <TextBlock Visibility="Collapsed" x:Name="ValidityHint" Style="{StaticResource LimsCaptionStyle}" TextWrapping="Wrap"/>
+  <Grid><TextBlock x:Name="CompositionTitle" Text="COMPOSICIÓN CERTIFICADA" Style="{StaticResource LimsSectionTitleStyle}" VerticalAlignment="Center"/><Button x:Name="AddComponentButton" Content="Agregar componente" HorizontalAlignment="Right" Click="OnAddComponent" Style="{StaticResource LimsSecondaryButtonStyle}"/></Grid>
+  <TextBlock x:Name="CompositionHint" Text="Una fila por analito certificado; todos comparten el saldo del frasco. Los cálculos usan la concentración certificada." Style="{StaticResource LimsCaptionStyle}" TextWrapping="Wrap"/>
+  <TextBox x:Name="ComponentSearch" Visibility="Collapsed" PlaceholderText="Buscar compuesto o CAS en el Mix" TextChanged="OnSearchComponents" Style="{StaticResource LimsCompactTextBoxStyle}"/>
+  <ScrollViewer MaxHeight="270" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto"><StackPanel x:Name="TableSurface" MinWidth="600" Spacing="4">
+   <Grid x:Name="TableHeader" ColumnSpacing="8"><Grid.ColumnDefinitions><ColumnDefinition Width="2*"/><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/><ColumnDefinition Width="60"/><ColumnDefinition Width="35"/></Grid.ColumnDefinitions><TextBlock Text="Compuesto *" Style="{StaticResource LimsCaptionStyle}"/><TextBlock Grid.Column="1" Text="CAS" Style="{StaticResource LimsCaptionStyle}"/><TextBlock Grid.Column="2" Text="Concentración *" Style="{StaticResource LimsCaptionStyle}"/><TextBlock Grid.Column="3" Text="Unidad *" Style="{StaticResource LimsCaptionStyle}"/><TextBlock x:Name="ActionLabel" Grid.Column="5" Text="Acción" Style="{StaticResource LimsCaptionStyle}"/></Grid>
    <StackPanel x:Name="ComponentRows" Spacing="4"/>
   </StackPanel></ScrollViewer>
-  <StackPanel Spacing="4"><Button Content="Pegar componentes desde Excel" Click="OnPasteComponents" Style="{StaticResource LimsSecondaryButtonStyle}" HorizontalAlignment="Left"/><TextBlock x:Name="PasteError" Style="{StaticResource LimsCaptionStyle}" TextWrapping="Wrap"/></StackPanel>
-  <Expander Header="Datos del fabricante (opcional)" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch"><StackPanel Spacing="10">
+  <StackPanel x:Name="PasteSurface" Spacing="4"><Button Content="Pegar componentes desde Excel" Click="OnPasteComponents" Style="{StaticResource LimsSecondaryButtonStyle}" HorizontalAlignment="Left"/><TextBlock x:Name="PasteError" Style="{StaticResource LimsCaptionStyle}" TextWrapping="Wrap"/></StackPanel>
+  <Expander x:Name="ManufacturerPanel" Header="Datos del fabricante (opcional)" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch"><StackPanel Spacing="10">
   <Grid ColumnSpacing="12" RowSpacing="10">
    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
    <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
@@ -24,7 +25,7 @@
    <StackPanel Grid.Row="3" Grid.Column="1" Spacing="6"><TextBox x:Name="MonthsBox" Header="Uso máximo tras apertura (si consta)" Style="{StaticResource LimsCompactTextBoxStyle}"/><design:LimsSelect x:Name="PeriodUnitSelect" AutomationProperties.Name="Unidad del periodo tras apertura"/></StackPanel>
   </Grid>
   </StackPanel></Expander>
-  <Expander Header="Otras expresiones certificadas" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch">
+  <Expander x:Name="ExpressionsPanel" Header="Otras expresiones certificadas" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch">
    <StackPanel Spacing="8"><TextBlock Text="Se conservan por separado. No se convierten fracciones de masa a concentraciones volumétricas sin densidad documentada." Style="{StaticResource LimsCaptionStyle}" TextWrapping="Wrap"/><StackPanel x:Name="ExpressionRows" Spacing="6"/><Button Content="+ Expresión certificada" Click="OnAddExpression" Style="{StaticResource LimsSecondaryButtonStyle}"/></StackPanel>
   </Expander>
  </StackPanel>

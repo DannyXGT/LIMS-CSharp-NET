@@ -1,0 +1,443 @@
+{
+  "fixtureOnly": true,
+  "Size": {
+    "Width": 1078.4000244140625,
+    "Height": 606.4000244140625,
+    "IsEmpty": false
+  },
+  "RasterizationScale": 1.25,
+  "windowSize": {
+    "Width": 1366,
+    "Height": 768
+  },
+  "ValidCount": 3,
+  "totalRows": 3,
+  "CanSave": true,
+  "InitialVolume": 10,
+  "AvailableVolume": 10,
+  "AvailabilityPercent": 100,
+  "ValidationStatus": "Listo para registrar la Intermedia",
+  "ImportMessage": "3 analitos importados. Revise las concentraciones antes de guardar.",
+  "IsReady": true,
+  "Name": "Mix \u00B7 PRUEBA VISUAL",
+  "Method": {
+    "Id": 1,
+    "Name": "M\u00E9todo de prueba 01"
+  },
+  "Location": {
+    "Id": 1,
+    "Name": "Laboratorio de prueba"
+  },
+  "VolumeUnit": {
+    "Id": 3,
+    "Name": "Mililitro",
+    "Symbol": "mL",
+    "DisplayName": "mL \u2014 Mililitro"
+  },
+  "ExpirationDate": "2027-10-19T00:00:00-06:00",
+  "Storage": "Ambiente",
+  "footer": {
+    "x": 72.80000305175781,
+    "y": 536,
+    "width": 981.5999755859375,
+    "height": 46.400001525878906
+  },
+  "summary": {
+    "x": 764,
+    "y": 192.00001525878906,
+    "width": 290.3999938964844,
+    "height": 333.6000061035156
+  },
+  "header": {
+    "x": 84,
+    "y": 339.1999816894531,
+    "width": 648,
+    "height": 28
+  },
+  "viewport": {
+    "x": 84,
+    "y": 367.20001220703125,
+    "width": 648,
+    "height": 171.1999969482422
+  },
+  "VerticalOffset": 0,
+  "ScrollableHeight": 0,
+  "captureOffset": 0,
+  "rows": [
+    {
+      "Number": 1,
+      "Name": "o-Toluidina",
+      "visible": true,
+      "bounds": {
+        "x": 84,
+        "y": 367.20001220703125,
+        "width": 648,
+        "height": 42.400001525878906
+      },
+      "fields": [
+        {
+          "Name": "AnaltyeName",
+          "label": "Analito 1 \u00B7 Nombre",
+          "IsTabStop": true,
+          "IsEnabled": true,
+          "bounds": {
+            "x": 126.40000915527344,
+            "y": 371.20001220703125,
+            "width": 249.60000610351562,
+            "height": 32
+          }
+        },
+        {
+          "Name": "AnalyteCas",
+          "label": "Analito 1 \u00B7 CAS",
+          "IsTabStop": true,
+          "IsEnabled": true,
+          "bounds": {
+            "x": 381.6000061035156,
+            "y": 371.20001220703125,
+            "width": 96,
+            "height": 32
+          }
+        },
+        {
+          "Name": "AnalyteConcentration",
+          "label": "Analito 1 \u00B7 Concentraci\u00F3n",
+          "IsTabStop": true,
+          "IsEnabled": true,
+          "bounds": {
+            "x": 484,
+            "y": 371.20001220703125,
+            "width": 100,
+            "height": 32
+          }
+        },
+        {
+          "Name": "AnalyteUnit",
+          "label": "Analito 1 \u00B7 Unidad",
+          "IsTabStop": true,
+          "IsEnabled": true,
+          "bounds": {
+            "x": 589.5999755859375,
+            "y": 371.20001220703125,
+            "width": 88,
+            "height": 32
+          }
+        },
+        {
+          "Name": "",
+          "label": "Quitar analito",
+          "IsTabStop": true,
+          "IsEnabled": true,
+          "bounds": {
+            "x": 684,
+            "y": 371.20001220703125,
+            "width": 32,
+            "height": 32
+          }
+        }
+      ]
+    },
+    {
+      "Number": 2,
+      "Name": "2-Anisidina",
+      "visible": true,
+      "bounds": {
+        "x": 84,
+        "y": 409.6000061035156,
+        "width": 648,
+        "height": 42.400001525878906
+      },
+      "fields": [
+        {
+          "Name": "AnaltyeName",
+          "label": "Analito 2 \u00B7 Nombre",
+          "IsTabStop": true,
+          "IsEnabled": true,
+          "bounds": {
+            "x": 126.40000915527344,
+            "y": 413.6000061035156,
+            "width": 249.60000610351562,
+            "height": 32
+          }
+        },
+        {
+          "Name": "AnalyteCas",
+          "label": "Analito 2 \u00B7 CAS",
+          "IsTabStop": true,
+          "IsEnabled": true,
+          "bounds": {
+            "x": 381.6000061035156,
+            "y": 413.6000061035156,
+            "width": 96,
+            "height": 32
+          }
+        },
+        {
+          "Name": "AnalyteConcentration",
+          "label": "Analito 2 \u00B7 Concentraci\u00F3n",
+          "IsTabStop": true,
+          "IsEnabled": true,
+          "bounds": {
+            "x": 484,
+            "y": 413.6000061035156,
+            "width": 100,
+            "height": 32
+          }
+        },
+        {
+          "Name": "AnalyteUnit",
+          "label": "Analito 2 \u00B7 Unidad",
+          "IsTabStop": true,
+          "IsEnabled": true,
+          "bounds": {
+            "x": 589.5999755859375,
+            "y": 413.6000061035156,
+            "width": 88,
+            "height": 32
+          }
+        },
+        {
+          "Name": "",
+          "label": "Quitar analito",
+          "IsTabStop": true,
+          "IsEnabled": true,
+          "bounds": {
+            "x": 684,
+            "y": 413.6000061035156,
+            "width": 32,
+            "height": 32
+          }
+        }
+      ]
+    },
+    {
+      "Number": 3,
+      "Name": "4-Aminobifenilo",
+      "visible": true,
+      "bounds": {
+        "x": 84,
+        "y": 451.9999694824219,
+        "width": 648,
+        "height": 42.400001525878906
+      },
+      "fields": [
+        {
+          "Name": "AnaltyeName",
+          "label": "Analito 3 \u00B7 Nombre",
+          "IsTabStop": true,
+          "IsEnabled": true,
+          "bounds": {
+            "x": 126.40000915527344,
+            "y": 455.9999694824219,
+            "width": 249.60000610351562,
+            "height": 32
+          }
+        },
+        {
+          "Name": "AnalyteCas",
+          "label": "Analito 3 \u00B7 CAS",
+          "IsTabStop": true,
+          "IsEnabled": true,
+          "bounds": {
+            "x": 381.6000061035156,
+            "y": 455.9999694824219,
+            "width": 96,
+            "height": 32
+          }
+        },
+        {
+          "Name": "AnalyteConcentration",
+          "label": "Analito 3 \u00B7 Concentraci\u00F3n",
+          "IsTabStop": true,
+          "IsEnabled": true,
+          "bounds": {
+            "x": 484,
+            "y": 455.9999694824219,
+            "width": 100,
+            "height": 32
+          }
+        },
+        {
+          "Name": "AnalyteUnit",
+          "label": "Analito 3 \u00B7 Unidad",
+          "IsTabStop": true,
+          "IsEnabled": true,
+          "bounds": {
+            "x": 589.5999755859375,
+            "y": 455.9999694824219,
+            "width": 88,
+            "height": 32
+          }
+        },
+        {
+          "Name": "",
+          "label": "Quitar analito",
+          "IsTabStop": true,
+          "IsEnabled": true,
+          "bounds": {
+            "x": 684,
+            "y": 455.9999694824219,
+            "width": 32,
+            "height": 32
+          }
+        }
+      ]
+    }
+  ],
+  "focused": {
+    "Name": "TextBox",
+    "label": "",
+    "bounds": {
+      "x": 656.7999877929688,
+      "y": 8,
+      "width": 280,
+      "height": 32
+    },
+    "intersectsCapture": false
+  },
+  "fieldNames": [
+    {
+      "name": "ProductNameBox",
+      "label": "Nombre del Mix"
+    },
+    {
+      "name": "MethodSelect",
+      "label": "M\u00E9todo del Mix"
+    },
+    {
+      "name": "BrandBox",
+      "label": "Fabricante del Mix"
+    },
+    {
+      "name": "CatalogBox",
+      "label": "Cat\u00E1logo del Mix"
+    },
+    {
+      "name": "LotBox",
+      "label": "Lote del Mix"
+    },
+    {
+      "name": "VolumeBox",
+      "label": "Volumen por frasco"
+    },
+    {
+      "name": "BottleCountBox",
+      "label": "N\u00FAmero de frascos"
+    },
+    {
+      "name": "VolumeUnitSelect",
+      "label": "Unidad de volumen"
+    },
+    {
+      "name": "SolventSelect",
+      "label": "Solvente o matriz del Mix"
+    },
+    {
+      "name": "ReceivedPicker",
+      "label": "Fecha de ingreso del Mix"
+    },
+    {
+      "name": "ExpirationPicker",
+      "label": "Fecha de expiraci\u00F3n del Mix"
+    },
+    {
+      "name": "LocationSelect",
+      "label": "Ubicaci\u00F3n del Mix"
+    },
+    {
+      "name": "StorageBox",
+      "label": "Condiciones de almacenamiento del Mix"
+    },
+    {
+      "name": "SaveButton",
+      "label": "Guardar Intermedia"
+    },
+    {
+      "name": "CancelButton",
+      "label": ""
+    },
+    {
+      "name": "AddRowButton",
+      "label": "Agregar componente al Mix"
+    },
+    {
+      "name": "PasteButton",
+      "label": "Pegar componentes desde Excel"
+    },
+    {
+      "name": "ComponentSearchBox",
+      "label": "Buscar analito o CAS en el Mix"
+    }
+  ],
+  "request": {
+    "RequestId": "c02010b5-30ab-45f3-99a1-e99f570d8d88",
+    "ExistingMaterialId": null,
+    "MaterialVersion": null,
+    "NewMaterial": {
+      "Name": "Mix \u00B7 PRUEBA VISUAL",
+      "CasNumber": null,
+      "CatalogNumber": "CAT-VISUAL",
+      "MethodId": 1,
+      "PurityPercent": null,
+      "Lot": "LOTE-VISUAL",
+      "Brand": "Fabricante de prueba",
+      "ReceivedDate": "2026-10-19",
+      "ExpirationDate": "2027-10-19",
+      "PresentationQuantity": 10,
+      "UnitId": 3,
+      "PackageCount": 1,
+      "StorageTemperature": "Ambiente",
+      "LocationId": 1,
+      "Presentation": "CommercialMix",
+      "Commercial": {
+        "Reference": "",
+        "Matrix": "Metanol (MeOH)",
+        "Traceability": null,
+        "NominalConcentration": null,
+        "NominalUnit": null,
+        "CoverageFactor": null,
+        "OpenedDate": null,
+        "UseAfterOpeningMonths": null,
+        "Components": [
+          {
+            "Id": "522d77b6-5bfd-4ed4-8afa-4fa6856f7ee2",
+            "Name": "o-Toluidina",
+            "CasNumber": "95-53-4",
+            "CertifiedConcentration": 50,
+            "ConcentrationUnit": "\u00B5g/mL",
+            "ExpandedUncertainty": null,
+            "PurityPercent": null,
+            "Lot": null,
+            "AdditionalData": null
+          },
+          {
+            "Id": "ef0f3298-a2a1-449d-8c96-f086ce8b3993",
+            "Name": "2-Anisidina",
+            "CasNumber": "90-04-0",
+            "CertifiedConcentration": 49.9,
+            "ConcentrationUnit": "\u00B5g/mL",
+            "ExpandedUncertainty": null,
+            "PurityPercent": null,
+            "Lot": null,
+            "AdditionalData": null
+          },
+          {
+            "Id": "01d383c8-aabb-4115-9031-5fcbbfd8a981",
+            "Name": "4-Aminobifenilo",
+            "CasNumber": "92-67-1",
+            "CertifiedConcentration": 50.1,
+            "ConcentrationUnit": "\u00B5g/mL",
+            "ExpandedUncertainty": null,
+            "PurityPercent": null,
+            "Lot": null,
+            "AdditionalData": null
+          }
+        ],
+        "OtherExpressions": null,
+        "UseAfterOpeningDays": null,
+        "UseNominalConcentration": false,
+        "MatrixSolventId": 4
+      }
+    }
+  }
+}

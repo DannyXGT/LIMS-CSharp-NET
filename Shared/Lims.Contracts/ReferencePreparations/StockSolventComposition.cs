@@ -27,7 +27,7 @@ public static class StockSolventComposition
         if (rows.Any(r => r is null || r.SolventId <= 0)) return "Seleccione un solvente en cada fila.";
         if (rows.Any(r => r.Percent <= 0 || r.Percent > 100 || decimal.Round(r.Percent, 4) != r.Percent))
             return "Cada proporción debe ser mayor que 0 y hasta 100 %, con hasta cuatro decimales.";
-        if (rows.Select(r => r.SolventId).Distinct().Count() != rows.Count) return "No puede repetir un solvente en la mezcla.";
+        if (rows.Select(r => r.SolventId).Distinct().Count() != rows.Count) return "El solvente está repetido. Unifique su proporción en una sola fila.";
         var total = rows.Sum(r => r.Percent);
         return total == 100m ? null : total < 100m
             ? $"Falta {Percent(100m - total)} % para completar el 100 %."

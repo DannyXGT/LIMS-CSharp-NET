@@ -11,20 +11,18 @@ namespace Lims.Desktop.Views;
 
 public sealed partial class IntermediateEditorDialog : ContentDialog
 {
-    private readonly ICommercialPreparationApiClient? _commercialApi;
     private bool _ready;
     private bool _syncParent;
     private Func<Task>? _confirmation;
     public IntermediateEditorDialog(IntermediateViewModel viewModel, ICommercialPreparationApiClient? commercialApi = null)
     {
-        _commercialApi = commercialApi;
         ViewModel = viewModel; InitializeComponent(); InitializeEntry();
         foreach (var field in new LimsPopupField[] { MethodSelect, ParentSelect, PreparationPicker, ExpirationPicker })
             field.PopupBoundary = EditorScroll;
         EditorScroll.ViewChanged += (_, _) => LimsPopupField.CloseForRootAfterLayout(this);
     }
     public IntermediateViewModel ViewModel { get; }
-    public CommercialPreparationDetail? CommercialCreated { get; private set; }
+    public bool OpenCommercialWorkspace { get; private set; }
     private bool IsCommercial => EntryTypeSelect.SelectedIndex == 1;
     private void InitializeEntry()
     {
@@ -32,26 +30,12 @@ public sealed partial class IntermediateEditorDialog : ContentDialog
         EntryTypeSelect.SelectedIndex = 0;
         EntryTypeSelect.PopupBoundary = EditorScroll;
     }
-    private async void OnEntryTypeChanged(object? sender, EventArgs args)
+    private void OnEntryTypeChanged(object? sender, EventArgs args)
     {
-        if (!_ready) return;
+        if (!_ready || !IsCommercial || ViewModel.IsBusy) return;
         LimsPopupField.CloseForRoot(XamlRoot);
-        FormSurface.Visibility = IsCommercial ? Visibility.Collapsed : Visibility.Visible;
-        CommercialEntry.Visibility = IsCommercial ? Visibility.Visible : Visibility.Collapsed;
-        if (IsCommercial) await CommercialEntry.InitializeAsync(_commercialApi, "Intermedia", ViewModel.PreparedBy, EditorScroll);
-        Render();
-    }
-    private void RenderCommercial()
-    {
-        Title = "Nueva Intermedia comercial";
-        EditorScroll.Visibility = Visibility.Visible; SuccessSurface.Visibility = Visibility.Collapsed;
-        FormSurface.Visibility = Visibility.Collapsed; CommercialEntry.Visibility = Visibility.Visible;
-        MessageText.Visibility = Visibility.Collapsed; ViewButton.Visibility = Visibility.Collapsed;
-        SaveButton.Visibility = Visibility.Visible; SaveButton.Content = CommercialEntry.IsBusy ? "Guardando…" : "Guardar Intermedia";
-        SaveButton.IsEnabled = ViewModel.CanCreate && CommercialEntry.IsReady && !CommercialEntry.IsBusy;
-        CancelButton.IsEnabled = EntryTypeSelect.IsEnabled = !CommercialEntry.IsBusy;
-        CancelButton.Content = "Cancelar";
-        Resize();
+        OpenCommercialWorkspace = true;
+        Hide();
     }
     public bool ViewCreatedDetail { get; private set; }
     private async void OnOpened(ContentDialog sender, ContentDialogOpenedEventArgs args)
@@ -70,8 +54,8 @@ public sealed partial class IntermediateEditorDialog : ContentDialog
     private void Render()
     {
         if (!_ready) return;
-        if (IsCommercial) { RenderCommercial(); return; }
-        FormSurface.Visibility = Visibility.Visible; CommercialEntry.Visibility = Visibility.Collapsed;
+        if (IsCommercial) return;
+        FormSurface.Visibility = Visibility.Visible;
         EntryTypeSelect.IsEnabled = !ViewModel.IsBusy;
         var success = ViewModel.Created is not null;
         EditorScroll.Visibility = success ? Visibility.Collapsed : Visibility.Visible;
@@ -79,6 +63,13 @@ public sealed partial class IntermediateEditorDialog : ContentDialog
         EmptyText.Visibility = ViewModel.Components.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
         SaveButton.IsEnabled = ViewModel.CanSave; SaveButton.Visibility = success ? Visibility.Collapsed : Visibility.Visible;
         SaveButton.Content = ViewModel.IsBusy ? "Creando…" : "Crear Intermedia";
+        FooterStatus.Visibility = _confirmation is null ? Visibility.Visible : Visibility.Collapsed;
+        FooterStatus.Text = success ? "Preparación registrada" : ViewModel.IsBusy ? "Guardando la preparación…" :
+            ViewModel.IsLoadingOptions ? "Cargando orígenes…" : ViewModel.CanSave ? "Listo para crear la Intermedia" :
+            new[] { ViewModel.NameError, ViewModel.MethodError, ViewModel.VolumeError, ViewModel.DateError,
+                ViewModel.Components.FirstOrDefault(c => c.Error.Length > 0)?.Error ?? "", ViewModel.Message }.FirstOrDefault(s => !string.IsNullOrWhiteSpace(s))
+                ?? "Agregue un componente y complete su volumen.";
+        ToolTipService.SetToolTip(SaveButton, FooterStatus.Text);
         CancelButton.Content = success ? "Cerrar" : "Cancelar"; CancelButton.IsEnabled = !ViewModel.IsBusy;
         ConfirmButton.IsEnabled = !ViewModel.IsBusy;
         ViewButton.Visibility = success ? Visibility.Visible : Visibility.Collapsed;
@@ -142,7 +133,7 @@ public sealed partial class IntermediateEditorDialog : ContentDialog
     }
     private async void OnSave(object sender, RoutedEventArgs args)
     {
-        if (IsCommercial) { var saving = CommercialEntry.SaveAsync(); Render(); CommercialCreated = await saving; Render(); if (CommercialCreated is not null) Hide(); return; }
+        if (IsCommercial) return;
         if (!ViewModel.CanSave) return;
         Confirm($"Crear solución intermedia · {ViewModel.Components.Count} componentes · Tomado {ViewModel.TotalDisplay} · Aforo {ViewModel.FinalDisplay}\n{ViewModel.ResultDisplay}", async () => { await ViewModel.SaveAsync(CancellationToken.None); });
     }
@@ -158,9 +149,9 @@ public sealed partial class IntermediateEditorDialog : ContentDialog
         await action(); Render();
     }
     private void OnDismissConfirmation(object sender, RoutedEventArgs args) { _confirmation = null; ConfirmSurface.Visibility = Visibility.Collapsed; FooterActions.Visibility = Visibility.Visible; Render(); }
-    private void OnCancel(object sender, RoutedEventArgs args) { if (!ViewModel.IsBusy && !CommercialEntry.IsBusy) Hide(); }
+    private void OnCancel(object sender, RoutedEventArgs args) { if (!ViewModel.IsBusy) Hide(); }
     private void OnViewCreated(object sender, RoutedEventArgs args) { ViewCreatedDetail = true; Hide(); }
-    private void OnClosing(ContentDialog sender, ContentDialogClosingEventArgs args) { if (ViewModel.IsBusy || CommercialEntry.IsBusy) args.Cancel = true; else LimsPopupField.CloseForRoot(XamlRoot); }
+    private void OnClosing(ContentDialog sender, ContentDialogClosingEventArgs args) { if (ViewModel.IsBusy) args.Cancel = true; else LimsPopupField.CloseForRoot(XamlRoot); }
     private void OnClosed(ContentDialog sender, ContentDialogClosedEventArgs args)
     {
         _ready = false; ViewModel.PropertyChanged -= OnModelChanged; XamlRoot.Changed -= OnRootChanged;

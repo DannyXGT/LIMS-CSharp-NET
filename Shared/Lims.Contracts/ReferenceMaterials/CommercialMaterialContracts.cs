@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using Lims.Contracts.ReferencePreparations;
 
 namespace Lims.Contracts.ReferenceMaterials;
 
@@ -25,7 +26,14 @@ public sealed record CommercialCertificate(string Reference, string Matrix, stri
     decimal? NominalConcentration, string? NominalUnit, decimal? CoverageFactor,
     DateOnly? OpenedDate, int? UseAfterOpeningMonths,
     IReadOnlyList<CertifiedComponent> Components, IReadOnlyList<CertifiedExpression>? OtherExpressions = null,
-    int? UseAfterOpeningDays = null);
+    int? UseAfterOpeningDays = null, bool UseNominalConcentration = false, int? MatrixSolventId = null,
+    IReadOnlyList<StockSolventInput>? Solvents = null, string? CompositionBasis = null,
+    IReadOnlyList<StockSolventDetail>? SolventDetails = null)
+{
+    // The certified values remain documented even when the method uses the nominal value.
+    public IReadOnlyList<CertifiedComponent> ComponentsForUse() => UseNominalConcentration && Components.Count == 1 && NominalConcentration is { } value && NominalUnit is { } unit
+        ? [Components[0] with { CertifiedConcentration = value, ConcentrationUnit = unit, ExpandedUncertainty = null }] : Components;
+}
 public sealed record MaterialOpeningAudit(Guid Id, DateOnly? PreviousDate, DateOnly? OpenedDate,
     int ActorUserId, DateTimeOffset ChangedAt);
 public sealed record MaterialConsumption(Guid Id, Guid PreparationId, string PreparationCode, string PreparationKind,

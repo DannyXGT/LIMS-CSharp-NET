@@ -24,6 +24,9 @@ public partial class App : Microsoft.UI.Xaml.Application
     private static readonly string[] DashboardElementNames = ["DashboardHeader", "DashboardTitle", "MetricsGrid", "OverviewGrid", "AnalyticsGrid", "OperationsGrid"];
     private Window? _window;
     private ShellPage? _shell;
+    private AlertsWorkspace? _alertsWorkspace;
+    private FixtureAlertsApi? _alertsApi;
+    private readonly Lims.Desktop.Services.WindowsAlertNotifications _alertWindows = new();
     private ReferenceMaterialsPage? _page;
     private Border? _standardsTableForComparison;
     private TextBlock? _standardsTitleForComparison;
@@ -73,7 +76,9 @@ public partial class App : Microsoft.UI.Xaml.Application
         _dashboardPage = new DashboardPage(new DashboardViewModel(_dashboardApi));
         _solutionApi = new FixtureSolutionGroupApi(_intermediateApi);
         _solutionGroups = new SolutionGroupWorkspace(_solutionApi, session);
-        _shell = new ShellPage(shellModel, _page, _stockPage, _intermediatePage, _permissionsPage, _dashboardPage, _api, _solutionGroups) { RequestedTheme = ElementTheme.Dark };
+        _alertsApi = new FixtureAlertsApi(_api.AlertVisualMaterials);
+        _alertsWorkspace = new AlertsWorkspace(_alertsApi, session, _alertWindows, _api, _stockApi, _intermediateApi, _commercialApi, _solutionApi);
+        _shell = new ShellPage(shellModel, _page, _stockPage, _intermediatePage, _permissionsPage, _dashboardPage, _api, _solutionGroups, _alertsWorkspace) { RequestedTheme = ElementTheme.Dark };
         var root = new Grid { RequestedTheme = ElementTheme.Dark, Style = (Style)Resources["FixtureRootStyle"] };
         root.RowDefinitions.Add(new RowDefinition { Height = new GridLength(48) });
         root.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
@@ -87,7 +92,9 @@ public partial class App : Microsoft.UI.Xaml.Application
         brand.Children.Add(new Border { Width = 1, Height = 18, Background = (Brush)Resources["LimsBorderBrush"] });
         brand.Children.Add(new TextBlock { Text = "Gestión de laboratorio", FontSize = 12, Foreground = (Brush)Resources["LimsTextSecondaryBrush"], VerticalAlignment = VerticalAlignment.Center });
         title.Children.Add(brand);
-        var fixtureLabel = new TextBlock { Text = "DATOS FICTICIOS", FontSize = 9, VerticalAlignment = VerticalAlignment.Center };
+        var bellHost = new ContentControl { Content = _alertsWorkspace.Bell, VerticalAlignment = VerticalAlignment.Center };
+        title.ColumnDefinitions.Add(new() { Width = GridLength.Auto }); Grid.SetColumn(bellHost, 3); title.Children.Add(bellHost);
+        var fixtureLabel = new TextBlock { Text = PersistentPreparationValidation.Enabled ? "BD AISLADA · DATOS DE PRUEBA" : "DATOS FICTICIOS", FontSize = 9, VerticalAlignment = VerticalAlignment.Center };
         Grid.SetColumn(fixtureLabel, 1); title.Children.Add(fixtureLabel);
         var systemSearch = new AutoSuggestBox { Width = 280, FontSize = 12, MinHeight = 30, VerticalAlignment = VerticalAlignment.Center, PlaceholderText = "Buscar en el sistema...", QueryIcon = new SymbolIcon(Symbol.Find) };
         Microsoft.UI.Xaml.Automation.AutomationProperties.SetAutomationId(systemSearch, "SystemSearch");
@@ -121,6 +128,36 @@ public partial class App : Microsoft.UI.Xaml.Application
             var navigation = (NavigationView)_shell.FindName("MainNavigation");
             switch (action)
             {
+                case "alerts":
+                    _alertsApi!.Fail = data.TryGetProperty("error", out var alertError) && alertError.GetBoolean();
+                    _alertsApi.Empty = data.TryGetProperty("empty", out var alertEmpty) && alertEmpty.GetBoolean();
+                    _alertsApi.FailureStatus = data.TryGetProperty("status", out var alertStatus) ? alertStatus.GetInt32() : 0;
+                    _alertsApi.EnginePending = data.TryGetProperty("pending", out var alertPending) && alertPending.GetBoolean();
+                    _alertsApi.DelayMs = data.TryGetProperty("delay", out var alertDelay) ? alertDelay.GetInt32() : 0;
+                    _alertsWorkspace!.Page.ViewModel.Filter = new(PageSize: data.TryGetProperty("pageSize", out var alertPageSize) ? alertPageSize.GetInt32() : 30);
+                    if (_alertsApi.DelayMs > 0) _ = _shell.NavigateAlertsAsync(); else await _shell.NavigateAlertsAsync();
+                    await _alertsWorkspace.PollAsync(); break;
+                case "alertQuick": await _alertsWorkspace!.Page.SetQuickAsync(data.GetProperty("index").GetInt32()); break;
+                case "alertSelect":
+                    var alertList = (ListView)_alertsWorkspace!.Page.FindName("AlertsList");
+                    alertList.SelectedIndex = data.TryGetProperty("index", out var alertIndex) ? alertIndex.GetInt32() : 0; break;
+                case "alertBell": _alertsWorkspace!.Bell.Flyout.ShowAt(_alertsWorkspace.Bell); break;
+                case "alertNative":
+                    _alertWindows.Initialize(_window);
+                    var nativeItem = (await _alertsApi!.NotificationsAsync(default)).Value!.Items[0] with { Title = "PRUEBA AISLADA · Alertas", Message = "Aviso de prueba WinUI. No corresponde a inventario productivo." };
+                    var accepted = _alertWindows.Show(nativeItem, 1);
+                    File.WriteAllText(Path.Combine(_directory, "windows-notification.json"), JsonSerializer.Serialize(new { fixtureOnly = true, accepted, status = _alertWindows.Status, clientOpen = true, closedClientGeneration = false }, ReportOptions)); break;
+                case "alertReport":
+                    var vm = _alertsWorkspace!.Page.ViewModel;
+                    File.WriteAllText(Path.Combine(_directory, "alerts-report.json"), JsonSerializer.Serialize(new { fixtureOnly = true, state = vm.State.ToString(), vm.FailureStatus, vm.IsBusy, count = vm.Items.Count, summary = vm.Data?.Summary, filter = vm.Filter, error = vm.Message, selected = vm.Detail?.Alert, readCalls = _alertsApi!.ReadCalls, _alertsApi.ListCalls, _alertsApi.AcknowledgeCalls, scale = _alertsWorkspace.Page.XamlRoot.RasterizationScale, width = _alertsWorkspace.Page.ActualWidth, height = _alertsWorkspace.Page.ActualHeight, monitor = GroupBounds((FrameworkElement)_alertsWorkspace.Page.FindName("MonitorSurface"), _alertsWorkspace.Page.XamlRoot.Content), detail = GroupBounds((FrameworkElement)_alertsWorkspace.Page.FindName("DetailSurface"), _alertsWorkspace.Page.XamlRoot.Content), compact = GroupBounds((FrameworkElement)_alertsWorkspace.Page.FindName("CompactDetailHost"), _alertsWorkspace.Page.XamlRoot.Content) }, ReportOptions)); break;
+                case var actionsCommand when actionsCommand?.StartsWith("actions", StringComparison.Ordinal) == true:
+                    await HandleActionsCommandAsync(actionsCommand, data); break;
+                case var solventAction when solventAction?.StartsWith("solvent", StringComparison.Ordinal) == true:
+                    await HandleSolventCommandAsync(solventAction, data); break;
+                case var formAction when formAction?.StartsWith("form", StringComparison.Ordinal) == true:
+                    HandleFormCommand(formAction, data); break;
+                case var mixAction when mixAction?.StartsWith("mix", StringComparison.Ordinal) == true:
+                    await HandleMixCommandAsync(mixAction, data); break;
                 case "group":
                     navigation.SelectedItem = _shell.FindName("PreparationsItem");
                     ((LimsTabStrip)((PreparationsPage)((ContentControl)_shell.FindName("PreparationsHost")).Content).FindName("PreparationTabs")).SelectedIndex = data.GetProperty("kind").GetString() == "Curva" ? 2 : 3;
@@ -335,7 +372,7 @@ public partial class App : Microsoft.UI.Xaml.Application
                     break;
                 case "intText": ((TextBox)_intermediatePage!.Editor!.FindName(data.GetProperty("field").GetString()!)).Text = data.GetProperty("text").GetString()!; break;
                 case "intDate": ((LimsDatePicker)_intermediatePage!.Editor!.FindName(data.GetProperty("field").GetString()!)).Date = DateTimeOffset.Parse(data.GetProperty("text").GetString()!, CultureInfo.InvariantCulture); break;
-                case "intScroll": ((ScrollViewer)_intermediatePage!.Editor!.FindName("EditorScroll")).ChangeView(null, data.GetProperty("offset").GetDouble(), null, true); break;
+                case "intScroll": ((ScrollViewer)(_intermediatePage!.IsCommercialWorkspaceOpen ? _intermediatePage.CommercialWorkspace!.FindName("CaptureScroll") : _intermediatePage.Editor!.FindName("EditorScroll"))).ChangeView(null, data.GetProperty("offset").GetDouble(), null, true); break;
                 case "intClose": _intermediatePage!.Editor?.Hide(); break;
                 case "intPopup": ((LimsPopupField)_intermediatePage!.Editor!.FindName(data.GetProperty("field").GetString()!)).OpenPopup(); break;
                 case "intDetail": ((ListView)_intermediatePage!.FindName("PreparationsList")).SelectedIndex = 0; _ = _intermediatePage.OpenDetailAsync(); break;
@@ -391,7 +428,7 @@ public partial class App : Microsoft.UI.Xaml.Application
                     foreach (var row in data.GetProperty("rows").EnumerateArray())
                     {
                         mixtureVm.AddSolvent();
-                        var rowPanel = (StackPanel)_stockPage.Editor!.FindName("SolventRowsPanel");
+                        var rowPanel = ((SolventCompositionEditor)_stockPage.Editor!.FindName("CompositionEditor")).RowsPanel;
                         var rowGrid = (Grid)rowPanel.Children[^1];
                         ((LimsSearchSelect)rowGrid.Children[0]).SelectedItem = mixtureVm.SolventCatalog.Single(s => s.Id == row.GetProperty("id").GetInt32());
                         ((TextBox)rowGrid.Children[1]).Text = row.GetProperty("percent").GetString()!;
@@ -417,7 +454,7 @@ public partial class App : Microsoft.UI.Xaml.Application
                         Message = _stockPage.ViewModel.Message,
                     }, ReportOptions));
                     break;
-                case "size": _window.AppWindow.MoveAndResize(new RectInt32(0, 0, data.GetProperty("width").GetInt32(), data.GetProperty("height").GetInt32())); break;
+                case "size": if (_window.AppWindow.Presenter is OverlappedPresenter sizePresenter) sizePresenter.Restore(); _window.AppWindow.MoveAndResize(new RectInt32(0, 0, data.GetProperty("width").GetInt32(), data.GetProperty("height").GetInt32())); break;
                 case "themeReport":
                     object Bounds(FrameworkElement element)
                     {
@@ -485,6 +522,17 @@ public partial class App : Microsoft.UI.Xaml.Application
                     ((LimsSelect)entryDialog.FindName("EntryTypeSelect")).SelectedIndex = 1;
                     break;
                 case "entryFill":
+                    if (data.GetProperty("kind").GetString() == "Intermedia")
+                    {
+                        var mixEntry = _intermediatePage!.CommercialWorkspace!;
+                        foreach (var field in data.GetProperty("fields").EnumerateObject()) ((TextBox)mixEntry.FindName(field.Name)).Text = field.Value.GetString()!;
+                        ((LimsSearchSelect)mixEntry.FindName("MethodSelect")).SelectedIndex = 0;
+                        ((LimsSelect)mixEntry.FindName("LocationSelect")).SelectedIndex = 0;
+                        ((LimsDatePicker)mixEntry.FindName("ExpirationPicker")).Date = DateTimeOffset.Now.AddYears(1);
+                        var certificate = JsonSerializer.Deserialize<Lims.Contracts.ReferenceMaterials.CommercialCertificate>(data.GetProperty("certificate").GetRawText())!;
+                        foreach (var component in certificate.Components) mixEntry.ViewModel.Rows.Add(CommercialComponentRow.From(component));
+                        break;
+                    }
                     var fillDialog = data.GetProperty("kind").GetString() == "Stock" ? (ContentDialog)_stockPage!.Editor! : _intermediatePage!.Editor!;
                     var entry = (CommercialPreparationEditor)fillDialog.FindName("CommercialEntry");
                     foreach (var field in data.GetProperty("fields").EnumerateObject()) ((TextBox)entry.FindName(field.Name)).Text = field.Value.GetString()!;
@@ -494,6 +542,17 @@ public partial class App : Microsoft.UI.Xaml.Application
                     ((CommercialCertificateEditor)entry.FindName("ComponentsEditor")).SetData(JsonSerializer.Deserialize<Lims.Contracts.ReferenceMaterials.CommercialCertificate>(data.GetProperty("certificate").GetRawText())!);
                     break;
                 case "entryGeometry":
+                    if (data.GetProperty("kind").GetString() == "Intermedia")
+                    {
+                        var mix = _intermediatePage!.CommercialWorkspace!;
+                        var save = (Button)mix.FindName("SaveButton");
+                        var p = save.TransformToVisual(null).TransformPoint(new Windows.Foundation.Point());
+                        File.WriteAllText(Path.Combine(_directory, data.GetProperty("name").GetString()! + ".json"), JsonSerializer.Serialize(new {
+                            fixtureOnly = true, mix.ViewModel.IsReady, internalFormCollapsed = _intermediatePage.Editor is null,
+                            footerVisible = p.Y >= 0 && p.Y + save.ActualHeight <= mix.XamlRoot.Size.Height,
+                            request = mix.ViewModel.ReadRequest()
+                        }, ReportOptions)); break;
+                    }
                     var geometryDialog = data.GetProperty("kind").GetString() == "Stock" ? (ContentDialog)_stockPage!.Editor! : _intermediatePage!.Editor!;
                     var geometryEntry = (CommercialPreparationEditor)geometryDialog.FindName("CommercialEntry");
                     var footer = (Button)geometryDialog.FindName("SaveButton");
@@ -503,6 +562,8 @@ public partial class App : Microsoft.UI.Xaml.Application
                         footerTop = footerPosition.Y, footerBottom = footerPosition.Y + footer.ActualHeight,
                         footerVisible = footerPosition.Y >= 0 && footerPosition.Y + footer.ActualHeight <= geometryDialog.XamlRoot.Size.Height,
                         internalFormCollapsed = ((FrameworkElement)geometryDialog.FindName("FormSurface")).Visibility == Visibility.Collapsed,
+                        resultText = ((TextBlock)geometryEntry.FindName("ResultConcentrations")).Text,
+                        resultBalance = ((TextBlock)geometryEntry.FindName("BalanceText")).Text,
                         request = geometryEntry.ReadRequest()
                     }, ReportOptions));
                     break;
@@ -510,11 +571,17 @@ public partial class App : Microsoft.UI.Xaml.Application
                     File.WriteAllText(Path.Combine(_directory, "commercial-entry-report.json"), JsonSerializer.Serialize(new { fixtureOnly = true, _commercialApi!.LastRequest, _commercialApi.Roles }, ReportOptions));
                     break;
                 case "entryCloseDetail": _stockPage!.CommercialDetail?.Hide(); _intermediatePage!.CommercialDetail?.Hide(); break;
-                case "commercialData":
-                    var presentation = data.GetProperty("presentation").GetString()!;
-                    ((LimsSelect)_editor!.FindName("PresentationSelect")).SelectedIndex = presentation == "CommercialMix" ? 2 : 1;
-                    var certificate = JsonSerializer.Deserialize<Lims.Contracts.ReferenceMaterials.CommercialCertificate>(data.GetProperty("certificate").GetRawText())!;
-                    ((CommercialCertificateEditor)_editor.FindName("CommercialEditor")).SetData(certificate);
+                case "standardEntryCatalogs":
+                    navigation.SelectedItem = _shell.FindName("StandardsItem");
+                    await _page.ViewModel.LoadCatalogsAsync();
+                    break;
+                case "standardEntryReport":
+                    File.WriteAllText(Path.Combine(_directory, "standard-entry-report.json"), JsonSerializer.Serialize(new {
+                        fixtureOnly = true,
+                        presentationSelectorRemoved = _editor!.FindName("PresentationSelect") is null,
+                        commercialEditorRemoved = _editor.FindName("CommercialEditor") is null,
+                        request = _editor.CreateRequest()
+                    }, ReportOptions));
                     break;
                 case "commercialReport":
                     File.WriteAllText(Path.Combine(_directory, "commercial-report.json"), JsonSerializer.Serialize(new { fixtureOnly = true, request = _editor!.CreateRequest() }, ReportOptions));

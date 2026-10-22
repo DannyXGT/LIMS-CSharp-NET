@@ -20,7 +20,7 @@
                 BorderBrush="{ThemeResource LimsBorderBrush}"
                 BorderThickness="0,0,0,1">
                 <Grid Padding="0,0,142,0" ColumnSpacing="16">
-                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                 <Grid x:Name="TitleBarDragArea">
                 <StackPanel
                     Margin="16,0,0,0"
@@ -58,6 +58,7 @@
                 <AutoSuggestBox x:Name="SystemSearch" Grid.Column="1" Width="280" FontSize="12" MinHeight="30"
                     VerticalAlignment="Center" PlaceholderText="Buscar en el sistema..." QueryIcon="Find"
                     AutomationProperties.Name="Buscar en el sistema" Visibility="Collapsed"/>
+                <ContentControl x:Name="NotificationsHost" Grid.Column="2" VerticalAlignment="Center" Visibility="Collapsed"/>
                 </Grid>
             </Border>
         </Grid>

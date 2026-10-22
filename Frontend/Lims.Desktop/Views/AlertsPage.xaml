@@ -1,0 +1,134 @@
+<Page x:Class="Lims.Desktop.Views.AlertsPage"
+ xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+ xmlns:vm="using:Lims.Desktop.ViewModels" xmlns:design="using:Lims.DesignSystem.Controls"
+ Background="{ThemeResource LimsBackgroundBrush}" SizeChanged="OnSizeChanged">
+ <Page.Resources>
+  <Style x:Key="AlertMetricStyle" TargetType="Button" BasedOn="{StaticResource LimsSecondaryButtonStyle}">
+   <Setter Property="Background" Value="{ThemeResource LimsSurfaceBrush}"/><Setter Property="Padding" Value="14,12"/>
+   <Setter Property="HorizontalAlignment" Value="Stretch"/><Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+   <Setter Property="VerticalContentAlignment" Value="Stretch"/><Setter Property="CornerRadius" Value="12"/>
+   <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="Button"><Grid x:Name="MetricRoot" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="{TemplateBinding CornerRadius}" Control.IsTemplateFocusTarget="True">
+    <VisualStateManager.VisualStateGroups><VisualStateGroup x:Name="CommonStates"><VisualStateGroup.Transitions><VisualTransition GeneratedDuration="0:0:0.12"/></VisualStateGroup.Transitions><VisualState x:Name="Normal"/><VisualState x:Name="PointerOver"><VisualState.Setters><Setter Target="MetricHover.Opacity" Value="0.06"/></VisualState.Setters></VisualState><VisualState x:Name="Pressed"><VisualState.Setters><Setter Target="MetricHover.Opacity" Value="0.10"/></VisualState.Setters></VisualState><VisualState x:Name="Disabled"><VisualState.Setters><Setter Target="MetricRoot.Opacity" Value="0.65"/></VisualState.Setters></VisualState></VisualStateGroup></VisualStateManager.VisualStateGroups>
+    <Border x:Name="MetricHover" Background="{TemplateBinding Foreground}" CornerRadius="{TemplateBinding CornerRadius}" Opacity="0" IsHitTestVisible="False"/><ContentPresenter Content="{TemplateBinding Content}" Padding="{TemplateBinding Padding}" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" Foreground="{TemplateBinding Foreground}"/>
+   </Grid></ControlTemplate></Setter.Value></Setter>
+  </Style>
+ </Page.Resources>
+ <Grid x:Name="AlertsRoot" RowSpacing="12">
+  <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+  <Grid x:Name="HeaderGrid" ColumnSpacing="16">
+   <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+   <StackPanel Spacing="3"><TextBlock Text="Alertas y notificaciones" FontSize="23" FontWeight="SemiBold"/><TextBlock x:Name="HeaderDescription" Text="Monitoreo de materiales, vencimientos y disponibilidad" FontSize="12" Foreground="{ThemeResource LimsTextSecondaryBrush}"/><InfoBar x:Name="ActionMessage" IsClosable="False" Severity="Error" Visibility="Collapsed"/></StackPanel>
+   <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+    <design:StatusBadge x:Name="ServiceBadge" Text="Sin sincronizar" Tone="Neutral" VerticalAlignment="Center"/>
+    <Button x:Name="RefreshButton" Content="Actualizar" design:LimsAction.Icon="Refresh" Style="{StaticResource LimsUtilityActionStyle}" Click="OnRefresh" ToolTipService.ToolTip="Consultar el último estado del servidor" AutomationProperties.Name="Actualizar alertas"/>
+    <Button x:Name="SettingsButton" Content="Configuración" design:LimsAction.Icon="Administration" Style="{StaticResource LimsActionIconStyle}" Click="OnSettings" ToolTipService.ToolTip="Configuración de Alertas" AutomationProperties.Name="Configuración de Alertas"/>
+    <Button x:Name="HistoryButton" Content="Historial de envíos" design:LimsAction.Icon="Mail" Style="{StaticResource LimsActionIconStyle}" Click="OnHistory" ToolTipService.ToolTip="Historial de envíos" AutomationProperties.Name="Historial de envíos"/>
+   </StackPanel>
+  </Grid>
+  <Grid x:Name="MetricsGrid" Grid.Row="1" ColumnSpacing="10" RowSpacing="8">
+   <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+   <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+   <Button x:Name="CriticalCard" Style="{StaticResource AlertMetricStyle}" Click="OnCritical" ToolTipService.ToolTip="Consultar condiciones críticas activas" AutomationProperties.Name="Filtrar alertas críticas">
+    <Grid RowSpacing="8" ColumnSpacing="10"><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="36"/></Grid.ColumnDefinitions>
+     <TextBlock Text="Alertas críticas" FontSize="12" Foreground="{ThemeResource LimsTextSecondaryBrush}" VerticalAlignment="Center"/>
+     <Border Grid.Column="1" Width="34" Height="34" Background="{ThemeResource LimsDangerSurfaceBrush}" CornerRadius="10"><design:LimsIcon Icon="Alerts" Size="19" IsDanger="True"/></Border>
+     <StackPanel Grid.Row="1" Grid.ColumnSpan="2" Orientation="Horizontal" Spacing="10"><TextBlock x:Name="CriticalCount" Text="Sin sincronizar" FontSize="32" Foreground="{ThemeResource LimsDangerBrush}" FontWeight="SemiBold"/><TextBlock x:Name="CriticalUnit" Text="condiciones" FontSize="10" VerticalAlignment="Bottom" Margin="0,0,0,6" Foreground="{ThemeResource LimsTextTertiaryBrush}"/></StackPanel>
+     <TextBlock Grid.Row="2" Grid.ColumnSpan="2" x:Name="CriticalBreakdown" Text="Sin datos del servidor" FontSize="10" FontWeight="Normal" Foreground="{ThemeResource LimsTextSecondaryBrush}" TextTrimming="CharacterEllipsis"/>
+    </Grid>
+   </Button>
+   <Button x:Name="UpcomingCard" Grid.Column="1" Style="{StaticResource AlertMetricStyle}" Click="OnUpcoming" ToolTipService.ToolTip="Consultar materiales próximos a vencer" AutomationProperties.Name="Filtrar próximos vencimientos">
+    <Grid RowSpacing="8" ColumnSpacing="8"><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="36"/></Grid.ColumnDefinitions>
+     <TextBlock Text="Próximos vencimientos" FontSize="12" Foreground="{ThemeResource LimsTextSecondaryBrush}" VerticalAlignment="Center"/>
+     <Border Grid.Column="1" Width="34" Height="34" Background="{ThemeResource LimsSurfaceSecondaryBrush}" CornerRadius="10"><design:LimsIcon Icon="Calendar" Size="19" Foreground="{ThemeResource LimsWarningBrush}"/></Border>
+     <StackPanel Grid.Row="1" Grid.ColumnSpan="2" Orientation="Horizontal" Spacing="10"><TextBlock x:Name="UpcomingCount" Text="Sin sincronizar" FontSize="32" Foreground="{ThemeResource LimsWarningBrush}" FontWeight="SemiBold"/><TextBlock x:Name="NearestDays" FontSize="10" VerticalAlignment="Bottom" Margin="0,0,0,6" Foreground="{ThemeResource LimsWarningBrush}"/></StackPanel>
+     <TextBlock Grid.Row="2" Grid.ColumnSpan="2" x:Name="NearestText" Text="Sin datos del servidor" FontSize="10" FontWeight="Normal" Foreground="{ThemeResource LimsTextSecondaryBrush}" TextTrimming="CharacterEllipsis"/>
+    </Grid>
+   </Button>
+   <Button x:Name="ExpiredCard" Grid.Column="2" Style="{StaticResource AlertMetricStyle}" Click="OnExpired" ToolTipService.ToolTip="Consultar materiales vencidos" AutomationProperties.Name="Filtrar materiales vencidos">
+    <Grid RowSpacing="8" ColumnSpacing="8"><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="36"/></Grid.ColumnDefinitions>
+     <TextBlock Text="Materiales vencidos" FontSize="12" Foreground="{ThemeResource LimsTextSecondaryBrush}" VerticalAlignment="Center"/>
+     <Border Grid.Column="1" Width="34" Height="34" Background="{ThemeResource LimsDangerSurfaceBrush}" CornerRadius="10"><design:LimsIcon Icon="Archive" Size="19" IsDanger="True"/></Border>
+     <StackPanel Grid.Row="1" Grid.ColumnSpan="2" Orientation="Horizontal" Spacing="10"><TextBlock x:Name="ExpiredCount" Text="Sin sincronizar" FontSize="32" FontWeight="SemiBold"/><TextBlock x:Name="ExpiredUnit" Text="materiales" FontSize="10" VerticalAlignment="Bottom" Margin="0,0,0,6" Foreground="{ThemeResource LimsTextTertiaryBrush}"/></StackPanel>
+     <TextBlock Grid.Row="2" Grid.ColumnSpan="2" x:Name="ExpiredPendingText" Text="Sin datos del servidor" FontSize="10" FontWeight="Normal" Foreground="{ThemeResource LimsTextSecondaryBrush}"/>
+    </Grid>
+   </Button>
+   <Button x:Name="PendingCard" Grid.Column="3" Style="{StaticResource AlertMetricStyle}" Click="OnPending" ToolTipService.ToolTip="Consultar alertas pendientes de atención" AutomationProperties.Name="Filtrar alertas pendientes">
+    <Grid RowSpacing="8" ColumnSpacing="8"><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="36"/></Grid.ColumnDefinitions>
+     <TextBlock Text="Alertas pendientes" FontSize="12" Foreground="{ThemeResource LimsTextSecondaryBrush}" VerticalAlignment="Center"/>
+     <Border Grid.Column="1" Width="34" Height="34" Background="{ThemeResource LimsAccentSoftBrush}" CornerRadius="10"><design:LimsIcon Icon="Traceability" Size="19" Foreground="{ThemeResource LimsAccentBrush}"/></Border>
+     <StackPanel Grid.Row="1" Grid.ColumnSpan="2" Orientation="Horizontal" Spacing="10"><TextBlock x:Name="PendingCount" Text="Sin sincronizar" FontSize="32" Foreground="{ThemeResource LimsAccentBrush}" FontWeight="SemiBold"/><TextBlock x:Name="PendingUnit" Text="sin atender" FontSize="10" VerticalAlignment="Bottom" Margin="0,0,0,6" Foreground="{ThemeResource LimsTextTertiaryBrush}"/></StackPanel>
+     <TextBlock Grid.Row="2" Grid.ColumnSpan="2" x:Name="UnreadText" Text="Lectura independiente de la atención" FontSize="10" FontWeight="Normal" Foreground="{ThemeResource LimsTextSecondaryBrush}"/>
+    </Grid>
+   </Button>
+  </Grid>
+  <Grid x:Name="MainGrid" Grid.Row="2" ColumnSpacing="12">
+   <Grid.ColumnDefinitions><ColumnDefinition Width="2.05*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+   <Border x:Name="MonitorSurface" Background="{ThemeResource LimsSurfaceBrush}" BorderBrush="{ThemeResource LimsBorderBrush}" BorderThickness="1" CornerRadius="12">
+    <Grid x:Name="MonitorGrid" RowSpacing="0">
+     <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+     <Grid x:Name="MonitorHeader" Padding="16,13,16,5"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+      <StackPanel Orientation="Horizontal" Spacing="9"><design:LimsIcon Icon="Summary" Size="18" Foreground="{ThemeResource LimsAccentBrush}"/><TextBlock Text="Monitor de alertas" FontSize="16" FontWeight="SemiBold"/></StackPanel>
+      <design:StatusBadge x:Name="ListCountBadge" Grid.Column="1" Text="Sin sincronizar" Tone="Neutral"/>
+     </Grid>
+     <Grid Grid.Row="1" Padding="16,0"><design:LimsTabStrip x:Name="QuickTabs" SelectionChanged="OnQuickTabChanged">
+      <design:LimsTabItem Label="Todas"/><design:LimsTabItem Label="Críticas"/><design:LimsTabItem Label="Por vencer"/><design:LimsTabItem Label="Disponibilidad"/><design:LimsTabItem Label="Historial"/>
+     </design:LimsTabStrip></Grid>
+     <Grid x:Name="FilterGrid" Grid.Row="2" Padding="16,10" ColumnSpacing="6" RowSpacing="8">
+      <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+      <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+      <TextBox x:Name="SearchBox" PlaceholderText="Material, compuesto, lote o código" TextChanged="OnSearchChanged" AutomationProperties.Name="Buscar alertas" FontSize="12" MinWidth="130"/>
+      <StackPanel x:Name="PrimaryFilters" Grid.Column="1" Orientation="Horizontal" Spacing="6">
+       <ComboBox x:Name="ModuleBox" Width="116" FontSize="11" SelectionChanged="OnFilterChanged" AutomationProperties.Name="Módulo de alerta"><ComboBoxItem Content="Todo módulo" Tag=""/><ComboBoxItem Content="Estándares" Tag="Standards"/><ComboBoxItem Content="Stock" Tag="Stock"/><ComboBoxItem Content="Intermedia" Tag="Intermedia"/><ComboBoxItem Content="Curva" Tag="Curva"/><ComboBoxItem Content="AQS" Tag="AQS"/></ComboBox>
+       <ComboBox x:Name="PriorityBox" Width="112" FontSize="11" SelectionChanged="OnFilterChanged" AutomationProperties.Name="Prioridad de alerta"><ComboBoxItem Content="Prioridad" Tag=""/><ComboBoxItem Content="Crítica" Tag="Critical"/><ComboBoxItem Content="Alta" Tag="High"/><ComboBoxItem Content="Advertencia" Tag="Warning"/><ComboBoxItem Content="Informativa" Tag="Information"/></ComboBox>
+       <ComboBox x:Name="StateBox" Width="112" FontSize="11" SelectionChanged="OnFilterChanged" AutomationProperties.Name="Estado de alerta"><ComboBoxItem Content="Activas" Tag="Active"/><ComboBoxItem Content="Pendientes" Tag="Pending"/><ComboBoxItem Content="Resueltas" Tag="Resolved"/><ComboBoxItem Content="Todo estado" Tag="All"/></ComboBox>
+       <Button x:Name="AdvancedButton" Content="Filtros avanzados" design:LimsAction.Icon="Filter" Style="{StaticResource LimsActionIconStyle}" AutomationProperties.Name="Filtros avanzados" ToolTipService.ToolTip="Fechas, categoría y orden">
+        <Button.Flyout><Flyout Placement="BottomEdgeAlignedRight"><StackPanel Width="300" Spacing="12">
+         <TextBlock Text="Filtros avanzados" FontSize="16" FontWeight="SemiBold"/>
+         <ComboBox x:Name="CategoryBox" Header="Categoría" HorizontalAlignment="Stretch" SelectionChanged="OnFilterChanged"><ComboBoxItem Content="Todas las categorías" Tag=""/><ComboBoxItem Content="Disponibilidad" Tag="Availability"/><ComboBoxItem Content="Vencimientos" Tag="Expiration"/><ComboBoxItem Content="Próximos vencimientos" Tag="Upcoming"/><ComboBoxItem Content="Vencidos" Tag="Expired"/></ComboBox>
+         <CalendarDatePicker x:Name="FromDate" Header="Detectada desde" PlaceholderText="Cualquier fecha" HorizontalAlignment="Stretch" DateChanged="OnDateChanged"/>
+         <CalendarDatePicker x:Name="UntilDate" Header="Hasta" PlaceholderText="Cualquier fecha" HorizontalAlignment="Stretch" DateChanged="OnDateChanged"/>
+         <ComboBox x:Name="SortBox" Header="Orden" HorizontalAlignment="Stretch" SelectionChanged="OnFilterChanged"><ComboBoxItem Content="Prioridad" Tag="Priority"/><ComboBoxItem Content="Más recientes" Tag="Newest"/><ComboBoxItem Content="Vencimiento" Tag="Expiration"/></ComboBox>
+         <Button Content="Limpiar filtros" design:LimsAction.Icon="ClearFilters" Style="{StaticResource LimsUtilityActionStyle}" Click="OnClear"/>
+        </StackPanel></Flyout></Button.Flyout>
+       </Button>
+      </StackPanel>
+     </Grid>
+     <Grid x:Name="ListRegion" Grid.Row="3" BorderBrush="{ThemeResource LimsBorderBrush}" BorderThickness="0,1,0,0">
+      <ListView x:Name="AlertsList" ItemsSource="{x:Bind ViewModel.Items}" SelectionChanged="OnAlertSelected" HorizontalContentAlignment="Stretch" Padding="5" SelectionMode="Single" ScrollViewer.HorizontalScrollMode="Disabled" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+       <ListView.ItemContainerStyle><Style TargetType="ListViewItem" BasedOn="{StaticResource DefaultListViewItemStyle}"><Setter Property="Padding" Value="4,0"/><Setter Property="HorizontalContentAlignment" Value="Stretch"/></Style></ListView.ItemContainerStyle>
+       <ListView.ItemTemplate><DataTemplate x:DataType="vm:AlertRow"><Grid Padding="7,8" ColumnSpacing="10">
+        <Grid.ColumnDefinitions><ColumnDefinition Width="22"/><ColumnDefinition Width="*"/><ColumnDefinition Width="155"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+        <design:LimsIcon Icon="{x:Bind Icon}" IsDanger="{x:Bind IsCritical}" Size="18" VerticalAlignment="Top" Margin="0,2,0,0"/>
+        <StackPanel Grid.Column="1" Spacing="4" VerticalAlignment="Center"><TextBlock Text="{x:Bind Material}" FontSize="14" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/><TextBlock Text="{x:Bind Subtitle}" FontSize="10" Foreground="{ThemeResource LimsTextSecondaryBrush}" TextTrimming="CharacterEllipsis"/>
+        </StackPanel>
+        <StackPanel Grid.Column="2" Spacing="4" VerticalAlignment="Center"><TextBlock Text="{x:Bind Title}" FontSize="11" Foreground="{ThemeResource LimsTextSecondaryBrush}" TextTrimming="CharacterEllipsis"/><TextBlock Text="{x:Bind Module}" FontSize="10" Foreground="{ThemeResource LimsAccentBrush}" TextTrimming="CharacterEllipsis"/></StackPanel>
+        <StackPanel Grid.Column="3" Spacing="5" HorizontalAlignment="Right" VerticalAlignment="Center">
+         <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right"><TextBlock Text="{x:Bind Metric}" FontSize="10" VerticalAlignment="Center"/><design:StatusBadge Text="{x:Bind Priority}" Tone="{x:Bind Tone}"/></StackPanel>
+         <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Right"><TextBlock Text="{x:Bind Status}" FontSize="10" Foreground="{ThemeResource LimsTextSecondaryBrush}"/><TextBlock Text="{x:Bind ReadLabel}" FontSize="10" Foreground="{ThemeResource LimsAccentBrush}"/></StackPanel>
+        </StackPanel>
+       </Grid></DataTemplate></ListView.ItemTemplate>
+      </ListView>
+      <StackPanel x:Name="StatePanel" Spacing="12" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="28,26" MaxWidth="510">
+       <Border x:Name="StateIconTile" Width="46" Height="46" CornerRadius="14" Background="{ThemeResource LimsSurfaceSecondaryBrush}" HorizontalAlignment="Center"><design:LimsIcon x:Name="StateIcon" Icon="Quality" Size="24"/></Border>
+       <ProgressRing x:Name="LoadingRing" Width="30" Height="30" IsActive="False" Visibility="Collapsed"/>
+       <TextBlock x:Name="StateTitle" Text="Conectando con Alertas" FontSize="19" FontWeight="SemiBold" TextAlignment="Center"/>
+       <TextBlock x:Name="StateDescription" FontSize="12" Foreground="{ThemeResource LimsTextSecondaryBrush}" TextWrapping="Wrap" TextAlignment="Center"/>
+       <TextBlock x:Name="StateTechnical" FontSize="11" Foreground="{ThemeResource LimsTextTertiaryBrush}" TextWrapping="Wrap" TextAlignment="Center"/>
+       <Button x:Name="StateAction" Content="Reintentar" design:LimsAction.Icon="Refresh" Style="{StaticResource LimsPrimaryActionStyle}" Click="OnStateAction" HorizontalAlignment="Center"/>
+      </StackPanel>
+     </Grid>
+     <Grid x:Name="ListFooter" Grid.Row="4" Padding="16,5" BorderBrush="{ThemeResource LimsBorderBrush}" BorderThickness="0,1,0,0"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+      <TextBlock x:Name="PageText" FontSize="10" Foreground="{ThemeResource LimsTextSecondaryBrush}" VerticalAlignment="Center"/>
+      <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="5"><Button x:Name="PreviousButton" Content="Página anterior" design:LimsAction.Icon="ChevronLeft" Style="{StaticResource LimsActionIconStyle}" Click="OnPrevious" AutomationProperties.Name="Página anterior" ToolTipService.ToolTip="Página anterior"/><Button x:Name="NextButton" Content="Página siguiente" design:LimsAction.Icon="ChevronRight" Style="{StaticResource LimsActionIconStyle}" Click="OnNext" AutomationProperties.Name="Página siguiente" ToolTipService.ToolTip="Página siguiente"/></StackPanel>
+     </Grid>
+    </Grid>
+   </Border>
+   <Border x:Name="DetailSurface" Grid.Column="1" Padding="18" Background="{ThemeResource LimsSurfaceBrush}" BorderBrush="{ThemeResource LimsBorderBrush}" BorderThickness="1" CornerRadius="12" VerticalAlignment="Top">
+    <ScrollViewer x:Name="DetailScroll" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"><StackPanel x:Name="DetailPanel" Spacing="12"/></ScrollViewer>
+   </Border>
+   <Border x:Name="CompactDetailHost" Grid.ColumnSpan="2" Padding="16" Background="{ThemeResource LimsSurfaceBrush}" BorderBrush="{ThemeResource LimsBorderBrush}" BorderThickness="1" CornerRadius="12" Visibility="Collapsed">
+    <Grid><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions><Button Content="Volver al monitor" design:LimsAction.Icon="ChevronLeft" Style="{StaticResource LimsUtilityActionStyle}" Click="OnBackToMonitor" Margin="0,0,0,10"/><ScrollViewer x:Name="CompactDetailScroll" Grid.Row="1" VerticalScrollBarVisibility="Auto"><ContentControl x:Name="CompactDetailContent" HorizontalContentAlignment="Stretch"/></ScrollViewer></Grid>
+   </Border>
+  </Grid>
+ </Grid>
+</Page>

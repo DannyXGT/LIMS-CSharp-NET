@@ -53,7 +53,7 @@ internal static class CommercialPreparationQuery
     }
     public static StockSummary Stock(ReferenceCommercialRole role, string actor, DateOnly today)
     {
-        var m = role.Material; var component = m.CertifiedComponents.Single();
+        var m = role.Material; var component = Lims.Application.ReferenceMaterials.CommercialMaterials.Certificate(m)!.ComponentsForUse().Single();
         return new(m.Id, role.Code, m.Name, "Comercial / comprado", m.Lot, null, component.CertifiedConcentration,
             component.ConcentrationUnit, m.TotalQuantity, m.Unit.Symbol, m.ReceivedDate, actor, m.EffectiveStatus(today).ToString(),
             null, "", m.EffectiveExpirationDate ?? m.ExpirationDate, m.AvailableQuantity, true);
@@ -62,7 +62,7 @@ internal static class CommercialPreparationQuery
     {
         var m = role.Material;
         // List projection is descriptive. No preparation or dilution is created for the commercial bottle.
-        var analytes = m.CertifiedComponents.Select(c => new IntermediateAnalyte(c.Id, c.Name, c.CasNumber, c.Lot ?? m.Lot,
+        var analytes = Lims.Application.ReferenceMaterials.CommercialMaterials.Certificate(m)!.ComponentsForUse().Select(c => new IntermediateAnalyte(c.Id, c.Name, c.CasNumber, c.Lot ?? m.Lot,
             c.CertifiedConcentration, c.ConcentrationUnit, m.Id, c.Id, c.ExpandedUncertainty)).ToArray();
         return new(m.Id, role.Code, m.Name, m.Method.Name, analytes.Length, m.TotalQuantity, m.Unit.Symbol, m.AvailableQuantity,
             analytes, m.ReceivedDate, m.EffectiveExpirationDate ?? m.ExpirationDate, actor, m.EffectiveStatus(today).ToString(), true);

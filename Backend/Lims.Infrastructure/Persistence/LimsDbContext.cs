@@ -46,6 +46,7 @@ public sealed class LimsDbContext(DbContextOptions<LimsDbContext> options) : DbC
         StockModel.Configure(modelBuilder);
         StockSolventModel.Configure(modelBuilder);
         CommercialMaterialModel.Configure(modelBuilder);
+        AlertModel.Configure(modelBuilder);
     }
 
     private static void ConfigureLegacyIdentity(ModelBuilder modelBuilder)

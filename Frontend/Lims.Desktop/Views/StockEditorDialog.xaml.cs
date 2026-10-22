@@ -17,13 +17,19 @@ public sealed partial class StockEditorDialog : ContentDialog
     private string _search = string.Empty;
     private readonly ICommercialPreparationApiClient? _commercialApi;
     private bool _ready;
+    private bool _expanded;
     public StockEditorDialog(StockViewModel viewModel, ICommercialPreparationApiClient? commercialApi = null)
     {
         _commercialApi = commercialApi;
         ViewModel = viewModel;
         InitializeComponent(); InitializeEntry();
+        CompositionEditor.Initialize(ViewModel.Composition, StepScroll);
+        CompositionEditor.RetryRequested += async (_, _) => await ViewModel.LoadSolventsAsync(CancellationToken.None);
+        CommercialEntry.StateChanged += (_, _) => Render();
+        EditorHeading.ExpandRequested += (_, _) => { _expanded = !_expanded; EditorHeading.IsExpanded = _expanded; Resize(); };
         foreach (var field in new LimsPopupField[] { SourceList, ConcentrationUnitSelect, VolumeUnitSelect, ActualUnitSelect, PreparationDatePicker, ExpirationDatePicker })
             field.PopupBoundary = StepScroll;
+        ActualUnitSelect.PopupBoundary = ResultPanel;
         StepScroll.ViewChanged += (_, _) => LimsPopupField.CloseForRootAfterLayout(this);
         _searchTimer.Tick += async (_, _) => { _searchTimer.Stop(); await ViewModel.SearchSourcesAsync(_search, 1, CancellationToken.None); Render(); };
     }
@@ -32,9 +38,9 @@ public sealed partial class StockEditorDialog : ContentDialog
     private bool IsCommercial => EntryTypeSelect.SelectedIndex == 1;
     private void InitializeEntry()
     {
-        EntryTypeSelect.ItemsSource = new[] { "Preparada en laboratorio", "Comercial / comprada" };
+        EntryTypeSelect.ItemsSource = new[] { "Preparado en laboratorio", "Comercial / comprado" };
         EntryTypeSelect.SelectedIndex = 0;
-        EntryTypeSelect.PopupBoundary = StepScroll;
+        EntryTypeSelect.PopupBoundary = EditorRoot;
     }
     private async void OnEntryTypeChanged(object? sender, EventArgs args)
     {
@@ -47,12 +53,16 @@ public sealed partial class StockEditorDialog : ContentDialog
     }
     private void RenderCommercial()
     {
-        Title = "Nuevo Stock comercial";
+        FooterStatus.Text = CommercialEntry.SaveStatus;
+        EditorHeading.Heading = "Nuevo Stock comercial";
+        EditorHeading.Description = "Producto adquirido · concentración, frasco e inventario";
+        LaboratoryLayout.Visibility = Visibility.Collapsed;
         StepScroll.Visibility = Visibility.Visible; SuccessSurface.Visibility = Visibility.Collapsed;
         FormSurface.Visibility = Visibility.Collapsed; CommercialEntry.Visibility = Visibility.Visible;
         MessageText.Visibility = Visibility.Collapsed; ViewButton.Visibility = Visibility.Collapsed;
         SaveButton.Visibility = Visibility.Visible; SaveButton.Content = CommercialEntry.IsBusy ? "Guardando…" : "Guardar Stock";
-        SaveButton.IsEnabled = ViewModel.CanCreate && CommercialEntry.IsReady && !CommercialEntry.IsBusy;
+        SaveButton.IsEnabled = ViewModel.CanCreate && CommercialEntry.CanSave && !CommercialEntry.IsBusy;
+        ToolTipService.SetToolTip(SaveButton, FooterStatus.Text);
         CancelButton.IsEnabled = EntryTypeSelect.IsEnabled = !CommercialEntry.IsBusy;
         CancelButton.Content = "Cancelar";
         Resize();
@@ -65,62 +75,34 @@ public sealed partial class StockEditorDialog : ContentDialog
         _ready = true;
         ViewModel.PropertyChanged += OnModelChanged;
         XamlRoot.Changed += OnRootChanged;
-        ViewModel.SolventRows.CollectionChanged += OnSolventRowsChanged;
-        BuildSolventRows();
         Resize(); Render(); Motion.Enter(FormSurface, y: 5);
         await ViewModel.LoadOptionsAsync(CancellationToken.None);
         await ViewModel.LoadSolventsAsync(CancellationToken.None);
         await ViewModel.SearchSourcesAsync(null, 1, CancellationToken.None);
         Render(); SourceList.Focus(FocusState.Programmatic);
     }
-    private void OnAddSolvent(object sender, RoutedEventArgs args) => ViewModel.AddSolvent();
-    private async void OnRetrySolvents(object sender, RoutedEventArgs args) => await ViewModel.LoadSolventsAsync(CancellationToken.None);
-    private void OnSolventRowsChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs args) => BuildSolventRows();
-    private void BuildSolventRows()
-    {
-        if (_ready) LimsPopupField.CloseForRoot(XamlRoot);
-        SolventRowsPanel.Children.Clear();
-        foreach (var row in ViewModel.SolventRows)
-        {
-            var grid = new Grid { ColumnSpacing = 6 };
-            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(90) });
-            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
-            var selector = new LimsSearchSelect { ItemsSource = ViewModel.SolventCatalog.ToArray(), SelectedItem = row.SelectedSolvent, PlaceholderText = "Solvente…", SearchPlaceholder = "Nombre o abreviatura…", PopupBoundary = StepScroll };
-            AutomationProperties.SetName(selector, "Solvente " + (ViewModel.SolventRows.IndexOf(row) + 1));
-            selector.SetBinding(LimsSelect.SelectedItemProperty, new Binding { Source = row, Path = new PropertyPath(nameof(row.SelectedSolvent)), Mode = BindingMode.TwoWay });
-            var percent = new TextBox { Text = row.Proportion, PlaceholderText = "%", Style = (Style)Application.Current.Resources["LimsCompactTextBoxStyle"] };
-            AutomationProperties.SetName(percent, "Proporción (%) " + (ViewModel.SolventRows.IndexOf(row) + 1));
-            percent.SetBinding(TextBox.TextProperty, new Binding { Source = row, Path = new PropertyPath(nameof(row.Proportion)), Mode = BindingMode.TwoWay, UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged });
-            var remove = new Button { Content = "×", Style = (Style)Application.Current.Resources["LimsSecondaryButtonStyle"], Padding = new Thickness(10, 4, 10, 4) };
-            AutomationProperties.SetName(remove, "Quitar solvente " + (ViewModel.SolventRows.IndexOf(row) + 1));
-            remove.Click += (_, _) => { LimsPopupField.CloseForRoot(XamlRoot); ViewModel.RemoveSolvent(row); };
-            Grid.SetColumn(percent, 1); Grid.SetColumn(remove, 2);
-            grid.Children.Add(selector); grid.Children.Add(percent); grid.Children.Add(remove);
-            SolventRowsPanel.Children.Add(grid);
-        }
-    }
     private void OnModelChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (e.PropertyName == nameof(ViewModel.IsSolventCatalogReady) && ViewModel.IsSolventCatalogReady) BuildSolventRows();
         Render();
     }
-    private void OnSolventScroll(object sender, ScrollViewerViewChangedEventArgs args) => LimsPopupField.CloseForRootAfterLayout(this);
     private void Render()
     {
         if (!_ready) return;
         if (IsCommercial) { RenderCommercial(); return; }
         FormSurface.Visibility = Visibility.Visible; CommercialEntry.Visibility = Visibility.Collapsed;
         EntryTypeSelect.IsEnabled = !ViewModel.IsBusy;
-        StockCompositionVisual.Render(CompositionBar, CompositionLegend, ViewModel.CompositionDetails);
-        RetrySolventsButton.Visibility = ViewModel.IsSolventCatalogReady ? Visibility.Collapsed : Visibility.Visible;
         var success = ViewModel.Created is not null;
         StepScroll.Visibility = success ? Visibility.Collapsed : Visibility.Visible;
         SuccessSurface.Visibility = success ? Visibility.Visible : Visibility.Collapsed;
-        Title = success ? "Stock creado" : "Nueva preparación Stock";
+        EditorHeading.Heading = success ? "Stock creado" : "Nuevo Stock preparado";
+        EditorHeading.Description = "Preparación en laboratorio · estándar, cantidades y composición";
+        LaboratoryLayout.Visibility = success ? Visibility.Collapsed : Visibility.Visible;
+        CommercialEntry.Visibility = Visibility.Collapsed;
         MessageText.Visibility = string.IsNullOrWhiteSpace(ViewModel.Message) ? Visibility.Collapsed : Visibility.Visible;
         SaveButton.Visibility = success ? Visibility.Collapsed : Visibility.Visible;
         SaveButton.IsEnabled = ViewModel.CanSave;
+        FooterStatus.Text = success ? "Preparación registrada" : ViewModel.CanSave ? "Listo para guardar" : StockRequirement();
+        ToolTipService.SetToolTip(SaveButton, FooterStatus.Text);
         SaveButton.Content = ViewModel.IsBusy ? "Creando…" : "Crear Stock";
         CancelButton.Content = success ? "Cerrar" : "Cancelar";
         CancelButton.IsEnabled = !ViewModel.IsBusy;
@@ -149,15 +131,32 @@ public sealed partial class StockEditorDialog : ContentDialog
             EditorRoot.Width = Math.Min(460, XamlRoot.Size.Width - 88);
         }
     }
+    private string StockRequirement()
+    {
+        if (ViewModel.IsBusy) return "Guardando la preparación…";
+        if (ViewModel.SelectedSource is null) return "Seleccione el estándar de origen.";
+        if (string.IsNullOrWhiteSpace(ViewModel.Compound)) return "Seleccione el analito del estándar.";
+        if (string.IsNullOrWhiteSpace(ViewModel.Concentration)) return "Indique la concentración objetivo.";
+        if (string.IsNullOrWhiteSpace(ViewModel.FinalVolume)) return "Indique el volumen final.";
+        if (string.IsNullOrWhiteSpace(ViewModel.ActualQuantity)) return "Indique el peso tomado realmente.";
+        if (ViewModel.IsCalculating) return "Calculando el resultado…";
+        if (ViewModel.Calculation is { HasSufficientMaterial: false }) return "El estándar no tiene saldo suficiente para el peso tomado.";
+        if (!ViewModel.Composition.IsValid) return ViewModel.Composition.IsReady ?
+            ViewModel.SolventRows.Any(r => r.SelectedSolvent is null) ? "Seleccione los solventes de la matriz." : ViewModel.Composition.Error ?? "Complete la composición de solventes." : ViewModel.Composition.CatalogMessage;
+        if (ViewModel.ExpirationDate is null) return "Indique la fecha de expiración.";
+        return string.IsNullOrWhiteSpace(ViewModel.Message) ? "Revise las cantidades, el nombre y las fechas de la preparación." : ViewModel.Message;
+    }
     private void Resize()
     {
-        var width = Math.Max(260, Math.Min(920, XamlRoot.Size.Width - 88));
+        var size = PreparationEditorHeader.SizeFor(XamlRoot, _expanded);
+        var width = size.Width;
         EditorRoot.Width = ViewModel.Created is null ? width : Math.Min(460, width);
-        EditorRoot.MaxHeight = Math.Max(220, XamlRoot.Size.Height - 130);
-        var narrow = width < 650;
-        ResultColumn.Width = narrow ? new GridLength(0) : new GridLength(1, GridUnitType.Star);
+        EditorRoot.Height = size.Height;
+        var narrow = width < 760;
+        LaboratoryLayout.ColumnDefinitions[1].Width = narrow ? new GridLength(0) : new GridLength(310);
         Grid.SetColumn(ResultPanel, narrow ? 0 : 1);
         Grid.SetRow(ResultPanel, narrow ? 1 : 0);
+        ResultPanel.MaxHeight = narrow ? 220 : double.PositiveInfinity;
     }
     private void OnRootChanged(XamlRoot sender, XamlRootChangedEventArgs args) => Resize();
     private void OnSourceSearchChanged(object? sender, string text) { if (!_ready) return; _search = text; _searchTimer.Stop(); _searchTimer.Start(); }
@@ -180,7 +179,6 @@ public sealed partial class StockEditorDialog : ContentDialog
     {
         _ready = false; _searchTimer.Stop();
         ViewModel.PropertyChanged -= OnModelChanged;
-        ViewModel.SolventRows.CollectionChanged -= OnSolventRowsChanged;
         XamlRoot.Changed -= OnRootChanged;
     }
 }

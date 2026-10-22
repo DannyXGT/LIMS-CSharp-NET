@@ -20,14 +20,26 @@ public sealed class CommercialPreparationDetailDialog : ContentDialog
         void Add(string value, string style = "LimsCaptionStyle") => content.Children.Add(new TextBlock
         { Text = value, TextWrapping = TextWrapping.Wrap, IsTextSelectionEnabled = true, Style = (Style)Application.Current.Resources[style] });
         Add(material.Name, "LimsSectionTitleStyle");
-        Add(material.StatusLabel);
+        var badge = new Border { Padding = new Thickness(8, 3, 8, 3), CornerRadius = new CornerRadius(4), HorizontalAlignment = HorizontalAlignment.Left,
+            Background = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["LimsSurfaceBrush"], Child = new TextBlock { Text = "Comercial · " + material.StatusLabel, Style = (Style)Application.Current.Resources["LimsCaptionStyle"] } };
+        content.Children.Add(badge);
+        if (material.Commercial is { } certificate)
+        {
+            if (detail.Kind == "Stock")
+            {
+                var used = certificate.ComponentsForUse().Single();
+                Add($"{used.CertifiedConcentration:G29} {used.ConcentrationUnit}", "LimsSectionTitleStyle");
+                if (certificate.UseNominalConcentration) Add($"Uso nominal según método · Certificada: {certificate.Components[0].CertifiedConcentration:G29} {certificate.Components[0].ConcentrationUnit}");
+            }
+            else Add($"{certificate.Components.Count} analitos · un único inventario");
+        }
         Add(detail.ResponsibleDisplay + " · " + ReferenceMaterialPresentation.LocalTimestamp(detail.RegisteredAt));
         Add($"{material.Brand} · Catálogo {material.CatalogNumber ?? "—"} · Lote {material.Lot}\n{material.Method} · {material.StorageLocation} · {material.StorageTemperature}");
         Add($"Ingreso {ReferenceMaterialPresentation.Date(material.ReceivedDate)} · Vencimiento {ReferenceMaterialPresentation.Date(material.EffectiveExpirationDate ?? material.ExpirationDate)}");
         var balance = detail.Availability;
         Add($"Disponible {balance.AvailableDisplay} de {balance.InitialDisplay} · {balance.PercentDisplay}");
         content.Children.Add(new ProgressBar { Minimum = 0, Maximum = 100, Value = balance.ProgressValue, Height = 6 });
-        content.Children.Add(CommercialMaterialDetails.Build(material));
+        content.Children.Add(CommercialMaterialDetails.Build(material, operational: true));
         _surface = new Grid { RowSpacing = 12 };
         _surface.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
         _surface.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
