@@ -11,6 +11,7 @@ artifacts/sql/*
 !artifacts/sql/certified_commercial_materials.sql
 !artifacts/sql/preflight_commercial_materials.sql
 !artifacts/sql/commercial_preparation_roles.sql
+!artifacts/sql/commercial_bottle_counts.sql
 !artifacts/sql/reference_stock.sql
 !artifacts/sql/reference_intermediate.sql
 !artifacts/sql/reference_preparation_decimal_scale.sql
@@ -18,6 +19,30 @@ artifacts/sql/*
 !artifacts/sql/reference_curve_aqs.sql
 !artifacts/validation/
 artifacts/validation/*
+!artifacts/validation/intermedia-workspace/
+artifacts/validation/intermedia-workspace/*
+!artifacts/validation/intermedia-workspace/*.png
+!artifacts/validation/intermedia-workspace/empty-*.json
+!artifacts/validation/intermedia-workspace/three-*.json
+!artifacts/validation/intermedia-workspace/twenty-*.json
+!artifacts/validation/intermedia-workspace/scroll-*.json
+!artifacts/validation/intermedia-workspace/access-*.json
+!artifacts/validation/intermedia-workspace/keyboard-*.json
+!artifacts/validation/intermedia-workspace/before-*.json
+!artifacts/validation/intermedia-workspace/after-cancel.json
+!artifacts/validation/intermedia-workspace/blank-row.json
+!artifacts/validation/intermedia-workspace/search.json
+!artifacts/validation/intermedia-workspace/commercial-entry-report.json
+!artifacts/validation/intermedia-workspace/validation-result.json
+!artifacts/validation/intermedia-workspace/verification.json
+!artifacts/validation/commercial-fix-20261019/
+artifacts/validation/commercial-fix-20261019/*
+!artifacts/validation/commercial-fix-20261019/*.png
+!artifacts/validation/commercial-fix-20261019/standard-entry-report.json
+!artifacts/validation/commercial-fix-20261019/stock-*.json
+!artifacts/validation/commercial-fix-20261019/intermedia-*.json
+!artifacts/validation/commercial-fix-20261019/commercial-entry-report.json
+!artifacts/validation/commercial-fix-20261019/verification.json
 !artifacts/validation/commercial-materials/
 artifacts/validation/commercial-materials/*
 !artifacts/validation/commercial-materials/*.png
@@ -107,3 +132,5 @@ artifacts/releases/
 *.tmp
 *.bak
 
+
+/graphify-out/
