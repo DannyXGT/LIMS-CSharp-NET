@@ -1,16 +1,16 @@
 # Graph Report - LIMS-CSharp-NET  (2026-10-24)
 
 ## Corpus Check
-- 588 files · ~806,614 words
+- 590 files · ~810,407 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 7857 nodes · 16882 edges · 407 communities (336 shown, 41 thin omitted)
-- Extraction: 95% EXTRACTED · 5% INFERRED · 0% AMBIGUOUS · INFERRED: 877 edges (avg confidence: 0.81)
+- 7872 nodes · 16913 edges · 431 communities (357 shown, 44 thin omitted)
+- Extraction: 95% EXTRACTED · 5% INFERRED · 0% AMBIGUOUS · INFERRED: 878 edges (avg confidence: 0.81)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `357e825b`
+- Built from commit: `0b34f20c`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -19,7 +19,7 @@
 - IntermediateViewModel
 - StockViewModel
 - IReferenceMaterialService
-- IntermediateDetailDialog
+- ContentDialog
 - FakeStockApi
 - ReferenceMaterialsViewModel
 - ReferenceMaterial
@@ -30,19 +30,19 @@
 - LimsIconKind
 - ReferenceMaterialService
 - FakeRepository
-- ResponseHandler
+- PermissionsApiClient
 - LimsDbContext
 - UserProfile
 - ReferenceMaterialPresentation
 - IntermediateOptions
 - Lims.Desktop.Http
 - FakeApi
-- JwtOptions
+- Page
 - Lims.Contracts.ReferencePreparations
 - README.md
 - IntermediateSource
-- App
-- AuthenticationService
+- Lims.Contracts.ReferenceMaterials
+- AuthenticationResponse
 - FakeSessionStore
 - LimsSelect
 - FakeApi
@@ -62,42 +62,42 @@
 - FixtureStockApi
 - DashboardResponse
 - ApiCallResult
-- Lims.Api/Program.cs
+- Lims.Domain.Identity
 - .PreparationMessage
 - IntermediateEditorDialog
 - UserPermissionState
 - ReferenceMaterialDetailDialog
-- OperationError
+- AuthenticationApiFactory
 - MaterialAlert
 - ShellViewModel
 - UserControl
 - StockService
 - LoginViewModel
-- PermissionRepositoryTests
+- Fixture
 - Page
-- ReferenceMaterialDomainTests
+- ReferenceUnit
 - .Enter
 - ReferenceMaterialEditorDialog
 - Page
 - StockPage
-- IReferenceMaterialRepository
-- CreateReferenceMaterialRequest
+- AlertsPage
+- ReferenceMaterialSummary
 - Lims.Infrastructure.Persistence
 - Argon2PasswordHashService
 - ResourceDictionary
 - .SendAsync
 - ReferenceMaterialsApiClient
-- AuthenticationResponse
+- .SendAsync
 - ContentDialog
 - .WriteAsync
 - UserIdentifierNormalizer
-- ContentDialog
-- .CloseForRoot
+- StockDetailDialog
+- Page
 - StatusBadge
 - PermissionsPage
 - ShellPage
 - StockEditorDialog
-- LimsIcon
+- IconInteraction
 - RefreshToken
 - ReferenceMaterialRepository
 - SolutionGroupViewModel
@@ -124,9 +124,9 @@
 - LimsDatePicker
 - DashboardViewModel
 - LimsTabStrip
-- ReferenceMaterialSummary
-- AlertPostgresTests
-- UserPermissionAssignment
+- IAlertService
+- AlertMailOptions
+- .CreateAsync
 - TextBlock
 - PopupFieldPeer
 - StockApiClient
@@ -139,7 +139,7 @@
 - NavigationService
 - LimsDbContextModelTests
 - PermissionEndpointsTests
-- FixturePermissionsApi
+- LimsIcon
 - IPermissionRepository
 - HistoricalEntryPolicy
 - RefreshTokenService
@@ -162,13 +162,13 @@
 - Button
 - CommercialIntermediateViewModel
 - Page
-- AvailabilityCard
+- Border
 - ReferenceMaterialsPage
-- ReferenceMethod
+- .ReaderExecutingAsync
 - Lims.Api.Tests.csproj
 - validate-standards-detail.ps1
-- IAuthenticationService
-- TextBox
+- RefreshRequest
+- LoginPage
 - Gestión de permisos
 - PermissionActionPanel
 - OperationResult
@@ -185,9 +185,9 @@
 - ApiError
 - .Resolve
 - DashboardComponents
-- .CheckHealthAsync
+- .WriteAsync
 - PermissionUserItem
-- AlertsPage
+- RoutedEventArgs
 - HeaderButton
 - DashboardPage
 - VisualStateGroup
@@ -204,7 +204,7 @@
 - apply-auth-migration.ps1
 - .TryParseDecimal
 - Dashboard principal LIMS .NET
-- .AllSevenWorkspacesReusePhysicalBalancesAndCurvaAqsNeverTreatSentinelZeroAsDepletion
+- IntermediateSummary
 - Migration
 - .Success
 - CreateReferenceStock
@@ -229,14 +229,14 @@
 - Estándares: tabla completa y ficha técnica
 - CalendarPanel
 - ScrollViewer
-- .OnTick
+- App
 - SolutionGroupApiClient
 - MethodBox
 - DesktopOptions
 - ContentDialog
 - validate-intermediate.ps1
-- ActionError
-- FixtureDashboardApi
+- .OnDoubleTapped
+- .CreateAsync
 - ContentPresenter
 - CommercialPreparationEditor
 - CommercialMaterialsPostgresTests
@@ -255,9 +255,9 @@
 - MIGRATION_NOTES.md
 - OPEN_DECISIONS.md
 - LimsTheme.xaml
-- SqliteTestModelCustomizer
+- .AddComponent
 - SolutionGroupService
-- .Initialize
+- TextBox
 - FormSurface
 - PermissionAction
 - Grid
@@ -267,7 +267,7 @@
 - StepScroll
 - Consola visual de Gestión de permisos
 - SolutionGroupEditorDialog
-- .Source
+- IntermediateService
 - CertifiedMaterialComponent
 - ReferenceCommercialRole
 - SolutionGroupEndpointsTests
@@ -279,8 +279,8 @@
 - record-permissions-motion.py
 - validate-dashboard.ps1
 - Fake
-- .Configure
-- .Apply
+- RoutedEventArgs
+- .CheckAsync
 - .OnFieldLostFocus
 - .Stocks
 - Carga manual historica y publicacion portable
@@ -302,16 +302,16 @@
 - .HandleMixCommandAsync
 - AlertRow
 - CommercialPreparationDetail
-- PermissionsApiClient
-- Fixture
+- AllowHistoricalStockDates
+- .OnEntryChanged
 - AddCertifiedCommercialMaterials
 - PreparationUsage
 - AddCommercialPreparationRoles
 - AddAlertEvaluationHistory
 - UserControl
 - SolutionVolumePreview
-- SaveChangesInterceptor
-- Session
+- Page
+- IPermissionsApiClient
 - FixtureSolutionGroupApi
 - AddStockSolventComposition
 - AddCommercialSolventComposition
@@ -323,11 +323,11 @@
 - SolutionPart
 - ComponentFields
 - .Build
-- ContentDialog
+- .OnNavigationLoaded
 - validate-preparation-actions.ps1
 - CommercialSolventCompositionTests
 - .HandleAsync
-- .LoadAsync
+- .OnOpened
 - AlertScreenState
 - .OnCaptureScrolled
 - SolutionGroupDetailDialog
@@ -337,32 +337,32 @@
 - Soluciones comerciales certificadas y Mix
 - CommercialBottleVisual
 - Grid
-- .ConvertVolume
+- IIntermediateApiClient
 - ThemeResourceTests
 - Alertas y Notificaciones
 - .OnFilterChanged
 - .OpenMaterialAsync
 - validate-shared-solvents.ps1
-- .RejectsInvalidTableBeforeReturningAnyRows
+- .OnExpirationChanged
 - Catálogo compartido y composición de solventes
 - correccion-operativa-comerciales-20261019.md
 - Curva y AQS: formularios, resultados y fichas
 - Preparaciones: Curva y AQS
 - Stock: compuesto y composición de solventes
-- Button
+- RoutedEventArgs
 - .Report
 - .OnDateChanged
 - Preparaciones: mejora de presentación y consultas
 - CommercialIntermediateDialog
 - StackPanel
-- ColumnDefinition
+- .CheckHealthAsync
 - ExpirationPicker
 - validate-intermedia-workspace.ps1
 - validate-preparation-dialogs.ps1
 - .Quantity
 - TestClock
 - .UnitGuardAcceptsNativeCatalogUnitsAndStillRejectsHistoricalMismatch
-- .PrecisionMigrationRepairsExistingValuesAndTheDeployedFixedScaleModel
+- .OnPropertyChanged
 - Lims.DesignSystem.csproj
 - validate-dashboard-design-system.ps1
 - validate-dashboard-shell.ps1
@@ -370,7 +370,7 @@
 - Preparaciones: creación modal consistente
 - SearchBox
 - ItemsControl
-- .FocusRow
+- SolventOption
 - validate-alerts.ps1
 - validate-curve-aqs.ps1
 - validate-curve-aqs-final.ps1
@@ -379,19 +379,43 @@
 - validate-theme-responsive.ps1
 - curva-aqs-api-pendiente.md
 - CaptureColumn
-- .OnComponentSearchChanged
-- EntryModeSelect
-- InventoryExpander
+- WindowsAlertNotifications
+- ReferenceMaterialVisuals
+- .SavingChangesAsync
 - SourceList
 - correccion-barras-estandares.md
 - correccion-tema-responsividad.md
 - ActionIcon
 - LimsDashboard.xaml
-- AvailabilityBar
+- .CreateElement
+- Border
+- .OnDateChanged
+- StackPanel
 - CompositionEditor
-- CommercialDetails
-- DetailScroll
-- CompositionEditor
+- MainWindow
+- ActionMessage
+- Border
+- .ToDateOnly
+- StatusCombo
+- CancelButton
+- TextBlock
+- CompactDetailScroll
+- EngineStateIcon
+- ExpressionsPanel
+- MethodSelect
+- AuthenticationColumn
+- Border
+- RevealPasswordGlyph
+- .OnEnterInvoked
+- .OnPopupLoaded
+- ListCountBadge
+- OpeningPicker
+- PeriodUnitSelect
+- EditorHeading
+- LoginForm
+- MethodSelect
+- ResultColumn
+- ResultView
 
 ## God Nodes (most connected - your core abstractions)
 1. `ApiCallResult` - 243 edges
@@ -408,39 +432,39 @@
 ## Surprising Connections (you probably didn't know these)
 - `AuthenticationApiFactory` --references--> `Program`  [EXTRACTED]
   Tests/Backend/Lims.Api.Tests/AuthenticationApiFactory.cs → Backend/Lims.Api/Program.cs
-- `PermissionEndpointsTests` --references--> `Program`  [EXTRACTED]
-  Tests/Backend/Lims.Api.Tests/PermissionEndpointsTests.cs → Backend/Lims.Api/Program.cs
+- `IntermediateEndpointsTests` --references--> `Program`  [EXTRACTED]
+  Tests/Backend/Lims.Api.Tests/IntermediateEndpointsTests.cs → Backend/Lims.Api/Program.cs
 - `SolutionGroupEndpointsTests` --references--> `Program`  [EXTRACTED]
   Tests/Backend/Lims.Api.Tests/SolutionGroupEndpointsTests.cs → Backend/Lims.Api/Program.cs
 - `StockEndpointsTests` --references--> `Program`  [EXTRACTED]
   Tests/Backend/Lims.Api.Tests/StockEndpointsTests.cs → Backend/Lims.Api/Program.cs
-- `FakeAuthenticationService` --implements--> `IAuthenticationService`  [EXTRACTED]
-  Tests/Backend/Lims.Api.Tests/AuthenticationApiFactory.cs → Backend/Lims.Application/Authentication/IAuthenticationService.cs
+- `Fake` --implements--> `IAlertService`  [EXTRACTED]
+  Tests/Backend/Lims.Api.Tests/AlertEndpointsTests.cs → Backend/Lims.Application/Alerts/IAlertService.cs
 
 ## Import Cycles
 - None detected.
 
-## Communities (407 total, 41 thin omitted)
+## Communities (431 total, 44 thin omitted)
 
 ### Community 0 - "StockPostgresTests"
-Cohesion: 0.25
-Nodes (5): IOException, PostgresException, StockPostgresFact, Task, StockPostgresTests
+Cohesion: 0.07
+Nodes (37): FixedScaleModelCustomizer, IAsyncDisposable, ModelCustomizer, OverflowException, SaveChangesInterceptor, DbContext, ModelBuilder, ModelCustomizerDependencies (+29 more)
 
 ### Community 1 - "IntermediateViewModel"
 Cohesion: 0.03
-Nodes (79): CancellationToken, Guid, Task, IIntermediateApiClient, CancellationToken, DateTimeOffset, Guid, IEnumerable (+71 more)
+Nodes (75): CancellationToken, DateTimeOffset, Guid, IEnumerable, List, ObservableCollection, PropertyChangedEventArgs, RelayCommand (+67 more)
 
 ### Community 2 - "StockViewModel"
-Cohesion: 0.02
-Nodes (71): StockSolventRow, Proportion, SelectedSolvent, DateTimeOffset, IReadOnlyList, StockViewModel, ActualQuantity, ActualWeightUnit (+63 more)
+Cohesion: 0.03
+Nodes (68): DateTimeOffset, IReadOnlyList, StockViewModel, ActualQuantity, ActualWeightUnit, Calculation, CanCreate, CanOpenSelectedPreparation (+60 more)
 
 ### Community 3 - "IReferenceMaterialService"
 Cohesion: 0.15
 Nodes (18): CommercialPreparationEndpoints, CancellationToken, Guid, HttpContext, IEndpointRouteBuilder, IResult, Task, ReferenceMaterialEndpoints (+10 more)
 
-### Community 4 - "IntermediateDetailDialog"
-Cohesion: 0.14
-Nodes (13): ContentDialogOpenedEventArgs, IReadOnlyList, XamlRoot, XamlRootChangedEventArgs, IntermediateDetailDialog, AuditDisplay, ContextDisplay, Detail (+5 more)
+### Community 4 - "ContentDialog"
+Cohesion: 0.07
+Nodes (25): ContentDialog, ContentDialog, Cylinder, DetailScroll, DetailSurface, ContentDialogClosedEventArgs, ContentDialogOpenedEventArgs, IReadOnlyList (+17 more)
 
 ### Community 5 - "FakeStockApi"
 Cohesion: 0.10
@@ -448,23 +472,23 @@ Nodes (29): FakeStockApi, CancellationToken, Fact, Func, Guid, IReadOnlyList, Li
 
 ### Community 6 - "ReferenceMaterialsViewModel"
 Cohesion: 0.05
-Nodes (43): CancellationToken, IEnumerable, ObservableCollection, Task, ReferenceMaterialsViewModel, CanArchive, CanArchiveSelected, CanCreate (+35 more)
+Nodes (44): ApiOperationFailure, CancellationToken, IEnumerable, ObservableCollection, Task, ReferenceMaterialsViewModel, CanArchive, CanArchiveSelected (+36 more)
 
 ### Community 7 - "ReferenceMaterial"
-Cohesion: 0.05
-Nodes (45): DateOnly, DateTimeOffset, Guid, IReadOnlyList, List, ReferenceMaterial, ArchivedAt, ArchivedByUserId (+37 more)
+Cohesion: 0.04
+Nodes (56): ReferenceLocation, Id, IsActive, Name, DateOnly, DateTimeOffset, Guid, IReadOnlyList (+48 more)
 
 ### Community 8 - "ReferencePreparation"
 Cohesion: 0.04
-Nodes (49): ReferencePreparation, ActualConcentration, ActualConcentrationUnit, ActualWeight, ActualWeightUnit, AvailableVolume, CalculatedWeight, CalculatedWeightUnit (+41 more)
+Nodes (52): DateOnly, DateTimeOffset, Guid, ReferencePreparation, ActualConcentration, ActualConcentrationUnit, ActualWeight, ActualWeightUnit (+44 more)
 
 ### Community 9 - "PermissionsViewModel"
 Cohesion: 0.04
 Nodes (47): ObservableCollection, PermissionHistoryRow, Tone, PermissionsViewModel, AccessibleModules, AccessNote, CanConfigureEmpty, CanEdit (+39 more)
 
 ### Community 10 - "ContentDialog"
-Cohesion: 0.06
-Nodes (45): AddButton, CancelButton, ComponentList, ConfirmButton, ConfirmSurface, ConfirmText, ContentDialog, Cylinder (+37 more)
+Cohesion: 0.07
+Nodes (39): ComponentList, ConfirmSurface, ConfirmText, ContentDialog, Cylinder, CylinderColumn, EditorRoot, EditorScroll (+31 more)
 
 ### Community 11 - "FakeApi"
 Cohesion: 0.14
@@ -472,78 +496,78 @@ Nodes (18): ReferenceMaterialPage, CancellationToken, Fact, Func, Guid, IReadOnl
 
 ### Community 12 - "LimsIconKind"
 Cohesion: 0.04
-Nodes (53): IconElement, LimsIconCatalog, LimsIconKind, Add, Administration, Alerts, ApplyFilters, Archive (+45 more)
+Nodes (51): LimsIconKind, Add, Administration, Alerts, ApplyFilters, Archive, Availability, Calendar (+43 more)
 
 ### Community 13 - "ReferenceMaterialService"
-Cohesion: 0.21
-Nodes (10): Guid, CancellationToken, DateOnly, Guid, IReadOnlyList, Task, TimeProvider, ReferenceMaterialService (+2 more)
+Cohesion: 0.13
+Nodes (17): CancellationToken, DateOnly, Guid, IReadOnlyList, Items, Task, TotalCount, IReferenceMaterialRepository (+9 more)
 
 ### Community 14 - "FakeRepository"
-Cohesion: 0.14
-Nodes (21): ArchiveReferenceMaterialRequest, CancellationToken, DateOnly, DateTimeOffset, Fact, Guid, IReadOnlyList, List (+13 more)
+Cohesion: 0.12
+Nodes (23): ReferenceMaterialCatalogSelection, ReferenceMaterialDisplayContext, ArchiveReferenceMaterialRequest, CancellationToken, DateOnly, DateTimeOffset, Fact, Guid (+15 more)
 
-### Community 15 - "ResponseHandler"
-Cohesion: 0.18
-Nodes (16): CancellationToken, Fact, Func, HttpClient, HttpMessageHandler, HttpRequestMessage, HttpResponseMessage, HttpStatusCode (+8 more)
+### Community 15 - "PermissionsApiClient"
+Cohesion: 0.11
+Nodes (23): CancellationToken, HttpContent, HttpMethod, IHttpClientFactory, IReadOnlyList, Task, PermissionsApiClient, CancellationToken (+15 more)
 
 ### Community 16 - "LimsDbContext"
 Cohesion: 0.06
-Nodes (31): Department, Id, Name, Role, Id, Name, UserPermissionGrant, Key (+23 more)
+Nodes (32): Department, Id, Name, Role, Id, Name, UserPermissionGrant, Key (+24 more)
 
 ### Community 17 - "UserProfile"
-Cohesion: 0.10
-Nodes (22): FakeNavigation, AuthenticationOutcome, LogoutOutcome, CancellationToken, Task, IAuthenticationGateway, IReadOnlyList, UserProfile (+14 more)
+Cohesion: 0.09
+Nodes (24): FakeNavigation, AuthenticationOutcome, LogoutOutcome, CancellationToken, Task, IAuthenticationGateway, IReadOnlyList, UserProfile (+16 more)
 
 ### Community 18 - "ReferenceMaterialPresentation"
-Cohesion: 0.09
-Nodes (12): Visibility, ReferenceMaterialVisuals, JsonSerializerOptions, CultureInfo, DateOnly, DateTimeOffset, ReferenceMaterialPresentation, Fact (+4 more)
+Cohesion: 0.08
+Nodes (17): ContainerContentChangingEventArgs, JsonSerializerOptions, ListViewBase, ReferenceLocationOption, ReferenceMethodOption, ReferenceUnitOption, DisplayName, CultureInfo (+9 more)
 
 ### Community 19 - "IntermediateOptions"
-Cohesion: 0.11
-Nodes (21): CancellationToken, HttpContext, IEndpointRouteBuilder, IResult, Task, IntermediateEndpoints, CancellationToken, DateOnly (+13 more)
+Cohesion: 0.15
+Nodes (16): CancellationToken, HttpContext, IEndpointRouteBuilder, IResult, Task, IntermediateEndpoints, CancellationToken, DateOnly (+8 more)
 
 ### Community 20 - "Lims.Desktop.Http"
-Cohesion: 0.07
-Nodes (9): Lims.Contracts.Authentication, Lims.Contracts.ReferenceMaterials, Lims.Contracts.Dashboard, Lims.Desktop.Validation, Lims.Desktop.Tests, Lims.Desktop.Http, Lims.Desktop.Services, ApiClientNames (+1 more)
+Cohesion: 0.09
+Nodes (9): Lims.Contracts.Authentication, Lims.Contracts.Dashboard, Lims.Contracts.Errors, Lims.Desktop.Tests, Lims.Desktop.Http, Lims.Desktop.ViewModels, Lims.Desktop.Services, ApiClientNames (+1 more)
 
 ### Community 21 - "FakeApi"
 Cohesion: 0.13
 Nodes (19): CancellationToken, Fact, FakeApi, Guid, IntermediatePage, IntermediateViewModel, List, Task (+11 more)
 
-### Community 22 - "JwtOptions"
-Cohesion: 0.22
-Nodes (7): IAccessTokenService, JwtAccessTokenService, JwtOptions, Audience, Issuer, SigningKey, SigningCredentials
+### Community 22 - "Page"
+Cohesion: 0.09
+Nodes (25): AvailabilityFilter, CommercialWorkspaceHost, EmptyState, FilterGrid, Filters, FiltersColumn, ListSurface, Page (+17 more)
 
 ### Community 23 - "Lims.Contracts.ReferencePreparations"
 Cohesion: 0.08
-Nodes (14): Lims.Domain.ReferencePreparations, Lims.Domain.ReferenceMaterials, Lims.Contracts.ReferencePreparations, Lims.Contracts.Errors, Lims.Application.Tests.ReferenceMaterials, Lims.Api.Tests, Lims.Api.ReferenceMaterials, Lims.Application.ReferenceMaterials (+6 more)
+Nodes (11): Lims.Domain.ReferencePreparations, Lims.Domain.ReferenceMaterials, Lims.Contracts.ReferencePreparations, Lims.Application.Tests.ReferenceMaterials, Lims.Api.ReferenceMaterials, Lims.Application.ReferenceMaterials, Lims.Application.ReferenceMaterials.Ports, Lims.Application.Common (+3 more)
 
 ### Community 24 - "README.md"
 Cohesion: 0.05
 Nodes (30): Arquitectura, Autenticación y sesión, Contrato, Contratos de error, Tokens y revocación, API, Desarrollo, Migraciones (+22 more)
 
 ### Community 25 - "IntermediateSource"
-Cohesion: 0.07
-Nodes (36): DateOnly, Guid, IReadOnlyList, CreateIntermediateRequest, IntermediateAnalyte, Display, IntermediateCalculation, ConcentrationDisplay (+28 more)
+Cohesion: 0.12
+Nodes (21): DateOnly, Guid, CreateIntermediateRequest, IntermediateAnalyte, Display, IntermediateCalculation, ConcentrationDisplay, FinalDisplay (+13 more)
 
-### Community 26 - "App"
+### Community 26 - "Lims.Contracts.ReferenceMaterials"
 Cohesion: 0.06
-Nodes (12): Lims.Desktop.Presentation, Lims.Desktop.VisualHarness, Lims.Desktop.Views, Lims.Desktop.Controls, Lims.DesignSystem.Controls, Lims.Desktop.ViewModels, Lims.DesignSystem.Presentation, SolutionGroupWorkspace (+4 more)
+Nodes (10): Lims.Desktop.Presentation, Lims.Desktop.VisualHarness, Lims.Desktop.Views, Lims.Contracts.ReferenceMaterials, Lims.Desktop.Validation, Lims.Desktop.Controls, Lims.DesignSystem.Controls, Lims.DesignSystem.Presentation (+2 more)
 
-### Community 27 - "AuthenticationService"
-Cohesion: 0.16
-Nodes (14): CancellationToken, DateTimeOffset, Guid, IssuedAccessToken, Task, TimeProvider, AuthenticationService, DateTimeOffset (+6 more)
+### Community 27 - "AuthenticationResponse"
+Cohesion: 0.14
+Nodes (15): CancellationToken, DateTimeOffset, Guid, IssuedAccessToken, Task, TimeProvider, AuthenticationService, CancellationToken (+7 more)
 
 ### Community 28 - "FakeSessionStore"
-Cohesion: 0.13
-Nodes (20): RefreshSessionSnapshot, CancellationToken, DateTimeOffset, Fact, Guid, InlineData, RefreshToken, Task (+12 more)
+Cohesion: 0.11
+Nodes (22): RefreshSessionSnapshot, LoginRequest, CancellationToken, DateTimeOffset, Fact, Guid, InlineData, RefreshToken (+14 more)
 
 ### Community 29 - "LimsSelect"
 Cohesion: 0.08
 Nodes (22): DependencyObject, DependencyProperty, DependencyPropertyChangedEventArgs, Grid, IEnumerable, KeyRoutedEventArgs, ListView, NotifyCollectionChangedEventArgs (+14 more)
 
 ### Community 30 - "FakeApi"
-Cohesion: 0.10
+Cohesion: 0.11
 Nodes (23): CancellationToken, Task, CancellationToken, Fact, Guid, IReadOnlyList, Task, TaskCompletionSource (+15 more)
 
 ### Community 31 - "ReferenceMaterialDetail"
@@ -551,8 +575,8 @@ Cohesion: 0.05
 Nodes (36): DateTimeOffset, IReadOnlyList, ReferenceMaterialDetail, ArchivedAtDisplay, ArchivedByDisplay, AvailabilityHeadline, AvailabilityPercentDisplay, AvailableDisplay (+28 more)
 
 ### Community 32 - "PermissionRepository"
-Cohesion: 0.14
-Nodes (16): PermissionOptions, EnforceIndividualPermissions, CancellationToken, IEnumerable, IQueryable, Task, TimeProvider, PermissionRepository (+8 more)
+Cohesion: 0.07
+Nodes (37): DateTimeOffset, Guid, PermissionCode, Code, UserPermissionAssignment, ActorUserId, ChangedAt, Code (+29 more)
 
 ### Community 33 - "StockSummary"
 Cohesion: 0.07
@@ -560,7 +584,7 @@ Nodes (30): StockAvailability, AvailableDisplay, AvailableVolume, ConsumedDispla
 
 ### Community 34 - "Page"
 Cohesion: 0.04
-Nodes (73): Action, ActionName, Actor, At, Change, Definition.Name, Icon, IsChanged (+65 more)
+Nodes (70): Action, ActionName, Actor, At, Change, Definition.Name, Icon, IsChanged (+62 more)
 
 ### Community 35 - ".CreateAsync"
 Cohesion: 0.10
@@ -568,31 +592,31 @@ Nodes (23): ExecutionStrategy, ExecutionStrategyDependencies, IExecutionStrategy
 
 ### Community 36 - "ContentDialog"
 Cohesion: 0.08
-Nodes (39): BrandError, CasError, ContentDialog, EditorRoot, EditorScrollViewer, EditorSurface, ExpirationDatePicker, ExpirationError (+31 more)
+Nodes (41): BrandBox, BrandError, CasError, CatalogBox, ContentDialog, EditorRoot, EditorScrollViewer, EditorSurface (+33 more)
 
 ### Community 37 - "LimsPopupField"
 Cohesion: 0.06
 Nodes (28): ActivePopup, Button, Canvas, KeyRoutedEventArgs, Size, ConditionalWeakTable, DependencyObject, DependencyProperty (+20 more)
 
 ### Community 38 - "StockDetail"
-Cohesion: 0.06
-Nodes (37): CancellationToken, HttpContext, IEndpointRouteBuilder, IResult, Task, StockEndpoints, CancellationToken, Guid (+29 more)
+Cohesion: 0.09
+Nodes (25): DateOnly, DateTimeOffset, Guid, IReadOnlyList, CreateStockRequest, StockDetail, CompositionDisplay, CompoundDisplay (+17 more)
 
 ### Community 39 - "IntermediatePage"
-Cohesion: 0.05
-Nodes (48): AvailabilityFilter, CommercialWorkspaceHost, EmptyState, FilterGrid, Filters, FiltersColumn, ListSurface, MethodFilter (+40 more)
+Cohesion: 0.12
+Nodes (14): NewCommercialButton, CommercialIntermediateWorkspace, DispatcherTimer, Guid, RoutedEventArgs, Task, IntermediatePage, CommercialDetail (+6 more)
 
 ### Community 40 - ".Calculate"
-Cohesion: 0.24
-Nodes (7): StockCalculator, ArgumentException, ArgumentOutOfRangeException, Fact, InlineData, Theory, StockCalculatorTests
+Cohesion: 0.16
+Nodes (8): StockCalculator, StockUnits, ArgumentException, ArgumentOutOfRangeException, Fact, InlineData, Theory, StockCalculatorTests
 
 ### Community 41 - "Page"
-Cohesion: 0.05
-Nodes (51): ViewportWidth, AuthenticationColumn, ContentElement, ErrorEntrance, HeroBrandTagline, HeroColumn, HeroContent, HeroHeadline (+43 more)
+Cohesion: 0.11
+Nodes (24): ViewportWidth, ContentElement, ErrorEntrance, HeroBrandTagline, HeroContent, HeroHeadline, HeroPanel, HeroSupport (+16 more)
 
 ### Community 42 - "IntermediateEndpointsTests"
-Cohesion: 0.09
-Nodes (20): Program, IDisposable, IntermediatePage, AuthenticationHeaderValue, CancellationToken, DateOnly, Fact, Guid (+12 more)
+Cohesion: 0.13
+Nodes (15): AuthenticationHeaderValue, CancellationToken, DateOnly, DateTimeOffset, Fact, Guid, HttpClient, IntermediatePage (+7 more)
 
 ### Community 43 - "User"
 Cohesion: 0.10
@@ -610,92 +634,92 @@ Nodes (28): CancellationToken, IQueryable, IReadOnlyList, Task, TimeProvider, Da
 Cohesion: 0.07
 Nodes (37): Db, ApiCallResult, Db, CancellationToken, Guid, IEnumerable, List, Task (+29 more)
 
-### Community 47 - "Lims.Api/Program.cs"
-Cohesion: 0.10
-Nodes (12): LimsPolicies, Lims.Application.Authentication.Ports, Lims.Api.Dashboard, Lims.Domain.Authentication, Lims.Application.Authentication, Lims.Infrastructure.Security, Lims.Application.Dashboard, Lims.Api.Permissions (+4 more)
+### Community 47 - "Lims.Domain.Identity"
+Cohesion: 0.12
+Nodes (8): Lims.Application.Authentication.Ports, Lims.Domain.Authentication, Lims.Api.Tests, Lims.Application.Authentication, Lims.Infrastructure.Security, Lims.Domain.Identity, Lims.Application.Authentication.Security, Lims.Infrastructure.Tests.Security
 
 ### Community 48 - ".PreparationMessage"
-Cohesion: 0.12
-Nodes (13): CancellationToken, Guid, IReadOnlyList, Task, IStockApiClient, CancellationToken, Guid, IEnumerable (+5 more)
+Cohesion: 0.14
+Nodes (11): CancellationToken, Guid, IReadOnlyList, Task, IStockApiClient, CancellationToken, Guid, IEnumerable (+3 more)
 
 ### Community 49 - "IntermediateEditorDialog"
-Cohesion: 0.12
-Nodes (12): ContentDialogOpenedEventArgs, Func, PropertyChangedEventArgs, RoutedEventArgs, Task, XamlRoot, XamlRootChangedEventArgs, IntermediateEditorDialog (+4 more)
+Cohesion: 0.09
+Nodes (21): AddButton, CancelButton, ConfirmButton, EntryTypeSelect, SaveButton, ViewButton, ContentDialogOpenedEventArgs, EventArgs (+13 more)
 
 ### Community 50 - "UserPermissionState"
-Cohesion: 0.12
-Nodes (24): CancellationToken, IReadOnlyList, Task, IPermissionsApiClient, DateTimeOffset, Guid, IReadOnlyList, EffectivePermissions (+16 more)
+Cohesion: 0.09
+Nodes (31): DateTimeOffset, Guid, IReadOnlyList, EffectivePermissions, PermissionCatalog, All, PermissionDefinition, PermissionHistory (+23 more)
 
 ### Community 51 - "ReferenceMaterialDetailDialog"
 Cohesion: 0.12
 Nodes (17): Button, Func, KeyRoutedEventArgs, Popup, Storyboard, Task, TaskCompletionSource, XamlRoot (+9 more)
 
-### Community 52 - "OperationError"
-Cohesion: 0.12
-Nodes (16): IReadOnlyDictionary, OperationError, FakeReferenceMaterialService, CancellationToken, DateTimeOffset, Guid, IReadOnlyList, Task (+8 more)
+### Community 52 - "AuthenticationApiFactory"
+Cohesion: 0.14
+Nodes (16): FakeAuthenticationService, FakeReferenceMaterialService, FakeSessionStore, IWebHostBuilder, CancellationToken, DateTimeOffset, Guid, IReadOnlyList (+8 more)
 
 ### Community 53 - "MaterialAlert"
 Cohesion: 0.03
 Nodes (93): DateOnly, DateTimeOffset, Guid, AlertConfiguration, ActorUserId, ChangedAt, Id, Json (+85 more)
 
 ### Community 54 - "ShellViewModel"
-Cohesion: 0.06
-Nodes (30): CancellationToken, RelayCommand, Task, ShellViewModel, AuthorizationSignature, CanViewAlerts, CanViewAqs, CanViewCurve (+22 more)
+Cohesion: 0.08
+Nodes (21): CancellationToken, RelayCommand, Task, ShellViewModel, AuthorizationSignature, CanViewAlerts, CanViewAqs, CanViewCurve (+13 more)
 
 ### Community 55 - "UserControl"
-Cohesion: 0.12
-Nodes (26): AuditSection, AvailabilityPercent, AvailabilityPresentation, AvailabilityQualifier, AvailabilityQuantity, AvailabilityTotals, AvailabilityVial, BreadcrumbName (+18 more)
+Cohesion: 0.10
+Nodes (30): ActionError, AvailabilityColumn, AvailabilityPercent, AvailabilityPresentation, AvailabilityQualifier, AvailabilityQuantity, AvailabilityTotals, AvailabilityVial (+22 more)
 
 ### Community 56 - "StockService"
-Cohesion: 0.13
-Nodes (18): CancellationToken, DateOnly, DateTimeOffset, Func, Guid, IReadOnlyList, Task, IStockRepository (+10 more)
+Cohesion: 0.25
+Nodes (7): CancellationToken, DateOnly, Guid, IReadOnlyList, Task, TimeProvider, StockService
 
 ### Community 57 - "LoginViewModel"
 Cohesion: 0.05
 Nodes (30): ContentControl, FrameworkElement, INavigationService, LoginState, Authenticated, Authenticating, Idle, InvalidCredentials (+22 more)
 
-### Community 58 - "PermissionRepositoryTests"
-Cohesion: 0.31
-Nodes (6): DbUpdateException, Fact, InlineData, Task, Theory, PermissionRepositoryTests
+### Community 58 - "Fixture"
+Cohesion: 0.15
+Nodes (13): PermissionTestModel, DbUpdateException, Fact, IModelCustomizer, InlineData, SqliteConnection, Task, Theory (+5 more)
 
 ### Community 59 - "Page"
 Cohesion: 0.08
-Nodes (35): AdministrationGroup, AlertsHost, AlertsItem, BrandLabels, DeniedPanel, HomeItem, HomePanel, LogoutButton (+27 more)
+Nodes (33): AdministrationGroup, AlertsHost, AlertsItem, BrandLabels, DeniedPanel, HomeItem, HomePanel, LogoutButton (+25 more)
 
-### Community 60 - "ReferenceMaterialDomainTests"
-Cohesion: 0.15
-Nodes (11): GeneratedRegex, Regex, CasRegistryNumber, ArgumentException, ArgumentOutOfRangeException, DateTimeOffset, Fact, InlineData (+3 more)
+### Community 60 - "ReferenceUnit"
+Cohesion: 0.11
+Nodes (16): GeneratedRegex, Regex, CasRegistryNumber, ReferenceUnit, Id, IsActive, Name, Symbol (+8 more)
 
 ### Community 61 - ".Enter"
-Cohesion: 0.12
-Nodes (13): InteractionMotion, ConditionalWeakTable, DependencyObject, DependencyProperty, DependencyPropertyChangedEventArgs, FrameworkElement, Task, Visual (+5 more)
+Cohesion: 0.13
+Nodes (12): ConditionalWeakTable, DependencyObject, DependencyProperty, DependencyPropertyChangedEventArgs, FrameworkElement, Task, Visual, Motion (+4 more)
 
 ### Community 62 - "ReferenceMaterialEditorDialog"
-Cohesion: 0.08
-Nodes (19): Column, ApiOperationFailure, ContentDialogClosingEventArgs, ContentDialogOpenedEventArgs, DateOnly, DateTimeOffset, FrameworkElement, Func (+11 more)
+Cohesion: 0.07
+Nodes (25): Text, Column, CancelButton, CasBox, CopySupportIdButton, PackageCountBox, PresentationBox, SaveButton (+17 more)
 
 ### Community 63 - "Page"
 Cohesion: 0.08
-Nodes (34): ApplyFilterColumn, ApplyFiltersButton, CatalogLoadingBar, ClearFilterColumn, ClearFiltersButton, DelayedProgress, FilterGrid, LoadingPlaceholder (+26 more)
+Nodes (31): ApplyFilterColumn, CatalogLoadingBar, ClearFilterColumn, DelayedProgress, FilterGrid, LoadingPlaceholder, MaterialsList, MethodFilterColumn (+23 more)
 
 ### Community 64 - "StockPage"
-Cohesion: 0.05
-Nodes (41): AvailabilityFilter, EmptyState, FilterGrid, Filters, FiltersColumn, MethodFilter, Page, PreparationsList (+33 more)
+Cohesion: 0.09
+Nodes (20): MethodFilter, PreparationsList, SearchBox, DependencyObject, DispatcherTimer, DoubleTappedRoutedEventArgs, Guid, KeyRoutedEventArgs (+12 more)
 
-### Community 65 - "IReferenceMaterialRepository"
-Cohesion: 0.22
-Nodes (8): CancellationToken, DateOnly, IReadOnlyList, Items, Task, TotalCount, IReferenceMaterialRepository, ReferenceMaterialDisplayContext
+### Community 65 - "AlertsPage"
+Cohesion: 0.14
+Nodes (11): QuickTabs, Brush, ComboBox, DispatcherTimer, EventArgs, Guid, SizeChangedEventArgs, Task (+3 more)
 
-### Community 66 - "CreateReferenceMaterialRequest"
-Cohesion: 0.15
-Nodes (14): IAuthorizationService, IClassFixture, LoginRequest, DateOnly, Guid, CreateReferenceMaterialRequest, ReplaceReferenceMaterialRequest, UpdateReferenceMaterialRequest (+6 more)
+### Community 66 - "ReferenceMaterialSummary"
+Cohesion: 0.08
+Nodes (26): IAuthorizationService, IClassFixture, DateOnly, Guid, CreateReferenceMaterialRequest, ReferenceMaterialSummary, AvailableDisplay, BrandDisplay (+18 more)
 
 ### Community 67 - "Lims.Infrastructure.Persistence"
-Cohesion: 0.10
-Nodes (11): Lims.Infrastructure.Alerts, Lims.Application.Alerts, Lims.Infrastructure.Tests.Persistence, Lims.Contracts.Permissions, Lims.Api.Alerts, Lims.Infrastructure.Persistence, Lims.Application.Permissions, Lims.Domain.Identity (+3 more)
+Cohesion: 0.09
+Nodes (16): LimsPolicies, Lims.Infrastructure.Alerts, Lims.Application.Alerts, Lims.Infrastructure.Tests.Persistence, Lims.Api.Dashboard, Lims.Contracts.Permissions, Lims.Api.Alerts, Lims.Infrastructure.Persistence (+8 more)
 
 ### Community 68 - "Argon2PasswordHashService"
-Cohesion: 0.18
+Cohesion: 0.19
 Nodes (7): IPasswordHashService, PasswordCheckResult, Argon2PasswordHashService, Fact, InlineData, Theory, Argon2PasswordHashServiceTests
 
 ### Community 69 - "ResourceDictionary"
@@ -710,9 +734,9 @@ Nodes (14): DelegatingHandler, CancellationToken, HttpRequestMessage, HttpRespon
 Cohesion: 0.25
 Nodes (9): CancellationToken, Guid, HttpMethod, HttpRequestMessage, IHttpClientFactory, IReadOnlyList, List, Task (+1 more)
 
-### Community 72 - "AuthenticationResponse"
-Cohesion: 0.19
-Nodes (11): CancellationToken, HttpClient, IHttpClientFactory, Task, AuthenticationApiClient, CancellationToken, Task, IAuthenticationApiClient (+3 more)
+### Community 72 - ".SendAsync"
+Cohesion: 0.44
+Nodes (5): CancellationToken, HttpClient, IHttpClientFactory, Task, AuthenticationApiClient
 
 ### Community 73 - "ContentDialog"
 Cohesion: 0.12
@@ -723,52 +747,52 @@ Cohesion: 0.17
 Nodes (9): Task, TimeProvider, JwtSessionValidation, CancellationToken, HttpContext, Task, ApiErrorWriter, JwtBearerEvents (+1 more)
 
 ### Community 75 - "UserIdentifierNormalizer"
-Cohesion: 0.11
-Nodes (13): CorporateIdentityPolicy, AllowedDomain, AllowLocalPartOnly, GeneratedRegex, Regex, IdentifierNormalizationResult, UserIdentifierNormalizer, Lims.Application.Tests.Authentication (+5 more)
+Cohesion: 0.14
+Nodes (10): CorporateIdentityPolicy, AllowedDomain, AllowLocalPartOnly, GeneratedRegex, Regex, IdentifierNormalizationResult, UserIdentifierNormalizer, InlineData (+2 more)
 
-### Community 76 - "ContentDialog"
-Cohesion: 0.07
-Nodes (23): ContentDialog, ContentDialogClosedEventArgs, ContentDialogClosingEventArgs, ContentDialogClosedEventArgs, ContentDialogClosingEventArgs, ContentDialogClosedEventArgs, ContentDialogOpenedEventArgs, IReadOnlyList (+15 more)
+### Community 76 - "StockDetailDialog"
+Cohesion: 0.10
+Nodes (18): ContentDialogClosedEventArgs, ContentDialogOpenedEventArgs, IReadOnlyList, XamlRoot, XamlRootChangedEventArgs, StockDetailDialog, BasisDisplay, CompoundDisplay (+10 more)
 
-### Community 77 - ".CloseForRoot"
-Cohesion: 0.21
-Nodes (6): DoubleTappedRoutedEventArgs, Func, KeyRoutedEventArgs, ReferenceMaterialDetailDialog, ReferenceMaterialEditorDialog, Task
+### Community 77 - "Page"
+Cohesion: 0.10
+Nodes (21): AvailabilityFilter, EmptyState, FilterGrid, Filters, FiltersColumn, Page, SearchColumn, SearchField (+13 more)
 
 ### Community 78 - "StatusBadge"
 Cohesion: 0.31
 Nodes (6): DependencyObject, DependencyProperty, DependencyPropertyChangedEventArgs, StatusBadge, Text, Tone
 
 ### Community 79 - "PermissionsPage"
-Cohesion: 0.08
-Nodes (22): ConfigureEmptyButton, DiscardButton, NextHistoryButton, PermissionTabs, PreviousHistoryButton, RefreshUsersButton, ReloadButton, SaveButton (+14 more)
+Cohesion: 0.07
+Nodes (25): ConfigureEmptyButton, DiscardButton, HistoryList, NextHistoryButton, PermissionTabs, PreviousHistoryButton, RefreshUsersButton, ReloadButton (+17 more)
 
 ### Community 80 - "ShellPage"
-Cohesion: 0.10
-Nodes (20): AutoSuggestBoxTextChangedEventArgs, Guid, Task, DashboardRoute, AutoSuggestBox, AutoSuggestBoxQuerySubmittedEventArgs, ComboBoxItem, DispatcherTimer (+12 more)
+Cohesion: 0.12
+Nodes (17): AutoSuggestBoxTextChangedEventArgs, Guid, Task, DashboardRoute, AutoSuggestBox, AutoSuggestBoxQuerySubmittedEventArgs, ComboBoxItem, DispatcherTimer (+9 more)
 
 ### Community 81 - "StockEditorDialog"
 Cohesion: 0.11
 Nodes (13): ContentDialogClosedEventArgs, ContentDialogClosingEventArgs, ContentDialogOpenedEventArgs, DispatcherTimer, PropertyChangedEventArgs, RoutedEventArgs, XamlRoot, XamlRootChangedEventArgs (+5 more)
 
-### Community 82 - "LimsIcon"
-Cohesion: 0.09
-Nodes (21): Action, Brush, ConditionalWeakTable, Control, DependencyObject, DependencyProperty, DependencyPropertyChangedEventArgs, ElementTheme (+13 more)
+### Community 82 - "IconInteraction"
+Cohesion: 0.16
+Nodes (11): Action, Brush, Control, ElementTheme, FrameworkElement, Func, PointerRoutedEventArgs, RoutedEventArgs (+3 more)
 
 ### Community 83 - "RefreshToken"
-Cohesion: 0.15
-Nodes (13): DateTimeOffset, Guid, RefreshToken, ConsumedAt, CreatedAt, ExpiresAt, Id, ReplacedByTokenId (+5 more)
+Cohesion: 0.12
+Nodes (16): DateTimeOffset, Guid, RefreshToken, ConsumedAt, CreatedAt, ExpiresAt, Id, ReplacedByTokenId (+8 more)
 
 ### Community 84 - "ReferenceMaterialRepository"
-Cohesion: 0.21
-Nodes (9): CancellationToken, DateOnly, Guid, IQueryable, IReadOnlyList, Items, Task, TotalCount (+1 more)
+Cohesion: 0.13
+Nodes (15): CancellationToken, DateOnly, Guid, IQueryable, IReadOnlyList, Items, Task, TotalCount (+7 more)
 
 ### Community 85 - "SolutionGroupViewModel"
 Cohesion: 0.03
 Nodes (69): CancellationToken, DateTimeOffset, Guid, IEnumerable, List, ObservableCollection, PropertyChangedEventArgs, RelayCommand (+61 more)
 
 ### Community 86 - "AuthSession"
-Cohesion: 0.10
-Nodes (17): DateTimeOffset, IssuedAccessToken, DateTimeOffset, Guid, AuthSession, ClientName, CreatedAt, ExpiresAt (+9 more)
+Cohesion: 0.07
+Nodes (26): DateTimeOffset, TimeSpan, IAccessTokenService, DateTimeOffset, IssuedAccessToken, DateTimeOffset, Guid, AuthSession (+18 more)
 
 ### Community 87 - "ApiLog"
 Cohesion: 0.24
@@ -791,16 +815,16 @@ Cohesion: 0.22
 Nodes (9): CancellationToken, Fact, Task, TaskCompletionSource, ControllableAuthenticationApi, RefreshCalls, Started, FakeSecureStorage (+1 more)
 
 ### Community 92 - "ReferencePreparationComponent"
-Cohesion: 0.13
-Nodes (14): DateTimeOffset, Guid, ReferencePreparationComponent, CreatedAt, Id, Position, PreparationId, SourceMaterialId (+6 more)
+Cohesion: 0.11
+Nodes (16): DateTimeOffset, Guid, ReferencePreparationComponent, CreatedAt, Id, Position, PreparationId, SourceMaterialId (+8 more)
 
 ### Community 93 - "IReferenceMaterialsApiClient"
-Cohesion: 0.16
-Nodes (12): CancellationToken, Guid, IReadOnlyList, Task, IReferenceMaterialsApiClient, RelayCommand, ReferenceLocationOption, ReferenceMethodOption (+4 more)
+Cohesion: 0.32
+Nodes (6): CancellationToken, Guid, IReadOnlyList, Task, IReferenceMaterialsApiClient, RelayCommand
 
 ### Community 94 - ".LoginAsync"
-Cohesion: 0.33
-Nodes (8): CancellationToken, Guid, HttpContext, IEndpointRouteBuilder, ILoggerFactory, IResult, Task, AuthenticationEndpoints
+Cohesion: 0.32
+Nodes (9): CancellationToken, Guid, HttpContext, IEndpointRouteBuilder, ILoggerFactory, IResult, Task, AuthenticationEndpoints (+1 more)
 
 ### Community 95 - "RefreshRotationStatus"
 Cohesion: 0.23
@@ -815,8 +839,8 @@ Cohesion: 0.22
 Nodes (10): CancellationToken, DateOnly, DateTimeOffset, Func, Guid, IQueryable, IReadOnlyList, StockPage (+2 more)
 
 ### Community 98 - ".RunAsync"
-Cohesion: 0.18
-Nodes (8): ContentControl, LimsPopupSurface, DependencyObject, Dictionary, ListView, Task, XamlRoot, PopupInteractionChecks
+Cohesion: 0.13
+Nodes (9): ContentControl, LimsPopupSurface, InteractionMotion, DependencyObject, Dictionary, ListView, Task, XamlRoot (+1 more)
 
 ### Community 99 - "TabPeer"
 Cohesion: 0.12
@@ -835,8 +859,8 @@ Cohesion: 0.14
 Nodes (12): IReadOnlyList, IntermediateComponentViewModel, AnalytesDisplay, BalanceDisplay, Error, HasError, IdentityDisplay, Source (+4 more)
 
 ### Community 103 - "Window"
-Cohesion: 0.12
-Nodes (16): AppNotificationActivatedEventArgs, AppNotificationManager, AppTitleBar, NotificationsHost, RootContent, SystemSearch, TitleBarDragArea, Window (+8 more)
+Cohesion: 0.18
+Nodes (11): AppTitleBar, NotificationsHost, RootContent, SystemSearch, TitleBarDragArea, Window, WindowLayout, AutoSuggestBox (+3 more)
 
 ### Community 104 - "LoginAttemptTracker"
 Cohesion: 0.20
@@ -851,24 +875,24 @@ Cohesion: 0.12
 Nodes (12): CalendarView, CalendarViewDayItem, DateTimeOffset, DependencyObject, DependencyProperty, DependencyPropertyChangedEventArgs, UIElement, LimsDatePicker (+4 more)
 
 ### Community 107 - "DashboardViewModel"
-Cohesion: 0.12
-Nodes (21): IHttpClientFactory, DashboardApiClient, CancellationToken, Task, IDashboardApiClient, CancellationTokenSource, Task, DashboardViewModel (+13 more)
+Cohesion: 0.10
+Nodes (25): IHttpClientFactory, DashboardApiClient, CancellationToken, Task, IDashboardApiClient, CancellationTokenSource, Task, DashboardViewModel (+17 more)
 
 ### Community 108 - "LimsTabStrip"
 Cohesion: 0.12
 Nodes (13): CompositionEasingFunction, Border, DependencyObject, DependencyProperty, DependencyPropertyChangedEventArgs, NotifyCollectionChangedEventArgs, ObservableCollection, StackPanel (+5 more)
 
-### Community 109 - "ReferenceMaterialSummary"
-Cohesion: 0.12
-Nodes (13): ReferenceMaterialSummary, AvailableDisplay, BrandDisplay, CasDisplay, CatalogDisplay, ExpirationDisplay, IdentitySubtitle, LotDisplay (+5 more)
+### Community 109 - "IAlertService"
+Cohesion: 0.25
+Nodes (8): HttpContext, IEndpointRouteBuilder, AlertEndpoints, CancellationToken, Guid, IReadOnlyList, Task, IAlertService
 
-### Community 110 - "AlertPostgresTests"
-Cohesion: 0.05
-Nodes (48): AlertAccess, TimeProvider, AlertDashboard, TimeProvider, AlertDeliveryProcessor, CancellationToken, Guid, Task (+40 more)
+### Community 110 - "AlertMailOptions"
+Cohesion: 0.06
+Nodes (35): PermissionOptions, EnforceIndividualPermissions, CancellationToken, Guid, Task, AlertMailOptions, Authentication, Enabled (+27 more)
 
-### Community 111 - "UserPermissionAssignment"
-Cohesion: 0.10
-Nodes (23): DateTimeOffset, Guid, PermissionCode, Code, UserPermissionAssignment, ActorUserId, ChangedAt, Code (+15 more)
+### Community 111 - ".CreateAsync"
+Cohesion: 0.19
+Nodes (11): CancellationToken, HttpContext, IEndpointRouteBuilder, IResult, Task, StockEndpoints, CancellationToken, Guid (+3 more)
 
 ### Community 112 - "TextBlock"
 Cohesion: 0.13
@@ -899,8 +923,8 @@ Cohesion: 0.14
 Nodes (9): FrameworkElementAutomationPeer, AutomationControlType, AutomationPeer, IRawElementProviderSimple, PatternInterface, StripPeer, CanSelectMultiple, IsSelectionRequired (+1 more)
 
 ### Community 119 - ".SignInAsync"
-Cohesion: 0.30
-Nodes (7): ILogger, LoggerMessage, DesktopLog, CancellationToken, ILogger, Task, AuthenticationGateway
+Cohesion: 0.21
+Nodes (10): ILogger, LoggerMessage, DesktopLog, CancellationToken, Task, IAuthenticationApiClient, CancellationToken, ILogger (+2 more)
 
 ### Community 120 - "PreparationListFilter"
 Cohesion: 0.19
@@ -915,12 +939,12 @@ Cohesion: 0.40
 Nodes (5): IDesignTimeModel, IEntityType, IProperty, Fact, LimsDbContextModelTests
 
 ### Community 123 - "PermissionEndpointsTests"
-Cohesion: 0.25
-Nodes (8): AuthenticationHeaderValue, Fact, HttpClient, InlineData, Task, Theory, WebApplicationFactory, PermissionEndpointsTests
+Cohesion: 0.16
+Nodes (13): Program, IDisposable, AuthenticationHeaderValue, CancellationToken, Fact, Guid, HttpClient, InlineData (+5 more)
 
-### Community 124 - "FixturePermissionsApi"
-Cohesion: 0.21
-Nodes (11): CancellationToken, Dictionary, IReadOnlyList, List, Task, FixturePermissionsApi, Current, FailSave (+3 more)
+### Community 124 - "LimsIcon"
+Cohesion: 0.15
+Nodes (11): ConditionalWeakTable, DependencyObject, DependencyProperty, DependencyPropertyChangedEventArgs, Grid, IconElement, LimsIcon, Icon (+3 more)
 
 ### Community 125 - "IPermissionRepository"
 Cohesion: 0.32
@@ -928,11 +952,11 @@ Nodes (6): HttpContext, IEndpointRouteBuilder, PermissionEndpoints, Cancellation
 
 ### Community 126 - "HistoricalEntryPolicy"
 Cohesion: 0.50
-Nodes (3): HistoricalEntryPolicy, EnforceCurrentExpiration, EnforceStockPreparationOnOrAfterReceipt
+Nodes (3): HistoricalEntryPolicy, EnforceCurrentExpiration, EnforceStockPreparationDates
 
 ### Community 127 - "RefreshTokenService"
-Cohesion: 0.24
-Nodes (6): IRefreshTokenService, GeneratedRefreshToken, RefreshTokenService, FakeRefreshTokenService, Fact, RefreshTokenServiceTests
+Cohesion: 0.40
+Nodes (4): GeneratedRefreshToken, RefreshTokenService, Fact, RefreshTokenServiceTests
 
 ### Community 128 - "Lims.Application.Tests.csproj"
 Cohesion: 0.29
@@ -951,24 +975,24 @@ Cohesion: 0.15
 Nodes (12): net10.0-windows10.0.26100.0, CommunityToolkit.Mvvm, Microsoft.Extensions.Hosting, Microsoft.Windows.SDK.BuildTools, Microsoft.WindowsAppSDK, OpenTelemetry.Extensions.Hosting, OpenTelemetry.Instrumentation.Http, Microsoft.NET.Sdk (+4 more)
 
 ### Community 132 - "PreparationsPage"
-Cohesion: 0.10
-Nodes (19): Page, AqsTab, CurveTab, IntermediateTab, Page, PreparationHost, PreparationTabs, StockTab (+11 more)
+Cohesion: 0.16
+Nodes (9): Page, EventArgs, Task, PreparationsPage, CanCreate, CreateLabel, Group, IsCommercialWorkspaceOpen (+1 more)
 
 ### Community 133 - "RoutedEventArgs"
 Cohesion: 0.19
 Nodes (8): ArchiveButton, AvailabilityProgress, CloseIconButton, EditButton, ReplaceButton, RoutedEventArgs, Button, ProgressBar
 
 ### Community 134 - "App"
-Cohesion: 0.10
-Nodes (13): Application, Lims.Desktop, Application, LaunchActivatedEventArgs, App, MainWindow, Program, Exception (+5 more)
+Cohesion: 0.12
+Nodes (12): Application, Lims.Desktop, Application, LaunchActivatedEventArgs, App, Program, Exception, StartupDiagnostics (+4 more)
 
 ### Community 135 - "Lims.Api.csproj"
 Cohesion: 0.17
 Nodes (11): net10.0, OpenTelemetry.Extensions.Hosting, OpenTelemetry.Instrumentation.Http, Microsoft.AspNetCore.Authentication.JwtBearer, Microsoft.AspNetCore.OpenApi, OpenTelemetry.Exporter.Console, OpenTelemetry.Instrumentation.AspNetCore, OpenTelemetry.Instrumentation.Runtime (+3 more)
 
 ### Community 136 - "Page"
-Cohesion: 0.05
-Nodes (69): ActionMessage, AlertsList, AlertsRoot, CommonStates, CompactDetailContent, CompactDetailHost, CompactDetailScroll, CriticalBreakdown (+61 more)
+Cohesion: 0.08
+Nodes (44): AlertsRoot, CommonStates, CriticalBreakdown, CriticalCount, CriticalUnit, Disabled, ExpiredCount, ExpiredPendingText (+36 more)
 
 ### Community 137 - "Lims.Infrastructure.Persistence.Migrations"
 Cohesion: 0.18
@@ -992,7 +1016,7 @@ Nodes (19): DateTimeOffset, IntermediateConsumption, Display, IntermediateDetail
 
 ### Community 142 - "FixtureAlertsApi"
 Cohesion: 0.07
-Nodes (50): AlertCondition, ContentDialogButtonClickEventArgs, DateOnly, DateTimeOffset, Guid, IReadOnlyList, AlertAction, AlertAdministration (+42 more)
+Nodes (50): AlertCondition, DateOnly, DateTimeOffset, Guid, IReadOnlyList, AlertAction, AlertAdministration, AlertChange (+42 more)
 
 ### Community 143 - "Lims.Application.csproj"
 Cohesion: 0.15
@@ -1004,19 +1028,23 @@ Nodes (5): CancelButton, MoreSourcesButton, SaveButton, ViewButton, Button
 
 ### Community 145 - "CommercialIntermediateViewModel"
 Cohesion: 0.03
-Nodes (64): DateOnly, DateTimeOffset, Func, HashSet, IEnumerable, ObservableCollection, CommercialIntermediateViewModel, AvailabilityDisplay (+56 more)
+Nodes (62): DateOnly, DateTimeOffset, Func, HashSet, CommercialIntermediateViewModel, AvailabilityDisplay, AvailabilityPercent, AvailableDisplay (+54 more)
 
 ### Community 146 - "Page"
 Cohesion: 0.11
 Nodes (20): AnalyticsGrid, ContentStack, DashboardHeader, DashboardScroll, DashboardTitle, EmptyPanel, ErrorBar, MetricsGrid (+12 more)
 
-### Community 148 - "ReferenceMaterialsPage"
-Cohesion: 0.10
-Nodes (12): ContainerContentChangingEventArgs, TableBorder, AutoSuggestBox, AutoSuggestBoxQuerySubmittedEventArgs, Grid, RoutedEventArgs, SelectionChangedEventArgs, SizeChangedEventArgs (+4 more)
+### Community 147 - "Border"
+Cohesion: 0.18
+Nodes (10): AuditSection, AvailabilityCard, DetailSurface, ExpiryCard, GeneralSection, IdentityVisual, Scrim, StateCard (+2 more)
 
-### Community 149 - "ReferenceMethod"
-Cohesion: 0.07
-Nodes (26): ReferenceMaterialCatalogSelection, ReferenceLocation, Id, IsActive, Name, ReferenceMethod, Id, IsActive (+18 more)
+### Community 148 - "ReferenceMaterialsPage"
+Cohesion: 0.09
+Nodes (16): ApplyFiltersButton, ClearFiltersButton, AutoSuggestBox, AutoSuggestBoxQuerySubmittedEventArgs, DoubleTappedRoutedEventArgs, Func, Grid, KeyRoutedEventArgs (+8 more)
+
+### Community 149 - ".ReaderExecutingAsync"
+Cohesion: 0.29
+Nodes (6): CommandEventData, DbCommand, DbDataReader, CancellationToken, InterceptionResult, ValueTask
 
 ### Community 150 - "Lims.Api.Tests.csproj"
 Cohesion: 0.25
@@ -1026,13 +1054,13 @@ Nodes (7): Microsoft.AspNetCore.Mvc.Testing, net10.0, coverlet.collector, Micros
 Cohesion: 0.35
 Nodes (8): Command(), FindElement(), Key(), OpenRow(), SelectRow(), SetField(), State(), WaitDetail()
 
-### Community 152 - "IAuthenticationService"
-Cohesion: 0.22
-Nodes (8): CancellationToken, Guid, Task, IAuthenticationService, FakeAuthenticationService, FakeSessionStore, IWebHostBuilder, LogoutResponse
+### Community 152 - "RefreshRequest"
+Cohesion: 0.25
+Nodes (5): CancellationToken, Guid, Task, LogoutResponse, RefreshRequest
 
-### Community 153 - "TextBox"
-Cohesion: 0.11
-Nodes (16): Text, BrandBox, CancelButton, CasBox, CatalogBox, CopySupportIdButton, LotBox, NameBox (+8 more)
+### Community 153 - "LoginPage"
+Cohesion: 0.20
+Nodes (8): IdentifierContainer, PasswordContainer, Border, PointerRoutedEventArgs, PropertyChangedEventArgs, LoginPage, ViewModel, Page
 
 ### Community 154 - "Gestión de permisos"
 Cohesion: 0.18
@@ -1043,8 +1071,8 @@ Cohesion: 0.43
 Nodes (3): Size, PermissionActionPanel, Panel
 
 ### Community 156 - "OperationResult"
-Cohesion: 0.09
-Nodes (23): HttpContext, IEndpointRouteBuilder, AlertEndpoints, CancellationToken, Guid, IReadOnlyList, Task, IAlertService (+15 more)
+Cohesion: 0.13
+Nodes (15): IReadOnlyDictionary, OperationError, OperationResult, Error, IsSuccess, Value, CancellationToken, Fact (+7 more)
 
 ### Community 157 - "ContentDialog"
 Cohesion: 0.14
@@ -1052,11 +1080,11 @@ Nodes (13): AvailabilityCard, AvailabilityProgress, CompositionBar, CompositionL
 
 ### Community 158 - "SolutionGroupPage"
 Cohesion: 0.06
-Nodes (39): EmptyState, FilterGrid, Filters, FiltersColumn, MethodFilter, Page, PreparationsList, SearchBox (+31 more)
+Nodes (38): EmptyState, FilterGrid, Filters, FiltersColumn, MethodFilter, Page, PreparationsList, SearchBox (+30 more)
 
 ### Community 159 - "StockEndpointsTests"
-Cohesion: 0.10
-Nodes (22): FakeCommercialService, FakeStockService, AuthenticationHeaderValue, CancellationToken, Fact, Guid, HttpClient, HttpStatusCode (+14 more)
+Cohesion: 0.09
+Nodes (24): FakeCommercialService, FakeStockService, StockCalculationRequest, StockPage, AuthenticationHeaderValue, CancellationToken, Fact, Guid (+16 more)
 
 ### Community 160 - "Lims.Infrastructure.csproj"
 Cohesion: 0.22
@@ -1087,36 +1115,36 @@ Cohesion: 0.39
 Nodes (4): CancellationToken, Task, PasswordVaultSecureStorage, PasswordVault
 
 ### Community 167 - "ApiError"
-Cohesion: 0.10
-Nodes (18): AlertApiFailures, InvalidContract, CancellationToken, Guid, HttpContent, HttpMethod, IHttpClientFactory, Task (+10 more)
+Cohesion: 0.09
+Nodes (20): AlertApiFailures, InvalidContract, CancellationToken, Guid, HttpContent, HttpMethod, IHttpClientFactory, Task (+12 more)
 
 ### Community 168 - ".Resolve"
 Cohesion: 0.17
 Nodes (11): IReadOnlyList, DashboardAccess, DashboardOptions, ExpirationWindowDays, PurchasingDepartmentName, PurchasingRoleName, DashboardSelection, Fact (+3 more)
 
 ### Community 169 - "DashboardComponents"
-Cohesion: 0.15
-Nodes (19): AccessibilitySettings, Action, Border, Brush, Button, ElementTheme, FrameworkElement, Grid (+11 more)
+Cohesion: 0.19
+Nodes (15): Action, Border, Brush, Button, ElementTheme, FrameworkElement, Grid, IEnumerable (+7 more)
 
-### Community 170 - ".CheckHealthAsync"
-Cohesion: 0.12
-Nodes (12): HttpContext, Task, HealthResponseWriter, CancellationToken, ILogger, Task, PostgreSqlHealthCheck, Lims.Api.Health (+4 more)
+### Community 170 - ".WriteAsync"
+Cohesion: 0.25
+Nodes (5): HttpContext, Task, HealthResponseWriter, Lims.Api.Health, HealthReport
 
 ### Community 171 - "PermissionUserItem"
 Cohesion: 0.13
 Nodes (10): Border, DependencyObject, DependencyProperty, DependencyPropertyChangedEventArgs, ListViewItem, PropertyChangedEventArgs, SizeChangedEventArgs, TextBlock (+2 more)
 
-### Community 172 - "AlertsPage"
-Cohesion: 0.07
-Nodes (26): AdvancedButton, CriticalCard, EngineActionsButton, EngineHistoryButton, EvaluateButton, ExpiredCard, HistoryButton, NextButton (+18 more)
+### Community 172 - "RoutedEventArgs"
+Cohesion: 0.10
+Nodes (16): AdvancedButton, CriticalCard, EngineActionsButton, EngineHistoryButton, EvaluateButton, ExpiredCard, HistoryButton, NextButton (+8 more)
 
 ### Community 173 - "HeaderButton"
 Cohesion: 0.25
 Nodes (8): TemplateSettings.HasMoreContentAfter, TemplateSettings.HasMoreContentBefore, TemplateSettings.HasMoreViews, TemplateSettings.HeaderText, HeaderButton, NextButton, PreviousButton, Button
 
 ### Community 174 - "DashboardPage"
-Cohesion: 0.13
-Nodes (16): Button, DispatcherTimer, FrameworkElement, Grid, IReadOnlyList, List, UIElement, DashboardPage (+8 more)
+Cohesion: 0.12
+Nodes (17): AccessibilitySettings, Button, DispatcherTimer, FrameworkElement, Grid, IReadOnlyList, List, UIElement (+9 more)
 
 ### Community 175 - "VisualStateGroup"
 Cohesion: 0.25
@@ -1139,8 +1167,8 @@ Cohesion: 0.25
 Nodes (7): net10.0-windows10.0.26100.0, Microsoft.NET.Test.Sdk, Microsoft.Windows.SDK.BuildTools, Microsoft.WindowsAppSDK, xunit, xunit.runner.visualstudio, Microsoft.NET.Sdk
 
 ### Community 180 - "UserControl"
-Cohesion: 0.06
-Nodes (48): BalanceBar, BalanceText, BottleCountBox, BottleVisual, BrandBox, CatalogBox, CodeLabel, ComponentsEditor (+40 more)
+Cohesion: 0.09
+Nodes (32): BalanceBar, BalanceText, BottleVisual, CodeLabel, ComponentsEditor, CompositionEditor, ErrorText, ExistingSummary (+24 more)
 
 ### Community 181 - "CorrelationIdMiddleware"
 Cohesion: 0.33
@@ -1167,32 +1195,32 @@ Cohesion: 0.38
 Nodes (4): Get-ConnectionValue(), Invoke-PsqlScalar(), New-PsqlConnection(), Test-MigrationRecorded()
 
 ### Community 187 - ".TryParseDecimal"
-Cohesion: 0.24
-Nodes (4): ReferenceMaterialInput, InlineData, Theory, ReferenceMaterialInputTests
+Cohesion: 0.17
+Nodes (5): ReferenceMaterialInput, PurityBox, InlineData, Theory, ReferenceMaterialInputTests
 
 ### Community 188 - "Dashboard principal LIMS .NET"
 Cohesion: 0.33
 Nodes (5): Autorización y composición, Cálculos y datos, Dashboard principal LIMS .NET, Navegación y presentación, Validación y límite de entorno
 
-### Community 189 - ".AllSevenWorkspacesReusePhysicalBalancesAndCurvaAqsNeverTreatSentinelZeroAsDepletion"
-Cohesion: 0.50
-Nodes (3): DateOnly, DateTimeOffset, Guid
+### Community 189 - "IntermediateSummary"
+Cohesion: 0.12
+Nodes (14): IntermediateSummary, Availability, AvailableDisplay, ComponentCountLabel, ConcentrationDetails, ConcentrationDisplay, DateDisplay, EntryCodeDisplay (+6 more)
 
 ### Community 190 - "Migration"
 Cohesion: 0.13
 Nodes (11): DateOnly, DateTimeOffset, Guid, MigrationBuilder, DateOnly, DateTime, DateTimeOffset, Guid (+3 more)
 
 ### Community 191 - ".Success"
-Cohesion: 0.14
-Nodes (16): CancellationToken, IQueryable, Task, CancellationToken, Task, AlertData, CancellationToken, Task (+8 more)
+Cohesion: 0.15
+Nodes (17): CancellationToken, IQueryable, Task, AlertAccess, CancellationToken, Task, TimeProvider, AlertDashboard (+9 more)
 
 ### Community 192 - "CreateReferenceStock"
 Cohesion: 0.14
 Nodes (10): DateOnly, DateTimeOffset, Guid, MigrationBuilder, DateOnly, DateTime, DateTimeOffset, Guid (+2 more)
 
 ### Community 193 - "UserControl"
-Cohesion: 0.09
-Nodes (39): ActionBar, BodyGrid, BottleCountError, BottleVisual, BrandError, CatalogError, ComponentsCard, ComponentTable (+31 more)
+Cohesion: 0.08
+Nodes (40): AvailabilityBar, BodyGrid, BottleCountError, BottleVisual, BrandError, CatalogError, ComponentTable, CompositionEditor (+32 more)
 
 ### Community 194 - "Ficha de Estándares: pasada visual final"
 Cohesion: 0.33
@@ -1207,12 +1235,12 @@ Cohesion: 0.33
 Nodes (5): Migración pendiente, Modelo y fórmulas, Preparaciones → Stock, Transacción y trazabilidad, Verificación
 
 ### Community 197 - "AlertModule"
-Cohesion: 0.08
-Nodes (24): DateOnly, Guid, IEnumerable, IReadOnlyList, AlertRules, AlertSource, IReadOnlyList, AlertActor (+16 more)
+Cohesion: 0.10
+Nodes (20): DateOnly, Guid, IEnumerable, IReadOnlyList, AlertRules, AlertSource, IReadOnlyList, AlertActor (+12 more)
 
 ### Community 198 - "AlertsWorkspace"
-Cohesion: 0.12
-Nodes (18): AlertId, Flyout, Button, Func, TextBlock, AlertUi, Button, DispatcherTimer (+10 more)
+Cohesion: 0.11
+Nodes (19): AlertId, Flyout, Border, Button, Func, TextBlock, AlertUi, Button (+11 more)
 
 ### Community 200 - "validate-standards-detail-polish.ps1"
 Cohesion: 0.67
@@ -1239,8 +1267,8 @@ Cohesion: 0.33
 Nodes (6): ActionHover, FocusBorder, Hover, LocalSelectionMark, SelectedBackground, Border
 
 ### Community 206 - ".OnDateChanged"
-Cohesion: 0.29
-Nodes (6): EntryTypeSelect, ExpirationPicker, PreparationPicker, EventArgs, LimsDatePicker, LimsSelect
+Cohesion: 0.67
+Nodes (3): ExpirationPicker, PreparationPicker, LimsDatePicker
 
 ### Community 207 - "SolutionPartViewModel"
 Cohesion: 0.06
@@ -1270,9 +1298,9 @@ Nodes (4): DecadeViewPanel, MonthViewPanel, YearViewPanel, CalendarPanel
 Cohesion: 0.50
 Nodes (4): DecadeViewScrollViewer, MonthViewScrollViewer, ScrollViewer, YearViewScrollViewer
 
-### Community 215 - ".OnTick"
-Cohesion: 0.07
-Nodes (22): NavigationViewItem, Button, Control, JsonElement, Task, TextBlock, TextBox, DependencyObject (+14 more)
+### Community 215 - "App"
+Cohesion: 0.08
+Nodes (28): SolutionGroupWorkspace, Aqs, Curve, ShellPage, Button, Control, JsonElement, Task (+20 more)
 
 ### Community 216 - "SolutionGroupApiClient"
 Cohesion: 0.13
@@ -1287,56 +1315,64 @@ Cohesion: 0.18
 Nodes (9): Uri, DesktopOptions, ApiBaseUrl, CorporateDomain, EnvironmentName, RequestTimeoutSeconds, Fact, InvalidOperationException (+1 more)
 
 ### Community 219 - "ContentDialog"
-Cohesion: 0.08
-Nodes (32): CodeBox, ContentDialog, DateGrid, DebitHint, DebitRows, EditorRoot, EditorScroll, ExpirationField (+24 more)
+Cohesion: 0.14
+Nodes (20): CodeBox, ContentDialog, DateGrid, DebitRows, EditorRoot, EditorScroll, ExpirationField, FormSurface (+12 more)
 
 ### Community 220 - "validate-intermediate.ps1"
 Cohesion: 0.83
 Nodes (3): Capture-Fixture(), Scenario(), Send-FixtureCommand()
 
-### Community 223 - "FixtureDashboardApi"
-Cohesion: 0.40
-Nodes (4): IReadOnlyList, FixtureDashboardApi, ReferenceRows, Scenario
+### Community 222 - ".OnDoubleTapped"
+Cohesion: 0.15
+Nodes (9): MethodFilter, PreparationsList, SearchBox, DependencyObject, DoubleTappedRoutedEventArgs, KeyRoutedEventArgs, TextChangedEventArgs, ListView (+1 more)
+
+### Community 223 - ".CreateAsync"
+Cohesion: 0.29
+Nodes (8): CancellationToken, DateOnly, DateTimeOffset, Func, Guid, IReadOnlyList, Task, IStockRepository
 
 ### Community 224 - "ContentPresenter"
 Cohesion: 0.50
 Nodes (4): ActionLabel, ContentPresenter, Icon, ContentPresenter
 
 ### Community 225 - "CommercialPreparationEditor"
-Cohesion: 0.09
-Nodes (20): EntrySelect, ExpirationPicker, LocationSelect, ReceivedPicker, VolumeUnitSelect, EventArgs, Grid, Guid (+12 more)
+Cohesion: 0.13
+Nodes (12): Grid, Guid, RoutedEventArgs, ScrollViewer, Task, CommercialPreparationEditor, CanSave, Composition (+4 more)
 
 ### Community 226 - "CommercialMaterialsPostgresTests"
-Cohesion: 0.22
-Nodes (10): DateOnly, IMigrationsSqlGenerator, IOException, PostgresException, StockPostgresFact, Task, CommercialMaterialsPostgresTests, Today (+2 more)
+Cohesion: 0.23
+Nodes (9): DateOnly, IMigrationsSqlGenerator, IOException, PostgresException, StockPostgresFact, Task, CommercialMaterialsPostgresTests, Today (+1 more)
 
 ### Community 227 - "CommercialCertificateEditor"
-Cohesion: 0.11
-Nodes (14): ComponentFields, AddComponentButton, Border, DateOnly, FrameworkElement, Grid, IReadOnlyList, List (+6 more)
+Cohesion: 0.15
+Nodes (8): ComponentFields, DateOnly, IReadOnlyList, List, TextBox, TextChangedEventArgs, CommercialCertificateEditor, PreviewComponents
 
 ### Community 228 - "UserControl"
-Cohesion: 0.10
-Nodes (30): ActionLabel, ComponentRows, ComponentSearch, CompositionHint, CompositionTitle, CoverageBox, ExpressionRows, ExpressionsPanel (+22 more)
+Cohesion: 0.13
+Nodes (23): ActionLabel, ComponentRows, ComponentSearch, CompositionHint, CompositionTitle, CoverageBox, ExpressionRows, MatrixBox (+15 more)
 
 ### Community 229 - "CommercialIntermediateWorkspace"
-Cohesion: 0.12
-Nodes (9): DependencyObject, Dictionary, Grid, PropertyChangedEventArgs, RoutedEventArgs, Task, TextBlock, CommercialIntermediateWorkspace (+1 more)
+Cohesion: 0.11
+Nodes (12): ComponentSearchBox, Control, DependencyObject, Dictionary, Grid, KeyRoutedEventArgs, PropertyChangedEventArgs, Task (+4 more)
 
 ### Community 230 - "Api"
 Cohesion: 0.14
 Nodes (17): Api, ArgumentException, CancellationToken, Fact, Guid, InlineData, List, Task (+9 more)
 
 ### Community 231 - "CreateSolutionGroupRequest"
-Cohesion: 0.11
+Cohesion: 0.12
 Nodes (21): CancellationToken, Guid, Task, ISolutionGroupApiClient, DateOnly, Guid, IReadOnlyList, CreateSolutionGroupRequest (+13 more)
 
-### Community 242 - "SqliteTestModelCustomizer"
-Cohesion: 0.12
-Nodes (13): ModelCustomizer, DbContext, ModelBuilder, ModelCustomizerDependencies, SqliteTestModelCustomizer, DbContext, ModelBuilder, ModelCustomizerDependencies (+5 more)
+### Community 242 - ".AddComponent"
+Cohesion: 0.21
+Nodes (6): AddComponentButton, Border, FrameworkElement, Grid, RoutedEventArgs, Button
 
 ### Community 243 - "SolutionGroupService"
 Cohesion: 0.14
 Nodes (15): IEndpointRouteBuilder, SolutionGroupEndpoints, CancellationToken, DateOnly, DateTimeOffset, Guid, Task, ISolutionGroupRepository (+7 more)
+
+### Community 253 - "TextBox"
+Cohesion: 0.21
+Nodes (10): BottleCountBox, BrandBox, CatalogBox, LotBox, ProductNameBox, RemoteSearch, StorageBox, VolumeBox (+2 more)
 
 ### Community 254 - "FormSurface"
 Cohesion: 0.67
@@ -1367,12 +1403,12 @@ Cohesion: 0.29
 Nodes (6): Aplicación real, Consola visual de Gestión de permisos, Movimiento implementado, Pantalla y componentes, Selección y guardado, Validación y evidencia
 
 ### Community 263 - "SolutionGroupEditorDialog"
-Cohesion: 0.12
-Nodes (12): CancelButton, SaveButton, ViewButton, ContentDialogOpenedEventArgs, PropertyChangedEventArgs, RoutedEventArgs, XamlRoot, XamlRootChangedEventArgs (+4 more)
+Cohesion: 0.18
+Nodes (6): ContentDialogClosedEventArgs, ContentDialogClosingEventArgs, RoutedEventArgs, SolutionGroupEditorDialog, ViewCreatedDetail, ViewModel
 
-### Community 264 - ".Source"
-Cohesion: 0.17
-Nodes (16): CancellationToken, DateOnly, DbContextEventData, Fixture, Guid, InterceptionResult, IOException, SaveChangesCompletedEventData (+8 more)
+### Community 264 - "IntermediateService"
+Cohesion: 0.11
+Nodes (23): CancellationToken, DateOnly, Guid, Task, TimeProvider, IntermediateService, Today, CancellationToken (+15 more)
 
 ### Community 265 - "CertifiedMaterialComponent"
 Cohesion: 0.08
@@ -1383,15 +1419,15 @@ Cohesion: 0.10
 Nodes (21): DateTimeOffset, Guid, ReferenceCommercialRole, Code, Kind, Material, MaterialId, RegisteredAt (+13 more)
 
 ### Community 267 - "SolutionGroupEndpointsTests"
-Cohesion: 0.13
-Nodes (17): AuthenticationHeaderValue, CancellationToken, DateOnly, Fact, Guid, HttpClient, InlineData, Repository (+9 more)
+Cohesion: 0.11
+Nodes (18): AuthenticationHeaderValue, CancellationToken, DateOnly, DateTimeOffset, Fact, Guid, HttpClient, InlineData (+10 more)
 
 ### Community 268 - "AuthenticationPolicy"
 Cohesion: 0.33
 Nodes (4): TimeSpan, AuthenticationPolicy, AccessTokenLifetime, RefreshTokenLifetime
 
 ### Community 269 - ".RegisterAsync"
-Cohesion: 0.17
+Cohesion: 0.16
 Nodes (14): CancellationToken, Guid, Task, TimeProvider, CommercialPreparationService, Materials, IQueryable, Guid (+6 more)
 
 ### Community 270 - "Inicio / Dashboard: composición analítica"
@@ -1399,32 +1435,36 @@ Cohesion: 0.08
 Nodes (21): Archivos de esta implementación, Componentes, Corrección del arranque desde WinApp, Datos reales, Diferencias y límites visuales, Inicio / Dashboard: composición analítica, Métricas no disponibles, Validación (+13 more)
 
 ### Community 271 - "AlertsViewModel"
-Cohesion: 0.08
-Nodes (23): CancellationTokenSource, ObservableCollection, AlertsViewModel, CanConfigure, CanEvaluate, CanManage, CanViewHistory, Data (+15 more)
+Cohesion: 0.09
+Nodes (26): CancellationToken, CancellationTokenSource, Guid, ObservableCollection, Task, AlertsViewModel, CanConfigure, CanEvaluate (+18 more)
 
 ### Community 272 - "CommercialComponentRow"
-Cohesion: 0.09
-Nodes (15): Guid, IReadOnlyList, PropertyChangedEventArgs, CommercialComponentRow, Cas, Concentration, HasVisibleError, Id (+7 more)
+Cohesion: 0.12
+Nodes (14): Guid, IReadOnlyList, CommercialComponentRow, Cas, Concentration, HasVisibleError, Id, IsBlank (+6 more)
 
 ### Community 273 - "record-permissions-motion.py"
 Cohesion: 0.33
 Nodes (4): BitmapInfo, BitmapInfoHeader, Record the rendered WinUI fixture window; no generated or interpolated frames., Rect
 
 ### Community 275 - "Fake"
-Cohesion: 0.19
-Nodes (9): CancellationToken, Guid, List, Task, TaskCompletionSource, Fake, EvaluationCalls, Loads (+1 more)
+Cohesion: 0.12
+Nodes (18): CancellationToken, Fact, Guid, InlineData, IReadOnlyList, List, Task, TaskCompletionSource (+10 more)
 
-### Community 277 - ".Apply"
-Cohesion: 0.14
-Nodes (12): DateTimeOffset, CommercialMaterials, DateOnly, DateTimeOffset, PreparationSources, MaterialPresentations, ArgumentException, DateOnly (+4 more)
+### Community 276 - "RoutedEventArgs"
+Cohesion: 0.21
+Nodes (7): IdentifierBox, PasswordInput, RevealPasswordButton, RoutedEventArgs, Button, TextBox, PasswordBox
+
+### Community 277 - ".CheckAsync"
+Cohesion: 0.21
+Nodes (7): NavigationViewItem, DependencyObject, FrameworkElement, IconElement, IEnumerable, Task, IconValidation
 
 ### Community 278 - ".OnFieldLostFocus"
 Cohesion: 0.12
-Nodes (22): AnaltyeName, AnalyteCas, AnalyteConcentration, AnalyteUnit, BottleCountBox, BrandBox, CatalogBox, ExistingSearchBox (+14 more)
+Nodes (21): AnaltyeName, AnalyteCas, AnalyteConcentration, AnalyteUnit, BottleCountBox, BrandBox, CatalogBox, EntryModeSelect (+13 more)
 
 ### Community 279 - ".Stocks"
-Cohesion: 0.18
-Nodes (14): CancellationToken, DateOnly, DbContextEventData, InterceptionResult, IOException, SaveChangesCompletedEventData, StockPostgresFact, Task (+6 more)
+Cohesion: 0.30
+Nodes (9): DateOnly, IOException, StockPostgresFact, Task, TaskCompletionSource, FailAfterSave, IntermediatePostgresTests, Today (+1 more)
 
 ### Community 280 - "Carga manual historica y publicacion portable"
 Cohesion: 0.40
@@ -1455,40 +1495,40 @@ Cohesion: 0.11
 Nodes (14): DateOnly, DateTimeOffset, Guid, MigrationBuilder, DateOnly, DateTime, DateTimeOffset, Guid (+6 more)
 
 ### Community 287 - "SolventCompositionViewModel"
-Cohesion: 0.13
+Cohesion: 0.12
 Nodes (15): IReadOnlyList, ObservableCollection, PropertyChangedEventArgs, SolventCompositionViewModel, Catalog, CatalogMessage, Details, Error (+7 more)
 
 ### Community 288 - "AlertConfigurationDialog"
-Cohesion: 0.12
-Nodes (15): Daily, CheckBox, ComboBox, ComboBoxItem, Department, Dictionary, IReadOnlyList, TextBox (+7 more)
+Cohesion: 0.13
+Nodes (15): ContentDialogButtonClickEventArgs, Daily, CheckBox, ComboBox, ComboBoxItem, Department, Dictionary, IReadOnlyList (+7 more)
 
 ### Community 290 - "DashboardAnalytics"
-Cohesion: 0.23
-Nodes (6): IReadOnlyList, DashboardAnalytics, DashboardAvailabilityPoint, DashboardStandards, Fact, DashboardAnalyticsTests
+Cohesion: 0.19
+Nodes (9): IReadOnlyList, DashboardAnalytics, DashboardAvailabilityPoint, DashboardChartPoint, DashboardStandards, Fact, InlineData, Theory (+1 more)
 
 ### Community 291 - "CommercialCertificate"
-Cohesion: 0.18
-Nodes (12): DateOnly, DateTimeOffset, Guid, IReadOnlyList, CertifiedComponent, Display, CertifiedExpression, CommercialCertificate (+4 more)
+Cohesion: 0.08
+Nodes (26): DateTimeOffset, CommercialMaterials, DateOnly, DateTimeOffset, Guid, IReadOnlyList, CertifiedComponent, Display (+18 more)
 
 ### Community 292 - "IntermediateRepository"
 Cohesion: 0.28
 Nodes (8): CancellationToken, DateOnly, DateTimeOffset, Dictionary, Guid, IEnumerable, Task, IntermediateRepository
 
 ### Community 293 - "LimsAction"
-Cohesion: 0.17
-Nodes (9): Button, DependencyObject, DependencyProperty, DependencyPropertyChangedEventArgs, RoutedEventArgs, Visibility, LimsAction, Border (+1 more)
+Cohesion: 0.22
+Nodes (7): Button, DependencyObject, DependencyProperty, DependencyPropertyChangedEventArgs, RoutedEventArgs, Visibility, LimsAction
 
 ### Community 294 - "IAlertsApiClient"
 Cohesion: 0.29
 Nodes (5): CancellationToken, Guid, IReadOnlyList, Task, IAlertsApiClient
 
 ### Community 295 - "SolventCompositionEditor"
-Cohesion: 0.21
+Cohesion: 0.23
 Nodes (9): Button, FrameworkElement, Grid, NotifyCollectionChangedEventArgs, PropertyChangedEventArgs, StackPanel, TextBlock, SolventCompositionEditor (+1 more)
 
 ### Community 296 - "EmailDelivery"
-Cohesion: 0.12
-Nodes (17): EmailDelivery, AlertId, AlertRevision, Attempts, CreatedAt, DeduplicationKey, DepartmentId, Html (+9 more)
+Cohesion: 0.07
+Nodes (36): EmailDelivery, AlertId, AlertRevision, Attempts, CreatedAt, DeduplicationKey, DepartmentId, Html (+28 more)
 
 ### Community 297 - ".HandleMixCommandAsync"
 Cohesion: 0.14
@@ -1499,16 +1539,16 @@ Cohesion: 0.12
 Nodes (16): AlertRow, Detected, Icon, IsCritical, IsUnread, Item, Material, Metric (+8 more)
 
 ### Community 299 - "CommercialPreparationDetail"
-Cohesion: 0.19
-Nodes (11): CancellationToken, Guid, Task, ICommercialPreparationApiClient, CancellationToken, Task, DateTimeOffset, CommercialPreparationDetail (+3 more)
+Cohesion: 0.15
+Nodes (13): CancellationToken, Guid, Task, ICommercialPreparationApiClient, CancellationToken, IEnumerable, ObservableCollection, Task (+5 more)
 
-### Community 300 - "PermissionsApiClient"
-Cohesion: 0.25
-Nodes (7): CancellationToken, HttpContent, HttpMethod, IHttpClientFactory, IReadOnlyList, Task, PermissionsApiClient
+### Community 300 - "AllowHistoricalStockDates"
+Cohesion: 0.18
+Nodes (7): MigrationBuilder, DateOnly, DateTime, DateTimeOffset, Guid, ModelBuilder, AllowHistoricalStockDates
 
-### Community 301 - "Fixture"
-Cohesion: 0.13
-Nodes (11): IAsyncDisposable, IInterceptor, PermissionTestModel, IModelCustomizer, SqliteConnection, ValueTask, Fixture, Options (+3 more)
+### Community 301 - ".OnEntryChanged"
+Cohesion: 0.20
+Nodes (8): EntryLayout, EntrySelect, LocationSelect, Surface, VolumeUnitSelect, SizeChangedEventArgs, Grid, LimsSelect
 
 ### Community 302 - "AddCertifiedCommercialMaterials"
 Cohesion: 0.15
@@ -1534,13 +1574,13 @@ Nodes (12): SolutionResultView, Storyboard, GraduatedCylinder, Button, Size, Tex
 Cohesion: 0.14
 Nodes (12): SolutionVolumePreview, Error, Exceeds, FinalDisplay, Percent, Remaining, RemainingDisplay, TakenDisplay (+4 more)
 
-### Community 308 - "SaveChangesInterceptor"
-Cohesion: 0.20
-Nodes (11): SaveChangesInterceptor, CancellationToken, DbContextEventData, InterceptionResult, SaveChangesCompletedEventData, TaskCompletionSource, ValueTask, FailAfterSave (+3 more)
+### Community 308 - "Page"
+Cohesion: 0.24
+Nodes (10): AqsTab, CurveTab, IntermediateTab, Page, PreparationHost, PreparationTabs, StockTab, ContentControl (+2 more)
 
-### Community 309 - "Session"
-Cohesion: 0.26
-Nodes (7): Fact, IReadOnlyList, AlertsViewModelTests, Page, Session, AccessToken, Profile
+### Community 309 - "IPermissionsApiClient"
+Cohesion: 0.42
+Nodes (4): CancellationToken, IReadOnlyList, Task, IPermissionsApiClient
 
 ### Community 310 - "FixtureSolutionGroupApi"
 Cohesion: 0.29
@@ -1575,7 +1615,7 @@ Cohesion: 0.17
 Nodes (11): Archivos principales, Corrección de historial EF ausente, Diagnóstico de tablas base ausentes, Evidencia, Inventario y relaciones, Migraciones preparadas, Permisos y rutas, Restricciones comerciales existentes sin historial de migración (+3 more)
 
 ### Community 318 - "SolutionPart"
-Cohesion: 0.17
+Cohesion: 0.15
 Nodes (10): IReadOnlyList, SolutionAnalyteRow, ResultDisplay, SourceDisplay, SolutionPart, FinalDisplay, Label, ResultDisplay (+2 more)
 
 ### Community 319 - "ComponentFields"
@@ -1583,12 +1623,12 @@ Cohesion: 0.17
 Nodes (12): Guid, ComponentFields, Cas, Concentration, Extra, Id, Lot, Name (+4 more)
 
 ### Community 320 - ".Build"
-Cohesion: 0.23
-Nodes (8): FrameworkElement, Grid, TextBlock, CommercialMaterialDetails, Grid, IReadOnlyList, TextBlock, StockCompositionVisual
+Cohesion: 0.25
+Nodes (7): FrameworkElement, Grid, TextBlock, CommercialMaterialDetails, Grid, IReadOnlyList, TextBlock
 
-### Community 321 - "ContentDialog"
-Cohesion: 0.17
-Nodes (9): ContentDialog, Cylinder, DetailScroll, DetailSurface, ContentDialogClosedEventArgs, RoutedEventArgs, GraduatedCylinder, ScrollViewer (+1 more)
+### Community 321 - ".OnNavigationLoaded"
+Cohesion: 0.22
+Nodes (5): MainNavigation, NavigationView, NavigationViewItemInvokedEventArgs, NavigationViewPaneClosingEventArgs, NavigationView
 
 ### Community 322 - "validate-preparation-actions.ps1"
 Cohesion: 0.41
@@ -1602,13 +1642,13 @@ Nodes (4): IReadOnlyList, StockPostgresFact, Task, CommercialSolventCompositionT
 Cohesion: 0.20
 Nodes (8): Exception, HttpContext, ILoggerFactory, PostgresException, Task, ApiExceptionHandler, IExceptionHandlerFeature, NpgsqlException
 
-### Community 325 - ".LoadAsync"
-Cohesion: 0.47
-Nodes (3): CancellationToken, Guid, Task
+### Community 325 - ".OnOpened"
+Cohesion: 0.22
+Nodes (4): ContentDialogOpenedEventArgs, PropertyChangedEventArgs, XamlRoot, XamlRootChangedEventArgs
 
 ### Community 326 - "AlertScreenState"
-Cohesion: 0.20
-Nodes (9): AlertScreenState, Empty, EnginePending, FilteredEmpty, Loading, Ready, Unavailable, InlineData (+1 more)
+Cohesion: 0.29
+Nodes (7): AlertScreenState, Empty, EnginePending, FilteredEmpty, Loading, Ready, Unavailable
 
 ### Community 327 - ".OnCaptureScrolled"
 Cohesion: 0.22
@@ -1623,8 +1663,8 @@ Cohesion: 0.29
 Nodes (6): Element(), Report(), Search(), SelectItem(), Send(), Visible()
 
 ### Community 330 - "SaveBarrier"
-Cohesion: 0.27
-Nodes (7): CancellationToken, DbContextEventData, InterceptionResult, SaveChangesCompletedEventData, TaskCompletionSource, ValueTask, SaveBarrier
+Cohesion: 0.24
+Nodes (8): CancellationToken, DbContextEventData, InterceptionResult, SaveChangesCompletedEventData, TaskCompletionSource, ValueTask, FailOnAssociationSave, SaveBarrier
 
 ### Community 331 - "ReferenceMaterialStatus"
 Cohesion: 0.22
@@ -1642,6 +1682,10 @@ Nodes (7): BottleLevel, BottleLiquid, UserControl, Storyboard, CommercialBottleV
 Cohesion: 0.22
 Nodes (9): AuditTable, AvailabilityMeter, BodyColumns, HeaderGrid, HeroGrid, IdentityChips, KpiGrid, OverlayRoot (+1 more)
 
+### Community 335 - "IIntermediateApiClient"
+Cohesion: 0.44
+Nodes (4): CancellationToken, Guid, Task, IIntermediateApiClient
+
 ### Community 336 - "ThemeResourceTests"
 Cohesion: 0.36
 Nodes (4): Fact, ThemeResourceTests, XDocument, XNamespace
@@ -1651,8 +1695,8 @@ Cohesion: 0.25
 Nodes (7): Alertas y Notificaciones, Cliente Windows, Correo, Evidencia de esta corrección, Evidencia reproducible, Finalización del motor (22/10/2026), Puesta en servicio
 
 ### Community 338 - ".OnFilterChanged"
-Cohesion: 0.39
-Nodes (7): CategoryBox, ModuleBox, PriorityBox, SortBox, StateBox, SelectionChangedEventArgs, ComboBox
+Cohesion: 0.25
+Nodes (9): AlertsList, CategoryBox, ModuleBox, PriorityBox, SortBox, StateBox, SelectionChangedEventArgs, ComboBox (+1 more)
 
 ### Community 339 - ".OpenMaterialAsync"
 Cohesion: 0.29
@@ -1662,9 +1706,9 @@ Nodes (5): Grid, XamlRoot, XamlRootChangedEventArgs, CommercialPreparationDetail
 Cohesion: 0.39
 Nodes (6): Assert-PersistedComposition(), Assert-Solvent(), Close-SolventDetails(), Report-Solvent(), Send-Solvent(), Set-Solvent()
 
-### Community 341 - ".RejectsInvalidTableBeforeReturningAnyRows"
-Cohesion: 0.25
-Nodes (5): ArgumentException, Fact, InlineData, Theory, CommercialComponentPasteTests
+### Community 341 - ".OnExpirationChanged"
+Cohesion: 0.22
+Nodes (7): ExistingSelect, ExpirationPicker, MethodSelect, ReceivedPicker, EventArgs, LimsDatePicker, LimsSearchSelect
 
 ### Community 342 - "Catálogo compartido y composición de solventes"
 Cohesion: 0.29
@@ -1686,9 +1730,9 @@ Nodes (6): API y permisos, Evidencia, Migración para revisión, Persistencia y 
 Cohesion: 0.29
 Nodes (6): Archivos agregados o modificados, Comportamiento, Persistencia y despliegue, Resultado de la entrega, Stock: compuesto y composición de solventes, Verificación reproducible
 
-### Community 347 - "Button"
-Cohesion: 0.29
-Nodes (7): AddRowButton, CancelButton, PasteButton, RetryButton, SaveButton, SummaryToggle, Button
+### Community 347 - "RoutedEventArgs"
+Cohesion: 0.17
+Nodes (8): AddRowButton, CancelButton, PasteButton, RetryButton, SaveButton, SummaryToggle, RoutedEventArgs, Button
 
 ### Community 348 - ".Report"
 Cohesion: 0.33
@@ -1710,9 +1754,9 @@ Nodes (3): XamlRoot, XamlRootChangedEventArgs, CommercialIntermediateDialog
 Cohesion: 0.33
 Nodes (6): CaptureFields, ExistingPanel, HeaderActions, NewFields, TableEmptyState, StackPanel
 
-### Community 353 - "ColumnDefinition"
-Cohesion: 0.33
-Nodes (6): AvailabilityColumn, ExpiryColumn, GeneralColumn, StateColumn, WorkspaceColumn, ColumnDefinition
+### Community 353 - ".CheckHealthAsync"
+Cohesion: 0.25
+Nodes (7): CancellationToken, ILogger, Task, PostgreSqlHealthCheck, HealthCheckContext, HealthCheckResult, IHealthCheck
 
 ### Community 354 - "ExpirationPicker"
 Cohesion: 0.40
@@ -1734,10 +1778,6 @@ Nodes (5): DateOnly, DateTimeOffset, TestClock, Now, Today
 Cohesion: 0.33
 Nodes (4): PostgresException, StockPostgresFact, Task, CatalogMigrationPostgresTests
 
-### Community 360 - ".PrecisionMigrationRepairsExistingValuesAndTheDeployedFixedScaleModel"
-Cohesion: 0.40
-Nodes (4): FixedScaleModelCustomizer, OverflowException, IMigrationsSqlGenerator, IModelCustomizer
-
 ### Community 361 - "Lims.DesignSystem.csproj"
 Cohesion: 0.40
 Nodes (4): net10.0-windows10.0.26100.0, Microsoft.Windows.SDK.BuildTools, Microsoft.WindowsAppSDK, Microsoft.NET.Sdk
@@ -1758,33 +1798,101 @@ Nodes (3): SearchBox, TextChangedEventArgs, TextBox
 Cohesion: 0.50
 Nodes (4): ComponentRows, CompositionPreview, ExistingComponents, ItemsControl
 
+### Community 368 - "SolventOption"
+Cohesion: 0.25
+Nodes (5): StockSolventRow, Proportion, SelectedSolvent, SolventOption, Display
+
 ### Community 377 - "CaptureColumn"
 Cohesion: 0.67
 Nodes (3): CaptureColumn, SummaryColumn, ColumnDefinition
 
-### Community 380 - "InventoryExpander"
+### Community 378 - "WindowsAlertNotifications"
+Cohesion: 0.29
+Nodes (5): AppNotificationActivatedEventArgs, AppNotificationManager, WindowsAlertNotifications, Available, Status
+
+### Community 380 - ".SavingChangesAsync"
+Cohesion: 0.33
+Nodes (5): CancellationToken, DbContextEventData, InterceptionResult, SaveChangesCompletedEventData, ValueTask
+
+### Community 390 - "Border"
+Cohesion: 0.33
+Nodes (6): CompactDetailHost, DetailSurface, MetricHover, MonitorSurface, StateIconTile, Border
+
+### Community 391 - ".OnDateChanged"
+Cohesion: 0.40
+Nodes (4): ExpirationDatePicker, ReceivedDatePicker, EventArgs, LimsDatePicker
+
+### Community 392 - "StackPanel"
+Cohesion: 0.40
+Nodes (5): DetailPanel, HeaderActions, PrimaryFilters, StatePanel, StackPanel
+
+### Community 408 - "ActionMessage"
+Cohesion: 0.33
+Nodes (4): ActionMessage, CompactDetailContent, ContentControl, InfoBar
+
+### Community 409 - "Border"
+Cohesion: 0.50
+Nodes (4): ActionBar, ComponentsCard, SummaryPanel, Border
+
+### Community 411 - "StatusCombo"
+Cohesion: 0.50
+Nodes (3): StatusCombo, SelectionChangedEventArgs, ComboBox
+
+### Community 412 - "CancelButton"
+Cohesion: 0.50
+Nodes (4): CancelButton, SaveButton, ViewButton, Button
+
+### Community 413 - "TextBlock"
+Cohesion: 0.50
+Nodes (4): DebitHint, MethodLabel, SuccessText, TextBlock
+
+### Community 414 - "CompactDetailScroll"
 Cohesion: 0.67
-Nodes (3): InventoryExpander, ProductExpander, Expander
+Nodes (3): CompactDetailScroll, DetailScroll, ScrollViewer
+
+### Community 415 - "EngineStateIcon"
+Cohesion: 0.67
+Nodes (3): EngineStateIcon, StateIcon, LimsIcon
+
+### Community 416 - "ExpressionsPanel"
+Cohesion: 0.67
+Nodes (3): ExpressionsPanel, ManufacturerPanel, Expander
+
+### Community 417 - "MethodSelect"
+Cohesion: 0.67
+Nodes (3): ExistingSelect, MethodSelect, LimsSearchSelect
+
+### Community 418 - "AuthenticationColumn"
+Cohesion: 0.67
+Nodes (3): AuthenticationColumn, HeroColumn, ColumnDefinition
+
+### Community 419 - "Border"
+Cohesion: 0.67
+Nodes (3): LoginCard, LoginError, Border
+
+### Community 420 - "RevealPasswordGlyph"
+Cohesion: 0.67
+Nodes (3): RevealPasswordGlyph, SubmitArrow, LimsIcon
 
 ## Knowledge Gaps
 - **1794 isolated node(s):** `net10.0`, `Microsoft.Extensions.Hosting`, `Microsoft.NET.Sdk`, `Lims.Api`, `LimsPolicies` (+1789 more)
-  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 2991 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
-- **41 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 2997 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
+- **44 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `ApiCallResult` connect `ApiCallResult` to `IntermediateViewModel`, `FakeStockApi`, `FakeApi`, `IntermediateDetail`, `FixtureAlertsApi`, `Fake`, `Lims.Desktop.Http`, `FakeApi`, `FakeApi`, `IAlertsApiClient`, `ApiError`, `StockDetail`, `CommercialPreparationDetail`, `PermissionsApiClient`, `DashboardResponse`, `FixtureStockApi`, `.PreparationMessage`, `UserPermissionState`, `FixtureSolutionGroupApi`, `FakeApi`, `ReferenceMaterialsApiClient`, `AuthenticationResponse`, `AlertsApiClient`, `SolutionGroupApiClient`, `ControllableAuthenticationApi`, `IReferenceMaterialsApiClient`, `Api`, `CreateSolutionGroupRequest`, `DashboardViewModel`, `StockApiClient`, `PreparationListFilter`, `FixturePermissionsApi`?**
-  _High betweenness centrality (0.081) - this node is a cross-community bridge._
-- **Why does `ReferenceMaterial` connect `ReferenceMaterial` to `StockPostgresTests`, `ReferencePreparation`, `CertifiedMaterialComponent`, `ReferenceCommercialRole`, `ReferenceMaterialService`, `FakeRepository`, `.RegisterAsync`, `LimsDbContext`, `.Configure`, `.Apply`, `ReferenceMethod`, `.Stocks`, `StockSolvent`, `PreparationRepository`, `StockDetail`, `.Calculate`, `FixtureStockApi`, `Fixture`, `StockService`, `ReferenceMaterialDomainTests`, `IReferenceMaterialRepository`, `ReferenceMaterialStatus`, `ReferenceMaterialRepository`, `StockRepository`?**
-  _High betweenness centrality (0.078) - this node is a cross-community bridge._
-- **Why does `App` connect `App` to `App`, `IntermediateDetail`, `FixtureAlertsApi`, `ReferenceMaterialPresentation`, `ReferenceMaterialsPage`, `IntermediatePage`, `.HandleMixCommandAsync`, `FixtureStockApi`, `DashboardPage`, `ApiCallResult`, `ShellViewModel`, `FixtureSolutionGroupApi`, `.Enter`, `ReferenceMaterialEditorDialog`, `StockPage`, `AlertsWorkspace`, `PermissionsPage`, `ShellPage`, `.OpenMaterialAsync`, `.OnTick`, `FixtureDashboardApi`, `Window`, `LimsDatePicker`, `FixturePermissionsApi`?**
-  _High betweenness centrality (0.058) - this node is a cross-community bridge._
+- **Why does `ApiCallResult` connect `ApiCallResult` to `FakeStockApi`, `FakeApi`, `IntermediateDetail`, `FixtureAlertsApi`, `PermissionsApiClient`, `Fake`, `Lims.Desktop.Http`, `FakeApi`, `FakeApi`, `IAlertsApiClient`, `ApiError`, `CommercialPreparationDetail`, `FixtureStockApi`, `DashboardResponse`, `.PreparationMessage`, `UserPermissionState`, `IPermissionsApiClient`, `FixtureSolutionGroupApi`, `FakeApi`, `ReferenceMaterialsApiClient`, `.SendAsync`, `IIntermediateApiClient`, `AlertsApiClient`, `SolutionGroupApiClient`, `ControllableAuthenticationApi`, `IReferenceMaterialsApiClient`, `Api`, `CreateSolutionGroupRequest`, `DashboardViewModel`, `StockApiClient`, `.SignInAsync`, `PreparationListFilter`?**
+  _High betweenness centrality (0.079) - this node is a cross-community bridge._
+- **Why does `ReferenceMaterial` connect `ReferenceMaterial` to `StockPostgresTests`, `ReferencePreparation`, `CertifiedMaterialComponent`, `ReferenceCommercialRole`, `ReferenceMaterialService`, `FakeRepository`, `.RegisterAsync`, `LimsDbContext`, `.Stocks`, `StockSolvent`, `PreparationRepository`, `CommercialCertificate`, `StockDetail`, `.Calculate`, `FixtureStockApi`, `StockService`, `ReferenceUnit`, `ReferenceMaterialStatus`, `ReferenceMaterialRepository`, `ReferencePreparationComponent`, `.CreateAsync`, `StockRepository`?**
+  _High betweenness centrality (0.072) - this node is a cross-community bridge._
+- **Why does `App` connect `App` to `App`, `IntermediateDetail`, `FixtureAlertsApi`, `ReferenceMaterialPresentation`, `ReferenceMaterialsPage`, `Lims.Contracts.ReferenceMaterials`, `IntermediatePage`, `.HandleMixCommandAsync`, `FixtureStockApi`, `DashboardPage`, `ApiCallResult`, `UserPermissionState`, `FixtureSolutionGroupApi`, `.Enter`, `ReferenceMaterialEditorDialog`, `StockPage`, `AlertsWorkspace`, `PermissionsPage`, `ShellPage`, `.OpenMaterialAsync`, `Window`, `LimsDatePicker`, `DashboardViewModel`, `WindowsAlertNotifications`?**
+  _High betweenness centrality (0.069) - this node is a cross-community bridge._
 - **Are the 4 inferred relationships involving `StockViewModel` (e.g. with `Get` and `OpenSelectedPreparationCommand`) actually correct?**
   _`StockViewModel` has 4 INFERRED edges - model-reasoned connections that need verification._
 - **Are the 4 inferred relationships involving `IntermediateViewModel` (e.g. with `Get` and `OpenSelectedPreparationCommand`) actually correct?**
   _`IntermediateViewModel` has 4 INFERRED edges - model-reasoned connections that need verification._
 - **What connects `net10.0`, `Microsoft.Extensions.Hosting`, `Microsoft.NET.Sdk` to the rest of the system?**
   _1794 weakly-connected nodes found - possible documentation gaps or missing edges._
-- **Should `IntermediateViewModel` be split into smaller, more focused modules?**
-  _Cohesion score 0.02672176308539945 - nodes in this community are weakly interconnected._
+- **Should `StockPostgresTests` be split into smaller, more focused modules?**
+  _Cohesion score 0.06811263318112633 - nodes in this community are weakly interconnected._

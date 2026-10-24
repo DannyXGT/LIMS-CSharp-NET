@@ -4,9 +4,11 @@ La carga de estandares ya permite una expiracion pasada. Se desactiva el bloqueo
 
 Interruptor: `HistoricalEntryPolicy.EnforceCurrentExpiration` en `Shared/Lims.Contracts/ReferencePreparations/HistoricalEntryPolicy.cs`. Actualmente devuelve `false`. Para reactivar la validacion, devolver `true` y recompilar/desplegar API y escritorio.
 
-Temporalmente, `HistoricalEntryPolicy.EnforceStockPreparationOnOrAfterReceipt` tambien devuelve `false`: permite registrar un Stock anterior al ingreso registrado del estandar sin cambiar ninguna de esas fechas. Para restablecer esa condicion, devolver `true` y recompilar/desplegar API y escritorio.
+Temporalmente, `HistoricalEntryPolicy.EnforceStockPreparationDates` devuelve `false`: permite cualquier fecha de preparacion y expiracion de Stock, incluida preparacion anterior al ingreso, posterior al vencimiento del estandar, futura o posterior a la expiracion del propio Stock. Las fechas siguen siendo obligatorias y se conservan tal como se ingresan. Para reactivar las comparaciones, devolver `true` y recompilar/desplegar API y escritorio.
 
-Registrar las fechas originales del Excel: preparacion <= expiracion del estandar y preparacion <= expiracion del Stock; la preparacion no puede ser futura. Siguen siendo obligatorios el peso tomado, los saldos suficientes, los catalogos y permisos. No se habilitan estandares archivados/bloqueados/agotados. El consumo y su movimiento siguen registrandose. No se modifican validaciones de Intermedia ni se ejecutan migraciones o SQL en InterDB.
+La base de datos tambien debe recibir la migracion `AllowHistoricalStockDates` (SQL: `artifacts/sql/historical_stock_dates.sql`) antes de usar esta API; la restriccion anterior rechaza Stock preparado despues del vencimiento del estandar incluso si el boton esta habilitado. El cambio solo flexibiliza fechas de Stock y conserva la cronologia de los demas tipos y las marcas de auditoria. La migracion inversa valida los datos existentes y falla si hay registros incompatibles; no elimina ni corrige registros historicos automaticamente.
+
+Registrar las fechas originales del Excel. Siguen siendo obligatorios el peso tomado, los saldos suficientes, los catalogos y permisos. No se habilitan estandares archivados/bloqueados/agotados. El consumo y su movimiento siguen registrandose. No se modifican validaciones de Intermedia ni se ejecutan migraciones o SQL en InterDB.
 
 ## Portable Windows x64: un solo EXE
 

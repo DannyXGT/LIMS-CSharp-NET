@@ -145,9 +145,11 @@ public sealed partial class StockViewModel(IStockApiClient api, ISessionService 
         Name.Trim().Length is > 0 and <= 200 && Notes.Trim().Length <= 2000 && StorageTemperature.Trim().Length <= 200 &&
         SelectedSource is { } source &&
         (!HistoricalEntryPolicy.EnforceCurrentExpiration || source.ExpirationDate >= DateOnly.FromDateTime(DateTimeOffset.UtcNow.ToOffset(TimeSpan.FromHours(-6)).DateTime)) &&
-        PreparationDate.Date <= DateTimeOffset.UtcNow.ToOffset(TimeSpan.FromHours(-6)).Date &&
-        (!HistoricalEntryPolicy.EnforceStockPreparationOnOrAfterReceipt || source.ReceivedDate is null || DateOnly.FromDateTime(PreparationDate.Date) >= source.ReceivedDate) &&
-        DateOnly.FromDateTime(PreparationDate.Date) <= source.ExpirationDate && ExpirationDate?.Date >= PreparationDate.Date;
+        ExpirationDate is not null &&
+        (!HistoricalEntryPolicy.EnforceStockPreparationDates ||
+            (PreparationDate.Date <= DateTimeOffset.UtcNow.ToOffset(TimeSpan.FromHours(-6)).Date &&
+             (source.ReceivedDate is null || DateOnly.FromDateTime(PreparationDate.Date) >= source.ReceivedDate) &&
+             DateOnly.FromDateTime(PreparationDate.Date) <= source.ExpirationDate && ExpirationDate.Value.Date >= PreparationDate.Date));
     public bool HasMultiplePages => TotalCount > _pageSize;
     public bool HasPreviousPage => Page > 1;
     public bool HasNextPage => Page * _pageSize < TotalCount;

@@ -1815,7 +1815,7 @@ namespace Lims.Infrastructure.Persistence.Migrations
 
                     b.ToTable("reference_preparations", null, t =>
                         {
-                            t.HasCheckConstraint("ck_reference_preparations_dates", "expiration_date >= preparation_date AND (kind <> 'Stock' OR preparation_date <= source_expiration_date) AND updated_at >= created_at");
+                            t.HasCheckConstraint("ck_reference_preparations_dates", "(kind = 'Stock' OR expiration_date >= preparation_date) AND updated_at >= created_at");
 
                             t.HasCheckConstraint("ck_reference_preparations_identity", "length(trim(code)) > 0 AND length(trim(name)) > 0 AND length(request_fingerprint) = 64");
 

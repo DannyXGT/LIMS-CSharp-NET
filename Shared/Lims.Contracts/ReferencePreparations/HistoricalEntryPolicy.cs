@@ -7,7 +7,7 @@ public static class HistoricalEntryPolicy
     // Recorded dates, lifecycle status and balances remain unchanged.
     public static bool EnforceCurrentExpiration => false;
 
-    // Temporarily allow Stock preparation before the recorded source receipt during historical entry.
-    // Set to true and rebuild/deploy BOTH API and desktop to restore this condition.
-    public static bool EnforceStockPreparationOnOrAfterReceipt => false;
+    // Temporarily allow any Stock preparation/expiration dates during historical entry.
+    // Set to true and rebuild/deploy BOTH API and desktop to restore all Stock date comparisons.
+    public static bool EnforceStockPreparationDates => false;
 }

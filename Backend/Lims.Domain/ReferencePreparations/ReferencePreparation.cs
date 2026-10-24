@@ -11,7 +11,7 @@ public sealed class ReferencePreparation
         decimal targetConcentration, decimal resultConcentration, string concentrationUnit,
         decimal finalQuantity, string finalUnit, decimal calculatedWeight, decimal actualWeight,
         string formula, DateOnly preparationDate, int actorUserId, string? notes,
-        DateTimeOffset now, string requestFingerprint, DateOnly expirationDate, string? storageTemperature)
+        DateTimeOffset now, string requestFingerprint, DateOnly expirationDate, string? storageTemperature, bool enforceDateValidation = true)
     {
         ArgumentNullException.ThrowIfNull(source);
         if (id == Guid.Empty) throw new ArgumentException("La solicitud es inválida.", nameof(id));
@@ -49,7 +49,7 @@ public sealed class ReferencePreparation
         ActualWeight = actualWeight;
         Formula = Text(formula, 240);
         PreparationDate = preparationDate;
-        if (expirationDate < preparationDate) throw new ArgumentException("La expiración debe ser igual o posterior a la preparación.", nameof(expirationDate));
+        if (enforceDateValidation && expirationDate < preparationDate) throw new ArgumentException("La expiración debe ser igual o posterior a la preparación.", nameof(expirationDate));
         ExpirationDate = expirationDate;
         if (storageTemperature?.Trim().Length > 200) throw new ArgumentException("La temperatura admite hasta 200 caracteres.", nameof(storageTemperature));
         StorageTemperature = string.IsNullOrWhiteSpace(storageTemperature) ? null : storageTemperature.Trim();

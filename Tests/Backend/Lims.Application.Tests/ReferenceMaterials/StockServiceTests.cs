@@ -11,10 +11,10 @@ public sealed class StockServiceTests
 {
     [Theory]
     [InlineData(2025, 10, 4, 2026, 10, 4, true)] // Before the recorded source receipt.
-    [InlineData(2028, 1, 1, 2028, 12, 31, false)] // After source expiration, but before today.
-    [InlineData(2030, 1, 1, 2031, 1, 1, false)] // Future preparation.
-    [InlineData(2025, 10, 4, 2025, 10, 3, false)] // Stock expiration before preparation.
-    public async Task HistoricalEntryAllowsPreparationBeforeReceiptWhileKeepingOtherDateChecks(
+    [InlineData(2028, 1, 1, 2028, 12, 31, true)] // After source expiration, but before today.
+    [InlineData(2030, 1, 1, 2031, 1, 1, true)] // Future preparation.
+    [InlineData(2025, 10, 4, 2025, 10, 3, true)] // Stock expiration before preparation.
+    public async Task HistoricalEntryAllowsAnyRecordedStockDates(
         int year, int month, int day, int expirationYear, int expirationMonth, int expirationDay, bool allowed)
     {
         var source = StockCalculatorTests.Material("mg", 100, 150);

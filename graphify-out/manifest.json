@@ -252,9 +252,9 @@
     "semantic_hash": ""
   },
   "Backend/Lims.Application/ReferencePreparations/StockService.cs": {
-    "mtime": 1792861678.318364,
-    "seen": 1792861828.012035,
-    "ast_hash": "0e633b89e5fd1a2948854211ed9fe31a",
+    "mtime": 1792863419.5941708,
+    "seen": 1792863675.5608482,
+    "ast_hash": "a0967f3dc0735a2939dd0964b8b9ba7a",
     "semantic_hash": ""
   },
   "Backend/Lims.Domain/Authentication/AuthSession.cs": {
@@ -348,9 +348,9 @@
     "semantic_hash": ""
   },
   "Backend/Lims.Domain/ReferencePreparations/ReferencePreparation.cs": {
-    "mtime": 1792218707.9234405,
-    "seen": 1792861828.0140648,
-    "ast_hash": "fca51009409e11bb61c8100ab3f7293e",
+    "mtime": 1792863419.6516013,
+    "seen": 1792863675.5674393,
+    "ast_hash": "87633f40aea67b9fa55eae1a51a076c5",
     "semantic_hash": ""
   },
   "Backend/Lims.Domain/ReferencePreparations/ReferencePreparationComponent.cs": {
@@ -474,9 +474,9 @@
     "semantic_hash": ""
   },
   "Backend/Lims.Infrastructure/Persistence/Migrations/LimsDbContextModelSnapshot.cs": {
-    "mtime": 1792708899.815307,
-    "seen": 1792861828.0181148,
-    "ast_hash": "4e051267218c38f58e914e10604396fb",
+    "mtime": 1792863477.5534503,
+    "seen": 1792863675.590233,
+    "ast_hash": "f03f213e260d7ffdb3dbe61f8aec5604",
     "semantic_hash": ""
   },
   "Backend/Lims.Infrastructure/Persistence/PermissionModel.cs": {
@@ -498,9 +498,9 @@
     "semantic_hash": ""
   },
   "Backend/Lims.Infrastructure/Persistence/StockModel.cs": {
-    "mtime": 1792218793.7743237,
-    "seen": 1792861828.0191114,
-    "ast_hash": "a67a97b0bc0c0c96798999edf31fccc7",
+    "mtime": 1792863419.6541266,
+    "seen": 1792863675.5937526,
+    "ast_hash": "becdb8a834e2f510a477941f2547ab88",
     "semantic_hash": ""
   },
   "Backend/Lims.Infrastructure/Persistence/StockRepository.cs": {
@@ -918,9 +918,9 @@
     "semantic_hash": ""
   },
   "Frontend/Lims.Desktop/ViewModels/StockViewModel.cs": {
-    "mtime": 1792861678.3171263,
-    "seen": 1792861828.0281465,
-    "ast_hash": "63a786cae2dfea426113dab523fd0d20",
+    "mtime": 1792863419.4953282,
+    "seen": 1792863675.631505,
+    "ast_hash": "a01e63b8d12bb82c592eb757f064c91e",
     "semantic_hash": ""
   },
   "Frontend/Lims.Desktop/Views/GraduatedCylinder.xaml": {
@@ -1368,9 +1368,9 @@
     "semantic_hash": ""
   },
   "Tests/Backend/Lims.Infrastructure.Tests/Persistence/StockPostgresTests.cs": {
-    "mtime": 1792472301.4861398,
-    "seen": 1792861828.0346527,
-    "ast_hash": "b022d03631c24fe98312a961d65dd612",
+    "mtime": 1792863829.5432272,
+    "seen": 1792863965.5933852,
+    "ast_hash": "c1678674ef62472bef3ea2d64fa7ac4d",
     "semantic_hash": ""
   },
   "Tests/Backend/Lims.Infrastructure.Tests/Security/Argon2PasswordHashServiceTests.cs": {
@@ -1464,9 +1464,9 @@
     "semantic_hash": ""
   },
   "Tests/Frontend/Lims.Desktop.Tests/StockViewModelTests.cs": {
-    "mtime": 1792861702.7459419,
-    "seen": 1792861828.0366826,
-    "ast_hash": "5c1c94df6af6c678d9aa74c8996891f7",
+    "mtime": 1792863419.842773,
+    "seen": 1792863675.679847,
+    "ast_hash": "704ac520b4ba61461ef9f7c06943b942",
     "semantic_hash": ""
   },
   "Tests/Frontend/Lims.Desktop.VisualHarness/App.xaml.cs": {
@@ -2142,9 +2142,9 @@
     "semantic_hash": ""
   },
   "Shared/Lims.Contracts/ReferencePreparations/HistoricalEntryPolicy.cs": {
-    "mtime": 1792861678.3134625,
-    "seen": 1792861828.030146,
-    "ast_hash": "8e9adfabd66b8d7585ce4d3bfb72e1e3",
+    "mtime": 1792863419.4637208,
+    "seen": 1792863675.6592214,
+    "ast_hash": "23115e562773950ecf8507785828857d",
     "semantic_hash": ""
   },
   "Tests/Backend/Lims.Api.Tests/DashboardEndpointsTests.cs": {
@@ -2202,9 +2202,9 @@
     "semantic_hash": ""
   },
   "docs/carga-historica-y-portable.md": {
-    "mtime": 1792861678.3206468,
-    "seen": 1792861828.0412107,
-    "ast_hash": "5630cac39a9f1654065b17ca1153e538",
+    "mtime": 1792863419.844783,
+    "seen": 1792863675.726643,
+    "ast_hash": "660a3d09dae39844fb0c3259d492a7aa",
     "semantic_hash": ""
   },
   "docs/gestion-permisos-consola-visual.md": {
@@ -2880,9 +2880,9 @@
     "semantic_hash": ""
   },
   "Tests/Backend/Lims.Application.Tests/ReferenceMaterials/StockServiceTests.cs": {
-    "mtime": 1792861702.7459419,
-    "seen": 1792861828.0331507,
-    "ast_hash": "1f823eec45a043c9582d8c6378d706da",
+    "mtime": 1792863419.731895,
+    "seen": 1792863675.6683095,
+    "ast_hash": "034f773bd795d856318892b978bd7b74",
     "semantic_hash": ""
   },
   "Tests/Backend/Lims.Infrastructure.Tests/Persistence/AlertPostgresTests.cs": {
@@ -3696,9 +3696,9 @@
     "semantic_hash": ""
   },
   "scripts/portable-version.txt": {
-    "mtime": 1792730365.2688308,
-    "seen": 1792861828.0472457,
-    "ast_hash": "dad6dce27315fca97033779693567422",
+    "mtime": 1792863915.1383696,
+    "seen": 1792863965.6279006,
+    "ast_hash": "68769064995762324b2275243d89dd34",
     "semantic_hash": ""
   },
   "artifacts/validation/commercial-fix-20261019/intermedia-1366-components.png": {
@@ -4299,6 +4299,18 @@
     "mtime": 1792207739.6469946,
     "seen": 1792861828.0515666,
     "ast_hash": "add6e954859bc5ee6074732d8544b947",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Infrastructure/Persistence/Migrations/20261024173757_AllowHistoricalStockDates.Designer.cs": {
+    "mtime": 1792863477.5534503,
+    "seen": 1792863675.590233,
+    "ast_hash": "a935a8aa7197a43a149e83b9c0e8c9d8",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Infrastructure/Persistence/Migrations/20261024173757_AllowHistoricalStockDates.cs": {
+    "mtime": 1792863477.5497646,
+    "seen": 1792863675.590233,
+    "ast_hash": "821097f508a5dbcb6b42a43aa3ace5b2",
     "semantic_hash": ""
   }
 }

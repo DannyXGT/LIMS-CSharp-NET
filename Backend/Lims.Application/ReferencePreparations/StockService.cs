@@ -38,7 +38,8 @@ public sealed class StockService(IStockRepository repository, TimeProvider timeP
         ArgumentNullException.ThrowIfNull(request);
         if (actorUserId <= 0) return Task.FromResult(Failure<StockDetail>(ErrorCodes.InvalidSession, "La sesión no es válida o expiró."));
         if (request.RequestId == Guid.Empty || request.Calculation is null || request.Name?.Trim().Length is not (> 0 and <= 200) ||
-            request.Notes?.Trim().Length > 2000 || request.PreparationDate == default || request.PreparationDate > Today() || request.ExpirationDate is null || request.ExpirationDate < request.PreparationDate || request.StorageTemperature?.Trim().Length > 200 || request.Calculation?.ActualWeight is null)
+            request.Notes?.Trim().Length > 2000 || request.PreparationDate == default || request.ExpirationDate is null ||
+            (HistoricalEntryPolicy.EnforceStockPreparationDates && (request.PreparationDate > Today() || request.ExpirationDate < request.PreparationDate)) || request.StorageTemperature?.Trim().Length > 200 || request.Calculation?.ActualWeight is null)
             return Task.FromResult(Failure<StockDetail>(ErrorCodes.ValidationError, "Registre el peso tomado y revise nombre, fechas, temperatura y observaciones de la preparación."));
         if (request.Compound?.Trim().Length is not (> 0 and <= 200))
             return Task.FromResult(Failure<StockDetail>(ErrorCodes.ValidationError, "Registre el compuesto (hasta 200 caracteres)."));
@@ -51,8 +52,8 @@ public sealed class StockService(IStockRepository repository, TimeProvider timeP
         {
             var error = SourceError(source, request.Calculation, today);
             if (error is not null) return OperationResult.Failure<ReferencePreparation>(error);
-            if ((HistoricalEntryPolicy.EnforceStockPreparationOnOrAfterReceipt && request.PreparationDate < source.ReceivedDate) ||
-                request.PreparationDate > source.ExpirationDate)
+            if (HistoricalEntryPolicy.EnforceStockPreparationDates &&
+                (request.PreparationDate < source.ReceivedDate || request.PreparationDate > source.ExpirationDate))
                 return Failure<ReferencePreparation>(ErrorCodes.ValidationError, "La fecha de preparación debe estar dentro de la vigencia del estándar.");
             try
             {
@@ -63,7 +64,8 @@ public sealed class StockService(IStockRepository repository, TimeProvider timeP
                 var preparation = new ReferencePreparation(request.RequestId, code, request.Name!, source,
                     calculation.TargetConcentration, calculation.ActualConcentration!.Value, calculation.ConcentrationUnit,
                     calculation.FinalVolume, calculation.FinalVolumeUnit, calculation.CalculatedWeight, calculation.ActualWeight!.Value,
-                    calculation.Formula, request.PreparationDate, actorUserId, request.Notes, now, fingerprint, request.ExpirationDate.Value, request.StorageTemperature);
+                    calculation.Formula, request.PreparationDate, actorUserId, request.Notes, now, fingerprint, request.ExpirationDate.Value, request.StorageTemperature,
+                    enforceDateValidation: HistoricalEntryPolicy.EnforceStockPreparationDates);
                 preparation.SetStockComposition(request.Compound!, request.Solvents!.Select(s => (s.SolventId, s.Percent)));
                 return OperationResult.Success(preparation);
             }

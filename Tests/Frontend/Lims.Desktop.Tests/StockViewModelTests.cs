@@ -317,7 +317,7 @@ public sealed class StockViewModelTests
         vm.ExpirationDate = null;
         Assert.False(vm.CanSave);
         vm.ExpirationDate = vm.PreparationDate.AddDays(-1);
-        Assert.False(vm.CanSave);
+        Assert.True(vm.CanSave);
         vm.ExpirationDate = vm.PreparationDate.AddDays(30);
         vm.ActualQuantity = "101";
         Assert.False(vm.CanSave);
@@ -364,15 +364,35 @@ public sealed class StockViewModelTests
 
         vm.Created = null;
         vm.PreparationDate = today.AddDays(1);
-        Assert.False(vm.CanSave);
+        Assert.True(vm.CanSave);
         vm.PreparationDate = today.AddYears(-1);
         vm.ExpirationDate = vm.PreparationDate.AddDays(-1);
-        Assert.False(vm.CanSave);
+        Assert.True(vm.CanSave);
         vm.ExpirationDate = today.AddYears(3);
         vm.SelectedSource = Source with { ExpirationDate = DateOnly.FromDateTime(today.AddDays(-60).Date) };
         vm.PreparationDate = today.AddDays(-30);
         vm.ActualQuantity = "10";
-        Assert.False(vm.CanSave);
+        Assert.True(vm.CanSave);
+    }
+
+    [Fact]
+    public async Task ScreenshotDatesAndQuantitiesAllowCreatingStockWithExpiredSource()
+    {
+        var api = new FakeStockApi();
+        var vm = Model(api);
+        await ReadyAsync(vm);
+        vm.SelectedSource = Source with { PurityPercent = 99.59m, AvailableQuantity = 250m, ExpirationDate = new DateOnly(2026, 4, 1) };
+        vm.Concentration = "1000";
+        vm.FinalVolume = "25";
+        vm.ActualQuantity = "25.100";
+        vm.PreparationDate = new DateTimeOffset(2026, 10, 4, 0, 0, 0, TimeSpan.FromHours(-6));
+        vm.ExpirationDate = new DateTimeOffset(2026, 10, 11, 0, 0, 0, TimeSpan.FromHours(-6));
+        Assert.True(vm.CanSave);
+        Assert.True(await vm.SaveAsync(CancellationToken.None));
+        var request = Assert.Single(api.Requests);
+        Assert.Equal(new DateOnly(2026, 10, 4), request.PreparationDate);
+        Assert.Equal(new DateOnly(2026, 10, 11), request.ExpirationDate);
+        Assert.Equal(25.100m, request.Calculation.ActualWeight);
     }
 
     [Fact]

@@ -191,7 +191,7 @@ public sealed class StockPostgresTests
         await using var context = fixture.Context();
         var service = Service(context);
         var valid = fixture.Request(50);
-        foreach (var invalid in new[] { valid with { Calculation = valid.Calculation with { ActualWeight = null } }, valid with { ExpirationDate = null }, valid with { ExpirationDate = valid.PreparationDate.AddDays(-1) } })
+        foreach (var invalid in new[] { valid with { Calculation = valid.Calculation with { ActualWeight = null } }, valid with { ExpirationDate = null } })
             Assert.Equal(ErrorCodes.ValidationError, (await service.CreateAsync(invalid, 42, CancellationToken.None)).Error?.Code);
         Assert.Empty(await context.ReferencePreparations.ToArrayAsync());
         Assert.Empty(await context.ReferenceMaterialMovements.ToArrayAsync());
@@ -240,6 +240,65 @@ public sealed class StockPostgresTests
         Assert.Equal(request.ExpirationDate, result.Value.Preparation.ExpirationDate);
         Assert.Equal(50m, (await context.ReferenceMaterials.AsNoTracking().SingleAsync()).AvailableQuantity);
         Assert.Single(await context.ReferenceMaterialMovements.ToArrayAsync());
+    }
+
+    [StockPostgresFact]
+    public async Task HistoricalDateMigrationAllowsScreenshotFutureAndReversedStockDatesWithoutLosingAudit()
+    {
+        foreach (var (date, expiration) in new[]
+        {
+            (new DateOnly(2026, 10, 4), new DateOnly(2026, 10, 11)),
+            (new DateOnly(2025, 10, 4), new DateOnly(2025, 10, 11)),
+            (new DateOnly(2030, 10, 4), new DateOnly(2030, 10, 11)),
+            (new DateOnly(2026, 10, 4), new DateOnly(2025, 10, 11)),
+        })
+        {
+            await using var fixture = await Fixture.CreateAsync(250, 99.59m);
+            await using var context = fixture.Context();
+            var source = await context.ReferenceMaterials.Include(m => m.Method).Include(m => m.Unit).Include(m => m.Location).SingleAsync();
+            source.Update(source.Name, source.CasNumber, source.CatalogNumber, source.Method, source.PurityPercent,
+                source.Lot, source.Brand, new DateOnly(2026, 1, 1), new DateOnly(2026, 4, 1), source.PresentationQuantity,
+                source.Unit, 1, source.StorageTemperature, source.Location, 42, DateTimeOffset.UtcNow);
+            await context.SaveChangesAsync();
+            var request = fixture.Request(1000) with
+            {
+                Calculation = fixture.Request(1000).Calculation with { SourceVersion = source.Version, TargetConcentration = 1000, FinalVolume = 25, ActualWeight = 25.100m },
+                PreparationDate = date, ExpirationDate = expiration,
+            };
+            // Reproduce the previously deployed constraint, then apply the actual migration.
+            await context.Database.ExecuteSqlRawAsync("ALTER TABLE reference_preparations DROP CONSTRAINT ck_reference_preparations_dates; ALTER TABLE reference_preparations ADD CONSTRAINT ck_reference_preparations_dates CHECK (expiration_date >= preparation_date AND (kind <> 'Stock' OR preparation_date <= source_expiration_date) AND updated_at >= created_at)");
+            if (date > source.ExpirationDate || expiration < date)
+            {
+                var rejected = await Assert.ThrowsAsync<DbUpdateException>(() => Service(context).CreateAsync(request, 42, default));
+                Assert.Equal(PostgresErrorCodes.CheckViolation, Assert.IsType<PostgresException>(rejected.InnerException).SqlState);
+            }
+            if (date == new DateOnly(2026, 10, 4) && expiration == new DateOnly(2026, 10, 11))
+            {
+                // This generated-schema fixture represents the predecessor migration, without a real deployment.
+                await context.Database.ExecuteSqlRawAsync("CREATE TABLE \"__EFMigrationsHistory\" (\"MigrationId\" varchar(150) PRIMARY KEY, \"ProductVersion\" varchar(32) NOT NULL); INSERT INTO \"__EFMigrationsHistory\" VALUES ('20261022224139_AddAlertEvaluationHistory', '10.0.10')");
+                var scriptPath = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../../../artifacts/sql/historical_stock_dates.sql"));
+                var script = await File.ReadAllTextAsync(scriptPath);
+                await context.Database.ExecuteSqlRawAsync(script);
+                await context.Database.ExecuteSqlRawAsync(script);
+                Assert.Equal(1, await context.Database.SqlQuery<int>($"SELECT count(*)::int AS \"Value\" FROM \"__EFMigrationsHistory\" WHERE \"MigrationId\" = '20261024173757_AllowHistoricalStockDates'").SingleAsync());
+            }
+            else
+            {
+                var commands = context.GetService<IMigrationsSqlGenerator>().Generate(new AllowHistoricalStockDates().UpOperations, context.Model);
+                foreach (var command in commands) await context.Database.ExecuteSqlRawAsync(command.CommandText);
+            }
+            var result = await Service(context).CreateAsync(request, 42, default);
+            Assert.True(result.IsSuccess, result.Error?.Message);
+            await using var reopened = fixture.Context();
+            var saved = await reopened.ReferencePreparations.SingleAsync();
+            Assert.Equal(date, saved.PreparationDate);
+            Assert.Equal(expiration, saved.ExpirationDate);
+            Assert.Equal(new DateOnly(2026, 4, 1), saved.SourceExpirationDate);
+            Assert.Equal(224.9m, (await reopened.ReferenceMaterials.SingleAsync()).AvailableQuantity);
+            Assert.Single(await reopened.ReferenceMaterialMovements.ToArrayAsync());
+            var audit = await Assert.ThrowsAsync<PostgresException>(() => reopened.Database.ExecuteSqlRawAsync("UPDATE reference_preparations SET updated_at = created_at - interval '1 minute'"));
+            Assert.Equal(PostgresErrorCodes.CheckViolation, audit.SqlState);
+        }
     }
 
     [StockPostgresFact]

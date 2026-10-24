@@ -19,7 +19,7 @@ internal static class StockModel
             table.HasCheckConstraint("ck_reference_preparations_purity", "kind <> 'Stock' OR (purity_percent_used > 0 AND purity_percent_used <= 100)");
             table.HasCheckConstraint("ck_reference_preparations_units", "final_volume_unit IN ('mL','L') AND (kind <> 'Stock' OR (concentration_unit IN ('mg/L','g/L','µg/L','µg/mL') AND calculated_weight_unit = source_unit AND actual_weight_unit = source_unit AND actual_concentration_unit = concentration_unit AND source_unit IN ('g','mg','µg','μg','ug')))");
             table.HasCheckConstraint("ck_reference_preparations_identity", "length(trim(code)) > 0 AND length(trim(name)) > 0 AND length(request_fingerprint) = 64");
-            table.HasCheckConstraint("ck_reference_preparations_dates", "expiration_date >= preparation_date AND (kind <> 'Stock' OR preparation_date <= source_expiration_date) AND updated_at >= created_at");
+            table.HasCheckConstraint("ck_reference_preparations_dates", "(kind = 'Stock' OR expiration_date >= preparation_date) AND updated_at >= created_at");
         });
         preparation.HasKey(item => item.Id);
         preparation.Property(item => item.Id).ValueGeneratedNever();
