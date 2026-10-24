@@ -83,9 +83,10 @@ public static class Motion
 
     public static Task ExitAsync(FrameworkElement element, int milliseconds = 90, float scale = 0.99f)
     {
+        ElementCompositionPreview.SetIsTranslationEnabled(element, true);
         var visual = ElementCompositionPreview.GetElementVisual(element);
-        visual.StopAnimation("Translation");
         visual.Properties.InsertVector3("Translation", Vector3.Zero);
+        visual.StopAnimation("Translation");
         if (!Enabled) { visual.StopAnimation("Scale"); visual.Scale = Vector3.One; }
         var completion = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var batch = visual.Compositor.CreateScopedBatch(CompositionBatchTypes.Animation);

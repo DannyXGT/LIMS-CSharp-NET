@@ -51,7 +51,8 @@ public sealed class StockService(IStockRepository repository, TimeProvider timeP
         {
             var error = SourceError(source, request.Calculation, today);
             if (error is not null) return OperationResult.Failure<ReferencePreparation>(error);
-            if (request.PreparationDate < source.ReceivedDate || request.PreparationDate > source.ExpirationDate)
+            if ((HistoricalEntryPolicy.EnforceStockPreparationOnOrAfterReceipt && request.PreparationDate < source.ReceivedDate) ||
+                request.PreparationDate > source.ExpirationDate)
                 return Failure<ReferencePreparation>(ErrorCodes.ValidationError, "La fecha de preparación debe estar dentro de la vigencia del estándar.");
             try
             {

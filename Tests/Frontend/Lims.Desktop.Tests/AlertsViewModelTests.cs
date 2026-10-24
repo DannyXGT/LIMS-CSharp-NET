@@ -9,6 +9,20 @@ namespace Lims.Desktop.Tests;
 
 public sealed class AlertsViewModelTests
 {
+    [Fact]
+    public async Task ManualEvaluationRequiresAdministratorSuppressesDoubleClickAndRefreshesBellAndHealthyZero()
+    {
+        var api = new Fake(); var session = new Session(); var model = new AlertsViewModel(api, session);
+        await model.EvaluateAsync(); Assert.Equal(0, api.EvaluationCalls);
+        session.Profile = session.Profile! with { Role = "Administrador" };
+        var bellUpdates = 0; model.NotificationsChanged += (_, _) => bellUpdates++;
+        var evaluation = model.EvaluateAsync(); await model.EvaluateAsync(); Assert.Equal(1, api.EvaluationCalls);
+        Assert.True(model.IsActionBusy); Assert.Single(api.Loads);
+        api.Loads[0].SetResult(new(true, Page with { Summary = Page.Summary with { Active = 0 } }, null, 200));
+        await evaluation;
+        Assert.Equal(AlertScreenState.Empty, model.State); Assert.True(model.Synchronized);
+        Assert.Equal(1, bellUpdates); Assert.False(model.IsActionBusy); Assert.True(model.IsMessageInformational);
+    }
     private static AlertPage Page => new([], 1, 30, 0, new(3, 1, 1, new(2026, 10, 28), 1, 2, 0, DateTimeOffset.UtcNow, DateTimeOffset.UtcNow));
     [Fact]
     public async Task PendingAttentionIsIndependentOfUnreadCountAndServerFailureIsNotZero()
@@ -71,6 +85,9 @@ public sealed class AlertsViewModelTests
     }
     private sealed class Fake : IAlertsApiClient
     {
+        public int EvaluationCalls { get; private set; }
+        public Task<ApiCallResult<AlertJobResult>> EvaluateAsync(CancellationToken ct) { EvaluationCalls++; return Task.FromResult(new ApiCallResult<AlertJobResult>(true, new(true, 12, 0, 0), null, 200)); }
+        public Task<ApiCallResult<IReadOnlyList<AlertEvaluationItem>>> EvaluationsAsync(CancellationToken ct) => Task.FromResult(new ApiCallResult<IReadOnlyList<AlertEvaluationItem>>(true, [], null, 200));
         public List<TaskCompletionSource<ApiCallResult<AlertPage>>> Loads { get; } = [];
         public List<CancellationToken> Tokens { get; } = [];
         public Task<ApiCallResult<AlertPage>> ListAsync(AlertFilter f, CancellationToken ct) { var completion = new TaskCompletionSource<ApiCallResult<AlertPage>>(); Loads.Add(completion); Tokens.Add(ct); return completion.Task; }

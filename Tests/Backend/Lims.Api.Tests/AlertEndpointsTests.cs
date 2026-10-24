@@ -33,12 +33,16 @@ public sealed class AlertEndpointsTests
         Assert.Equal(HttpStatusCode.OK, list.StatusCode); Assert.Equal(42, fake.Actor); Assert.Equal(2, fake.Filter!.Page); Assert.Equal(AlertPriority.Critical, fake.Filter.Priority); Assert.Equal(AlertModule.Stock, fake.Filter.Module); Assert.Equal(new DateOnly(2026, 10, 1), fake.Filter.From);
         Assert.Equal(HttpStatusCode.Forbidden, (await client.GetAsync("/api/alerts/administration")).StatusCode);
         Assert.Equal(HttpStatusCode.Forbidden, (await client.GetAsync("/api/alerts/deliveries")).StatusCode);
+        Assert.Equal(HttpStatusCode.Forbidden, (await client.PostAsync("/api/alerts/evaluate", null)).StatusCode);
+        Assert.Equal(HttpStatusCode.Forbidden, (await client.GetAsync("/api/alerts/evaluations")).StatusCode);
         Assert.Equal(HttpStatusCode.Forbidden, (await client.PostAsJsonAsync($"/api/alerts/{Guid.NewGuid()}/acknowledge", new AlertAction(Guid.Empty, null))).StatusCode);
         factory.SetIdentity("Analista"); Assert.Equal(HttpStatusCode.Forbidden, (await client.GetAsync("/api/alerts")).StatusCode);
         factory.PermissionRepository.Current = null; Assert.Equal(HttpStatusCode.Unauthorized, (await client.GetAsync("/api/alerts/notifications")).StatusCode);
     }
     private sealed class Fake : IAlertService
     {
+        public Task<OperationResult<AlertJobResult>> EvaluateAsync(int actor, CancellationToken ct) => Denied<AlertJobResult>();
+        public Task<OperationResult<IReadOnlyList<AlertEvaluationItem>>> EvaluationsAsync(int actor, CancellationToken ct) => Denied<IReadOnlyList<AlertEvaluationItem>>();
         public int Actor { get; private set; } public AlertFilter? Filter { get; private set; }
         private static Task<OperationResult<T>> Denied<T>() => Task.FromResult(OperationResult.Failure<T>(new(ErrorCodes.Forbidden, "Denied in fixture")));
         public Task<OperationResult<AlertPage>> ListAsync(int actor, AlertFilter filter, CancellationToken ct) { Actor = actor; Filter = filter; return Task.FromResult(OperationResult.Success(new AlertPage([], filter.Page, filter.PageSize, 0, new(0, 0, 0, null, 0, 0, 0, null, DateTimeOffset.UtcNow)))); }

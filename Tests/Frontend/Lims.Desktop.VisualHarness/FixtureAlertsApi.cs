@@ -8,6 +8,8 @@ namespace Lims.Desktop.VisualHarness;
 // Visual fixtures only. No production API, SMTP transport or inventory writes.
 internal sealed class FixtureAlertsApi : IAlertsApiClient
 {
+        public Task<ApiCallResult<AlertJobResult>> EvaluateAsync(CancellationToken ct) => Task.FromResult(new ApiCallResult<AlertJobResult>(true, new(true, 12, 0, 0), null, 200));
+        public Task<ApiCallResult<IReadOnlyList<AlertEvaluationItem>>> EvaluationsAsync(CancellationToken ct) => Task.FromResult(new ApiCallResult<IReadOnlyList<AlertEvaluationItem>>(true, [], null, 200));
     private readonly List<AlertItem> _items = [];
     private readonly HashSet<Guid> _read = [];
     private readonly Dictionary<Guid, Guid> _notifications = [];

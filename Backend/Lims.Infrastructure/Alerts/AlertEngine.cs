@@ -9,7 +9,7 @@ namespace Lims.Infrastructure.Alerts;
 
 public sealed class AlertEngine(LimsDbContext db, AlertSourceReader sources, AlertAccess access, TimeProvider clock)
 {
-    public async Task<(int Evaluated, int Changed)> EvaluateAsync(CancellationToken ct) =>
+    public async Task<(int Evaluated, int Changed)> EvaluateAsync(CancellationToken ct, Guid? runId = null) =>
         await db.Database.CreateExecutionStrategy().ExecuteAsync(async () =>
         {
             db.ChangeTracker.Clear();
@@ -68,7 +68,7 @@ public sealed class AlertEngine(LimsDbContext db, AlertSourceReader sources, Ale
                 if (actor is null) continue;
                 var visible = index.Values.Where(a => a.ResolvedAt == null && actor.Sees(a.DepartmentId, (AlertModule)a.Modules)).ToArray();
                 foreach (var a in visible)
-                    if (known.Add((a.Id, a.Revision, u.Id))) db.Add(new UserNotification { AlertId = a.Id, Revision = a.Revision, UserId = u.Id, Title = a.Title + " — " + a.Material, Message = a.Description, Priority = a.Priority, CreatedAt = now });
+                    if (settings.InternalEnabled && known.Add((a.Id, a.Revision, u.Id))) db.Add(new UserNotification { AlertId = a.Id, Revision = a.Revision, UserId = u.Id, Title = a.Title + " — " + a.Material, Message = a.Description, Priority = a.Priority, CreatedAt = now });
                 foreach (var recipient in settings.Recipients.Where(r => r.UserId == u.Id))
                 {
                     var scoped = visible.Where(a => a.DepartmentId == recipient.DepartmentId).ToArray();
@@ -88,6 +88,12 @@ public sealed class AlertEngine(LimsDbContext db, AlertSourceReader sources, Ale
             var configuration = await db.Set<AlertConfiguration>().SingleOrDefaultAsync(ct).ConfigureAwait(false);
             if (configuration is null) { configuration = new() { Json = JsonSerializer.Serialize(settings), Version = Guid.Empty }; db.Add(configuration); }
             configuration.LastEvaluation = now;
+            if (runId is { } id)
+            {
+                var run = await db.Set<AlertEvaluation>().SingleAsync(r => r.Id == id, ct).ConfigureAwait(false);
+                run.Evaluated = sourceRows.Count; run.Changed = changed; run.Active = activeIds.Length;
+                run.State = "Evaluated";
+            }
             await db.SaveChangesAsync(ct).ConfigureAwait(false); await tx.CommitAsync(ct).ConfigureAwait(false);
             return (sourceRows.Count, changed);
         }).ConfigureAwait(false);

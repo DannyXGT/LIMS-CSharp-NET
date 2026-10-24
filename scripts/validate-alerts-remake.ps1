@@ -97,4 +97,4 @@ Send @{action='alerts'}
 & $driver -Action HoverCapture -Name 'Actualizar alertas' -CaptureName 'hover-actualizar' -EvidenceFolder alerts-remake | Out-Null
 (Element 'Actualizar alertas').SetFocus(); & $driver -Action Key -Keys '{TAB}' -EvidenceFolder alerts-remake; Capture 'foco-teclado'
 $checks.Add('pagination, search, module, quick filters, empty, pending, error, loading, read, attend, source material, bell, configuration, SMTP status, hover, keyboard focus, disabled')
-@{passed=$true;fixtureOnly=$true;scale=1.25;checks=$checks;limitations='WinUI real con fixtures aislados. API desplegada verificada por separado: rutas de Alertas 404. No demuestra JOB remoto, SMTP real ni roles autenticados del servidor.'} | ConvertTo-Json -Depth 8 | Set-Content (Join-Path $evidence 'validation.json') -Encoding UTF8
+@{passed=$true;fixtureOnly=$true;scale=1.25;checks=$checks;limitations='WinUI real con fixtures aislados. No demuestra JOB remoto, migraciones productivas, SMTP real ni roles autenticados del servidor; consultar el diagnóstico de despliegue por separado.'} | ConvertTo-Json -Depth 8 | Set-Content (Join-Path $evidence 'validation.json') -Encoding UTF8

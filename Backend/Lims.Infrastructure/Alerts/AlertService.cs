@@ -10,8 +10,24 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Lims.Infrastructure.Alerts;
 
-public sealed class AlertService(LimsDbContext db, AlertAccess access, AlertMailOptions mail, TimeProvider clock) : IAlertService
+public sealed class AlertService(LimsDbContext db, AlertAccess access, AlertMailOptions mail, TimeProvider clock, AlertJob job) : IAlertService
 {
+    public async Task<OperationResult<AlertJobResult>> EvaluateAsync(int actor, CancellationToken ct)
+    {
+        var user = await access.ActorAsync(actor, ct).ConfigureAwait(false);
+        if (user is null || !user.Administrator || !user.Has(PermissionCatalog.AlertsManage)) return Denied<AlertJobResult>();
+        var settings = await AlertData.SettingsAsync(db, ct).ConfigureAwait(false);
+        if (settings.Scopes.Count == 0) return Invalid<AlertJobResult>("Configure los ámbitos y departamentos reales antes de evaluar.");
+        // Manual evaluation never dispatches the SMTP outbox. The central worker owns automatic mail.
+        return OperationResult.Success(await job.RunAsync(ct, actor, sendEmail: false).ConfigureAwait(false));
+    }
+    public async Task<OperationResult<IReadOnlyList<AlertEvaluationItem>>> EvaluationsAsync(int actor, CancellationToken ct)
+    {
+        var user = await access.ActorAsync(actor, ct).ConfigureAwait(false);
+        if (user is null || !user.Administrator || !user.Has(PermissionCatalog.AlertsManage)) return Denied<IReadOnlyList<AlertEvaluationItem>>();
+        var rows = await db.Set<AlertEvaluation>().AsNoTracking().OrderByDescending(r => r.StartedAt).Take(30).ToArrayAsync(ct).ConfigureAwait(false);
+        return OperationResult.Success<IReadOnlyList<AlertEvaluationItem>>(rows.Select(r => new AlertEvaluationItem(r.Id, r.StartedAt, r.CompletedAt, r.State, r.ActorUserId, r.Evaluated, r.Changed, r.Active, r.Sent, r.Error)).ToArray());
+    }
     private static OperationResult<T> Denied<T>() => OperationResult.Failure<T>(new(ErrorCodes.Forbidden, "No tiene autorización para esta operación o registro."));
     private static OperationResult<T> Invalid<T>(string message) => OperationResult.Failure<T>(new(ErrorCodes.ValidationError, message));
     private static OperationResult<T> Conflict<T>() => OperationResult.Failure<T>(new(ErrorCodes.Conflict, "La configuración cambió. Recargue antes de guardar."));

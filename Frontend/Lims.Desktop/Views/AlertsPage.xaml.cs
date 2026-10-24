@@ -53,9 +53,32 @@ public sealed partial class AlertsPage : Page
         var summary = ViewModel.Data?.Summary; var synced = ViewModel.Synchronized;
         ActionMessage.IsOpen = ViewModel.Data is not null && ViewModel.Message.Length > 0;
         ActionMessage.Message = ViewModel.Message; ActionMessage.Visibility = ActionMessage.IsOpen ? Visibility.Visible : Visibility.Collapsed;
-        ServiceBadge.Text = ViewModel.ServiceLabel;
-        ServiceBadge.Tone = ViewModel.State switch { AlertScreenState.Unavailable => "Danger", AlertScreenState.EnginePending => "Warning", AlertScreenState.Loading => "Information", _ => "Success" };
-        var unsynced = ViewModel.IsBusy ? "Actualizando" : ViewModel.State == AlertScreenState.EnginePending ? "Pendiente" : "Sin sincronizar";
+        ActionMessage.Severity = ViewModel.IsMessageInformational ? InfoBarSeverity.Informational : InfoBarSeverity.Error;
+        var screen = ViewModel.State;
+        ServiceBadge.Text = screen switch
+        {
+            AlertScreenState.Loading => "Sincronizando",
+            AlertScreenState.Unavailable => ViewModel.FailureStatus >= 500 ? "Error" : "No disponible",
+            AlertScreenState.EnginePending => "Pendiente de evaluación",
+            _ => "Activo"
+        };
+        var stateBrush = HeaderStateBrush(screen switch
+        {
+            AlertScreenState.Loading => "LimsInformationBrush",
+            AlertScreenState.Unavailable => "LimsDangerBrush",
+            AlertScreenState.EnginePending => "LimsWarningBrush",
+            _ => "LimsSuccessBrush"
+        });
+        ServiceBadge.Foreground = EngineStateIcon.Foreground = stateBrush;
+        EngineStateIcon.Icon = screen switch { AlertScreenState.Unavailable => LimsIconKind.Error, AlertScreenState.Loading => LimsIconKind.Refresh,
+            AlertScreenState.EnginePending => LimsIconKind.Scheduling, _ => LimsIconKind.Check };
+        HeaderEvaluation.Text = summary?.LastEvaluation is { } evaluated
+            ? "Última · " + evaluated.ToOffset(TimeSpan.FromHours(-6)).ToString("dd/MM/yyyy HH:mm", System.Globalization.CultureInfo.InvariantCulture)
+            : screen == AlertScreenState.Loading ? "Consultando última evaluación" : summary is not null ? "Sin evaluación registrada" : "Última evaluación no disponible";
+        ToolTipService.SetToolTip(HeaderEvaluation, ViewModel.UpdateDisplay);
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(HeaderEvaluation, summary?.LastEvaluation is not null ? ViewModel.UpdateDisplay : HeaderEvaluation.Text);
+        ToolTipService.SetToolTip(ServiceBadge, screen == AlertScreenState.Unavailable ? ViewModel.Message : ViewModel.UpdateDisplay);
+        var unsynced = "—";
         var values = new[] { summary?.Critical, summary?.Upcoming, summary?.Expired, summary?.Pending };
         var textBlocks = new[] { CriticalCount, UpcomingCount, ExpiredCount, PendingCount };
         for (var i = 0; i < textBlocks.Length; i++) { textBlocks[i].Text = synced ? values[i]?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "No disponible" : unsynced; textBlocks[i].FontSize = synced ? ActualHeight < 650 ? 29 : 34 : 17; }
@@ -69,6 +92,9 @@ public sealed partial class AlertsPage : Page
         UnreadText.Text = synced ? $"{summary!.Unread} avisos sin leer · lectura independiente" : "Lecturas aún sin sincronizar";
         foreach (var card in new[] { CriticalCard, UpcomingCard, ExpiredCard, PendingCard }) card.IsEnabled = synced;
         RefreshButton.IsEnabled = !ViewModel.IsBusy;
+        EvaluateButton.Visibility = EngineHistoryButton.Visibility = ViewModel.CanEvaluate ? Visibility.Visible : Visibility.Collapsed;
+        EngineActionsButton.Visibility = ViewModel.CanEvaluate ? Visibility.Visible : Visibility.Collapsed;
+        EvaluateButton.IsEnabled = !ViewModel.IsActionBusy && !ViewModel.IsBusy && ViewModel.Data is not null;
         SettingsButton.Visibility = ViewModel.CanConfigure ? Visibility.Visible : Visibility.Collapsed;
         HistoryButton.Visibility = ViewModel.CanViewHistory ? Visibility.Visible : Visibility.Collapsed;
         ListCountBadge.Text = summary is null ? "Sin sincronizar" : summary.LastEvaluation is null ? "Sin evaluación" : $"{ViewModel.Data!.Total} resultados";
@@ -81,6 +107,13 @@ public sealed partial class AlertsPage : Page
         PreviousButton.IsEnabled = !ViewModel.IsBusy && synced && ViewModel.Filter.Page > 1;
         NextButton.IsEnabled = !ViewModel.IsBusy && synced && ViewModel.Data is { } p && p.Page * p.PageSize < p.Total;
         RenderState(); RenderDetail();
+    }
+    private Brush HeaderStateBrush(string key)
+    {
+        foreach (var dictionary in Application.Current.Resources.MergedDictionaries)
+            if (dictionary.ThemeDictionaries.TryGetValue(ActualTheme.ToString(), out var theme) && theme is ResourceDictionary palette &&
+                palette.TryGetValue(key, out var value) && value is Brush brush) return brush;
+        return (Brush)Application.Current.Resources[key];
     }
     private void RenderState()
     {
@@ -184,6 +217,9 @@ public sealed partial class AlertsPage : Page
     private async void OnAlertSelected(object sender, SelectionChangedEventArgs e) { if (AlertsList.SelectedItem is AlertRow row) await OpenAsync(row.Item.Id); }
     private async void OnPrevious(object sender, RoutedEventArgs e) { if (PreviousButton.IsEnabled) await ApplyAsync(ViewModel.Filter.Page - 1); }
     private async void OnNext(object sender, RoutedEventArgs e) { if (NextButton.IsEnabled) await ApplyAsync(ViewModel.Filter.Page + 1); }
+    private async void OnEvaluate(object sender, RoutedEventArgs e) { EngineActionsButton.Flyout.Hide(); await ViewModel.EvaluateAsync(); }
+    public event EventHandler? EngineHistory;
+    private void OnEngineHistory(object sender, RoutedEventArgs e) { EngineActionsButton.Flyout.Hide(); EngineHistory?.Invoke(this, EventArgs.Empty); }
     private void OnSettings(object sender, RoutedEventArgs e) => Configure?.Invoke(this, EventArgs.Empty);
     private void OnHistory(object sender, RoutedEventArgs e) => DeliveryHistory?.Invoke(this, EventArgs.Empty);
     private void OnBackToMonitor(object sender, RoutedEventArgs e) => HideCompactDetail();
@@ -231,8 +267,16 @@ public sealed partial class AlertsPage : Page
         FilterGrid.RowSpacing = wrapFilters ? 8 : 0;
         FilterGrid.Padding = shortHeight ? new(12, 7, 12, 7) : new(16, 10, 16, 10);
         Grid.SetColumn(PrimaryFilters, wrapFilters ? 0 : 1); Grid.SetRow(PrimaryFilters, wrapFilters ? 1 : 0);
-        HeaderDescription.Visibility = e.NewSize.Width < 850 ? Visibility.Collapsed : Visibility.Visible;
-        LimsAction.SetLabelVisibility(RefreshButton, e.NewSize.Width < 850 ? Visibility.Collapsed : Visibility.Visible);
+        var wrapHeader = e.NewSize.Width < 800;
+        Grid.SetColumn(HeaderOperations, wrapHeader ? 0 : 1);
+        Grid.SetRow(HeaderOperations, wrapHeader ? 1 : 0);
+        Grid.SetColumnSpan(HeaderOperations, wrapHeader ? 2 : 1);
+        Grid.SetColumnSpan(HeaderIdentity, wrapHeader ? 2 : 1);
+        HeaderOperations.HorizontalAlignment = wrapHeader ? HorizontalAlignment.Left : HorizontalAlignment.Right;
+        HeaderOperations.Margin = wrapHeader ? new(0, 12, 0, 0) : new(0);
+        HeaderGrid.Padding = e.NewSize.Width < 650 ? new(16, 14, 16, 14) : new(20, 16, 20, 16);
+        HeaderTitle.FontSize = e.NewSize.Width < 1000 ? 20 : 22;
+        LimsAction.SetLabelVisibility(RefreshButton, e.NewSize.Width < 1120 ? Visibility.Collapsed : Visibility.Visible);
         Render();
     }
 }

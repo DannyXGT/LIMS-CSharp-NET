@@ -8,6 +8,8 @@ namespace Lims.Desktop.Http;
 
 internal sealed class AlertsApiClient(IHttpClientFactory clients) : IAlertsApiClient
 {
+    public Task<ApiCallResult<AlertJobResult>> EvaluateAsync(CancellationToken ct) => Send<AlertJobResult>(HttpMethod.Post, "/evaluate", null, ct);
+    public Task<ApiCallResult<IReadOnlyList<AlertEvaluationItem>>> EvaluationsAsync(CancellationToken ct) => Send<IReadOnlyList<AlertEvaluationItem>>(HttpMethod.Get, "/evaluations", null, ct);
     public Task<ApiCallResult<AlertPage>> ListAsync(AlertFilter f, CancellationToken ct)
     {
         var args = new Dictionary<string, string?> { ["Search"] = f.Search, ["Category"] = f.Category, ["Priority"] = f.Priority?.ToString(), ["Module"] = f.Module?.ToString(), ["State"] = f.State, ["From"] = f.From?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture), ["Until"] = f.Until?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture), ["Sort"] = f.Sort, ["Page"] = f.Page.ToString(CultureInfo.InvariantCulture), ["PageSize"] = f.PageSize.ToString(CultureInfo.InvariantCulture) };

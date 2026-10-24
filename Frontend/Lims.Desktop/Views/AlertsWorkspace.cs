@@ -42,6 +42,7 @@ public sealed class AlertsWorkspace
         _api = api; _session = session; _windows = windows; _references = references; _stock = stock; _intermediate = intermediate; _commercial = commercial; _groups = groups;
         Page = new(new AlertsViewModel(api, session));
         Page.Configure += async (_, _) => await ConfigureAsync(); Page.DeliveryHistory += async (_, _) => await HistoryAsync();
+        Page.EngineHistory += async (_, _) => await EngineHistoryAsync();
         Page.OpenMaterial += async (_, alert) => await OpenMaterialAsync(alert);
         Page.ViewModel.NotificationsChanged += async (_, _) => await PollAsync();
         var content = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6 }; content.Children.Add(new Lims.DesignSystem.Controls.LimsIcon { Icon = Lims.DesignSystem.Controls.LimsIconKind.Notifications, Size = 18 }); content.Children.Add(_badge);
@@ -146,7 +147,6 @@ public sealed class AlertsWorkspace
             line.Children.Add(AlertUi.Text($"{AlertRow.PriorityLabel(n.Priority)} · {n.CreatedAt.ToOffset(TimeSpan.FromHours(-6)):dd/MM HH:mm} · {(n.ReadAt is null ? "No leída" : "Leída")}", 10));
             var actions = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 2 }; Grid.SetColumn(actions, 2); row.Children.Add(actions);
             actions.Children.Add(IconButton("Abrir alerta de " + n.Title, async () => { if (n.ReadAt is null && !await ReadNotificationAsync(n.Id, false)) return; _flyout.Hide(); NavigateRequested?.Invoke(this, n.AlertId); }, LimsIconKind.ViewDetail));
-            if (n.ReadAt is null) actions.Children.Add(IconButton("Marcar como leída: " + n.Title, async () => { await ReadNotificationAsync(n.Id); }, LimsIconKind.Check));
             rows.Children.Add(row); rows.Children.Add(AlertUi.Rule());
         }
         if (data.Unread > 0) _flyoutContent.Children.Add(AlertUi.Button("Marcar todas como leídas", async () => { await ReadNotificationAsync(null); }, icon: LimsIconKind.Check));
@@ -186,6 +186,27 @@ public sealed class AlertsWorkspace
                 if (!r.IsSuccess) Page.ViewModel.Message = r.Error?.Message ?? "No se guardaron las preferencias.";
                 await PollAsync();
             }
+        }
+        finally { _dialog = false; }
+    }
+    private async Task EngineHistoryAsync()
+    {
+        if (_dialog || !Page.ViewModel.CanEvaluate) return; _dialog = true;
+        try
+        {
+            var response = await _api.EvaluationsAsync(CancellationToken.None);
+            var rows = new StackPanel { Spacing = 12 };
+            if (!response.IsSuccess) rows.Children.Add(AlertUi.Text(response.Error?.Message ?? "No se pudo consultar el historial del motor."));
+            else if (response.Value is not { Count: > 0 }) rows.Children.Add(AlertUi.Text("No hay ejecuciones registradas."));
+            else foreach (var run in response.Value)
+            {
+                var state = run.State switch { "Succeeded" => "Completada", "Running" => "En ejecución", "Evaluated" => "Evaluada; procesando canales", "Interrupted" => "Interrumpida", "DeliveryFailed" => "Evaluada; fallo en canales", _ => "Fallida" };
+                rows.Children.Add(AlertUi.Text($"{run.StartedAt.ToOffset(TimeSpan.FromHours(-6)):dd/MM/yyyy HH:mm} · {state}", 13, true));
+                rows.Children.Add(AlertUi.Text($"{(run.ActorUserId is null ? "Programada" : "Manual")} · {run.Evaluated} materiales · {run.Active} alertas activas · {run.Changed} cambios · {run.Sent} correos confirmados", 12));
+                if (run.Error is { } error) rows.Children.Add(AlertUi.Text(error, 12));
+                rows.Children.Add(AlertUi.Rule());
+            }
+            await new ContentDialog { Title = "Historial del motor", Content = new ScrollViewer { Content = rows, MaxHeight = Math.Max(160, Math.Min(520, (Bell.XamlRoot?.Size.Height ?? 650) - 220)) }, CloseButtonText = "Cerrar", XamlRoot = Bell.XamlRoot, RequestedTheme = Bell.ActualTheme }.ShowAsync();
         }
         finally { _dialog = false; }
     }

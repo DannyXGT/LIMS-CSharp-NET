@@ -15,6 +15,10 @@ internal static class AlertEndpoints
             context.HttpContext.Response.Headers.CacheControl = "no-store";
             return await next(context).ConfigureAwait(false);
         });
+        group.MapPost("/evaluate", async (IAlertService s, HttpContext c, CancellationToken ct) =>
+            ReferenceMaterialEndpoints.ToResult(c, await s.EvaluateAsync(Actor(c), ct).ConfigureAwait(false))).RequireAuthorization(PermissionCatalog.AlertsManage);
+        group.MapGet("/evaluations", async (IAlertService s, HttpContext c, CancellationToken ct) =>
+            ReferenceMaterialEndpoints.ToResult(c, await s.EvaluationsAsync(Actor(c), ct).ConfigureAwait(false))).RequireAuthorization(PermissionCatalog.AlertsManage);
         group.MapGet("", async ([AsParameters] AlertFilter filter, IAlertService service, HttpContext c, CancellationToken ct) =>
             ReferenceMaterialEndpoints.ToResult(c, await service.ListAsync(Actor(c), filter, ct).ConfigureAwait(false)));
         group.MapGet("/{id:guid}", async (Guid id, IAlertService s, HttpContext c, CancellationToken ct) =>

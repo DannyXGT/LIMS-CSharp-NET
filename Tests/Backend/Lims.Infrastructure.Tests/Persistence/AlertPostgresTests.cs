@@ -18,6 +18,65 @@ namespace Lims.Infrastructure.Tests.Persistence;
 
 public sealed class AlertPostgresTests
 {
+    [StockPostgresFact]
+    public async Task EvaluationHistoryDeploymentRejectsMissingPrerequisiteAndAppliesTwiceInIsolatedSchema()
+    {
+        await using var f = await Fixture.CreateAsync(); await using var db = f.Db();
+        await db.Database.ExecuteSqlRawAsync("DROP TABLE alert_evaluations; CREATE TABLE \"__EFMigrationsHistory\" (\"MigrationId\" varchar(150) PRIMARY KEY, \"ProductVersion\" varchar(32) NOT NULL);");
+        var root = new DirectoryInfo(AppContext.BaseDirectory);
+        while (root is not null && !Directory.Exists(Path.Combine(root.FullName, ".git"))) root = root.Parent;
+        Assert.NotNull(root);
+        var script = await File.ReadAllTextAsync(Path.Combine(root.FullName, "artifacts", "sql", "alert_evaluation_history.sql"));
+        var error = await Assert.ThrowsAsync<PostgresException>(() => db.Database.ExecuteSqlRawAsync(script));
+        Assert.Equal("P0001", error.SqlState);
+        await db.Database.ExecuteSqlRawAsync("INSERT INTO \"__EFMigrationsHistory\" VALUES ('20261022031315_AddAlertsAndNotifications', '10.0.10');");
+        await db.Database.ExecuteSqlRawAsync(script); await db.Database.ExecuteSqlRawAsync(script);
+        Assert.Empty(await db.Set<AlertEvaluation>().ToArrayAsync());
+        var rows = await f.Service(db).EvaluationsAsync(42, default); Assert.True(rows.IsSuccess);
+    }
+    [StockPostgresFact]
+    public async Task ManualEvaluationIsAdministrativeAuditedIdempotentAndNeverSendsMailOrChangesInventory()
+    {
+        await using var f = await Fixture.CreateAsync(8); await using var db = f.Db(); var service = f.Service(db);
+        Assert.False((await service.EvaluateAsync(84, default)).IsSuccess);
+        Assert.False((await service.EvaluationsAsync(84, default)).IsSuccess);
+        var before = await db.ReferenceMaterials.AsNoTracking().Select(m => new { m.Id, m.TotalQuantity, m.AvailableQuantity, m.Version }).SingleAsync();
+        var first = (await service.EvaluateAsync(42, default)).Value!;
+        var second = (await service.EvaluateAsync(42, default)).Value!;
+        Assert.True(first.Acquired); Assert.Equal(1, first.Evaluated); Assert.Equal(1, first.Changed);
+        Assert.Equal(0, second.Changed); Assert.Equal(0, first.Sent);
+        Assert.Single(await db.Set<MaterialAlert>().ToArrayAsync()); Assert.Equal(2, await db.Set<UserNotification>().CountAsync());
+        Assert.All(await db.Set<EmailDelivery>().ToArrayAsync(), r => Assert.Equal("Pending", r.State));
+        var history = (await service.EvaluationsAsync(42, default)).Value!;
+        Assert.Equal(2, history.Count); Assert.All(history, r => { Assert.Equal("Succeeded", r.State); Assert.Equal(42, r.ActorUserId); Assert.NotNull(r.CompletedAt); Assert.Equal(1, r.Active); });
+        Assert.NotNull((await service.ListAsync(42, new(), default)).Value!.Summary.LastEvaluation);
+        Assert.Equal(before, await db.ReferenceMaterials.AsNoTracking().Select(m => new { m.Id, m.TotalQuantity, m.AvailableQuantity, m.Version }).SingleAsync());
+    }
+    [StockPostgresFact]
+    public async Task HealthyZeroAndFailureRecoveryAreRecordedAndGlobalLockAlsoProtectsManualRuns()
+    {
+        await using var f = await Fixture.CreateAsync(80); await using var db = f.Db(); var service = f.Service(db);
+        await using (var held = new NpgsqlConnection(db.Database.GetConnectionString()))
+        {
+            await held.OpenAsync(); await using var cmd = new NpgsqlCommand("SELECT pg_advisory_lock(@key)", held);
+            cmd.Parameters.AddWithValue("key", AlertData.JobLock); await cmd.ExecuteNonQueryAsync();
+            Assert.False((await service.EvaluateAsync(42, default)).Value!.Acquired);
+            Assert.Empty(await db.Set<AlertEvaluation>().ToArrayAsync());
+        }
+        db.Add(new AlertEvaluation { StartedAt = f.Clock.Now.AddMinutes(-10) }); await db.SaveChangesAsync();
+        Assert.True((await service.EvaluateAsync(42, default)).Value!.Acquired);
+        var history = (await service.EvaluationsAsync(42, default)).Value!;
+        Assert.Contains(history, r => r.State == "Interrupted" && r.CompletedAt != null);
+        Assert.Contains(history, r => r.State == "Succeeded" && r.Active == 0 && r.Evaluated == 1);
+        var page = (await service.ListAsync(42, new(), default)).Value!;
+        Assert.Equal(0, page.Summary.Active); Assert.NotNull(page.Summary.LastEvaluation);
+        var settings = (await service.AdministrationAsync(42, default)).Value!.Settings;
+        await service.ConfigureAsync(42, settings with { Scopes = [], Recipients = [] }, default);
+        Assert.False((await service.EvaluateAsync(42, default)).IsSuccess);
+        var job = new AlertJob(db, f.Engine(db), new AlertDeliveryProcessor(db, f.Access(db), f.Mail, new TestTransport(), f.Clock), f.Clock);
+        await Assert.ThrowsAsync<InvalidOperationException>(() => job.RunAsync(default));
+        Assert.Contains((await service.EvaluationsAsync(42, default)).Value!, r => r.State == "Failed" && r.Error!.Contains("ámbitos"));
+    }
     [Fact]
     public void MigrationOnlyAddsAlertTablesAndPermissions()
     {
@@ -187,7 +246,7 @@ public sealed class AlertPostgresTests
     public async Task SchedulerLockSurvivesIisIndependentlyAndAmbiguousTransportIsNotAutomaticallyResent()
     {
         await using var f = await Fixture.CreateAsync(8); await using var db = f.Db(); var transport = new TestTransport { Ambiguous = true };
-        var job = new AlertJob(db, f.Engine(db), new AlertDeliveryProcessor(db, f.Access(db), f.Mail, transport, f.Clock));
+        var job = new AlertJob(db, f.Engine(db), new AlertDeliveryProcessor(db, f.Access(db), f.Mail, transport, f.Clock), f.Clock);
         await using (var held = new NpgsqlConnection(db.Database.GetConnectionString()))
         {
             await held.OpenAsync(); await using var cmd = new NpgsqlCommand("SELECT pg_advisory_lock(@key)", held); cmd.Parameters.AddWithValue("key", AlertData.JobLock); await cmd.ExecuteNonQueryAsync();
@@ -220,7 +279,7 @@ public sealed class AlertPostgresTests
         public AlertMailOptions Mail { get; } = new() { Enabled = true, Host = "smtp.example.invalid", Sender = "lims@example.invalid", Username = "test-only", Password = "test-only" };
         public LimsDbContext Db() => stock.Context();
         public AlertAccess Access(LimsDbContext db) => new(db, new PermissionRepository(db, new PermissionOptions(), Clock));
-        public AlertService Service(LimsDbContext db) => new(db, Access(db), Mail, Clock);
+        public AlertService Service(LimsDbContext db) => new(db, Access(db), Mail, Clock, new AlertJob(db, Engine(db), new AlertDeliveryProcessor(db, Access(db), Mail, new TestTransport(), Clock), Clock));
         public AlertEngine Engine(LimsDbContext db) => new(db, new AlertSourceReader(db), Access(db), Clock);
         public static async Task<Fixture> CreateAsync(decimal balance = 20)
         {

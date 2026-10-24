@@ -43,4 +43,6 @@ public sealed record DeliveryItem(Guid Id, int UserId, string Recipient, string 
 public sealed record DeliveryPage(IReadOnlyList<DeliveryItem> Items, int Page, int Total, string? MailState = null);
 public sealed record AlertAction(Guid Version, string? Note);
 public sealed record MailTestRequest(Guid RequestId);
-public sealed record AlertJobResult(bool Acquired, int Evaluated, int Changed, int Sent);
+public sealed record AlertJobResult(bool Acquired, int Evaluated, int Changed, int Sent, Guid? RunId = null);
+public sealed record AlertEvaluationItem(Guid Id, DateTimeOffset StartedAt, DateTimeOffset? CompletedAt,
+    string State, int? ActorUserId, int Evaluated, int Changed, int Active, int Sent, string? Error);

@@ -5,6 +5,8 @@ namespace Lims.Application.Alerts;
 
 public interface IAlertService
 {
+    Task<OperationResult<AlertJobResult>> EvaluateAsync(int actor, CancellationToken ct);
+    Task<OperationResult<IReadOnlyList<AlertEvaluationItem>>> EvaluationsAsync(int actor, CancellationToken ct);
     Task<OperationResult<AlertPage>> ListAsync(int actor, AlertFilter filter, CancellationToken ct);
     Task<OperationResult<AlertDetail>> DetailAsync(int actor, Guid id, CancellationToken ct);
     Task<OperationResult<AlertDetail>> AcknowledgeAsync(int actor, Guid id, string? note, CancellationToken ct);

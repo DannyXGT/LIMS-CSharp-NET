@@ -4,6 +4,8 @@ namespace Lims.Desktop.Http;
 
 public interface IAlertsApiClient
 {
+    Task<ApiCallResult<AlertJobResult>> EvaluateAsync(CancellationToken ct);
+    Task<ApiCallResult<IReadOnlyList<AlertEvaluationItem>>> EvaluationsAsync(CancellationToken ct);
     Task<ApiCallResult<AlertPage>> ListAsync(AlertFilter filter, CancellationToken ct);
     Task<ApiCallResult<AlertDetail>> DetailAsync(Guid id, CancellationToken ct);
     Task<ApiCallResult<AlertDetail>> AcknowledgeAsync(Guid id, CancellationToken ct);

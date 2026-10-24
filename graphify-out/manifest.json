@@ -72,9 +72,9 @@
     "semantic_hash": ""
   },
   "Backend/Lims.Api/Program.cs": {
-    "mtime": 1791969756.0868967,
-    "seen": 1791970553.7230663,
-    "ast_hash": "5a2c0f56c683a10799c93d7b836dbed5",
+    "mtime": 1792638101.2588336,
+    "seen": 1792861828.0082996,
+    "ast_hash": "ecb84b3b2b3743750725e6dd28b0662e",
     "semantic_hash": ""
   },
   "Backend/Lims.Api/Properties/launchSettings.json": {
@@ -84,9 +84,9 @@
     "semantic_hash": ""
   },
   "Backend/Lims.Api/ReferenceMaterials/IntermediateEndpoints.cs": {
-    "mtime": 1791871262.7123995,
-    "seen": 1791939451.9499557,
-    "ast_hash": "d9ab840cdd5bcfa52c088c346e88224d",
+    "mtime": 1792253216.6058314,
+    "seen": 1792861828.0082996,
+    "ast_hash": "e32ba0c14ff77b41bb8be298b4d7dd41",
     "semantic_hash": ""
   },
   "Backend/Lims.Api/ReferenceMaterials/ReferenceMaterialEndpoints.cs": {
@@ -96,9 +96,9 @@
     "semantic_hash": ""
   },
   "Backend/Lims.Api/ReferenceMaterials/StockEndpoints.cs": {
-    "mtime": 1791871262.7073994,
-    "seen": 1791939451.9499557,
-    "ast_hash": "ccce5006e5eabb36e3d3cc8e76208434",
+    "mtime": 1792253216.206725,
+    "seen": 1792861828.0082996,
+    "ast_hash": "d130b9bac1dfb67b63daca32b73f4775",
     "semantic_hash": ""
   },
   "Backend/Lims.Api/appsettings.Development.json": {
@@ -210,51 +210,51 @@
     "semantic_hash": ""
   },
   "Backend/Lims.Application/ReferenceMaterials/Ports/IReferenceMaterialRepository.cs": {
-    "mtime": 1791037466.3696086,
-    "seen": 1791939451.9499557,
-    "ast_hash": "cf65b211b08cb5b7888d813c2a79af3d",
+    "mtime": 1792218749.3045073,
+    "seen": 1792861828.012035,
+    "ast_hash": "0a54db651d6755fcf2e9a29f49cd7757",
     "semantic_hash": ""
   },
   "Backend/Lims.Application/ReferenceMaterials/ReferenceMaterialService.cs": {
-    "mtime": 1791038251.3253498,
-    "seen": 1791939451.9499557,
-    "ast_hash": "b1114998b271aa4645d4ab5424ad45ae",
+    "mtime": 1792219630.8630948,
+    "seen": 1792861828.012035,
+    "ast_hash": "9cba9bc9802b3f8b4b99d0fe6f168e7b",
     "semantic_hash": ""
   },
   "Backend/Lims.Application/ReferencePreparations/IIntermediateService.cs": {
-    "mtime": 1791414061.0100594,
-    "seen": 1791939451.9499557,
-    "ast_hash": "403e8fbb8b704550adccf106dcfdfcca",
+    "mtime": 1792137968.1869075,
+    "seen": 1792861828.012035,
+    "ast_hash": "1eb9daad903565673850b7fc123f41dd",
     "semantic_hash": ""
   },
   "Backend/Lims.Application/ReferencePreparations/IStockRepository.cs": {
-    "mtime": 1791353107.7489922,
-    "seen": 1791939451.9499557,
-    "ast_hash": "2c2ec8438b469cabbc72694dd6babe35",
+    "mtime": 1792207056.4056892,
+    "seen": 1792861828.012035,
+    "ast_hash": "7173498a3a8128091475b95d36c6dceb",
     "semantic_hash": ""
   },
   "Backend/Lims.Application/ReferencePreparations/IStockService.cs": {
-    "mtime": 1791352425.4050786,
-    "seen": 1791939451.9499557,
-    "ast_hash": "715ed8d113f7ce6e7cab3ce9342ee655",
+    "mtime": 1792207056.4061964,
+    "seen": 1792861828.012035,
+    "ast_hash": "72ed74dc0126f3338517de034bfa5079",
     "semantic_hash": ""
   },
   "Backend/Lims.Application/ReferencePreparations/IntermediateService.cs": {
-    "mtime": 1791414062.5576024,
-    "seen": 1791939451.9499557,
-    "ast_hash": "dcb273250e7a661a415e08d0ff5901e7",
+    "mtime": 1792137975.634837,
+    "seen": 1792861828.012035,
+    "ast_hash": "77a7c0c2c1f31e087dce845366d836f5",
     "semantic_hash": ""
   },
   "Backend/Lims.Application/ReferencePreparations/StockCalculator.cs": {
-    "mtime": 1791352562.1227193,
-    "seen": 1791939451.9499557,
-    "ast_hash": "dcfc334c22dda256cfc00c0f4fabf442",
+    "mtime": 1792218945.2375712,
+    "seen": 1792861828.012035,
+    "ast_hash": "5eb537e9931d405acf2e58ea6513ff98",
     "semantic_hash": ""
   },
   "Backend/Lims.Application/ReferencePreparations/StockService.cs": {
-    "mtime": 1791970408.206134,
-    "seen": 1791970553.739441,
-    "ast_hash": "0441f66ef679c59be2c4f72f2b5a3334",
+    "mtime": 1792861678.318364,
+    "seen": 1792861828.012035,
+    "ast_hash": "0e633b89e5fd1a2948854211ed9fe31a",
     "semantic_hash": ""
   },
   "Backend/Lims.Domain/Authentication/AuthSession.cs": {
@@ -318,9 +318,9 @@
     "semantic_hash": ""
   },
   "Backend/Lims.Domain/ReferenceMaterials/ReferenceMaterial.cs": {
-    "mtime": 1791970408.2672465,
-    "seen": 1791970553.7434194,
-    "ast_hash": "66bfba4d7711678096e6d8b323408c53",
+    "mtime": 1792451893.7180388,
+    "seen": 1792861828.013542,
+    "ast_hash": "f7ca55e57e88210654ea6905ea78273a",
     "semantic_hash": ""
   },
   "Backend/Lims.Domain/ReferenceMaterials/ReferenceMaterialStatus.cs": {
@@ -342,21 +342,21 @@
     "semantic_hash": ""
   },
   "Backend/Lims.Domain/ReferencePreparations/ReferenceMaterialMovement.cs": {
-    "mtime": 1791413998.3700707,
-    "seen": 1791939451.9499557,
-    "ast_hash": "e057e7e382ccac04ffba826ba8197286",
+    "mtime": 1792218945.2547808,
+    "seen": 1792861828.0140648,
+    "ast_hash": "5c286e7aef8db54dacf494e98e2bdf16",
     "semantic_hash": ""
   },
   "Backend/Lims.Domain/ReferencePreparations/ReferencePreparation.cs": {
-    "mtime": 1791416239.026971,
-    "seen": 1791939451.9499557,
-    "ast_hash": "818f0669e0457f527118c4d3b6a82cd9",
+    "mtime": 1792218707.9234405,
+    "seen": 1792861828.0140648,
+    "ast_hash": "fca51009409e11bb61c8100ab3f7293e",
     "semantic_hash": ""
   },
   "Backend/Lims.Domain/ReferencePreparations/ReferencePreparationComponent.cs": {
-    "mtime": 1791413997.893756,
-    "seen": 1791939451.9499557,
-    "ast_hash": "01ff5f40e87c927f9cd9830d61a5b6c0",
+    "mtime": 1792218945.25578,
+    "seen": 1792861828.0140648,
+    "ast_hash": "d967c19fdbc0c12f9adbdd531c20cf3b",
     "semantic_hash": ""
   },
   "Backend/Lims.Infrastructure/Lims.Infrastructure.csproj": {
@@ -372,15 +372,15 @@
     "semantic_hash": ""
   },
   "Backend/Lims.Infrastructure/Persistence/IntermediateRepository.cs": {
-    "mtime": 1791415630.2512207,
-    "seen": 1791939451.9499557,
-    "ast_hash": "ad8881a9818d8806d681b99b1bcb4df3",
+    "mtime": 1792253174.2990136,
+    "seen": 1792861828.0140648,
+    "ast_hash": "3ba130782f079c19331a076c5cedf354",
     "semantic_hash": ""
   },
   "Backend/Lims.Infrastructure/Persistence/LimsDbContext.cs": {
-    "mtime": 1791871219.6956527,
-    "seen": 1791939451.9499557,
-    "ast_hash": "ba01cd33a392a31044c83f16f5df7286",
+    "mtime": 1792637752.2493403,
+    "seen": 1792861828.0140648,
+    "ast_hash": "7a1af4978c89e2b335ae0b0713389890",
     "semantic_hash": ""
   },
   "Backend/Lims.Infrastructure/Persistence/LimsDbContextFactory.cs": {
@@ -474,9 +474,9 @@
     "semantic_hash": ""
   },
   "Backend/Lims.Infrastructure/Persistence/Migrations/LimsDbContextModelSnapshot.cs": {
-    "mtime": 1791874216.9998014,
-    "seen": 1791939451.9499557,
-    "ast_hash": "759525a52abfd193b8b7bbf688b6cf8d",
+    "mtime": 1792708899.815307,
+    "seen": 1792861828.0181148,
+    "ast_hash": "4e051267218c38f58e914e10604396fb",
     "semantic_hash": ""
   },
   "Backend/Lims.Infrastructure/Persistence/PermissionModel.cs": {
@@ -492,21 +492,21 @@
     "semantic_hash": ""
   },
   "Backend/Lims.Infrastructure/Persistence/ReferenceMaterialRepository.cs": {
-    "mtime": 1791037469.203163,
-    "seen": 1791939451.9499557,
-    "ast_hash": "cca939e094297ed9e022d7259649bdda",
+    "mtime": 1792219544.0215707,
+    "seen": 1792861828.0191114,
+    "ast_hash": "660f9fa71552ef473a1cb9b3f4833939",
     "semantic_hash": ""
   },
   "Backend/Lims.Infrastructure/Persistence/StockModel.cs": {
-    "mtime": 1791874205.608181,
-    "seen": 1791939451.9499557,
-    "ast_hash": "49c430372bc7471bc02479cbe5a2c9a1",
+    "mtime": 1792218793.7743237,
+    "seen": 1792861828.0191114,
+    "ast_hash": "a67a97b0bc0c0c96798999edf31fccc7",
     "semantic_hash": ""
   },
   "Backend/Lims.Infrastructure/Persistence/StockRepository.cs": {
-    "mtime": 1791970408.2426832,
-    "seen": 1791970553.7634313,
-    "ast_hash": "f09408e970fbf0d80b91fdbca5f43d3a",
+    "mtime": 1792253174.2970116,
+    "seen": 1792861828.0191114,
+    "ast_hash": "7fd9e1cc3de887ec523c6b296292cb08",
     "semantic_hash": ""
   },
   "Backend/Lims.Infrastructure/Persistence/UserRepository.cs": {
@@ -552,27 +552,27 @@
     "semantic_hash": ""
   },
   "Frontend/Lims.DesignSystem/Controls/LimsIcon.cs": {
-    "mtime": 1791259807.868988,
-    "seen": 1791939451.9499557,
+    "mtime": 1792119916.0173056,
+    "seen": 1792861828.0206172,
     "ast_hash": "1bbdf4eed35c8872d1e8f45cb184edf3",
     "semantic_hash": ""
   },
   "Frontend/Lims.DesignSystem/Controls/LimsIconCatalog.cs": {
-    "mtime": 1791259542.5891864,
-    "seen": 1791939451.9499557,
-    "ast_hash": "cfdbb4792a634944c43a0afc811cd367",
+    "mtime": 1792643400.2028995,
+    "seen": 1792861828.0206172,
+    "ast_hash": "653a385c4ed70e322cfddd533bf48c95",
     "semantic_hash": ""
   },
   "Frontend/Lims.DesignSystem/Controls/LimsIconKind.cs": {
-    "mtime": 1791258914.1849072,
-    "seen": 1791939451.9499557,
-    "ast_hash": "92211b3e687d2b411a8ec23d9a5af795",
+    "mtime": 1792643399.0629153,
+    "seen": 1792861828.0206172,
+    "ast_hash": "dd9747fcb1f94d220b99a28dd4a1efab",
     "semantic_hash": ""
   },
   "Frontend/Lims.DesignSystem/Controls/LimsPopupField.cs": {
-    "mtime": 1791265270.2947936,
-    "seen": 1791939451.9499557,
-    "ast_hash": "d04296e70cb22f69262183910035e1a3",
+    "mtime": 1792026656.1620297,
+    "seen": 1792861828.0206172,
+    "ast_hash": "f5fb5040c70794b58cc19ce5a3cd1d34",
     "semantic_hash": ""
   },
   "Frontend/Lims.DesignSystem/Controls/LimsPopupSurface.cs": {
@@ -636,9 +636,9 @@
     "semantic_hash": ""
   },
   "Frontend/Lims.DesignSystem/Presentation/Motion.cs": {
-    "mtime": 1791265242.988756,
-    "seen": 1791939451.9499557,
-    "ast_hash": "0283704bf995ecb240d3d33c3fbf8e13",
+    "mtime": 1792730142.7838767,
+    "seen": 1792861828.0216236,
+    "ast_hash": "d8ba578a6b45f1fb33d9bb24b5e24b83",
     "semantic_hash": ""
   },
   "Frontend/Lims.DesignSystem/Presentation/PopupLayout.cs": {
@@ -648,27 +648,27 @@
     "semantic_hash": ""
   },
   "Frontend/Lims.DesignSystem/Themes/LimsControls.xaml": {
-    "mtime": 1791862784.864064,
-    "seen": 1791939451.9499557,
-    "ast_hash": "995f49fc9e6edfc7657d408cc7df4a56",
+    "mtime": 1792475554.030685,
+    "seen": 1792861828.022624,
+    "ast_hash": "f946920e872795e85ddd59925b105597",
     "semantic_hash": ""
   },
   "Frontend/Lims.DesignSystem/Themes/LimsTheme.xaml": {
-    "mtime": 1791258987.2569764,
-    "seen": 1791939451.9499557,
-    "ast_hash": "8e72b83adc875bb04714932be36e4324",
+    "mtime": 1792025897.929739,
+    "seen": 1792861828.022624,
+    "ast_hash": "d9c2c079454b8e628796a12c7557b50d",
     "semantic_hash": ""
   },
   "Frontend/Lims.Desktop/App.xaml": {
-    "mtime": 1791043364.1564593,
-    "seen": 1791939451.9499557,
-    "ast_hash": "e1ad161dccec86469f1305b5d9a86192",
+    "mtime": 1792049744.254264,
+    "seen": 1792861828.022624,
+    "ast_hash": "d1d056e977a977512173d7c76fee24e4",
     "semantic_hash": ""
   },
   "Frontend/Lims.Desktop/App.xaml.cs": {
-    "mtime": 1791971343.5110378,
-    "seen": 1791971671.0837424,
-    "ast_hash": "4c3686bafb41a8bf449431370f52eb14",
+    "mtime": 1792728991.051167,
+    "seen": 1792861828.022624,
+    "ast_hash": "d85f7ab61cc96e6dd38fdf3789027d13",
     "semantic_hash": ""
   },
   "Frontend/Lims.Desktop/DesktopLog.cs": {
@@ -720,9 +720,9 @@
     "semantic_hash": ""
   },
   "Frontend/Lims.Desktop/Http/IIntermediateApiClient.cs": {
-    "mtime": 1791414172.8868978,
-    "seen": 1791939451.9499557,
-    "ast_hash": "0d25c558590963d593e48cbd53e408a2",
+    "mtime": 1792137970.2968383,
+    "seen": 1792861828.0241275,
+    "ast_hash": "32633ff41c9b0fb3f69afe953fa63058",
     "semantic_hash": ""
   },
   "Frontend/Lims.Desktop/Http/IPermissionsApiClient.cs": {
@@ -738,9 +738,9 @@
     "semantic_hash": ""
   },
   "Frontend/Lims.Desktop/Http/IStockApiClient.cs": {
-    "mtime": 1791352425.536063,
-    "seen": 1791939451.9499557,
-    "ast_hash": "7966b87a8970001a31acf4e203140f0e",
+    "mtime": 1792207056.454627,
+    "seen": 1792861828.0241275,
+    "ast_hash": "53a8cee208d09773badf52b650bae336",
     "semantic_hash": ""
   },
   "Frontend/Lims.Desktop/Http/ITokenRefreshCoordinator.cs": {
@@ -750,9 +750,9 @@
     "semantic_hash": ""
   },
   "Frontend/Lims.Desktop/Http/IntermediateApiClient.cs": {
-    "mtime": 1791414172.8868978,
-    "seen": 1791939451.9499557,
-    "ast_hash": "ced6af511c6f9a9e09c6d622119b37e4",
+    "mtime": 1792137975.5975702,
+    "seen": 1792861828.0251343,
+    "ast_hash": "f8dd9a90907abcf51042a3972045b401",
     "semantic_hash": ""
   },
   "Frontend/Lims.Desktop/Http/PermissionsApiClient.cs": {
@@ -768,9 +768,9 @@
     "semantic_hash": ""
   },
   "Frontend/Lims.Desktop/Http/StockApiClient.cs": {
-    "mtime": 1791352425.4772785,
-    "seen": 1791939451.9499557,
-    "ast_hash": "3ce8318f2c84bb34a14feda67c2e2720",
+    "mtime": 1792207056.4574983,
+    "seen": 1792861828.0251343,
+    "ast_hash": "0bc0fc9f2e35483ba9af7658e8c4750d",
     "semantic_hash": ""
   },
   "Frontend/Lims.Desktop/Http/TokenRefreshCoordinator.cs": {
@@ -780,21 +780,21 @@
     "semantic_hash": ""
   },
   "Frontend/Lims.Desktop/Lims.Desktop.csproj": {
-    "mtime": 1792019536.1297908,
-    "seen": 1792019629.835126,
-    "ast_hash": "2c9d167baf697a3ba0d5c5ca58e297da",
+    "mtime": 1792729032.223544,
+    "seen": 1792861828.0251343,
+    "ast_hash": "ff52d3b918b8afe221b14955dce1a1a2",
     "semantic_hash": ""
   },
   "Frontend/Lims.Desktop/MainWindow.xaml": {
-    "mtime": 1790434554.285214,
-    "seen": 1791939451.9499557,
-    "ast_hash": "413d577deba156c02a527d776246408c",
+    "mtime": 1792638654.7681732,
+    "seen": 1792861828.0251343,
+    "ast_hash": "22ba366f9c107e3b20dece6fe93ad89d",
     "semantic_hash": ""
   },
   "Frontend/Lims.Desktop/MainWindow.xaml.cs": {
-    "mtime": 1791967761.0506308,
-    "seen": 1791970553.779268,
-    "ast_hash": "f1a941b62f23f520c1941a7e4441081e",
+    "mtime": 1792638656.3067274,
+    "seen": 1792861828.0251343,
+    "ast_hash": "70f20719fa3276518590fe6d56622853",
     "semantic_hash": ""
   },
   "Frontend/Lims.Desktop/Presentation/ReferenceMaterialErrors.cs": {
@@ -804,9 +804,9 @@
     "semantic_hash": ""
   },
   "Frontend/Lims.Desktop/Presentation/ReferenceMaterialVisuals.cs": {
-    "mtime": 1791333913.3091109,
-    "seen": 1791939451.9499557,
-    "ast_hash": "20997e70811e56d5ac64538117525aba",
+    "mtime": 1792137198.191319,
+    "seen": 1792861828.026139,
+    "ast_hash": "c7af2fd92a531a30e3af239286777edb",
     "semantic_hash": ""
   },
   "Frontend/Lims.Desktop/Properties/AssemblyInfo.cs": {
@@ -882,9 +882,9 @@
     "semantic_hash": ""
   },
   "Frontend/Lims.Desktop/ViewModels/IntermediateViewModel.cs": {
-    "mtime": 1791871825.9651532,
-    "seen": 1791939451.9499557,
-    "ast_hash": "aea2bf7bcb22445739ebec244160fa9f",
+    "mtime": 1792254088.3736715,
+    "seen": 1792861828.0271468,
+    "ast_hash": "51b159a0fec8c08d3f083086eec1992b",
     "semantic_hash": ""
   },
   "Frontend/Lims.Desktop/ViewModels/LoginState.cs": {
@@ -900,27 +900,27 @@
     "semantic_hash": ""
   },
   "Frontend/Lims.Desktop/ViewModels/PermissionsViewModel.cs": {
-    "mtime": 1791950805.3803701,
-    "seen": 1791970553.7974086,
-    "ast_hash": "fe67de1e3a35550521e29825303acca8",
+    "mtime": 1792025823.7593236,
+    "seen": 1792861828.0281465,
+    "ast_hash": "895034ba5bab2ff2b4e2cfd3bf244af9",
     "semantic_hash": ""
   },
   "Frontend/Lims.Desktop/ViewModels/ReferenceMaterialsViewModel.cs": {
-    "mtime": 1791871824.054417,
-    "seen": 1791939451.9499557,
-    "ast_hash": "b1924d35220bf0a82a9280b7798d2f64",
+    "mtime": 1792451810.7801545,
+    "seen": 1792861828.0281465,
+    "ast_hash": "50822df308e733c49b005310363ec98a",
     "semantic_hash": ""
   },
   "Frontend/Lims.Desktop/ViewModels/ShellViewModel.cs": {
-    "mtime": 1791969911.9651086,
-    "seen": 1791970553.7974086,
-    "ast_hash": "8d14b97cf07c502817bf94df89e98b56",
+    "mtime": 1792638654.2470844,
+    "seen": 1792861828.0281465,
+    "ast_hash": "7a98c5260a9afd1451b9b7c45988d539",
     "semantic_hash": ""
   },
   "Frontend/Lims.Desktop/ViewModels/StockViewModel.cs": {
-    "mtime": 1791970408.2710855,
-    "seen": 1791970553.7974086,
-    "ast_hash": "71713ec7a91116b13d65c14b43096f1f",
+    "mtime": 1792861678.3171263,
+    "seen": 1792861828.0281465,
+    "ast_hash": "63a786cae2dfea426113dab523fd0d20",
     "semantic_hash": ""
   },
   "Frontend/Lims.Desktop/Views/GraduatedCylinder.xaml": {
@@ -936,159 +936,159 @@
     "semantic_hash": ""
   },
   "Frontend/Lims.Desktop/Views/IntermediateDetailDialog.xaml": {
-    "mtime": 1791414558.3287024,
-    "seen": 1791939451.9499557,
-    "ast_hash": "768dbb6262660657f954ba29997cf2e6",
+    "mtime": 1792138371.3547425,
+    "seen": 1792861828.0281465,
+    "ast_hash": "9a1d5aaabd00a387453d908be3fc06b5",
     "semantic_hash": ""
   },
   "Frontend/Lims.Desktop/Views/IntermediateDetailDialog.xaml.cs": {
-    "mtime": 1791414558.7763934,
-    "seen": 1791939451.9499557,
-    "ast_hash": "e4b4990aa60a22dfd941d7869d7a8985",
+    "mtime": 1792138198.479348,
+    "seen": 1792861828.0281465,
+    "ast_hash": "600f024f9c95a82514d73ab27914150c",
     "semantic_hash": ""
   },
   "Frontend/Lims.Desktop/Views/IntermediateEditorDialog.xaml": {
-    "mtime": 1791654424.4819365,
-    "seen": 1791939451.9499557,
-    "ast_hash": "8ec980325d84033a0743bda3ddb04781",
+    "mtime": 1792621382.4599195,
+    "seen": 1792861828.0281465,
+    "ast_hash": "6d948be0f0856d7b758bb1a711f9321c",
     "semantic_hash": ""
   },
   "Frontend/Lims.Desktop/Views/IntermediateEditorDialog.xaml.cs": {
-    "mtime": 1791416161.9724832,
-    "seen": 1791939451.9499557,
-    "ast_hash": "74956bcf8ee0dca6cb75807ab63ec419",
+    "mtime": 1792475191.724216,
+    "seen": 1792861828.0281465,
+    "ast_hash": "e7fed0d27773ababa328e395c4f1baf5",
     "semantic_hash": ""
   },
   "Frontend/Lims.Desktop/Views/IntermediatePage.xaml": {
-    "mtime": 1791847861.8690026,
-    "seen": 1791939451.9499557,
-    "ast_hash": "d640dea7bf137521f6c22e5366fbcbf5",
+    "mtime": 1792458467.7490752,
+    "seen": 1792861828.0281465,
+    "ast_hash": "98c36e2650301a5de2b2064d8dee9be8",
     "semantic_hash": ""
   },
   "Frontend/Lims.Desktop/Views/IntermediatePage.xaml.cs": {
-    "mtime": 1791847861.8741274,
-    "seen": 1791939451.9499557,
-    "ast_hash": "3b47e397c32e6554e313805e77537782",
+    "mtime": 1792469709.3663113,
+    "seen": 1792861828.0281465,
+    "ast_hash": "7e7b3102cbf9b669b1b2bd7fee9c5911",
     "semantic_hash": ""
   },
   "Frontend/Lims.Desktop/Views/LoginPage.xaml": {
-    "mtime": 1791259010.363759,
-    "seen": 1791939451.9499557,
-    "ast_hash": "6072fd28a7a8072ce10c8710c552d979",
+    "mtime": 1792027476.481245,
+    "seen": 1792861828.0281465,
+    "ast_hash": "044045745deded4e28c53d6dad5dee16",
     "semantic_hash": ""
   },
   "Frontend/Lims.Desktop/Views/LoginPage.xaml.cs": {
-    "mtime": 1791259010.366662,
-    "seen": 1791939451.9499557,
-    "ast_hash": "57d170d0aba1a942d9341b30eb5abdb5",
+    "mtime": 1792025760.5549686,
+    "seen": 1792861828.0281465,
+    "ast_hash": "0f00ba72e23bd22533a0731e19b0fcb3",
     "semantic_hash": ""
   },
   "Frontend/Lims.Desktop/Views/PermissionsPage.xaml": {
-    "mtime": 1791958738.6571176,
-    "seen": 1791970553.802573,
-    "ast_hash": "cd27faeda5cca39cc15ebce77457aae9",
+    "mtime": 1792025897.9333107,
+    "seen": 1792861828.0281465,
+    "ast_hash": "f40537a6190d9615c1556a69caeb19a1",
     "semantic_hash": ""
   },
   "Frontend/Lims.Desktop/Views/PermissionsPage.xaml.cs": {
-    "mtime": 1791951787.2729287,
-    "seen": 1791970553.802573,
-    "ast_hash": "a99ad0e4afaa5a719ddcf055cfbd651f",
+    "mtime": 1792025701.2639737,
+    "seen": 1792861828.0281465,
+    "ast_hash": "891101f11f1772d978c1696fa021503f",
     "semantic_hash": ""
   },
   "Frontend/Lims.Desktop/Views/PreparationsPage.xaml": {
-    "mtime": 1791871509.5782428,
-    "seen": 1791939451.9499557,
-    "ast_hash": "d50f5a877894e697c01d9deeb8db2478",
+    "mtime": 1792142615.9381578,
+    "seen": 1792861828.0281465,
+    "ast_hash": "1c1482edbd1dea903e853fddaed33267",
     "semantic_hash": ""
   },
   "Frontend/Lims.Desktop/Views/PreparationsPage.xaml.cs": {
-    "mtime": 1791871827.4326432,
-    "seen": 1791939451.9499557,
-    "ast_hash": "6f3acbfec6d4365fb18601a518c82987",
+    "mtime": 1792469556.2392638,
+    "seen": 1792861828.0281465,
+    "ast_hash": "8e0deff402f3ba2a9d79c02421ea6123",
     "semantic_hash": ""
   },
   "Frontend/Lims.Desktop/Views/ReferenceMaterialDetailDialog.xaml": {
-    "mtime": 1791347264.1705709,
-    "seen": 1791939451.9499557,
-    "ast_hash": "4c268a9f400d4e019596665614fc2b7e",
+    "mtime": 1792219628.6133807,
+    "seen": 1792861828.0281465,
+    "ast_hash": "904499822d9cc5d4c06b668b5373b878",
     "semantic_hash": ""
   },
   "Frontend/Lims.Desktop/Views/ReferenceMaterialDetailDialog.xaml.cs": {
-    "mtime": 1791347264.1715705,
-    "seen": 1791939451.9499557,
-    "ast_hash": "ca6af78b9cbe71266821141b320a74eb",
+    "mtime": 1792218945.205542,
+    "seen": 1792861828.0281465,
+    "ast_hash": "214dccea68cc33f595fa8b5170e7098d",
     "semantic_hash": ""
   },
   "Frontend/Lims.Desktop/Views/ReferenceMaterialEditorDialog.xaml": {
-    "mtime": 1791265271.2497087,
-    "seen": 1791939451.9499557,
-    "ast_hash": "5c14ced305d7bd762391b683c2eeba0e",
+    "mtime": 1792452201.2289867,
+    "seen": 1792861828.0281465,
+    "ast_hash": "80f1e2e36cada9819a43042d757ec120",
     "semantic_hash": ""
   },
   "Frontend/Lims.Desktop/Views/ReferenceMaterialEditorDialog.xaml.cs": {
-    "mtime": 1791267673.424404,
-    "seen": 1791939451.9499557,
-    "ast_hash": "fe6198aeb182f94f3babde9e6d4cae0b",
+    "mtime": 1792452161.5045269,
+    "seen": 1792861828.0281465,
+    "ast_hash": "ba4391464e1f1850a4baa0933b4c4e5c",
     "semantic_hash": ""
   },
   "Frontend/Lims.Desktop/Views/ReferenceMaterialsPage.xaml": {
-    "mtime": 1791334344.7375627,
-    "seen": 1791939451.9499557,
-    "ast_hash": "aee2ed23f034865029cd63e62593985c",
+    "mtime": 1792220605.6095266,
+    "seen": 1792861828.0281465,
+    "ast_hash": "13d5e79d7136daa32c5238bdd3a7870e",
     "semantic_hash": ""
   },
   "Frontend/Lims.Desktop/Views/ReferenceMaterialsPage.xaml.cs": {
-    "mtime": 1791334342.6239617,
-    "seen": 1791939451.9499557,
-    "ast_hash": "2a11ec39c4c227d5280fd17819147488",
+    "mtime": 1792137201.0925488,
+    "seen": 1792861828.0281465,
+    "ast_hash": "b035d51d60328cfd6c7ef269d4339da7",
     "semantic_hash": ""
   },
   "Frontend/Lims.Desktop/Views/ShellPage.xaml": {
-    "mtime": 1791969756.0983715,
-    "seen": 1791970553.808834,
-    "ast_hash": "a6553265376b6d349e21f93352e79bee",
+    "mtime": 1792639429.7111578,
+    "seen": 1792861828.0281465,
+    "ast_hash": "7afb012acce979167dd5cd2a5d90f2d3",
     "semantic_hash": ""
   },
   "Frontend/Lims.Desktop/Views/ShellPage.xaml.cs": {
-    "mtime": 1792019535.8732412,
-    "seen": 1792019629.8673487,
-    "ast_hash": "af9c3dccf1e4ec081792f6bce29dc731",
+    "mtime": 1792640147.0581224,
+    "seen": 1792861828.0281465,
+    "ast_hash": "7f9c6425eef41ce732239d8ec394f058",
     "semantic_hash": ""
   },
   "Frontend/Lims.Desktop/Views/StockDetailDialog.xaml": {
-    "mtime": 1791862847.274058,
-    "seen": 1791939451.9499557,
-    "ast_hash": "5d2659746b871614ed407eb1f9c3d9bb",
+    "mtime": 1792207530.6861055,
+    "seen": 1792861828.0281465,
+    "ast_hash": "0dcc8d6b2701e84cb518b7deea88d9c0",
     "semantic_hash": ""
   },
   "Frontend/Lims.Desktop/Views/StockDetailDialog.xaml.cs": {
-    "mtime": 1791352717.1405067,
-    "seen": 1791939451.9499557,
-    "ast_hash": "e0a4031a4b0fa4f640c645ab3815fca8",
+    "mtime": 1792207056.4660177,
+    "seen": 1792861828.0281465,
+    "ast_hash": "527e08a132529d0cda3032f58c3db7e9",
     "semantic_hash": ""
   },
   "Frontend/Lims.Desktop/Views/StockEditorDialog.xaml": {
-    "mtime": 1791654424.4798837,
-    "seen": 1791939451.9499557,
-    "ast_hash": "9c9c2b40e0c8d3540b599733e4a1cd80",
+    "mtime": 1792475109.063113,
+    "seen": 1792861828.0281465,
+    "ast_hash": "1c86c0c8e33d31ac5989ba6ce9f6ebed",
     "semantic_hash": ""
   },
   "Frontend/Lims.Desktop/Views/StockEditorDialog.xaml.cs": {
-    "mtime": 1791353627.5804775,
-    "seen": 1791939451.9499557,
-    "ast_hash": "15c593cce035cd40e708d7eda110f397",
+    "mtime": 1792620383.7841024,
+    "seen": 1792861828.0281465,
+    "ast_hash": "5ea0d50e732e5037b476c1289362d5ca",
     "semantic_hash": ""
   },
   "Frontend/Lims.Desktop/Views/StockPage.xaml": {
-    "mtime": 1791862847.2730558,
-    "seen": 1791939451.9499557,
-    "ast_hash": "77ce46b3739989706c0bde9e2aa42574",
+    "mtime": 1792254088.3736715,
+    "seen": 1792861828.0281465,
+    "ast_hash": "8d68db1ea2c41a27e713caf82341ca8a",
     "semantic_hash": ""
   },
   "Frontend/Lims.Desktop/Views/StockPage.xaml.cs": {
-    "mtime": 1791847861.8669577,
-    "seen": 1791939451.9499557,
-    "ast_hash": "1470507e44230e5435e8a038f2e868b2",
+    "mtime": 1792254088.3721719,
+    "seen": 1792861828.0281465,
+    "ast_hash": "8e42a034a75565621c7e637a91f571b5",
     "semantic_hash": ""
   },
   "Frontend/Lims.Desktop/appsettings.Development.json": {
@@ -1104,9 +1104,9 @@
     "semantic_hash": ""
   },
   "Lims.sln": {
-    "mtime": 1790405098.8470674,
-    "seen": 1791939451.9499557,
-    "ast_hash": "55f40e4cb496c2fe030852bf4f2b4790",
+    "mtime": 1792638355.195476,
+    "seen": 1792861828.0281465,
+    "ast_hash": "2fe66c6900f01465b3e6365013db7940",
     "semantic_hash": ""
   },
   "Shared/Lims.Contracts/Authentication/AuthenticationResponse.cs": {
@@ -1158,15 +1158,15 @@
     "semantic_hash": ""
   },
   "Shared/Lims.Contracts/Permissions/PermissionContracts.cs": {
-    "mtime": 1791873470.5917628,
-    "seen": 1791939451.9499557,
-    "ast_hash": "160192ed73a309d8c933e1e6533ea2fd",
+    "mtime": 1792637753.0689416,
+    "seen": 1792861828.030146,
+    "ast_hash": "e13dd47239c4b54e4dc279b4e86b09f5",
     "semantic_hash": ""
   },
   "Shared/Lims.Contracts/ReferenceMaterials/ReferenceMaterialContracts.cs": {
-    "mtime": 1791038861.262073,
-    "seen": 1791939451.9499557,
-    "ast_hash": "8a9614393e018982decb749839586130",
+    "mtime": 1792254810.4219563,
+    "seen": 1792861828.030146,
+    "ast_hash": "3bf788e6e27ff5a87aa2a03f19b3eea4",
     "semantic_hash": ""
   },
   "Shared/Lims.Contracts/ReferenceMaterials/ReferenceMaterialPermissions.cs": {
@@ -1176,21 +1176,21 @@
     "semantic_hash": ""
   },
   "Shared/Lims.Contracts/ReferenceMaterials/ReferenceMaterialPresentation.cs": {
-    "mtime": 1791038247.2265623,
-    "seen": 1791939451.9499557,
-    "ast_hash": "a2505614dac695a01e4382caab3dfabd",
+    "mtime": 1792218707.9234405,
+    "seen": 1792861828.030146,
+    "ast_hash": "674a2d32cd2b153fedec38e70c4a3aff",
     "semantic_hash": ""
   },
   "Shared/Lims.Contracts/ReferencePreparations/IntermediateCalculator.cs": {
-    "mtime": 1791415629.7684166,
-    "seen": 1791939451.9499557,
-    "ast_hash": "17284b9c26996f96bfee85a7cc2f120f",
+    "mtime": 1792219799.698459,
+    "seen": 1792861828.030146,
+    "ast_hash": "3ecba476b5ad83ee4b15c693e0f5cac6",
     "semantic_hash": ""
   },
   "Shared/Lims.Contracts/ReferencePreparations/IntermediateContracts.cs": {
-    "mtime": 1791416237.2212481,
-    "seen": 1791939451.9499557,
-    "ast_hash": "6a3d1ebe4af939c3508666c8e49f1bb0",
+    "mtime": 1792253174.2949917,
+    "seen": 1792861828.030146,
+    "ast_hash": "5d076ea2d3f32bb00fcc1ba721e9483b",
     "semantic_hash": ""
   },
   "Shared/Lims.Contracts/ReferencePreparations/StockAvailability.cs": {
@@ -1200,9 +1200,9 @@
     "semantic_hash": ""
   },
   "Shared/Lims.Contracts/ReferencePreparations/StockContracts.cs": {
-    "mtime": 1791862756.3417466,
-    "seen": 1791939451.9499557,
-    "ast_hash": "8b538bb61e2c8780b8a0d66e0619d324",
+    "mtime": 1792253174.2933779,
+    "seen": 1792861828.030146,
+    "ast_hash": "fb09fb756e812a170c617539fc34a4a9",
     "semantic_hash": ""
   },
   "Shared/Lims.Contracts/ReferencePreparations/StockPresentation.cs": {
@@ -1230,15 +1230,15 @@
     "semantic_hash": ""
   },
   "Tests/Backend/Lims.Api.Tests/AuthenticationEndpointsTests.cs": {
-    "mtime": 1791871643.568683,
-    "seen": 1791939451.9499557,
-    "ast_hash": "adcd4e99060a49f87da3f99a34e5b988",
+    "mtime": 1792219294.061718,
+    "seen": 1792861828.031146,
+    "ast_hash": "cdb74ef490de5199f1f1e9b0721fdd2d",
     "semantic_hash": ""
   },
   "Tests/Backend/Lims.Api.Tests/IntermediateEndpointsTests.cs": {
-    "mtime": 1791871643.5727031,
-    "seen": 1791939451.9499557,
-    "ast_hash": "73e210fe2f24f677f314267bb8c4a688",
+    "mtime": 1792137970.9340203,
+    "seen": 1792861828.031146,
+    "ast_hash": "b1f2e1f57e335cde547fc41625046334",
     "semantic_hash": ""
   },
   "Tests/Backend/Lims.Api.Tests/Lims.Api.Tests.csproj": {
@@ -1248,15 +1248,15 @@
     "semantic_hash": ""
   },
   "Tests/Backend/Lims.Api.Tests/PermissionEndpointsTests.cs": {
-    "mtime": 1791872232.0868235,
-    "seen": 1791939451.9499557,
-    "ast_hash": "59713eed915162e499fa364867217c99",
+    "mtime": 1792143216.2007117,
+    "seen": 1792861828.031146,
+    "ast_hash": "e0e8ea5786c6d77001ac6df0c1312a2b",
     "semantic_hash": ""
   },
   "Tests/Backend/Lims.Api.Tests/StockEndpointsTests.cs": {
-    "mtime": 1791871643.5706909,
-    "seen": 1791939451.9499557,
-    "ast_hash": "8c304797b9c1e118692428eaf29c3444",
+    "mtime": 1792254374.5472982,
+    "seen": 1792861828.031146,
+    "ast_hash": "58fc12e93166acc47aae565a5746d9fb",
     "semantic_hash": ""
   },
   "Tests/Backend/Lims.Api.Tests/TestPermissionRepository.cs": {
@@ -1290,9 +1290,9 @@
     "semantic_hash": ""
   },
   "Tests/Backend/Lims.Application.Tests/ReferenceMaterials/IntermediateCalculatorTests.cs": {
-    "mtime": 1791416289.089399,
-    "seen": 1791939451.9499557,
-    "ast_hash": "853586ff2c44d85ddcc4d1f8c6d57cc3",
+    "mtime": 1792138537.048943,
+    "seen": 1792861828.0321512,
+    "ast_hash": "42fa1b89cc22eb8d89e4e801510a37c8",
     "semantic_hash": ""
   },
   "Tests/Backend/Lims.Application.Tests/ReferenceMaterials/ReferenceMaterialDomainTests.cs": {
@@ -1320,9 +1320,9 @@
     "semantic_hash": ""
   },
   "Tests/Backend/Lims.Application.Tests/ReferenceMaterials/StockPresentationTests.cs": {
-    "mtime": 1791862907.921973,
-    "seen": 1791939451.9499557,
-    "ast_hash": "47a9589243e14fdc901c8c975e6580d3",
+    "mtime": 1792138417.7517395,
+    "seen": 1792861828.0331507,
+    "ast_hash": "7194e682b5a00b59572092e157eef627",
     "semantic_hash": ""
   },
   "Tests/Backend/Lims.Infrastructure.Tests/Lims.Infrastructure.Tests.csproj": {
@@ -1338,9 +1338,9 @@
     "semantic_hash": ""
   },
   "Tests/Backend/Lims.Infrastructure.Tests/Persistence/IntermediatePostgresTests.cs": {
-    "mtime": 1791414988.8912952,
-    "seen": 1791939451.9499557,
-    "ast_hash": "0951128c5234729fc9b75f0bae94f0e4",
+    "mtime": 1792138417.1887238,
+    "seen": 1792861828.034146,
+    "ast_hash": "b297cb6bda873a50746f29655d826d07",
     "semantic_hash": ""
   },
   "Tests/Backend/Lims.Infrastructure.Tests/Persistence/LimsDbContextModelTests.cs": {
@@ -1350,15 +1350,15 @@
     "semantic_hash": ""
   },
   "Tests/Backend/Lims.Infrastructure.Tests/Persistence/PermissionPostgresTests.cs": {
-    "mtime": 1791947732.9697027,
-    "seen": 1791970553.8379388,
-    "ast_hash": "6c6462432776d7900e7bccd2306ab097",
+    "mtime": 1792639819.1042266,
+    "seen": 1792861828.0346527,
+    "ast_hash": "7e00d9dbe12ec8f11a1e5d4c73a7b5f5",
     "semantic_hash": ""
   },
   "Tests/Backend/Lims.Infrastructure.Tests/Persistence/PermissionRepositoryTests.cs": {
-    "mtime": 1791947732.5436268,
-    "seen": 1791970553.8379388,
-    "ast_hash": "7896927bc7cde9a703c0afcc6620739c",
+    "mtime": 1792143304.7595515,
+    "seen": 1792861828.0346527,
+    "ast_hash": "66c3c163a0cf42dfcaeafc277716dcd8",
     "semantic_hash": ""
   },
   "Tests/Backend/Lims.Infrastructure.Tests/Persistence/ReferenceMaterialDisplayTests.cs": {
@@ -1368,9 +1368,9 @@
     "semantic_hash": ""
   },
   "Tests/Backend/Lims.Infrastructure.Tests/Persistence/StockPostgresTests.cs": {
-    "mtime": 1791970408.2778473,
-    "seen": 1791970553.8379388,
-    "ast_hash": "c908716039867a6dd963ca165e9b66e3",
+    "mtime": 1792472301.4861398,
+    "seen": 1792861828.0346527,
+    "ast_hash": "b022d03631c24fe98312a961d65dd612",
     "semantic_hash": ""
   },
   "Tests/Backend/Lims.Infrastructure.Tests/Security/Argon2PasswordHashServiceTests.cs": {
@@ -1392,15 +1392,15 @@
     "semantic_hash": ""
   },
   "Tests/Frontend/Lims.Desktop.Tests/IntermediateViewModelTests.cs": {
-    "mtime": 1791871643.578396,
-    "seen": 1791939451.9499557,
-    "ast_hash": "6bf1f2827785d84371ce48277dc7736c",
+    "mtime": 1792254857.9880826,
+    "seen": 1792861828.0351596,
+    "ast_hash": "ced7c064cd0c0955a9944ed29d31ca9a",
     "semantic_hash": ""
   },
   "Tests/Frontend/Lims.Desktop.Tests/Lims.Desktop.Tests.csproj": {
-    "mtime": 1790405014.9827194,
-    "seen": 1791939451.9499557,
-    "ast_hash": "9353580d6138f2ccb17dc8a98f733b86",
+    "mtime": 1792025952.636474,
+    "seen": 1792861828.0351596,
+    "ast_hash": "549e155cf5dab34025887591659d9940",
     "semantic_hash": ""
   },
   "Tests/Frontend/Lims.Desktop.Tests/LoginViewModelTests.cs": {
@@ -1416,9 +1416,9 @@
     "semantic_hash": ""
   },
   "Tests/Frontend/Lims.Desktop.Tests/PermissionsViewModelTests.cs": {
-    "mtime": 1791949966.1489956,
-    "seen": 1791970553.8440106,
-    "ast_hash": "63afd98447f30f8f99e0dc52b01b5a6e",
+    "mtime": 1792143217.1898217,
+    "seen": 1792861828.0361702,
+    "ast_hash": "ee3680316fcbd1e4dc0b775a06c92871",
     "semantic_hash": ""
   },
   "Tests/Frontend/Lims.Desktop.Tests/PopupPresentationTests.cs": {
@@ -1458,27 +1458,27 @@
     "semantic_hash": ""
   },
   "Tests/Frontend/Lims.Desktop.Tests/StockApiClientTests.cs": {
-    "mtime": 1791352425.4925575,
-    "seen": 1791939451.9499557,
-    "ast_hash": "ac4298ad1ba1b3517bf14f319b0dfc16",
+    "mtime": 1792138883.8547566,
+    "seen": 1792861828.0366826,
+    "ast_hash": "ae50318fe41554c29869efffcc9cd121",
     "semantic_hash": ""
   },
   "Tests/Frontend/Lims.Desktop.Tests/StockViewModelTests.cs": {
-    "mtime": 1791970408.2730973,
-    "seen": 1791970553.847011,
-    "ast_hash": "ecbf6c0e702b32dd0624741f1191d188",
+    "mtime": 1792861702.7459419,
+    "seen": 1792861828.0366826,
+    "ast_hash": "5c1c94df6af6c678d9aa74c8996891f7",
     "semantic_hash": ""
   },
   "Tests/Frontend/Lims.Desktop.VisualHarness/App.xaml.cs": {
-    "mtime": 1791972284.9499114,
-    "seen": 1792019629.9172034,
-    "ast_hash": "a98339b95f2173b56f87fbb5298294f7",
+    "mtime": 1792730166.8702261,
+    "seen": 1792861828.0366826,
+    "ast_hash": "e5f61883c5b66d5a476b5323592a92b4",
     "semantic_hash": ""
   },
   "Tests/Frontend/Lims.Desktop.VisualHarness/FixtureIntermediateApi.cs": {
-    "mtime": 1791415052.711727,
-    "seen": 1791939451.9499557,
-    "ast_hash": "3f32caabb33e22c3009c88904d70ba5e",
+    "mtime": 1792254380.2513413,
+    "seen": 1792861828.0366826,
+    "ast_hash": "32dc5a3b7deaacab17d284106fd09bc6",
     "semantic_hash": ""
   },
   "Tests/Frontend/Lims.Desktop.VisualHarness/FixturePermissionsApi.cs": {
@@ -1488,15 +1488,15 @@
     "semantic_hash": ""
   },
   "Tests/Frontend/Lims.Desktop.VisualHarness/FixtureStockApi.cs": {
-    "mtime": 1791353629.7994933,
-    "seen": 1791939451.9499557,
-    "ast_hash": "5af0e14cf87aceb870b3f8d1e4490ecb",
+    "mtime": 1792472366.310818,
+    "seen": 1792861828.0366826,
+    "ast_hash": "9f02533270b4c4e8535cce16fcd9256c",
     "semantic_hash": ""
   },
   "Tests/Frontend/Lims.Desktop.VisualHarness/Fixtures.cs": {
-    "mtime": 1791971611.3026757,
-    "seen": 1791971671.1040554,
-    "ast_hash": "d622420f0223cdd17c8986213927dd3c",
+    "mtime": 1792639203.461115,
+    "seen": 1792861828.0366826,
+    "ast_hash": "0da325eca04655e50948424ec6bd7505",
     "semantic_hash": ""
   },
   "Tests/Frontend/Lims.Desktop.VisualHarness/IconValidation.cs": {
@@ -1506,15 +1506,15 @@
     "semantic_hash": ""
   },
   "Tests/Frontend/Lims.Desktop.VisualHarness/Lims.Desktop.VisualHarness.csproj": {
-    "mtime": 1791969912.1222038,
-    "seen": 1791970553.848011,
-    "ast_hash": "0245ccad6c552d8f2371b80ab582f72d",
+    "mtime": 1792639102.1358118,
+    "seen": 1792861828.0381942,
+    "ast_hash": "e0bf360b50ca509abfdfc807f591b2bf",
     "semantic_hash": ""
   },
   "Tests/Frontend/Lims.Desktop.VisualHarness/PopupInteractionChecks.cs": {
-    "mtime": 1791244732.85783,
-    "seen": 1791939451.9499557,
-    "ast_hash": "e1a2672dbcee8c4a1083ffa054fbffcb",
+    "mtime": 1792026701.672404,
+    "seen": 1792861828.0381942,
+    "ast_hash": "31356c3b7e949853524385ccc82fed9a",
     "semantic_hash": ""
   },
   "Tests/Frontend/Lims.Desktop.VisualHarness/StandardsPresentationChecks.cs": {
@@ -1524,9 +1524,9 @@
     "semantic_hash": ""
   },
   "Tests/Frontend/Lims.Desktop.VisualHarness/ValidationApp.xaml": {
-    "mtime": 1791239111.3424497,
-    "seen": 1791939451.9499557,
-    "ast_hash": "3166d4ba115081f9fb660e49e72645fb",
+    "mtime": 1792049744.6979122,
+    "seen": 1792861828.0381942,
+    "ast_hash": "ed2e4fe84a67c658a276f28310fa18a1",
     "semantic_hash": ""
   },
   "artifacts/validation/intermediate/verification.json": {
@@ -1578,9 +1578,9 @@
     "semantic_hash": ""
   },
   "scripts/run-winui.ps1": {
-    "mtime": 1790405674.550975,
-    "seen": 1791939451.9499557,
-    "ast_hash": "14df1ec414ee3a6106cc24e1c6a91da8",
+    "mtime": 1792137946.0818834,
+    "seen": 1792861828.0392044,
+    "ast_hash": "fa509dbb47f5a3ab482a23544d26968a",
     "semantic_hash": ""
   },
   "scripts/run.ps1": {
@@ -1590,9 +1590,9 @@
     "semantic_hash": ""
   },
   "scripts/test-stock.ps1": {
-    "mtime": 1791349169.7956746,
-    "seen": 1791939451.9499557,
-    "ast_hash": "bdb60979ff0e4e6a9d4dee1cf3dee8cb",
+    "mtime": 1792255223.9236734,
+    "seen": 1792861828.0402124,
+    "ast_hash": "b31cc4d4d96d21982bb4644f19b75ca1",
     "semantic_hash": ""
   },
   "scripts/validate-intermediate.ps1": {
@@ -1608,9 +1608,9 @@
     "semantic_hash": ""
   },
   "scripts/validate-preparation-list.ps1": {
-    "mtime": 1791848112.513777,
-    "seen": 1791939451.9499557,
-    "ast_hash": "448ff8ea013951f96a44c66f3b54ee81",
+    "mtime": 1792138499.6140444,
+    "seen": 1792861828.0402124,
+    "ast_hash": "59e7f47776e5832431df95a07aaa10f7",
     "semantic_hash": ""
   },
   "scripts/validate-preparation-tabs.ps1": {
@@ -1620,9 +1620,9 @@
     "semantic_hash": ""
   },
   "scripts/validate-standards-availability.ps1": {
-    "mtime": 1791347812.5226772,
-    "seen": 1791939451.9499557,
-    "ast_hash": "92bc05ef320d1a175722071f2e3b14b2",
+    "mtime": 1792137443.2625668,
+    "seen": 1792861828.0402124,
+    "ast_hash": "9fbbf9cdda1274a61e29376713a9f942",
     "semantic_hash": ""
   },
   "scripts/validate-standards-detail-polish.ps1": {
@@ -1644,9 +1644,9 @@
     "semantic_hash": ""
   },
   "scripts/validate-standards-visual.ps1": {
-    "mtime": 1791345578.830935,
-    "seen": 1791939451.9499557,
-    "ast_hash": "c7b5cc48da86d71a3b1264babb2c4e78",
+    "mtime": 1792644458.1861725,
+    "seen": 1792861828.0412107,
+    "ast_hash": "c10735935a87e0d10446e310f7a207e8",
     "semantic_hash": ""
   },
   "scripts/validate-stock.ps1": {
@@ -1662,9 +1662,9 @@
     "semantic_hash": ""
   },
   "README.md": {
-    "mtime": 1790811526.4219737,
-    "seen": 1791939451.9499557,
-    "ast_hash": "ea7b92391aca5b2502a37c7507c2e608",
+    "mtime": 1792263037.0220015,
+    "seen": 1792861828.0412107,
+    "ast_hash": "87acf460c1c7758f6c9435eed6da5d66",
     "semantic_hash": ""
   },
   "docs/architecture.md": {
@@ -2070,33 +2070,33 @@
     "semantic_hash": ""
   },
   "Backend/Lims.Infrastructure/Persistence/DashboardRepository.cs": {
-    "mtime": 1791971611.3016696,
-    "seen": 1791971671.0837424,
-    "ast_hash": "e5214c92284fe4fdeb6bbd10f18d60d7",
+    "mtime": 1792640406.6466026,
+    "seen": 1792861828.0140648,
+    "ast_hash": "a39bd555d3e3ef609d0d836e88408d86",
     "semantic_hash": ""
   },
   "Frontend/Lims.Desktop/Controls/DashboardComponents.cs": {
-    "mtime": 1791971292.1219697,
-    "seen": 1791971671.0837424,
-    "ast_hash": "e1c3c57287dd9fe1dcb096c39bbfcc4a",
+    "mtime": 1792124558.2815876,
+    "seen": 1792861828.022624,
+    "ast_hash": "fecfcf8e3dd87c278c34d410fc131c21",
     "semantic_hash": ""
   },
   "Frontend/Lims.Desktop/Controls/PermissionAction.cs": {
-    "mtime": 1791958810.9404914,
-    "seen": 1791970553.7772324,
-    "ast_hash": "8adc9c98dea694482d5515287417655f",
+    "mtime": 1792025702.0938327,
+    "seen": 1792861828.022624,
+    "ast_hash": "02e041f95c45b391e063a207118a3642",
     "semantic_hash": ""
   },
   "Frontend/Lims.Desktop/Controls/PermissionActionPanel.cs": {
-    "mtime": 1791951864.2956078,
-    "seen": 1791970553.7772324,
-    "ast_hash": "a09ce019b3624033f4b77881415339b8",
+    "mtime": 1792025701.697751,
+    "seen": 1792861828.022624,
+    "ast_hash": "0d14ccc29a9f44ea9f127b6e3b2753f7",
     "semantic_hash": ""
   },
   "Frontend/Lims.Desktop/Controls/PermissionUserItem.cs": {
-    "mtime": 1791949534.1174674,
-    "seen": 1791970553.7772324,
-    "ast_hash": "07bc473fb9ed060b18bcf860cd7baa33",
+    "mtime": 1792025896.887442,
+    "seen": 1792861828.022624,
+    "ast_hash": "607c2e65b564ce2cd4f4eb37f83252f0",
     "semantic_hash": ""
   },
   "Frontend/Lims.Desktop/Http/DashboardApiClient.cs": {
@@ -2111,46 +2111,40 @@
     "ast_hash": "5be8a9341f45dfa6d6cbfc7b46ec6470",
     "semantic_hash": ""
   },
-  "Frontend/Lims.Desktop/Presentation/DashboardMotion.cs": {
-    "mtime": 1791970707.988628,
-    "seen": 1791970739.8218625,
-    "ast_hash": "132386431b5b6e7bd51f702830e10728",
-    "semantic_hash": ""
-  },
   "Frontend/Lims.Desktop/Presentation/PermissionsMotion.cs": {
-    "mtime": 1791949531.7823386,
-    "seen": 1791970553.779268,
-    "ast_hash": "b878563c8695e9a7f3751d5602c2036e",
+    "mtime": 1792730141.2240767,
+    "seen": 1792861828.0251343,
+    "ast_hash": "350e5d554ad7ed07f47633ec5194de2c",
     "semantic_hash": ""
   },
   "Frontend/Lims.Desktop/ViewModels/DashboardViewModel.cs": {
-    "mtime": 1791969756.0868967,
-    "seen": 1791970553.795406,
-    "ast_hash": "155c74d49cd4aaf8e108374371ab64c2",
+    "mtime": 1792219000.8916018,
+    "seen": 1792861828.0271468,
+    "ast_hash": "34ec6330d99ef96cd41abfacb0d20bc3",
     "semantic_hash": ""
   },
   "Frontend/Lims.Desktop/Views/DashboardPage.xaml": {
-    "mtime": 1791969911.9575524,
-    "seen": 1791970553.7974086,
-    "ast_hash": "286938b9369cf6a951530a4ce61b70d0",
+    "mtime": 1792124558.295806,
+    "seen": 1792861828.0281465,
+    "ast_hash": "6030c0abf2153b93c0bef0d8caea857d",
     "semantic_hash": ""
   },
   "Frontend/Lims.Desktop/Views/DashboardPage.xaml.cs": {
-    "mtime": 1791971393.2907853,
-    "seen": 1791971671.0912645,
-    "ast_hash": "8e93efc865c0acb0c344be9798ce0680",
+    "mtime": 1792639433.9232512,
+    "seen": 1792861828.0281465,
+    "ast_hash": "efb3c3c3b1bb099e07bbdddb18173e6e",
     "semantic_hash": ""
   },
   "Shared/Lims.Contracts/Dashboard/DashboardContracts.cs": {
-    "mtime": 1791969755.8985584,
-    "seen": 1791970553.8095295,
-    "ast_hash": "b095b6144fc2ceb9ba2427b9ad0967b4",
+    "mtime": 1792638869.3004892,
+    "seen": 1792861828.029145,
+    "ast_hash": "274077eb2656a2503a792964a6c45b2b",
     "semantic_hash": ""
   },
   "Shared/Lims.Contracts/ReferencePreparations/HistoricalEntryPolicy.cs": {
-    "mtime": 1791970408.2041292,
-    "seen": 1791970553.8216252,
-    "ast_hash": "b874fbae3a634f0b96c19bd6a6f1dc12",
+    "mtime": 1792861678.3134625,
+    "seen": 1792861828.030146,
+    "ast_hash": "8e9adfabd66b8d7585ce4d3bfb72e1e3",
     "semantic_hash": ""
   },
   "Tests/Backend/Lims.Api.Tests/DashboardEndpointsTests.cs": {
@@ -2166,9 +2160,9 @@
     "semantic_hash": ""
   },
   "Tests/Backend/Lims.Infrastructure.Tests/Persistence/DashboardPostgresTests.cs": {
-    "mtime": 1791970259.8008735,
-    "seen": 1791970553.8369372,
-    "ast_hash": "44b396d901a404c12535a87d7ef55774",
+    "mtime": 1792119985.7601066,
+    "seen": 1792861828.034146,
+    "ast_hash": "34889ef73198423b0638a5b79cf19b5e",
     "semantic_hash": ""
   },
   "Tests/Frontend/Lims.Desktop.Tests/DashboardViewModelTests.cs": {
@@ -2178,15 +2172,15 @@
     "semantic_hash": ""
   },
   "Tests/Frontend/Lims.Desktop.VisualHarness/FixtureDashboardApi.cs": {
-    "mtime": 1791971611.3036754,
-    "seen": 1791971671.1040554,
-    "ast_hash": "4c998b6f96b4b528659087c12b61b4ba",
+    "mtime": 1792120277.4766886,
+    "seen": 1792861828.0366826,
+    "ast_hash": "0b9bd7e73f38e67a264af6d6eab63d56",
     "semantic_hash": ""
   },
   "scripts/publish-portable.ps1": {
-    "mtime": 1792019725.8582253,
-    "seen": 1792019730.5075514,
-    "ast_hash": "3565abd9cdbe81eb3b52d0fcc524937c",
+    "mtime": 1792706938.249748,
+    "seen": 1792861828.0392044,
+    "ast_hash": "1074bc1ef5e43b20d100becb0ea500d3",
     "semantic_hash": ""
   },
   "scripts/record-permissions-motion.py": {
@@ -2202,15 +2196,15 @@
     "semantic_hash": ""
   },
   "scripts/validate-permissions-console.ps1": {
-    "mtime": 1791951484.0276737,
-    "seen": 1791970553.8560667,
-    "ast_hash": "53db3a9d662e56c6ba84f754b4a71ae3",
+    "mtime": 1792027253.190515,
+    "seen": 1792861828.0402124,
+    "ast_hash": "c85e537b34706b8db2ba4e5c5a2f0128",
     "semantic_hash": ""
   },
   "docs/carga-historica-y-portable.md": {
-    "mtime": 1792019725.8604543,
-    "seen": 1792019730.5133939,
-    "ast_hash": "378e83c728757a4a41f7588a47fdccfa",
+    "mtime": 1792861678.3206468,
+    "seen": 1792861828.0412107,
+    "ast_hash": "5630cac39a9f1654065b17ca1153e538",
     "semantic_hash": ""
   },
   "docs/gestion-permisos-consola-visual.md": {
@@ -2229,6 +2223,2082 @@
     "mtime": 1791971611.333587,
     "seen": 1791971671.1070595,
     "ast_hash": "027f625c073cc4a0662730f099e7c3e5",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.AlertWorker/Lims.AlertWorker.csproj": {
+    "mtime": 1792640250.6394124,
+    "seen": 1792861828.0047812,
+    "ast_hash": "7f95f7b6e05ea063976abe295bcb1a54",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.AlertWorker/Program.cs": {
+    "mtime": 1792709321.0275187,
+    "seen": 1792861828.0047812,
+    "ast_hash": "9433f57ace39dff86e2a804f22f10bab",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.AlertWorker/appsettings.json": {
+    "mtime": 1792640249.6944573,
+    "seen": 1792861828.0047812,
+    "ast_hash": "3b2227a707e520b0aec39a3848cb3b13",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Api/Alerts/AlertEndpoints.cs": {
+    "mtime": 1792708754.2090049,
+    "seen": 1792861828.0047812,
+    "ast_hash": "2a34fe16002a6475d70ff065ac580a35",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Api/ReferenceMaterials/CommercialPreparationEndpoints.cs": {
+    "mtime": 1792253215.8440678,
+    "seen": 1792861828.0082996,
+    "ast_hash": "e6f5ee378d83e44150a36ac4123ff6f0",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Api/ReferenceMaterials/SolutionGroupEndpoints.cs": {
+    "mtime": 1792142328.0191197,
+    "seen": 1792861828.0082996,
+    "ast_hash": "d9f4d4bf6fe5c80025f65e00a47650c6",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Application/Alerts/AlertRules.cs": {
+    "mtime": 1792637997.297137,
+    "seen": 1792861828.0082996,
+    "ast_hash": "b9e8007b766aeba1c3188257e6ed0642",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Application/Alerts/IAlertService.cs": {
+    "mtime": 1792708753.259217,
+    "seen": 1792861828.0082996,
+    "ast_hash": "edaec2ea7206a446b30dfa054608a1ab",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Application/ReferenceMaterials/CommercialMaterials.cs": {
+    "mtime": 1792471901.4108672,
+    "seen": 1792861828.012035,
+    "ast_hash": "edc37979a910e1352b6e0e2ec90efb44",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Application/ReferencePreparations/ICommercialPreparationService.cs": {
+    "mtime": 1792253103.7316144,
+    "seen": 1792861828.012035,
+    "ast_hash": "19ae9cd49d800a38bc61f90a3aee0abe",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Application/ReferencePreparations/ISolutionGroupRepository.cs": {
+    "mtime": 1792142267.7615507,
+    "seen": 1792861828.012035,
+    "ast_hash": "9f16cad3a77fcbcabd2391a4b655e739",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Application/ReferencePreparations/SolutionGroupService.cs": {
+    "mtime": 1792142268.4170737,
+    "seen": 1792861828.012035,
+    "ast_hash": "f4b45125b20b25eb53459a80a6ceaada",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Domain/Alerts/AlertEntities.cs": {
+    "mtime": 1792708751.4444327,
+    "seen": 1792861828.012035,
+    "ast_hash": "c04d0a51e12a2372e62e6a69a89a3215",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Domain/ReferenceMaterials/CertifiedMaterialComponent.cs": {
+    "mtime": 1792218707.1132157,
+    "seen": 1792861828.012035,
+    "ast_hash": "e9882adf416b0592ef05442d188ee5a8",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Domain/ReferenceMaterials/ReferenceCommercialRole.cs": {
+    "mtime": 1792253103.173036,
+    "seen": 1792861828.012035,
+    "ast_hash": "7158b7528ef7823662a8ca9586eced0b",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Domain/ReferencePreparations/ReferenceSolvent.cs": {
+    "mtime": 1792471901.4041572,
+    "seen": 1792861828.0140648,
+    "ast_hash": "2b1115e751ec74f73ca5b4125be61bc6",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Infrastructure/Alerts/AlertAccess.cs": {
+    "mtime": 1792637906.8573878,
+    "seen": 1792861828.0140648,
+    "ast_hash": "a920bbc5e333863ff8d8721545bfa50a",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Infrastructure/Alerts/AlertDashboard.cs": {
+    "mtime": 1792638868.3639023,
+    "seen": 1792861828.0140648,
+    "ast_hash": "f5b9a02e9f955f966e0deb9fe70919d7",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Infrastructure/Alerts/AlertData.cs": {
+    "mtime": 1792637908.2666798,
+    "seen": 1792861828.0140648,
+    "ast_hash": "b5e1d477c9d9b46993a892424f1de1a1",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Infrastructure/Alerts/AlertDeliveryProcessor.cs": {
+    "mtime": 1792639625.259521,
+    "seen": 1792861828.0140648,
+    "ast_hash": "d5c9df72894c3448e8bbdb1fb743d64e",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Infrastructure/Alerts/AlertEmailTransport.cs": {
+    "mtime": 1792638000.2924068,
+    "seen": 1792861828.0140648,
+    "ast_hash": "61de92ad5865a88fc15f6625ad3254a3",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Infrastructure/Alerts/AlertEngine.cs": {
+    "mtime": 1792708764.8815992,
+    "seen": 1792861828.0140648,
+    "ast_hash": "0266ddea9c10d07ef6a931984c8f1977",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Infrastructure/Alerts/AlertJob.cs": {
+    "mtime": 1792709253.7020607,
+    "seen": 1792861828.0140648,
+    "ast_hash": "28956556899f911dd6ac8d7557dd4584",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Infrastructure/Alerts/AlertRegistration.cs": {
+    "mtime": 1792638868.8534827,
+    "seen": 1792861828.0140648,
+    "ast_hash": "1ac257214738590f62f67d7db0f52313",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Infrastructure/Alerts/AlertService.cs": {
+    "mtime": 1792708753.7399423,
+    "seen": 1792861828.0140648,
+    "ast_hash": "3e11324507b4a36656b35229d83be4f2",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Infrastructure/Alerts/AlertSourceReader.cs": {
+    "mtime": 1792638761.823602,
+    "seen": 1792861828.0140648,
+    "ast_hash": "c545a15e9f2175009482bc8436398d83",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Infrastructure/Persistence/AlertModel.cs": {
+    "mtime": 1792708751.8442903,
+    "seen": 1792861828.0140648,
+    "ast_hash": "6adc4169001f53ee7bf3ab0f29c7b424",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Infrastructure/Persistence/CommercialMaterialModel.cs": {
+    "mtime": 1792451893.7188623,
+    "seen": 1792861828.0140648,
+    "ast_hash": "e7374fbb6c7609ddd4c749290f64d509",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Infrastructure/Persistence/CommercialPreparationQuery.cs": {
+    "mtime": 1792451893.713635,
+    "seen": 1792861828.0140648,
+    "ast_hash": "fd87c49c6a3ae0799ba0cd89c8391d58",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Infrastructure/Persistence/CommercialPreparationService.cs": {
+    "mtime": 1792472887.633819,
+    "seen": 1792861828.0140648,
+    "ast_hash": "5f4f171037da1e2a30b2f0dcc16c4281",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Infrastructure/Persistence/Migrations/20261016092426_AddCurveAndAqsPreparations.Designer.cs": {
+    "mtime": 1792142667.0860167,
+    "seen": 1792861828.0181148,
+    "ast_hash": "2bd456aacf1177c13dcbca90eaff425b",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Infrastructure/Persistence/Migrations/20261016092426_AddCurveAndAqsPreparations.cs": {
+    "mtime": 1792142667.0825033,
+    "seen": 1792861828.0181148,
+    "ast_hash": "ce65df506691d55a40c9197d0bf34b53",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Infrastructure/Persistence/Migrations/20261017031716_AddStockSolventComposition.Designer.cs": {
+    "mtime": 1792207056.3908756,
+    "seen": 1792861828.0181148,
+    "ast_hash": "ea73ddc60b7bdc8578aa35557d9d0dbe",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Infrastructure/Persistence/Migrations/20261017031716_AddStockSolventComposition.cs": {
+    "mtime": 1792207186.8686051,
+    "seen": 1792861828.0181148,
+    "ast_hash": "85371035fe8660840814296244238a3a",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Infrastructure/Persistence/Migrations/20261017063950_AddCertifiedCommercialMaterials.Designer.cs": {
+    "mtime": 1792219220.000547,
+    "seen": 1792861828.0181148,
+    "ast_hash": "665726a049d537450d05745b3fb1c7ee",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Infrastructure/Persistence/Migrations/20261017063950_AddCertifiedCommercialMaterials.cs": {
+    "mtime": 1792219245.2403495,
+    "seen": 1792861828.0181148,
+    "ast_hash": "68a12f8bcdedea3fd57db268ad9d6ff6",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Infrastructure/Persistence/Migrations/20261017162400_AddCommercialPreparationRoles.Designer.cs": {
+    "mtime": 1792254240.3873465,
+    "seen": 1792861828.0181148,
+    "ast_hash": "b8cfac8a5ac7a8bc001e1d6c0ac5a1b6",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Infrastructure/Persistence/Migrations/20261017162400_AddCommercialPreparationRoles.cs": {
+    "mtime": 1792254240.3853457,
+    "seen": 1792861828.0181148,
+    "ast_hash": "5a80ac0eb77b4d9a802e86bafc7737ea",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Infrastructure/Persistence/Migrations/20261019232052_AllowCommercialBottleCounts.Designer.cs": {
+    "mtime": 1792452052.4778273,
+    "seen": 1792861828.0181148,
+    "ast_hash": "214d1c5a054ca72f2f47011e4e853389",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Infrastructure/Persistence/Migrations/20261019232052_AllowCommercialBottleCounts.cs": {
+    "mtime": 1792452052.4767647,
+    "seen": 1792861828.0181148,
+    "ast_hash": "a62ffda11f86b094d485ed07885c9ca2",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Infrastructure/Persistence/Migrations/20261020045452_AddCommercialSolventComposition.Designer.cs": {
+    "mtime": 1792472092.2308805,
+    "seen": 1792861828.0181148,
+    "ast_hash": "bbdb5bdf3cab62365b19e6420aabb057",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Infrastructure/Persistence/Migrations/20261020045452_AddCommercialSolventComposition.cs": {
+    "mtime": 1792472228.8628411,
+    "seen": 1792861828.0181148,
+    "ast_hash": "cc45f30316775aff5ed32bdf304530af",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Infrastructure/Persistence/Migrations/20261022031315_AddAlertsAndNotifications.Designer.cs": {
+    "mtime": 1792638795.173771,
+    "seen": 1792861828.0181148,
+    "ast_hash": "bb429c8b28258e2bd792f7108081e159",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Infrastructure/Persistence/Migrations/20261022031315_AddAlertsAndNotifications.cs": {
+    "mtime": 1792639031.5597963,
+    "seen": 1792861828.0181148,
+    "ast_hash": "eaf5df7c39067492212a3e738f21bf99",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Infrastructure/Persistence/Migrations/20261022224139_AddAlertEvaluationHistory.Designer.cs": {
+    "mtime": 1792708899.8133054,
+    "seen": 1792861828.0181148,
+    "ast_hash": "dbcdd65018d812a33438072ed96baedc",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Infrastructure/Persistence/Migrations/20261022224139_AddAlertEvaluationHistory.cs": {
+    "mtime": 1792708899.8113053,
+    "seen": 1792861828.0181148,
+    "ast_hash": "e1db4bd76002e007525583e8ca409fca",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Infrastructure/Persistence/PreparationListQuery.cs": {
+    "mtime": 1792138302.485497,
+    "seen": 1792861828.0191114,
+    "ast_hash": "8a30788fb39dd828452bdb6a80c31308",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Infrastructure/Persistence/PreparationSources.cs": {
+    "mtime": 1792253171.368327,
+    "seen": 1792861828.0191114,
+    "ast_hash": "e6727c991caea9b2c798aa3ae6e71b9a",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Infrastructure/Persistence/SolutionGroupRepository.cs": {
+    "mtime": 1792220694.5853548,
+    "seen": 1792861828.0191114,
+    "ast_hash": "28952d78a6ec4eac5ec70f2b13794f3f",
+    "semantic_hash": ""
+  },
+  "Backend/Lims.Infrastructure/Persistence/StockSolventModel.cs": {
+    "mtime": 1792471901.4062827,
+    "seen": 1792861828.0191114,
+    "ast_hash": "7dd3a56935843c7cb3028667ff90294f",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.DesignSystem/Controls/LimsAction.cs": {
+    "mtime": 1792475553.5481122,
+    "seen": 1792861828.0191114,
+    "ast_hash": "042376ca21c392ab5b13a51f059eab9c",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.DesignSystem/Themes/LimsDashboard.xaml": {
+    "mtime": 1792124558.299371,
+    "seen": 1792861828.022624,
+    "ast_hash": "e187a76b91ee67b2557a8db76100451d",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/Controls/SolutionGroupVisuals.cs": {
+    "mtime": 1792194450.9859962,
+    "seen": 1792861828.022624,
+    "ast_hash": "c965c48758ff7b2f48beaf732f5cefd1",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/Http/AlertsApiClient.cs": {
+    "mtime": 1792708803.669376,
+    "seen": 1792861828.022624,
+    "ast_hash": "30ef6a46055a4820f9c39cf625b8a0f5",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/Http/CommercialPreparationApiClient.cs": {
+    "mtime": 1792471967.7625601,
+    "seen": 1792861828.0236235,
+    "ast_hash": "f2841fd966973fc2fa7bbbf234309a7a",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/Http/IAlertsApiClient.cs": {
+    "mtime": 1792708801.2072952,
+    "seen": 1792861828.0241275,
+    "ast_hash": "fb8eba71be55b2088aad501235497d28",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/Http/ICommercialPreparationApiClient.cs": {
+    "mtime": 1792253218.541684,
+    "seen": 1792861828.0241275,
+    "ast_hash": "c46c19bb8f1d947bdaf4502cd63db9fb",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/Http/ISolutionGroupApiClient.cs": {
+    "mtime": 1792142360.289666,
+    "seen": 1792861828.0241275,
+    "ast_hash": "08ecf8457ab87fcb2d5be74b1da2f3b1",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/Http/SolutionGroupApiClient.cs": {
+    "mtime": 1792196648.3933103,
+    "seen": 1792861828.0251343,
+    "ast_hash": "4032c52af848fd676b296053d3d4cde4",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/Presentation/DashboardAnalytics.cs": {
+    "mtime": 1792121792.3072739,
+    "seen": 1792861828.0251343,
+    "ast_hash": "206ebd0787071a5f2d83aff49b2e6394",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/Presentation/SolutionGroupPresentation.cs": {
+    "mtime": 1792218945.2075436,
+    "seen": 1792861828.026139,
+    "ast_hash": "0364f98f4b489cfeec4589fd28a4d8d3",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/Program.cs": {
+    "mtime": 1792729031.6635299,
+    "seen": 1792861828.026139,
+    "ast_hash": "7169a4a2d7c718184880c4059ac86db6",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/Services/WindowsAlertNotifications.cs": {
+    "mtime": 1792640662.974907,
+    "seen": 1792861828.0271468,
+    "ast_hash": "a15e939891998e48f34cb840b787d51b",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/StartupDiagnostics.cs": {
+    "mtime": 1792728990.42477,
+    "seen": 1792861828.0271468,
+    "ast_hash": "a489db4c4161afa0bf7ab76b7d806742",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/ViewModels/AlertsViewModel.cs": {
+    "mtime": 1792709248.0812724,
+    "seen": 1792861828.0271468,
+    "ast_hash": "0da113be65e054dd16b17ebbdc95f5f2",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/ViewModels/CommercialIntermediateViewModel.cs": {
+    "mtime": 1792472023.483413,
+    "seen": 1792861828.0271468,
+    "ast_hash": "e6006f6ddd9b991a475983d39a93b877",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/ViewModels/SolutionGroupViewModel.cs": {
+    "mtime": 1792220705.9041884,
+    "seen": 1792861828.0281465,
+    "ast_hash": "bf95e03bd52d17e3e8444f9ca06a5eaa",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/ViewModels/SolventCompositionViewModel.cs": {
+    "mtime": 1792473330.0869582,
+    "seen": 1792861828.0281465,
+    "ast_hash": "e6030aa3604f20bf9ece829ef7466632",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/ViewModels/StockSolventRow.cs": {
+    "mtime": 1792207056.3972716,
+    "seen": 1792861828.0281465,
+    "ast_hash": "0a946aa87e1b1a61ce7e9a0196378a6b",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/Views/AlertConfigurationDialog.cs": {
+    "mtime": 1792644157.7503424,
+    "seen": 1792861828.0281465,
+    "ast_hash": "41af164714d005fce340c1bb01d3d080",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/Views/AlertsPage.xaml": {
+    "mtime": 1792714342.695546,
+    "seen": 1792861828.0281465,
+    "ast_hash": "87afcbb6e9d0f886aff6fd97fd774187",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/Views/AlertsPage.xaml.cs": {
+    "mtime": 1792714721.312143,
+    "seen": 1792861828.0281465,
+    "ast_hash": "4313299dd063afaa66e5bf093ca7c4ab",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/Views/AlertsWorkspace.cs": {
+    "mtime": 1792709468.957534,
+    "seen": 1792861828.0281465,
+    "ast_hash": "b40c2ee8b54d7a6a60d5854c93bebb1e",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/Views/CommercialBottleVisual.xaml": {
+    "mtime": 1792469446.409483,
+    "seen": 1792861828.0281465,
+    "ast_hash": "fd439bd7b8e2db59354e0648819dc4e8",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/Views/CommercialBottleVisual.xaml.cs": {
+    "mtime": 1792469448.1395528,
+    "seen": 1792861828.0281465,
+    "ast_hash": "b9086914272dde0e195270661d341d32",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/Views/CommercialCertificateEditor.xaml": {
+    "mtime": 1792452201.218903,
+    "seen": 1792861828.0281465,
+    "ast_hash": "e26b4837cfd70c7f5af093fae00c6b8a",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/Views/CommercialCertificateEditor.xaml.cs": {
+    "mtime": 1792452201.218903,
+    "seen": 1792861828.0281465,
+    "ast_hash": "fb5cf3c5891b4baba7409d842106bf59",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/Views/CommercialIntermediateDialog.cs": {
+    "mtime": 1792620385.230108,
+    "seen": 1792861828.0281465,
+    "ast_hash": "753c7f971c1e0e3a3535ff0308939095",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/Views/CommercialIntermediateWorkspace.xaml": {
+    "mtime": 1792621383.2302306,
+    "seen": 1792861828.0281465,
+    "ast_hash": "4a04062ff96be7b3cce0b9d2edd920d0",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/Views/CommercialIntermediateWorkspace.xaml.cs": {
+    "mtime": 1792475196.1199496,
+    "seen": 1792861828.0281465,
+    "ast_hash": "0c51f7e0ec1038eb16a395c4f7dc2e1b",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/Views/CommercialMaterialDetails.cs": {
+    "mtime": 1792472023.483413,
+    "seen": 1792861828.0281465,
+    "ast_hash": "4401a59e5b92a805633a444fce42fee5",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/Views/CommercialPreparationDetailDialog.cs": {
+    "mtime": 1792451980.8556173,
+    "seen": 1792861828.0281465,
+    "ast_hash": "13e02f6dff086b1da0bd5b7d6d092ada",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/Views/CommercialPreparationEditor.xaml": {
+    "mtime": 1792620386.802027,
+    "seen": 1792861828.0281465,
+    "ast_hash": "b22db65e04627c4b9b92a001235d40db",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/Views/CommercialPreparationEditor.xaml.cs": {
+    "mtime": 1792620388.4999986,
+    "seen": 1792861828.0281465,
+    "ast_hash": "e5d09ea9fa6950f92f93bd74e12af839",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/Views/PreparationEditorHeader.cs": {
+    "mtime": 1792620597.66832,
+    "seen": 1792861828.0281465,
+    "ast_hash": "2516e6cc810da7b4aef54c0e6ceb0641",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/Views/SolutionGroupDetailDialog.xaml": {
+    "mtime": 1792193979.5424187,
+    "seen": 1792861828.0281465,
+    "ast_hash": "1c5ff3de49527180530cb4d728093728",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/Views/SolutionGroupDetailDialog.xaml.cs": {
+    "mtime": 1792194120.4939706,
+    "seen": 1792861828.0281465,
+    "ast_hash": "2941c0f540d3a0d1b2e21e2264196f43",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/Views/SolutionGroupEditorDialog.xaml": {
+    "mtime": 1792621382.857979,
+    "seen": 1792861828.0281465,
+    "ast_hash": "fd5b4ee81edd9bddfb98216431cc2eee",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/Views/SolutionGroupEditorDialog.xaml.cs": {
+    "mtime": 1792475193.0575576,
+    "seen": 1792861828.0281465,
+    "ast_hash": "b63fce1db33269ef3bbf5f004a5e5b4b",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/Views/SolutionGroupPage.xaml": {
+    "mtime": 1792143453.817385,
+    "seen": 1792861828.0281465,
+    "ast_hash": "ce58baed2bdfc59d922335b8891949d1",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/Views/SolutionGroupPage.xaml.cs": {
+    "mtime": 1792194089.0767305,
+    "seen": 1792861828.0281465,
+    "ast_hash": "4e91b3e7dc718ab9d96beedb54672f51",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/Views/SolutionGroupWorkspace.cs": {
+    "mtime": 1792142608.091453,
+    "seen": 1792861828.0281465,
+    "ast_hash": "6832dc5c5db33d8bca7cb588c7c38c2d",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/Views/SolventCompositionEditor.cs": {
+    "mtime": 1792620598.122706,
+    "seen": 1792861828.0281465,
+    "ast_hash": "c3672d71fc25bf67ac6e95b51b6d131f",
+    "semantic_hash": ""
+  },
+  "Frontend/Lims.Desktop/Views/StockCompositionVisual.cs": {
+    "mtime": 1792207056.398281,
+    "seen": 1792861828.0281465,
+    "ast_hash": "c9ed017c4f2469052a92482fdb334aa9",
+    "semantic_hash": ""
+  },
+  "Shared/Lims.Contracts/Alerts/AlertContracts.cs": {
+    "mtime": 1792708751.0670767,
+    "seen": 1792861828.0281465,
+    "ast_hash": "a0254ce9e34ca111461cc421a0e000f9",
+    "semantic_hash": ""
+  },
+  "Shared/Lims.Contracts/ReferenceMaterials/CommercialMaterialContracts.cs": {
+    "mtime": 1792471901.3992305,
+    "seen": 1792861828.030146,
+    "ast_hash": "e4dfb28690ddef0bf63a83417a4f5f96",
+    "semantic_hash": ""
+  },
+  "Shared/Lims.Contracts/ReferencePreparations/CommercialComponentPaste.cs": {
+    "mtime": 1792253263.2198682,
+    "seen": 1792861828.030146,
+    "ast_hash": "7c80f72e5bc258192018c2c157ddf5ea",
+    "semantic_hash": ""
+  },
+  "Shared/Lims.Contracts/ReferencePreparations/CommercialPreparationContracts.cs": {
+    "mtime": 1792471901.401746,
+    "seen": 1792861828.030146,
+    "ast_hash": "0a6cd2a3542f8e1dc800566dc8fb9186",
+    "semantic_hash": ""
+  },
+  "Shared/Lims.Contracts/ReferencePreparations/PreparationListFilter.cs": {
+    "mtime": 1792137910.9573305,
+    "seen": 1792861828.030146,
+    "ast_hash": "7c0f420a070bc8e7953fef464f64b235",
+    "semantic_hash": ""
+  },
+  "Shared/Lims.Contracts/ReferencePreparations/PreparationUsage.cs": {
+    "mtime": 1792138160.4195786,
+    "seen": 1792861828.030146,
+    "ast_hash": "958178bd2606bc193a51bcf55e27d05f",
+    "semantic_hash": ""
+  },
+  "Shared/Lims.Contracts/ReferencePreparations/SolutionGroupCalculator.cs": {
+    "mtime": 1792220691.2400374,
+    "seen": 1792861828.030146,
+    "ast_hash": "0def94d979537e1c2fcd84c611cc19b4",
+    "semantic_hash": ""
+  },
+  "Shared/Lims.Contracts/ReferencePreparations/SolutionGroupContracts.cs": {
+    "mtime": 1792142227.3811736,
+    "seen": 1792861828.030146,
+    "ast_hash": "e286c455cf75eb736df78f29eb9d73e1",
+    "semantic_hash": ""
+  },
+  "Shared/Lims.Contracts/ReferencePreparations/StockSolventComposition.cs": {
+    "mtime": 1792471901.4027464,
+    "seen": 1792861828.030146,
+    "ast_hash": "dec070c8d8c719ac5418a865938e0774",
+    "semantic_hash": ""
+  },
+  "Tests/Backend/Lims.Api.Tests/AlertEndpointsTests.cs": {
+    "mtime": 1792708949.4420981,
+    "seen": 1792861828.030146,
+    "ast_hash": "f8564d0eb16feb9bb2c6d3e02c322d9b",
+    "semantic_hash": ""
+  },
+  "Tests/Backend/Lims.Api.Tests/SolutionGroupEndpointsTests.cs": {
+    "mtime": 1792142912.1048574,
+    "seen": 1792861828.031146,
+    "ast_hash": "5e0fc8268f745522197da8c9a2bb9583",
+    "semantic_hash": ""
+  },
+  "Tests/Backend/Lims.Application.Tests/AlertRulesTests.cs": {
+    "mtime": 1792639011.6681018,
+    "seen": 1792861828.031146,
+    "ast_hash": "730dc7aa1710cbadeaf14d5d9a206c08",
+    "semantic_hash": ""
+  },
+  "Tests/Backend/Lims.Application.Tests/ReferenceMaterials/CommercialCertificateTests.cs": {
+    "mtime": 1792452201.218903,
+    "seen": 1792861828.0321512,
+    "ast_hash": "b7a4b60fdf13614d0297009b9eea6026",
+    "semantic_hash": ""
+  },
+  "Tests/Backend/Lims.Application.Tests/ReferenceMaterials/CommercialComponentPasteTests.cs": {
+    "mtime": 1792254328.2112446,
+    "seen": 1792861828.0321512,
+    "ast_hash": "e79cd7fbe9e0343099b61ecb9da95208",
+    "semantic_hash": ""
+  },
+  "Tests/Backend/Lims.Application.Tests/ReferenceMaterials/SolutionGroupCalculatorTests.cs": {
+    "mtime": 1792142754.8965762,
+    "seen": 1792861828.0331507,
+    "ast_hash": "006df468ffa99b8bb7935e490b6d1e2a",
+    "semantic_hash": ""
+  },
+  "Tests/Backend/Lims.Application.Tests/ReferenceMaterials/StockServiceTests.cs": {
+    "mtime": 1792861702.7459419,
+    "seen": 1792861828.0331507,
+    "ast_hash": "1f823eec45a043c9582d8c6378d706da",
+    "semantic_hash": ""
+  },
+  "Tests/Backend/Lims.Infrastructure.Tests/Persistence/AlertPostgresTests.cs": {
+    "mtime": 1792709515.9173467,
+    "seen": 1792861828.034146,
+    "ast_hash": "eb00bd441ad1095c82aa9ae90d9c6aed",
+    "semantic_hash": ""
+  },
+  "Tests/Backend/Lims.Infrastructure.Tests/Persistence/CatalogMigrationPostgresTests.cs": {
+    "mtime": 1792448007.308506,
+    "seen": 1792861828.034146,
+    "ast_hash": "fd22d510535f2ec9d4d8bafe8586fd24",
+    "semantic_hash": ""
+  },
+  "Tests/Backend/Lims.Infrastructure.Tests/Persistence/CommercialMaterialsPostgresTests.cs": {
+    "mtime": 1792472887.6358335,
+    "seen": 1792861828.034146,
+    "ast_hash": "065f5aca62941baaaeaff1f4de4e059c",
+    "semantic_hash": ""
+  },
+  "Tests/Backend/Lims.Infrastructure.Tests/Persistence/CommercialMigrationReconciliationTests.cs": {
+    "mtime": 1792453851.6587687,
+    "seen": 1792861828.034146,
+    "ast_hash": "dac079c29257b36fb5f86f34d3d75ffe",
+    "semantic_hash": ""
+  },
+  "Tests/Backend/Lims.Infrastructure.Tests/Persistence/CommercialSolventCompositionTests.cs": {
+    "mtime": 1792473005.5603762,
+    "seen": 1792861828.034146,
+    "ast_hash": "59bcfa9fb05f7e5c783b8c4eca6b4394",
+    "semantic_hash": ""
+  },
+  "Tests/Backend/Lims.Infrastructure.Tests/Persistence/SolutionGroupPostgresTests.cs": {
+    "mtime": 1792143383.2909553,
+    "seen": 1792861828.0346527,
+    "ast_hash": "f7fec6056d91dbee4de011ba06f28139",
+    "semantic_hash": ""
+  },
+  "Tests/Frontend/Lims.Desktop.Tests/AlertsApiClientTests.cs": {
+    "mtime": 1792644548.1127374,
+    "seen": 1792861828.0346527,
+    "ast_hash": "9669c68c8ae54d8badd76ea79bbbe767",
+    "semantic_hash": ""
+  },
+  "Tests/Frontend/Lims.Desktop.Tests/AlertsViewModelTests.cs": {
+    "mtime": 1792709251.4113202,
+    "seen": 1792861828.0346527,
+    "ast_hash": "12dc0e3d384f766c03cce87069b181b5",
+    "semantic_hash": ""
+  },
+  "Tests/Frontend/Lims.Desktop.Tests/CommercialIntermediateViewModelTests.cs": {
+    "mtime": 1792472140.1300595,
+    "seen": 1792861828.0346527,
+    "ast_hash": "c5e84e83da9f7ec2a0d25af95472399f",
+    "semantic_hash": ""
+  },
+  "Tests/Frontend/Lims.Desktop.Tests/DashboardAnalyticsTests.cs": {
+    "mtime": 1792120153.623885,
+    "seen": 1792861828.0346527,
+    "ast_hash": "6a8e3ea2482dff1462a9522920654b9f",
+    "semantic_hash": ""
+  },
+  "Tests/Frontend/Lims.Desktop.Tests/SolutionGroupApiClientTests.cs": {
+    "mtime": 1792196648.7464144,
+    "seen": 1792861828.0366826,
+    "ast_hash": "0b1ac6bd33e2a595ab1c351fc5ae5472",
+    "semantic_hash": ""
+  },
+  "Tests/Frontend/Lims.Desktop.Tests/SolutionGroupViewModelTests.cs": {
+    "mtime": 1792194044.5612073,
+    "seen": 1792861828.0366826,
+    "ast_hash": "c16dbf38e6612f3670bbd3674eef8581",
+    "semantic_hash": ""
+  },
+  "Tests/Frontend/Lims.Desktop.Tests/SolventCompositionTests.cs": {
+    "mtime": 1792472596.6159792,
+    "seen": 1792861828.0366826,
+    "ast_hash": "8a6c53fb621a0b1c1fa5b5e045b6220a",
+    "semantic_hash": ""
+  },
+  "Tests/Frontend/Lims.Desktop.Tests/ThemeResourceTests.cs": {
+    "mtime": 1792027063.2526536,
+    "seen": 1792861828.0366826,
+    "ast_hash": "8a0b29417f090f30bddb9787c57ed008",
+    "semantic_hash": ""
+  },
+  "Tests/Frontend/Lims.Desktop.VisualHarness/ActionControlsValidation.cs": {
+    "mtime": 1792620390.2061293,
+    "seen": 1792861828.0366826,
+    "ast_hash": "3c58698e3965389f96a22566f86322f8",
+    "semantic_hash": ""
+  },
+  "Tests/Frontend/Lims.Desktop.VisualHarness/App.MotionRegression.cs": {
+    "mtime": 1792730167.338224,
+    "seen": 1792861828.0366826,
+    "ast_hash": "18522013f378307527c6cf3e8c67baf9",
+    "semantic_hash": ""
+  },
+  "Tests/Frontend/Lims.Desktop.VisualHarness/CommercialWorkspaceValidation.cs": {
+    "mtime": 1792472366.34664,
+    "seen": 1792861828.0366826,
+    "ast_hash": "594874f0f18912ff86703f3ab00545d1",
+    "semantic_hash": ""
+  },
+  "Tests/Frontend/Lims.Desktop.VisualHarness/FixtureAlertsApi.cs": {
+    "mtime": 1792708828.8647854,
+    "seen": 1792861828.0366826,
+    "ast_hash": "cf248ac47a203281001bf2aefbcd82a1",
+    "semantic_hash": ""
+  },
+  "Tests/Frontend/Lims.Desktop.VisualHarness/FixtureCommercialPreparationApi.cs": {
+    "mtime": 1792475385.279814,
+    "seen": 1792861828.0366826,
+    "ast_hash": "bd93b2c914792c82bb5aa0bde068ce02",
+    "semantic_hash": ""
+  },
+  "Tests/Frontend/Lims.Desktop.VisualHarness/FixtureSolutionGroupApi.cs": {
+    "mtime": 1792194448.3501117,
+    "seen": 1792861828.0366826,
+    "ast_hash": "3d2362e2fee1f8427ce77f3b339fbcbe",
+    "semantic_hash": ""
+  },
+  "Tests/Frontend/Lims.Desktop.VisualHarness/PersistentPreparationValidation.cs": {
+    "mtime": 1792472336.5655842,
+    "seen": 1792861828.0381942,
+    "ast_hash": "d539d575a8e731d1721aa29cd2ff7c7b",
+    "semantic_hash": ""
+  },
+  "Tests/Frontend/Lims.Desktop.VisualHarness/PreparationDialogValidation.cs": {
+    "mtime": 1792469556.2392638,
+    "seen": 1792861828.0381942,
+    "ast_hash": "26d9bd9c2df5f6db858bc524cf38f744",
+    "semantic_hash": ""
+  },
+  "Tests/Frontend/Lims.Desktop.VisualHarness/SolventValidation.cs": {
+    "mtime": 1792473296.330347,
+    "seen": 1792861828.0381942,
+    "ast_hash": "12e5cd7ec14ca7aba63425a61f8fa73a",
+    "semantic_hash": ""
+  },
+  "Tests/Frontend/Lims.Desktop.VisualHarness/StandardsAvailabilityChecks.cs": {
+    "mtime": 1792137202.53106,
+    "seen": 1792861828.0381942,
+    "ast_hash": "93c53b5936f3fb112aaf7a1f7c585600",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/commercial-fix-20261019/commercial-entry-report.json": {
+    "mtime": 1792452978.0587013,
+    "seen": 1792861828.0381942,
+    "ast_hash": "2f569a2bef1a68920d33d25a1e36fb12",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/commercial-fix-20261019/intermedia-1366.json": {
+    "mtime": 1792452970.6448693,
+    "seen": 1792861828.0381942,
+    "ast_hash": "94c49d50420a10b31b75aa7099a382d0",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/commercial-fix-20261019/intermedia-1920.json": {
+    "mtime": 1792452974.0322173,
+    "seen": 1792861828.0381942,
+    "ast_hash": "bcc85fe0167afa2205af96711dddaeb1",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/commercial-fix-20261019/standard-entry-report.json": {
+    "mtime": 1792452947.397144,
+    "seen": 1792861828.0381942,
+    "ast_hash": "b1fc7e8f0fe22a91c37aab463addec14",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/commercial-fix-20261019/stock-1366.json": {
+    "mtime": 1792452958.1673782,
+    "seen": 1792861828.0381942,
+    "ast_hash": "8618dba0204fc61f31f550780d441203",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/commercial-fix-20261019/stock-1920.json": {
+    "mtime": 1792452961.4945414,
+    "seen": 1792861828.0381942,
+    "ast_hash": "123959504b0a675a9aa675b33ebafa98",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/commercial-fix-20261019/verification.json": {
+    "mtime": 1792453381.640947,
+    "seen": 1792861828.0381942,
+    "ast_hash": "d85931982bb215f346f65c719d95fef7",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/commercial-materials/CommercialMix-form-layout-1366.json": {
+    "mtime": 1792220892.2997298,
+    "seen": 1792861828.0381942,
+    "ast_hash": "268c12eb25f1f37b7e7b04d73bc9a63d",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/commercial-materials/CommercialMix-form-layout-1920.json": {
+    "mtime": 1792220891.2981637,
+    "seen": 1792861828.0381942,
+    "ast_hash": "739fbac8f2affbe372d9780708b1af1a",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/commercial-materials/CommercialMix-request.json": {
+    "mtime": 1792220890.2647188,
+    "seen": 1792861828.0381942,
+    "ast_hash": "f76d8ec69ccf706cfad4882b4de5b8a5",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/commercial-materials/CommercialSolution-form-layout-1366.json": {
+    "mtime": 1792220883.846308,
+    "seen": 1792861828.0381942,
+    "ast_hash": "0c6594a5262e0c22a802602b0ffbccb8",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/commercial-materials/CommercialSolution-form-layout-1920.json": {
+    "mtime": 1792220882.921213,
+    "seen": 1792861828.0381942,
+    "ast_hash": "52d0e333e5d944ffdc822b05046a0691",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/commercial-materials/CommercialSolution-request.json": {
+    "mtime": 1792220881.6253102,
+    "seen": 1792861828.0381942,
+    "ast_hash": "b8d61933aced6d965dd4fd36007bc5ba",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/commercial-materials/intermediate-report.json": {
+    "mtime": 1792220898.6916375,
+    "seen": 1792861828.0381942,
+    "ast_hash": "b459be2419d251ec53f3b11fd586e213",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/commercial-materials/verification.json": {
+    "mtime": 1792220972.5357127,
+    "seen": 1792861828.0381942,
+    "ast_hash": "593f86f48ac88739c893aad815866e14",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/curve-aqs/AQS-form-1366x768.json": {
+    "mtime": 1792187140.5800297,
+    "seen": 1792861828.0381942,
+    "ast_hash": "c2564a4936f3de646982994598e95a6e",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/curve-aqs/AQS-form-1600x900.json": {
+    "mtime": 1792187138.2158005,
+    "seen": 1792861828.0381942,
+    "ast_hash": "f843b3a5ab1e1694cabd14057ab3eb27",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/curve-aqs/AQS-form-1920x1080.json": {
+    "mtime": 1792187136.011987,
+    "seen": 1792861828.0381942,
+    "ast_hash": "6f7b6c54aaa5b4c6a839265776f41c1a",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/curve-aqs/AQS-invalid.json": {
+    "mtime": 1792187123.9460006,
+    "seen": 1792861828.0381942,
+    "ast_hash": "16c83c9f6c890e262628d740e3eb06d7",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/curve-aqs/AQS-ready.json": {
+    "mtime": 1792187124.742567,
+    "seen": 1792861828.0381942,
+    "ast_hash": "6f7b6c54aaa5b4c6a839265776f41c1a",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/curve-aqs/AQS-saved.json": {
+    "mtime": 1792187144.1002998,
+    "seen": 1792861828.0381942,
+    "ast_hash": "acd5673be5964de36eb6d05191a896e9",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/curve-aqs/Curva-form-1366x768.json": {
+    "mtime": 1792187132.9623678,
+    "seen": 1792861828.0381942,
+    "ast_hash": "33e6fa480394b5dc652b3505b417e19f",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/curve-aqs/Curva-form-1600x900.json": {
+    "mtime": 1792187130.6299498,
+    "seen": 1792861828.0381942,
+    "ast_hash": "daa0cf7d668dedc00b190c9d20bf0e9b",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/curve-aqs/Curva-form-1920x1080.json": {
+    "mtime": 1792187128.4620829,
+    "seen": 1792861828.0381942,
+    "ast_hash": "79bd58f09a4797d2f7dedabcf07bcc09",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/curve-aqs/Curva-invalid.json": {
+    "mtime": 1792187119.5977483,
+    "seen": 1792861828.0381942,
+    "ast_hash": "a32c632422fb0ac7015cb0b528114b0a",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/curve-aqs/Curva-ready.json": {
+    "mtime": 1792187120.5874653,
+    "seen": 1792861828.0381942,
+    "ast_hash": "79bd58f09a4797d2f7dedabcf07bcc09",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/curve-aqs/Curva-saved.json": {
+    "mtime": 1792187146.9658518,
+    "seen": 1792861828.0381942,
+    "ast_hash": "7d8450c1dfaf5346a73315d469fcf124",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/curve-aqs/popup-verification.json": {
+    "mtime": 1792187362.0184162,
+    "seen": 1792861828.0381942,
+    "ast_hash": "2e8e7020da9eae4a5b5fa17d477dce69",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/curve-aqs/shared-balance.json": {
+    "mtime": 1792187149.1288943,
+    "seen": 1792861828.0381942,
+    "ast_hash": "4d6407cccbf4c85fda4932feb0efd7ca",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/curve-aqs/verification.json": {
+    "mtime": 1792187149.1991775,
+    "seen": 1792861828.0381942,
+    "ast_hash": "d94cf2c3cd1c8a78b6a35c18a475b762",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/intermedia-workspace/access-BottleCountBox.json": {
+    "mtime": 1792466025.0515265,
+    "seen": 1792861828.0381942,
+    "ast_hash": "16b4368ff8a2fc578579ce15ee3d5e43",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/intermedia-workspace/access-BrandBox.json": {
+    "mtime": 1792466020.6134253,
+    "seen": 1792861828.0381942,
+    "ast_hash": "3b517026ac4dd439d02f30ff88b5ea09",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/intermedia-workspace/access-CatalogBox.json": {
+    "mtime": 1792466021.4512565,
+    "seen": 1792861828.0381942,
+    "ast_hash": "40f9bf2243f4cf2b8935d6ce8e1380ae",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/intermedia-workspace/access-ExpirationPicker.json": {
+    "mtime": 1792466027.2251678,
+    "seen": 1792861828.0381942,
+    "ast_hash": "adc58f0318d7b837790f69654afdeca4",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/intermedia-workspace/access-LocationSelect.json": {
+    "mtime": 1792466027.981093,
+    "seen": 1792861828.0381942,
+    "ast_hash": "cc1467d4f7029a4e15ff0c17b94c7860",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/intermedia-workspace/access-LotBox.json": {
+    "mtime": 1792466022.1912522,
+    "seen": 1792861828.0381942,
+    "ast_hash": "59a0da8f55537a6589786610eac0e026",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/intermedia-workspace/access-MethodSelect.json": {
+    "mtime": 1792466019.8615146,
+    "seen": 1792861828.0381942,
+    "ast_hash": "c8c8add8ff6605fb63ad96d1457e7d56",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/intermedia-workspace/access-ProductNameBox.json": {
+    "mtime": 1792466019.123664,
+    "seen": 1792861828.0381942,
+    "ast_hash": "8de7e32e7bcf22f1d7512f75b1a20d9e",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/intermedia-workspace/access-ReceivedPicker.json": {
+    "mtime": 1792466026.4959905,
+    "seen": 1792861828.0381942,
+    "ast_hash": "cf0b217b34457a8a314d4abaa35f7cca",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/intermedia-workspace/access-SolventSelect.json": {
+    "mtime": 1792466025.7724478,
+    "seen": 1792861828.0381942,
+    "ast_hash": "7a68e7071b38911085f67dd8976559b8",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/intermedia-workspace/access-StorageBox.json": {
+    "mtime": 1792466028.7114446,
+    "seen": 1792861828.0381942,
+    "ast_hash": "c25806e0b0d5ef83f319e2ea0efc6bf7",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/intermedia-workspace/access-VolumeBox.json": {
+    "mtime": 1792466023.5512452,
+    "seen": 1792861828.0381942,
+    "ast_hash": "c0f69492a8ad3d9f12eb10742b10d9ae",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/intermedia-workspace/access-VolumeUnitSelect.json": {
+    "mtime": 1792466024.3055706,
+    "seen": 1792861828.0381942,
+    "ast_hash": "5c00ee29c4bc51b54f021d6beaf4da65",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/intermedia-workspace/after-cancel.json": {
+    "mtime": 1792466035.4067986,
+    "seen": 1792861828.0381942,
+    "ast_hash": "ac72ee5def8491269257ed2d2f53cc97",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/intermedia-workspace/before-cancel.json": {
+    "mtime": 1792466034.917535,
+    "seen": 1792861828.0381942,
+    "ast_hash": "21dec8efb05a3cf6e8de2258d5202f54",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/intermedia-workspace/before-save.json": {
+    "mtime": 1792466038.3963058,
+    "seen": 1792861828.0381942,
+    "ast_hash": "e03955431b4ca1f482bd974ea7a242ff",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/intermedia-workspace/blank-row.json": {
+    "mtime": 1792466031.053575,
+    "seen": 1792861828.0381942,
+    "ast_hash": "6fc658f691b33179157ab0e1dde47aab",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/intermedia-workspace/commercial-entry-report.json": {
+    "mtime": 1792466039.7134225,
+    "seen": 1792861828.0381942,
+    "ast_hash": "629ae4251b462dcf08a483bcbeb3d227",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/intermedia-workspace/empty-1366.json": {
+    "mtime": 1792465988.1711712,
+    "seen": 1792861828.0381942,
+    "ast_hash": "e8b9227db17d0953d58778d1aa9f60e1",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/intermedia-workspace/empty-1920.json": {
+    "mtime": 1792465990.0114532,
+    "seen": 1792861828.0381942,
+    "ast_hash": "f06a815ced5518aec2a8d81bf1787720",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/intermedia-workspace/keyboard-down.json": {
+    "mtime": 1792466016.7535863,
+    "seen": 1792861828.0381942,
+    "ast_hash": "6142deb883a42ffea857c2410c3e30c3",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/intermedia-workspace/keyboard-enter.json": {
+    "mtime": 1792466032.5361168,
+    "seen": 1792861828.0381942,
+    "ast_hash": "f6ddff3e00df9f3aae465ae30fd89b69",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/intermedia-workspace/keyboard-tab.json": {
+    "mtime": 1792466017.711285,
+    "seen": 1792861828.0381942,
+    "ast_hash": "f1192f1d7be5cdeef77bc2a7f7b0ed0b",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/intermedia-workspace/scroll-1366.json": {
+    "mtime": 1792466000.4492679,
+    "seen": 1792861828.0381942,
+    "ast_hash": "4e7b1a714b091ed400712771fc56de2d",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/intermedia-workspace/scroll-1920.json": {
+    "mtime": 1792466008.5824077,
+    "seen": 1792861828.0381942,
+    "ast_hash": "de43c15ed0361d351bb1c344cdb10965",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/intermedia-workspace/search.json": {
+    "mtime": 1792466014.7313633,
+    "seen": 1792861828.0381942,
+    "ast_hash": "9aa6b5070397566615a46e289a4505ca",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/intermedia-workspace/three-1366.json": {
+    "mtime": 1792465993.9293034,
+    "seen": 1792861828.0381942,
+    "ast_hash": "cc6c080192abaef214b77749091c9109",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/intermedia-workspace/three-1920.json": {
+    "mtime": 1792465996.4017756,
+    "seen": 1792861828.0381942,
+    "ast_hash": "95107dbea5d9f63b7b9ea4cbdc4c1fee",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/intermedia-workspace/twenty-1366.json": {
+    "mtime": 1792465998.6686516,
+    "seen": 1792861828.0381942,
+    "ast_hash": "1097b78353458ff521b370fc5b0dc732",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/intermedia-workspace/twenty-1920.json": {
+    "mtime": 1792466006.7435248,
+    "seen": 1792861828.0381942,
+    "ast_hash": "3b210ad28bb2a21190411d05cb4c677b",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/intermedia-workspace/validation-result.json": {
+    "mtime": 1792466040.644379,
+    "seen": 1792861828.0381942,
+    "ast_hash": "8d56f3e9ce9197bf124c70e8fe5ee956",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/intermedia-workspace/verification.json": {
+    "mtime": 1792466097.7705784,
+    "seen": 1792861828.0381942,
+    "ast_hash": "f7f50b00e2cc294b307d7e4f75fc57cd",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/stock-solvents/verification.json": {
+    "mtime": 1792207784.5510795,
+    "seen": 1792861828.0381942,
+    "ast_hash": "33f48f3998f24e3ade9afd93c7602861",
+    "semantic_hash": ""
+  },
+  "scripts/capture-preparations-runtime.ps1": {
+    "mtime": 1792139206.5831823,
+    "seen": 1792861828.0392044,
+    "ast_hash": "56c077fab165a11214a25df37ca16303",
+    "semantic_hash": ""
+  },
+  "scripts/capture-theme-login.ps1": {
+    "mtime": 1792027512.104909,
+    "seen": 1792861828.0392044,
+    "ast_hash": "1cafb5b84a82f989e82232c17682ee6a",
+    "semantic_hash": ""
+  },
+  "scripts/diagnose-alert-server.ps1": {
+    "mtime": 1792713851.782752,
+    "seen": 1792861828.0392044,
+    "ast_hash": "7965d9c79d80b5a60700074032f13f26",
+    "semantic_hash": ""
+  },
+  "scripts/diagnose-desktop-startup.ps1": {
+    "mtime": 1792729032.9689283,
+    "seen": 1792861828.0392044,
+    "ast_hash": "994d3f7033e696a2a5009c97ea3ab811",
+    "semantic_hash": ""
+  },
+  "scripts/inspect-standards-live.ps1": {
+    "mtime": 1792138656.3244872,
+    "seen": 1792861828.0392044,
+    "ast_hash": "02c5daea19cf667038bca8d56859100c",
+    "semantic_hash": ""
+  },
+  "scripts/install-alert-task.ps1": {
+    "mtime": 1792708927.994549,
+    "seen": 1792861828.0392044,
+    "ast_hash": "e4d1b7bcc435c0ba596a10a1326a7a93",
+    "semantic_hash": ""
+  },
+  "scripts/test-alerts.ps1": {
+    "mtime": 1792640987.952792,
+    "seen": 1792861828.0392044,
+    "ast_hash": "398dbcce8c549193fb987def443bec37",
+    "semantic_hash": ""
+  },
+  "scripts/test-commercial-solvents.ps1": {
+    "mtime": 1792472559.3580596,
+    "seen": 1792861828.0392044,
+    "ast_hash": "ffcd2090a1b7f312c1f6abd2e7e992cb",
+    "semantic_hash": ""
+  },
+  "scripts/validate-alert-worker-local.ps1": {
+    "mtime": 1792709389.8415256,
+    "seen": 1792861828.0402124,
+    "ast_hash": "cdd0d81ef8b35726c666ac7a338e2e62",
+    "semantic_hash": ""
+  },
+  "scripts/validate-alerts-remake.ps1": {
+    "mtime": 1792709689.8509955,
+    "seen": 1792861828.0402124,
+    "ast_hash": "3579570485dfba0280b1cc29577ca49f",
+    "semantic_hash": ""
+  },
+  "scripts/validate-alerts.ps1": {
+    "mtime": 1792640665.925221,
+    "seen": 1792861828.0402124,
+    "ast_hash": "b6cfb14f82ba4cac962e2141e5ccc8b5",
+    "semantic_hash": ""
+  },
+  "scripts/validate-commercial-materials.ps1": {
+    "mtime": 1792220386.0002198,
+    "seen": 1792861828.0402124,
+    "ast_hash": "0b8bea5799768079d420baf32b657074",
+    "semantic_hash": ""
+  },
+  "scripts/validate-commercial-preparations.ps1": {
+    "mtime": 1792452550.8201554,
+    "seen": 1792861828.0402124,
+    "ast_hash": "db8ae322ece02666643070d39a2174d3",
+    "semantic_hash": ""
+  },
+  "scripts/validate-curve-aqs-final.ps1": {
+    "mtime": 1792194641.4344382,
+    "seen": 1792861828.0402124,
+    "ast_hash": "0724423b35c73ac2bc111fea12b086f3",
+    "semantic_hash": ""
+  },
+  "scripts/validate-curve-aqs-popups.ps1": {
+    "mtime": 1792187352.5861156,
+    "seen": 1792861828.0402124,
+    "ast_hash": "90c02fca12492e212f9270c76c554de4",
+    "semantic_hash": ""
+  },
+  "scripts/validate-curve-aqs-references.ps1": {
+    "mtime": 1792194930.3240826,
+    "seen": 1792861828.0402124,
+    "ast_hash": "e05a0f5064654d7c8ce9c703567e0110",
+    "semantic_hash": ""
+  },
+  "scripts/validate-curve-aqs-shared.ps1": {
+    "mtime": 1792194814.171165,
+    "seen": 1792861828.0402124,
+    "ast_hash": "e8bf7c97e84231f5ab9709626ebc2954",
+    "semantic_hash": ""
+  },
+  "scripts/validate-curve-aqs.ps1": {
+    "mtime": 1792187091.4858067,
+    "seen": 1792861828.0402124,
+    "ast_hash": "4953f70f3c98515262ce459c5138d73f",
+    "semantic_hash": ""
+  },
+  "scripts/validate-dashboard-design-system.ps1": {
+    "mtime": 1792124558.299371,
+    "seen": 1792861828.0402124,
+    "ast_hash": "a94be1c5a612a0817b5b72f26b297f4d",
+    "semantic_hash": ""
+  },
+  "scripts/validate-dashboard-header.ps1": {
+    "mtime": 1792119045.641162,
+    "seen": 1792861828.0402124,
+    "ast_hash": "75db6f4cfaae905c9789af9af4511736",
+    "semantic_hash": ""
+  },
+  "scripts/validate-dashboard-premium.ps1": {
+    "mtime": 1792121971.2566974,
+    "seen": 1792861828.0402124,
+    "ast_hash": "ce93fefc6d1a41cfdd27ca367a6941b4",
+    "semantic_hash": ""
+  },
+  "scripts/validate-dashboard-shell.ps1": {
+    "mtime": 1792120516.6312888,
+    "seen": 1792861828.0402124,
+    "ast_hash": "e58a660ee9db6f300f30dd6d5dab7bb3",
+    "semantic_hash": ""
+  },
+  "scripts/validate-intermedia-workspace.ps1": {
+    "mtime": 1792466097.7715845,
+    "seen": 1792861828.0402124,
+    "ast_hash": "ba19cac7a62156be01c3dfc3bccaf346",
+    "semantic_hash": ""
+  },
+  "scripts/validate-preparation-actions.ps1": {
+    "mtime": 1792621592.1400406,
+    "seen": 1792861828.0402124,
+    "ast_hash": "514f33278a6f4a449b8c25ddea74ba23",
+    "semantic_hash": ""
+  },
+  "scripts/validate-preparation-dialogs.ps1": {
+    "mtime": 1792470207.2888312,
+    "seen": 1792861828.0402124,
+    "ast_hash": "67f952303e0e1a5c63a1f7284957efa8",
+    "semantic_hash": ""
+  },
+  "scripts/validate-preparations-intermediate.ps1": {
+    "mtime": 1792139513.5498512,
+    "seen": 1792861828.0402124,
+    "ast_hash": "e2a2ee1d7c16aa4c1fddd78a9a54cb5e",
+    "semantic_hash": ""
+  },
+  "scripts/validate-preparations-workspace.ps1": {
+    "mtime": 1792138501.532782,
+    "seen": 1792861828.0402124,
+    "ast_hash": "12304123b435e5117aae6b3c0a94fe24",
+    "semantic_hash": ""
+  },
+  "scripts/validate-shared-solvents.ps1": {
+    "mtime": 1792473617.4977102,
+    "seen": 1792861828.0402124,
+    "ast_hash": "a6ae7cc7ce302d846d27e01eb65e6355",
+    "semantic_hash": ""
+  },
+  "scripts/validate-stock-solvents.ps1": {
+    "mtime": 1792207675.4892502,
+    "seen": 1792861828.0412107,
+    "ast_hash": "679de688d98e4e58e86df7e257b8e549",
+    "semantic_hash": ""
+  },
+  "scripts/validate-theme-responsive.ps1": {
+    "mtime": 1792027791.5168521,
+    "seen": 1792861828.0412107,
+    "ast_hash": "73aa8827c0e466e2241ffe39ab11e2be",
+    "semantic_hash": ""
+  },
+  "docs/alertas-notificaciones.md": {
+    "mtime": 1792713852.1510777,
+    "seen": 1792861828.0412107,
+    "ast_hash": "925d752c973cc8ba227c8f946d3ab89c",
+    "semantic_hash": ""
+  },
+  "docs/catalogo-solventes-compartido.md": {
+    "mtime": 1792473577.591274,
+    "seen": 1792861828.0412107,
+    "ast_hash": "7b9a4c34caab7416cc9e9b8f1e102a7b",
+    "semantic_hash": ""
+  },
+  "docs/correccion-barras-estandares.md": {
+    "mtime": 1792138853.126892,
+    "seen": 1792861828.0412107,
+    "ast_hash": "6218e47e1c918633c2e2801901025099",
+    "semantic_hash": ""
+  },
+  "docs/correccion-operativa-comerciales-20261019.md": {
+    "mtime": 1792453965.976785,
+    "seen": 1792861828.0412107,
+    "ast_hash": "949e2947d84fe23979ef924453e3a56f",
+    "semantic_hash": ""
+  },
+  "docs/correccion-tema-responsividad.md": {
+    "mtime": 1792027791.5128064,
+    "seen": 1792861828.0412107,
+    "ast_hash": "a881580b6b04d1dd3ccbd0b6d75ff131",
+    "semantic_hash": ""
+  },
+  "docs/curva-aqs-api-pendiente.md": {
+    "mtime": 1792196797.7530694,
+    "seen": 1792861828.0412107,
+    "ast_hash": "5db68777c51ff2973dddf25ba3f83b64",
+    "semantic_hash": ""
+  },
+  "docs/curva-aqs-correccion-visual.md": {
+    "mtime": 1792195004.7805932,
+    "seen": 1792861828.0412107,
+    "ast_hash": "dad722d4d17aec8fe25616e18dcda8ea",
+    "semantic_hash": ""
+  },
+  "docs/dashboard-premium.md": {
+    "mtime": 1792123579.2734828,
+    "seen": 1792861828.0412107,
+    "ast_hash": "c9285ad246f5827f6ef79547a94e90ff",
+    "semantic_hash": ""
+  },
+  "docs/inicio-compacto.md": {
+    "mtime": 1792131138.3239815,
+    "seen": 1792861828.0432162,
+    "ast_hash": "add7d99707264d44d71b655cfc81a192",
+    "semantic_hash": ""
+  },
+  "docs/inicio-design-system.md": {
+    "mtime": 1792131137.8567774,
+    "seen": 1792861828.0432162,
+    "ast_hash": "0793e21385be932a7ea7989d558b82f5",
+    "semantic_hash": ""
+  },
+  "docs/intermedia-comercial-workspace.md": {
+    "mtime": 1792466025.0393744,
+    "seen": 1792861828.0432162,
+    "ast_hash": "c4e62f8b93d5d805483f7c468b050028",
+    "semantic_hash": ""
+  },
+  "docs/preparaciones-curva-aqs.md": {
+    "mtime": 1792187390.95067,
+    "seen": 1792861828.0442164,
+    "ast_hash": "d810f2cc26acececb11ae211e5419d25",
+    "semantic_hash": ""
+  },
+  "docs/preparaciones-modales-consistentes.md": {
+    "mtime": 1792470653.9931736,
+    "seen": 1792861828.0442164,
+    "ast_hash": "2e1147f365b5ccaa380944750d3931ff",
+    "semantic_hash": ""
+  },
+  "docs/preparaciones-profesional.md": {
+    "mtime": 1792139566.7092626,
+    "seen": 1792861828.0442164,
+    "ast_hash": "ef31b3a4999046add42cabb1d0c1ff2b",
+    "semantic_hash": ""
+  },
+  "docs/restauracion-shell-y-agregados-dashboard.md": {
+    "mtime": 1792121486.4464247,
+    "seen": 1792861828.0462368,
+    "ast_hash": "9570f9f98a6892aa9c9b109665f5cf24",
+    "semantic_hash": ""
+  },
+  "docs/soluciones-comerciales-certificadas.md": {
+    "mtime": 1792447111.2572384,
+    "seen": 1792861828.0462368,
+    "ast_hash": "8a695c1db8d766f695b5c985e5823cc3",
+    "semantic_hash": ""
+  },
+  "docs/stock-compuesto-solventes.md": {
+    "mtime": 1792207784.6247478,
+    "seen": 1792861828.0462368,
+    "ast_hash": "50263a5925ee71028b7b2cfd0bd0953f",
+    "semantic_hash": ""
+  },
+  "docs/stock-intermedias-comerciales.md": {
+    "mtime": 1792449403.7465177,
+    "seen": 1792861828.0462368,
+    "ast_hash": "d08b9627cbbf828a532b552cfe9e1307",
+    "semantic_hash": ""
+  },
+  "scripts/portable-version.txt": {
+    "mtime": 1792730365.2688308,
+    "seen": 1792861828.0472457,
+    "ast_hash": "dad6dce27315fca97033779693567422",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/commercial-fix-20261019/intermedia-1366-components.png": {
+    "mtime": 1792452970.4705286,
+    "seen": 1792861828.0482447,
+    "ast_hash": "f87708903d0b13071b4f57df9bc63750",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/commercial-fix-20261019/intermedia-1366-detail.png": {
+    "mtime": 1792452976.7263567,
+    "seen": 1792861828.0482447,
+    "ast_hash": "d8c5fd8d034874ee1ce3635287f44d91",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/commercial-fix-20261019/intermedia-1366-form.png": {
+    "mtime": 1792452968.8981647,
+    "seen": 1792861828.0482447,
+    "ast_hash": "ac29915c3b2662bc2e8ccf7e078bea32",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/commercial-fix-20261019/intermedia-1366-inventory.png": {
+    "mtime": 1792452969.58578,
+    "seen": 1792861828.0482447,
+    "ast_hash": "adbeded4744da0b4593d6c9229e1179b",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/commercial-fix-20261019/intermedia-1920-components.png": {
+    "mtime": 1792452973.919242,
+    "seen": 1792861828.0482447,
+    "ast_hash": "930e720ab7bbd912735a600ba40be7c5",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/commercial-fix-20261019/intermedia-1920-detail.png": {
+    "mtime": 1792452977.5030975,
+    "seen": 1792861828.0482447,
+    "ast_hash": "516ce58ccec15493fa31bc2145cb881b",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/commercial-fix-20261019/intermedia-1920-form.png": {
+    "mtime": 1792452972.2396522,
+    "seen": 1792861828.0482447,
+    "ast_hash": "c69f708aadd1820df9572ce18df64207",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/commercial-fix-20261019/intermedia-1920-inventory.png": {
+    "mtime": 1792452973.064969,
+    "seen": 1792861828.0482447,
+    "ast_hash": "ccc380fdfb73264a0a55497405b4aed4",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/commercial-fix-20261019/standard-1366-form.png": {
+    "mtime": 1792452949.7063704,
+    "seen": 1792861828.0482447,
+    "ast_hash": "ee9648812d971746f2627046ea246b51",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/commercial-fix-20261019/standard-1366-storage.png": {
+    "mtime": 1792452950.3960426,
+    "seen": 1792861828.0482447,
+    "ast_hash": "ee9648812d971746f2627046ea246b51",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/commercial-fix-20261019/standard-1920-form.png": {
+    "mtime": 1792452951.594913,
+    "seen": 1792861828.0482447,
+    "ast_hash": "b1c72a03a67b38405617d9d15d6d3e79",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/commercial-fix-20261019/standard-1920-storage.png": {
+    "mtime": 1792452952.3870814,
+    "seen": 1792861828.0482447,
+    "ast_hash": "fa21ba5e429b242c4b70a1a6b55766b1",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/commercial-fix-20261019/stock-1366-components.png": {
+    "mtime": 1792452958.023837,
+    "seen": 1792861828.0482447,
+    "ast_hash": "6a5673afe99d6b7cdaad2e31a22ba0f9",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/commercial-fix-20261019/stock-1366-detail.png": {
+    "mtime": 1792452963.812123,
+    "seen": 1792861828.0482447,
+    "ast_hash": "c69137d226e0083d945b17c8d814cd07",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/commercial-fix-20261019/stock-1366-form.png": {
+    "mtime": 1792452956.6289923,
+    "seen": 1792861828.0482447,
+    "ast_hash": "7befd4d7bfec4c99a34e27fa52061c26",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/commercial-fix-20261019/stock-1366-inventory.png": {
+    "mtime": 1792452957.319791,
+    "seen": 1792861828.0482447,
+    "ast_hash": "58c3ca362aee826b8930b47265e75c96",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/commercial-fix-20261019/stock-1920-components.png": {
+    "mtime": 1792452961.359314,
+    "seen": 1792861828.0482447,
+    "ast_hash": "6ec87faa8cb9314b7289e5569ef5a38b",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/commercial-fix-20261019/stock-1920-detail.png": {
+    "mtime": 1792452964.6439967,
+    "seen": 1792861828.0482447,
+    "ast_hash": "4cee3ee2fa9e8704e1dcf31a6a6c6f02",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/commercial-fix-20261019/stock-1920-form.png": {
+    "mtime": 1792452959.7356124,
+    "seen": 1792861828.0482447,
+    "ast_hash": "130a3aaea77d73844666c6504918dad1",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/commercial-fix-20261019/stock-1920-inventory.png": {
+    "mtime": 1792452960.5564575,
+    "seen": 1792861828.0482447,
+    "ast_hash": "a826e6bac6fef6dd108ec7183a93930a",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/commercial-materials/CommercialMix-certificate-1366x768.png": {
+    "mtime": 1792220892.1883354,
+    "seen": 1792861828.0482447,
+    "ast_hash": "070d8198729392697e1d1921c95377ef",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/commercial-materials/CommercialMix-certificate-1920x1080.png": {
+    "mtime": 1792220891.214034,
+    "seen": 1792861828.0482447,
+    "ast_hash": "a991cb9d4d299ef02f38e916eabb071c",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/commercial-materials/CommercialMix-detail-1366x768.png": {
+    "mtime": 1792220897.5177324,
+    "seen": 1792861828.0482447,
+    "ast_hash": "4659e5a9f4e5d3b6084072637a0c2592",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/commercial-materials/CommercialMix-detail-1920x1080.png": {
+    "mtime": 1792220896.6807234,
+    "seen": 1792861828.0482447,
+    "ast_hash": "897ac9bb794840a18796f86cbf3ec040",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/commercial-materials/CommercialMix-detail-components-1366x768.png": {
+    "mtime": 1792220897.8813431,
+    "seen": 1792861828.0482447,
+    "ast_hash": "65c7fc71c12732991d3699a01895ddf4",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/commercial-materials/CommercialMix-detail-components-1920x1080.png": {
+    "mtime": 1792220897.0166917,
+    "seen": 1792861828.0482447,
+    "ast_hash": "6dde95bb49288bd6e9df7abfc2fc66b4",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/commercial-materials/CommercialMix-form-1366x768.png": {
+    "mtime": 1792220891.8014598,
+    "seen": 1792861828.0482447,
+    "ast_hash": "61d7f997d2273f739d3195c3a2f2af64",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/commercial-materials/CommercialMix-form-1920x1080.png": {
+    "mtime": 1792220890.8352256,
+    "seen": 1792861828.0482447,
+    "ast_hash": "71097aa59b57fa8dbf2e957beb7b2832",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/commercial-materials/CommercialSolution-certificate-1366x768.png": {
+    "mtime": 1792220883.8016894,
+    "seen": 1792861828.0482447,
+    "ast_hash": "53faa95389963d6bcb3916a1724f10a9",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/commercial-materials/CommercialSolution-certificate-1920x1080.png": {
+    "mtime": 1792220882.816759,
+    "seen": 1792861828.0482447,
+    "ast_hash": "a3c1dc1cea5ab87f2fec1f6e885146ba",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/commercial-materials/CommercialSolution-detail-1366x768.png": {
+    "mtime": 1792220888.8666668,
+    "seen": 1792861828.0482447,
+    "ast_hash": "bbbd20203a71b210a664a4fdeaf97c08",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/commercial-materials/CommercialSolution-detail-1920x1080.png": {
+    "mtime": 1792220888.0452402,
+    "seen": 1792861828.0482447,
+    "ast_hash": "df61ec6f48069ef0d71162f52f83b90e",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/commercial-materials/CommercialSolution-detail-components-1366x768.png": {
+    "mtime": 1792220889.1874394,
+    "seen": 1792861828.0482447,
+    "ast_hash": "02cd2762040f7a5865642bd40f09953c",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/commercial-materials/CommercialSolution-detail-components-1920x1080.png": {
+    "mtime": 1792220888.4286046,
+    "seen": 1792861828.0482447,
+    "ast_hash": "e7269cead4e049abf43f4985421b6fa6",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/commercial-materials/CommercialSolution-form-1366x768.png": {
+    "mtime": 1792220883.4211476,
+    "seen": 1792861828.0482447,
+    "ast_hash": "0c9ddb1c48a79a28154b3909e934190d",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/commercial-materials/CommercialSolution-form-1920x1080.png": {
+    "mtime": 1792220882.469699,
+    "seen": 1792861828.0482447,
+    "ast_hash": "fe685f8b1fcc6c553064cfd1ded0b2a3",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/commercial-materials/Mix-intermediate-1366x768.png": {
+    "mtime": 1792220900.210028,
+    "seen": 1792861828.0482447,
+    "ast_hash": "5284e4caefc37ec128e5138459c303a5",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/commercial-materials/Mix-intermediate-1920x1080.png": {
+    "mtime": 1792220899.2630858,
+    "seen": 1792861828.0482447,
+    "ast_hash": "92f03cafef7c116bc9bed8ce0ab01dcf",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/commercial-materials/Mix-intermediate-results-1366x768.png": {
+    "mtime": 1792220900.545597,
+    "seen": 1792861828.0482447,
+    "ast_hash": "20323d2eee28238e037755e0c4f148d4",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/commercial-materials/Mix-intermediate-results-1920x1080.png": {
+    "mtime": 1792220899.6697536,
+    "seen": 1792861828.0482447,
+    "ast_hash": "79cadfada3ce90646222021269a56f38",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/curve-aqs/AQS-calendar.png": {
+    "mtime": 1792187361.2260928,
+    "seen": 1792861828.0482447,
+    "ast_hash": "ae3651ea646f8272f0a948ae7966755b",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/curve-aqs/AQS-components-1366x768.png": {
+    "mtime": 1792187141.202247,
+    "seen": 1792861828.0482447,
+    "ast_hash": "1f9a25e46598f9d249454e4aec6d63cf",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/curve-aqs/AQS-components-1600x900.png": {
+    "mtime": 1792187138.9208975,
+    "seen": 1792861828.0482447,
+    "ast_hash": "0d3dcda6dc9c241c6f70afb28bc10ece",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/curve-aqs/AQS-components-1920.png": {
+    "mtime": 1792187125.3078356,
+    "seen": 1792861828.0482447,
+    "ast_hash": "8de35c54b706a16963eb82445dff3164",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/curve-aqs/AQS-components-1920x1080.png": {
+    "mtime": 1792187136.6746137,
+    "seen": 1792861828.0482447,
+    "ast_hash": "3519c1fd1ba52dab4b2a4d0d8015b22f",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/curve-aqs/AQS-detail.png": {
+    "mtime": 1792187145.3031347,
+    "seen": 1792861828.0482447,
+    "ast_hash": "643eee15b682fe71d76ea9efa673a6a8",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/curve-aqs/AQS-empty.png": {
+    "mtime": 1792187122.6255114,
+    "seen": 1792861828.0482447,
+    "ast_hash": "f6bac1e3335e62f05a60982dd1dc0893",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/curve-aqs/AQS-form-1366x768.png": {
+    "mtime": 1792187140.4658365,
+    "seen": 1792861828.0482447,
+    "ast_hash": "053151a07847e496875cb5a5965f1902",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/curve-aqs/AQS-form-1600x900.png": {
+    "mtime": 1792187138.1717925,
+    "seen": 1792861828.0482447,
+    "ast_hash": "75b00bf44c52d36a313cc354e5587a93",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/curve-aqs/AQS-form-1920x1080.png": {
+    "mtime": 1792187135.9448593,
+    "seen": 1792861828.0482447,
+    "ast_hash": "d2f525733dfa8f9e7c28647f8f389426",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/curve-aqs/AQS-invalid.png": {
+    "mtime": 1792187124.5293045,
+    "seen": 1792861828.0482447,
+    "ast_hash": "3baae89b260611425b63d8f70f20d98f",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/curve-aqs/AQS-list.png": {
+    "mtime": 1792187144.7321613,
+    "seen": 1792861828.0482447,
+    "ast_hash": "c404049ef974f2ea73c2aeff71ba966a",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/curve-aqs/AQS-new-empty.png": {
+    "mtime": 1792187123.7621424,
+    "seen": 1792861828.0482447,
+    "ast_hash": "83252c5520d8412f89739b00a19b79a5",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/curve-aqs/AQS-results-1366x768.png": {
+    "mtime": 1792187141.805965,
+    "seen": 1792861828.0482447,
+    "ast_hash": "4c074cefd2d33347d0dfdaa2613cd2da",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/curve-aqs/AQS-results-1600x900.png": {
+    "mtime": 1792187139.6360166,
+    "seen": 1792861828.0482447,
+    "ast_hash": "6d4cf2f176aaedc8a9348ef94061b41b",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/curve-aqs/AQS-results-1920x1080.png": {
+    "mtime": 1792187137.3615084,
+    "seen": 1792861828.0482447,
+    "ast_hash": "006c1ad17f4b9ed72188ce747ffb98c5",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/curve-aqs/AQS-review-1920.png": {
+    "mtime": 1792187126.0057738,
+    "seen": 1792861828.0482447,
+    "ast_hash": "3e973cff764f4c72b6da37a1a8a9e4be",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/curve-aqs/AQS-saved.png": {
+    "mtime": 1792187144.0479531,
+    "seen": 1792861828.0482447,
+    "ast_hash": "9bda2fcd74332fb597f4b515ddd57c4f",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/curve-aqs/AQS-source-dropdown.png": {
+    "mtime": 1792187361.8865433,
+    "seen": 1792861828.0482447,
+    "ast_hash": "dc1919aea6903055379a41651c582727",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/curve-aqs/Curva-calendar.png": {
+    "mtime": 1792187358.6261368,
+    "seen": 1792861828.0482447,
+    "ast_hash": "02f794312c253a3b202801269ece4405",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/curve-aqs/Curva-components-1366x768.png": {
+    "mtime": 1792187133.5696864,
+    "seen": 1792861828.0482447,
+    "ast_hash": "45d49f130b1b0d7609ec858c3d2f34f5",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/curve-aqs/Curva-components-1600x900.png": {
+    "mtime": 1792187131.3197613,
+    "seen": 1792861828.0482447,
+    "ast_hash": "4d150343672ac6f69e7c44a1b0362c76",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/curve-aqs/Curva-components-1920.png": {
+    "mtime": 1792187121.1705565,
+    "seen": 1792861828.0482447,
+    "ast_hash": "cb16d33e9cbc27e28b68b0742c561553",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/curve-aqs/Curva-components-1920x1080.png": {
+    "mtime": 1792187129.0950048,
+    "seen": 1792861828.0482447,
+    "ast_hash": "ecb9e16f0f58495eafdd9b24a74b8a13",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/curve-aqs/Curva-detail.png": {
+    "mtime": 1792187148.2683635,
+    "seen": 1792861828.0482447,
+    "ast_hash": "6e287d06e793c3a1dcc7fa01752eb446",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/curve-aqs/Curva-empty.png": {
+    "mtime": 1792187117.9862216,
+    "seen": 1792861828.0482447,
+    "ast_hash": "f91e175dab603779f3d7f29f1f5f0071",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/curve-aqs/Curva-form-1366x768.png": {
+    "mtime": 1792187132.829907,
+    "seen": 1792861828.0482447,
+    "ast_hash": "25f5e66c44fe2406a8aaaacbe653a321",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/curve-aqs/Curva-form-1600x900.png": {
+    "mtime": 1792187130.5261486,
+    "seen": 1792861828.0482447,
+    "ast_hash": "b41ec4da1b1999fd2fe2e45778c6322f",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/curve-aqs/Curva-form-1920x1080.png": {
+    "mtime": 1792187128.3661935,
+    "seen": 1792861828.0482447,
+    "ast_hash": "dbfecab69dcc0a420f6349affe758586",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/curve-aqs/Curva-invalid.png": {
+    "mtime": 1792187120.2359326,
+    "seen": 1792861828.0482447,
+    "ast_hash": "b026547bad78aa77eda4e7e28c96f58f",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/curve-aqs/Curva-list.png": {
+    "mtime": 1792187147.6295147,
+    "seen": 1792861828.0482447,
+    "ast_hash": "6a27d3a1759ac76047ea46f99521381c",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/curve-aqs/Curva-new-empty.png": {
+    "mtime": 1792187119.1859694,
+    "seen": 1792861828.0482447,
+    "ast_hash": "c7d00d3632e11d52b30a0225042e65ab",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/curve-aqs/Curva-results-1366x768.png": {
+    "mtime": 1792187134.150762,
+    "seen": 1792861828.0482447,
+    "ast_hash": "06ad4e818ff99df8cbc7798e79ccfede",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/curve-aqs/Curva-results-1600x900.png": {
+    "mtime": 1792187131.9860115,
+    "seen": 1792861828.0482447,
+    "ast_hash": "6e22aa42906798e2d715c5dd855e7f73",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/curve-aqs/Curva-results-1920x1080.png": {
+    "mtime": 1792187129.7095933,
+    "seen": 1792861828.0482447,
+    "ast_hash": "3cc9e9a074e292f5f14f27bc86ff2156",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/curve-aqs/Curva-review-1920.png": {
+    "mtime": 1792187121.8157756,
+    "seen": 1792861828.0482447,
+    "ast_hash": "61b2110924e90528936c5102c6010084",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/curve-aqs/Curva-saved.png": {
+    "mtime": 1792187146.8319416,
+    "seen": 1792861828.0482447,
+    "ast_hash": "428e78016f289faed0bc6a66314b5c0e",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/curve-aqs/Curva-source-dropdown.png": {
+    "mtime": 1792187359.299098,
+    "seen": 1792861828.0482447,
+    "ast_hash": "548fd0e91995427519974163f54c202a",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/curve-aqs/Intermediate-shared-75mL.png": {
+    "mtime": 1792187148.985785,
+    "seen": 1792861828.0482447,
+    "ast_hash": "e7c72b0f738d69a67506028f2ff6e0d9",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/intermedia-workspace/composition-expiry-1366.png": {
+    "mtime": 1792466004.8574896,
+    "seen": 1792861828.0482447,
+    "ast_hash": "94cdaf901be90d89ab15bc2aff70227a",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/intermedia-workspace/composition-expiry-1920.png": {
+    "mtime": 1792466012.9653623,
+    "seen": 1792861828.0482447,
+    "ast_hash": "bc9f7ec0f36e886c2e7ca010dae5740d",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/intermedia-workspace/empty-1366.png": {
+    "mtime": 1792465987.9470613,
+    "seen": 1792861828.0482447,
+    "ast_hash": "a10a35ea45a6bd25088db7a78ba596d5",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/intermedia-workspace/empty-1920.png": {
+    "mtime": 1792465989.8896463,
+    "seen": 1792861828.0482447,
+    "ast_hash": "d5f90c11f17dd51ec045c0d9c5d251b4",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/intermedia-workspace/inventory-1366.png": {
+    "mtime": 1792466003.4463632,
+    "seen": 1792861828.0482447,
+    "ast_hash": "ded16ebefa4e041cabc9f9365eaffd97",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/intermedia-workspace/inventory-1920.png": {
+    "mtime": 1792466011.603072,
+    "seen": 1792861828.0482447,
+    "ast_hash": "1138cd709d8e9d37e3ce455de2f72657",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/intermedia-workspace/narrow-capture-960.png": {
+    "mtime": 1792466034.0789003,
+    "seen": 1792861828.0482447,
+    "ast_hash": "64271aeb0ee576cbb6132e2842769ad3",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/intermedia-workspace/narrow-summary-960.png": {
+    "mtime": 1792466034.3560443,
+    "seen": 1792861828.0482447,
+    "ast_hash": "e9a371b901f07f6656fc98b7c502de67",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/intermedia-workspace/saved-commercial-detail.png": {
+    "mtime": 1792466040.2860413,
+    "seen": 1792861828.0482447,
+    "ast_hash": "54c635ed5175a5f6c0495d8057880028",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/intermedia-workspace/scroll-1366.png": {
+    "mtime": 1792466001.746885,
+    "seen": 1792861828.0482447,
+    "ast_hash": "520898ca4365049417c00343cd0a8b87",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/intermedia-workspace/scroll-1920.png": {
+    "mtime": 1792466009.9387033,
+    "seen": 1792861828.0482447,
+    "ast_hash": "5bde25604584c684d73cf9c7ff496126",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/intermedia-workspace/solvent-catalogue.png": {
+    "mtime": 1792466029.6222973,
+    "seen": 1792861828.0482447,
+    "ast_hash": "6665b0d2ed33a582e26aaa5b4b08126f",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/intermedia-workspace/three-1366.png": {
+    "mtime": 1792465993.767897,
+    "seen": 1792861828.0482447,
+    "ast_hash": "51e2b3f804bbc4c3b5b648cdce9f5e76",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/intermedia-workspace/three-1920.png": {
+    "mtime": 1792465996.2758627,
+    "seen": 1792861828.0482447,
+    "ast_hash": "6c378dfa9acc9e259d725e1b9e65e89c",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/intermedia-workspace/twenty-1366.png": {
+    "mtime": 1792465999.9864888,
+    "seen": 1792861828.0482447,
+    "ast_hash": "0863c0d3195d1460bb1f5cc0ef65d22b",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/intermedia-workspace/twenty-1920.png": {
+    "mtime": 1792466008.1093247,
+    "seen": 1792861828.0482447,
+    "ast_hash": "064f46249accd095dfd495b899e060a4",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/stock-solvents/detail-30-20-50-1920x1080.png": {
+    "mtime": 1792207743.0180147,
+    "seen": 1792861828.0515666,
+    "ast_hash": "9d874661d9fb092b00895e8c49ed6745",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/stock-solvents/mixture-30-20-50-1366x768.png": {
+    "mtime": 1792207741.7208033,
+    "seen": 1792861828.0515666,
+    "ast_hash": "a40faffa9a71c03dda1b7d71894eea95",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/stock-solvents/mixture-30-20-50-1920x1080.png": {
+    "mtime": 1792207741.0506332,
+    "seen": 1792861828.0515666,
+    "ast_hash": "e40fa5862362bd4299800448765971f0",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/stock-solvents/mixture-50-50-1366x768.png": {
+    "mtime": 1792207740.3356884,
+    "seen": 1792861828.0515666,
+    "ast_hash": "46d7b9baca294863c9fbd99a45e1c0c9",
+    "semantic_hash": ""
+  },
+  "artifacts/validation/stock-solvents/mixture-50-50-1920x1080.png": {
+    "mtime": 1792207739.6469946,
+    "seen": 1792861828.0515666,
+    "ast_hash": "add6e954859bc5ee6074732d8544b947",
     "semantic_hash": ""
   }
 }

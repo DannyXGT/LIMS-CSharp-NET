@@ -8,6 +8,12 @@ internal static class AlertModel
 {
     public static void Configure(ModelBuilder model)
     {
+        model.Entity<AlertEvaluation>(b =>
+        {
+            b.ToTable("alert_evaluations"); b.HasKey(x => x.Id); b.Property(x => x.Id).ValueGeneratedNever();
+            b.Property(x => x.State).HasMaxLength(24); b.Property(x => x.Error).HasMaxLength(400);
+            b.HasIndex(x => x.StartedAt);
+        });
         model.Entity<MaterialAlert>(b =>
         {
             b.ToTable("material_alerts"); b.HasKey(x => x.Id);

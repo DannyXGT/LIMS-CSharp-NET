@@ -345,6 +345,37 @@ public sealed class StockViewModelTests
     }
 
     [Fact]
+    public async Task HistoricalStockBeforeSourceReceiptCanBeSavedWithoutChangingRecordedDates()
+    {
+        var api = new FakeStockApi();
+        var vm = Model(api);
+        await ReadyAsync(vm);
+        var today = DateTimeOffset.UtcNow.ToOffset(TimeSpan.FromHours(-6));
+        vm.SelectedSource = Source with { ReceivedDate = DateOnly.FromDateTime(today.AddDays(-10).Date) };
+        vm.PreparationDate = today.AddYears(-1);
+        vm.ExpirationDate = today.AddDays(-30);
+        vm.ActualQuantity = "10";
+        Assert.True(vm.CanSave);
+        Assert.True(await vm.SaveAsync(CancellationToken.None));
+        var request = Assert.Single(api.Requests);
+        Assert.Equal(DateOnly.FromDateTime(today.AddYears(-1).Date), request.PreparationDate);
+        Assert.Equal(DateOnly.FromDateTime(today.AddDays(-30).Date), request.ExpirationDate);
+        Assert.Equal(DateOnly.FromDateTime(today.AddDays(-10).Date), vm.SelectedSource!.ReceivedDate);
+
+        vm.Created = null;
+        vm.PreparationDate = today.AddDays(1);
+        Assert.False(vm.CanSave);
+        vm.PreparationDate = today.AddYears(-1);
+        vm.ExpirationDate = vm.PreparationDate.AddDays(-1);
+        Assert.False(vm.CanSave);
+        vm.ExpirationDate = today.AddYears(3);
+        vm.SelectedSource = Source with { ExpirationDate = DateOnly.FromDateTime(today.AddDays(-60).Date) };
+        vm.PreparationDate = today.AddDays(-30);
+        vm.ActualQuantity = "10";
+        Assert.False(vm.CanSave);
+    }
+
+    [Fact]
     public async Task CompositionEditorPreservesPercentagesAndBlocksIncompleteDuplicateAndRemovedRows()
     {
         var api = new FakeStockApi(); var vm = Model(api); await ReadyAsync(vm);

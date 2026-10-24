@@ -10,12 +10,17 @@ internal static class PermissionsMotion
     public static void Enter(FrameworkElement element, bool slide = false)
     {
         if (Motion.Enabled) Motion.Enter(element, y: slide ? 7 : 0, milliseconds: 180);
-        else
-        {
-            var visual = ElementCompositionPreview.GetElementVisual(element);
-            visual.StopAnimation("Opacity"); visual.StopAnimation("Translation");
-            visual.Opacity = 1; visual.Properties.InsertVector3("Translation", Vector3.Zero);
-        }
+        else Reset(element);
+    }
+
+    internal static void Reset(FrameworkElement element)
+    {
+        ElementCompositionPreview.SetIsTranslationEnabled(element, true);
+        var visual = ElementCompositionPreview.GetElementVisual(element);
+        // Translation may never have been used when Windows disables animations.
+        visual.Properties.InsertVector3("Translation", Vector3.Zero);
+        visual.StopAnimation("Opacity"); visual.StopAnimation("Translation");
+        visual.Opacity = 1;
     }
 
     public static void Opacity(FrameworkElement element, float target, int milliseconds)

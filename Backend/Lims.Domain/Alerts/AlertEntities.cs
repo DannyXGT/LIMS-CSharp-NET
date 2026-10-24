@@ -1,5 +1,19 @@
 namespace Lims.Domain.Alerts;
 
+public sealed class AlertEvaluation
+{
+    public Guid Id { get; set; } = Guid.NewGuid();
+    public DateTimeOffset StartedAt { get; set; }
+    public DateTimeOffset? CompletedAt { get; set; }
+    public string State { get; set; } = "Running";
+    public int? ActorUserId { get; set; }
+    public int Evaluated { get; set; }
+    public int Changed { get; set; }
+    public int Active { get; set; }
+    public int Sent { get; set; }
+    public string? Error { get; set; }
+}
+
 public sealed class MaterialAlert
 {
     public Guid Id { get; set; } = Guid.NewGuid();

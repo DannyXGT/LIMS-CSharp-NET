@@ -42,6 +42,7 @@ public sealed partial class AlertsViewModel(IAlertsApiClient api, ISessionServic
     [ObservableProperty] public partial bool IsDetailBusy { get; set; }
     [ObservableProperty] public partial bool IsActionBusy { get; set; }
     [ObservableProperty] public partial string Message { get; set; } = "";
+    [ObservableProperty] public partial bool IsMessageInformational { get; set; }
     [ObservableProperty] public partial int FailureStatus { get; set; }
     [ObservableProperty] public partial AlertPage? Data { get; set; }
     [ObservableProperty] public partial AlertDetail? Detail { get; set; }
@@ -49,6 +50,7 @@ public sealed partial class AlertsViewModel(IAlertsApiClient api, ISessionServic
     public event EventHandler? NotificationsChanged;
     public bool Has(string code) => session.Profile?.Role == "Administrador" || session.Profile?.Permissions.Contains(code, StringComparer.Ordinal) == true;
     public bool CanManage => Has(PermissionCatalog.AlertsManage);
+    public bool CanEvaluate => session.Profile?.Role == "Administrador" && CanManage;
     public bool CanConfigure => session.Profile?.Role == "Administrador" && Has(PermissionCatalog.NotificationsConfigure);
     public bool CanViewHistory => Has(PermissionCatalog.DeliveryHistory);
     public AlertScreenState State => IsBusy ? AlertScreenState.Loading : Data is null ? AlertScreenState.Unavailable :
@@ -76,7 +78,7 @@ public sealed partial class AlertsViewModel(IAlertsApiClient api, ISessionServic
         _loadCancellation?.Cancel(); _loadCancellation?.Dispose();
         var cancellation = CancellationTokenSource.CreateLinkedTokenSource(ct); _loadCancellation = cancellation;
         var revision = ++_revision; _detailRevision++; _detailCancellation?.Cancel(); IsDetailBusy = false;
-        var user = session.Profile?.Id; IsBusy = true; Message = ""; FailureStatus = 0;
+        var user = session.Profile?.Id; IsBusy = true; Message = ""; IsMessageInformational = false; FailureStatus = 0;
         Data = null; Items.Clear(); Detail = null;
         try
         {
@@ -106,6 +108,25 @@ public sealed partial class AlertsViewModel(IAlertsApiClient api, ISessionServic
         finally { if (revision == _detailRevision) IsDetailBusy = false; }
     }
     public Task AcknowledgeAsync(CancellationToken ct = default) => ActAsync(false, ct);
+    public async Task EvaluateAsync(CancellationToken ct = default)
+    {
+        if (!CanEvaluate || IsActionBusy) return;
+        var user = session.Profile?.Id; IsActionBusy = true; IsMessageInformational = false;
+        try
+        {
+            var response = await api.EvaluateAsync(ct);
+            if (user != session.Profile?.Id) return;
+            if (!response.IsSuccess || response.Value is not { } result)
+            { Message = response.Error?.Message ?? "No se pudo ejecutar la evaluación. Revise el historial del motor."; return; }
+            await LoadAsync(ct);
+            if (user != session.Profile?.Id) return;
+            IsMessageInformational = true;
+            Message = result.Acquired ? $"Evaluación completada: {result.Evaluated} materiales, {result.Changed} cambios. Consulte los resultados y el historial del motor."
+                : "Ya hay una evaluación en ejecución. Actualice al finalizar.";
+            NotificationsChanged?.Invoke(this, EventArgs.Empty);
+        }
+        finally { IsActionBusy = false; }
+    }
     public Task MarkReadAsync(CancellationToken ct = default) => ActAsync(true, ct);
     private async Task ActAsync(bool read, CancellationToken ct)
     {

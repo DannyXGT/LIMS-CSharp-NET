@@ -18,11 +18,14 @@ public partial class App : Application
 
     public App()
     {
+        UnhandledException += (_, args) => StartupDiagnostics.ReportFailure("Interfaz de LIMS", args.Exception);
+        StartupDiagnostics.Write("Configurando idioma e interfaz");
         var uiCulture = CultureInfo.GetCultureInfo("es-GT");
         CultureInfo.DefaultThreadCurrentCulture = uiCulture;
         CultureInfo.DefaultThreadCurrentUICulture = uiCulture;
         Microsoft.Windows.Globalization.ApplicationLanguages.PrimaryLanguageOverride = uiCulture.Name;
         InitializeComponent();
+        StartupDiagnostics.Write("Recursos XAML cargados; creando servicios");
         var builder = Host.CreateApplicationBuilder(new HostApplicationBuilderSettings
         {
             ContentRootPath = AppContext.BaseDirectory,
@@ -102,6 +105,7 @@ public partial class App : Application
         builder.Services.AddSingleton<ShellPage>();
         builder.Services.AddSingleton<MainWindow>();
         _host = builder.Build();
+        StartupDiagnostics.Write("Servicios creados");
     }
 
     protected override async void OnLaunched(LaunchActivatedEventArgs args)
@@ -109,5 +113,6 @@ public partial class App : Application
         await _host.StartAsync().ConfigureAwait(true);
         _window = _host.Services.GetRequiredService<MainWindow>();
         _window.Activate();
+        StartupDiagnostics.Write("Ventana LIMS activada");
     }
 }

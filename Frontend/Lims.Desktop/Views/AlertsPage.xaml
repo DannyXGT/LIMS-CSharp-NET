@@ -15,15 +15,41 @@
  </Page.Resources>
  <Grid x:Name="AlertsRoot" RowSpacing="12">
   <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
-  <Grid x:Name="HeaderGrid" ColumnSpacing="16">
+  <Grid x:Name="HeaderGrid" ColumnSpacing="24" Padding="20,16" Background="{ThemeResource LimsSurfaceBrush}" BorderBrush="{ThemeResource LimsBorderBrush}" BorderThickness="1" CornerRadius="12" MinHeight="88">
+   <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-   <StackPanel Spacing="3"><TextBlock Text="Alertas y notificaciones" FontSize="23" FontWeight="SemiBold"/><TextBlock x:Name="HeaderDescription" Text="Monitoreo de materiales, vencimientos y disponibilidad" FontSize="12" Foreground="{ThemeResource LimsTextSecondaryBrush}"/><InfoBar x:Name="ActionMessage" IsClosable="False" Severity="Error" Visibility="Collapsed"/></StackPanel>
-   <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-    <design:StatusBadge x:Name="ServiceBadge" Text="Sin sincronizar" Tone="Neutral" VerticalAlignment="Center"/>
-    <Button x:Name="RefreshButton" Content="Actualizar" design:LimsAction.Icon="Refresh" Style="{StaticResource LimsUtilityActionStyle}" Click="OnRefresh" ToolTipService.ToolTip="Consultar el último estado del servidor" AutomationProperties.Name="Actualizar alertas"/>
-    <Button x:Name="SettingsButton" Content="Configuración" design:LimsAction.Icon="Administration" Style="{StaticResource LimsActionIconStyle}" Click="OnSettings" ToolTipService.ToolTip="Configuración de Alertas" AutomationProperties.Name="Configuración de Alertas"/>
-    <Button x:Name="HistoryButton" Content="Historial de envíos" design:LimsAction.Icon="Mail" Style="{StaticResource LimsActionIconStyle}" Click="OnHistory" ToolTipService.ToolTip="Historial de envíos" AutomationProperties.Name="Historial de envíos"/>
-   </StackPanel>
+   <Grid x:Name="HeaderIdentity" ColumnSpacing="14" VerticalAlignment="Center">
+    <Grid.ColumnDefinitions><ColumnDefinition Width="44"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+    <Border Width="44" Height="44" CornerRadius="12" Background="#14334B" BorderBrush="#315573" BorderThickness="1">
+     <design:LimsIcon Icon="Notifications" Size="24" Foreground="#75B9FF"/>
+    </Border>
+    <StackPanel Grid.Column="1" Spacing="4" VerticalAlignment="Center">
+     <TextBlock x:Name="HeaderTitle" Text="Alertas y notificaciones" FontSize="22" FontWeight="SemiBold" Foreground="{ThemeResource LimsTextPrimaryBrush}" TextWrapping="WrapWholeWords"/>
+     <TextBlock x:Name="HeaderDescription" Text="Monitoreo de materiales, vencimientos y disponibilidad" FontSize="12" Foreground="{ThemeResource LimsTextSecondaryBrush}" TextWrapping="WrapWholeWords"/>
+    </StackPanel>
+   </Grid>
+   <Grid x:Name="HeaderOperations" Grid.Column="1" ColumnSpacing="18" VerticalAlignment="Center">
+    <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+    <StackPanel Spacing="5" VerticalAlignment="Center">
+     <StackPanel Orientation="Horizontal" Spacing="7"><TextBlock Text="Motor" FontSize="11" Foreground="{ThemeResource LimsTextSecondaryBrush}" VerticalAlignment="Center"/><design:LimsIcon x:Name="EngineStateIcon" Icon="Scheduling" Size="13"/><TextBlock x:Name="ServiceBadge" Text="No disponible" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"/></StackPanel>
+     <StackPanel Orientation="Horizontal" Spacing="6"><design:LimsIcon Icon="Calendar" Size="12" Foreground="{ThemeResource LimsTextTertiaryBrush}"/><TextBlock x:Name="HeaderEvaluation" Text="Sin evaluación registrada" FontSize="11" Foreground="{ThemeResource LimsTextSecondaryBrush}"/></StackPanel>
+    </StackPanel>
+    <Border Grid.Column="1" BorderBrush="{ThemeResource LimsBorderBrush}" BorderThickness="1,0,0,0" Padding="16,0,0,0" VerticalAlignment="Center">
+     <StackPanel x:Name="HeaderActions" Orientation="Horizontal" Spacing="4">
+      <Button x:Name="RefreshButton" Content="Actualizar" design:LimsAction.Icon="Refresh" Style="{StaticResource LimsUtilityActionStyle}" Click="OnRefresh" ToolTipService.ToolTip="Actualizar alertas" AutomationProperties.Name="Actualizar alertas"/>
+      <Button x:Name="SettingsButton" Content="Configuración" design:LimsAction.Icon="Administration" Style="{StaticResource LimsActionIconStyle}" Click="OnSettings" ToolTipService.ToolTip="Configuración de Alertas" AutomationProperties.Name="Configuración de Alertas"/>
+      <Button x:Name="HistoryButton" Content="Historial de envíos" design:LimsAction.Icon="Mail" Style="{StaticResource LimsActionIconStyle}" Click="OnHistory" ToolTipService.ToolTip="Historial de envíos" AutomationProperties.Name="Historial de envíos"/>
+      <Button x:Name="EngineActionsButton" Content="Acciones del motor" design:LimsAction.Icon="ChevronDown" Style="{StaticResource LimsActionIconStyle}" ToolTipService.ToolTip="Acciones administrativas del motor" AutomationProperties.Name="Acciones del motor">
+       <Button.Flyout><Flyout Placement="BottomEdgeAlignedRight"><StackPanel Spacing="6">
+        <TextBlock Text="Administración del motor" FontSize="12" Foreground="{ThemeResource LimsTextSecondaryBrush}" Margin="8,2,8,6"/>
+        <Button x:Name="EvaluateButton" Content="Ejecutar evaluación" design:LimsAction.Icon="Scheduling" Style="{StaticResource LimsUtilityActionStyle}" Click="OnEvaluate" AutomationProperties.Name="Ejecutar evaluación" ToolTipService.ToolTip="Evaluar materiales existentes"/>
+        <Button x:Name="EngineHistoryButton" Content="Historial del motor" design:LimsAction.Icon="Traceability" Style="{StaticResource LimsUtilityActionStyle}" Click="OnEngineHistory" ToolTipService.ToolTip="Historial del motor" AutomationProperties.Name="Historial del motor"/>
+       </StackPanel></Flyout></Button.Flyout>
+      </Button>
+     </StackPanel>
+    </Border>
+   </Grid>
+   <InfoBar x:Name="ActionMessage" Grid.Row="2" Grid.ColumnSpan="2" Margin="0,12,0,0" IsClosable="False" Severity="Error" Visibility="Collapsed"/>
   </Grid>
   <Grid x:Name="MetricsGrid" Grid.Row="1" ColumnSpacing="10" RowSpacing="8">
    <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>

@@ -128,6 +128,7 @@ public partial class App : Microsoft.UI.Xaml.Application
             var navigation = (NavigationView)_shell.FindName("MainNavigation");
             switch (action)
             {
+                case "motionRegression": await ValidateMotionRegressionAsync(); break;
                 case "alerts":
                     _alertsApi!.Fail = data.TryGetProperty("error", out var alertError) && alertError.GetBoolean();
                     _alertsApi.Empty = data.TryGetProperty("empty", out var alertEmpty) && alertEmpty.GetBoolean();
