@@ -21,8 +21,8 @@ public sealed partial class SolutionGroupDetailDialog : ContentDialog
         var metrics = new[] {
             ("Soluciones", Detail.Calculation.Parts.Count.ToString(CultureInfo.CurrentCulture)),
             ("Aforos individuales", SolutionGroupVisuals.FinalVolumes(Detail.Calculation)),
-            ("Analitos únicos", Detail.Calculation.Parts.SelectMany(p => p.Results).Select(a => a.MaterialId).Distinct().Count().ToString(CultureInfo.CurrentCulture)),
-            ("Orígenes únicos", Detail.Calculation.Parts.Select(p => p.Source.Id).Distinct().Count().ToString(CultureInfo.CurrentCulture)),
+            ("Analitos únicos", Detail.Calculation.Parts.SelectMany(p => p.Results.Concat(p.InternalStandard?.Results ?? [])).Select(a => a.MaterialId).Distinct().Count().ToString(CultureInfo.CurrentCulture)),
+            ("Orígenes únicos", Detail.Calculation.Debits.Count.ToString(CultureInfo.CurrentCulture)),
             ("Vigencia", Detail.Preparation.StatusLabel)
         };
         foreach (var (label, value) in metrics) SummaryMetrics.Children.Add(SolutionGroupVisuals.Card(this, SolutionGroupVisuals.Metric(label, value), 10));

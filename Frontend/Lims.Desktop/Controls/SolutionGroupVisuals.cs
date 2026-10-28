@@ -102,13 +102,21 @@ internal static class SolutionGroupVisuals
     }
     public static string FinalVolumes(SolutionCalculation calculation) => string.Join(" · ", calculation.Parts
         .GroupBy(p => p.FinalDisplay).Select(g => $"{g.Count()} × {g.Key}"));
-    public static UIElement Vessel(FrameworkElement owner, SolutionVolumePreview? preview)
+    public static UIElement Vessel(FrameworkElement owner, SolutionVolumePreview? preview, SolutionPart? part = null)
     {
         var grid = Columns(.7, 2);
         var graphic = new Grid { Width = 56, Height = 118, VerticalAlignment = VerticalAlignment.Center, Margin = new(0, 4, 0, 4) };
         var color = Brush(owner, preview?.Tone switch { "Danger" => "LimsDangerBrush", "Warning" => "LimsWarningBrush", _ => "LimsInformationBrush" });
         graphic.Children.Add(new Border { BorderThickness = new(2), BorderBrush = Brush(owner, "LimsTextSecondaryBrush"), CornerRadius = new(3, 3, 15, 15) });
-        graphic.Children.Add(new Border { Background = color, Opacity = .65, Height = preview is null ? 0 : (double)Math.Clamp(preview.Percent, 0, 100) * 1.08, Margin = new(5), VerticalAlignment = VerticalAlignment.Bottom, CornerRadius = new(0, 0, 10, 10) });
+        var totalHeight = preview is null ? 0 : (double)Math.Clamp(preview.Percent, 0, 100) * 1.08;
+        var standardTaken = part?.InternalStandard is { } s
+            ? StockUnits.ConvertVolume(s.VolumeTaken, s.VolumeUnit, part.FinalVolumeUnit) : 0;
+        var standardHeight = preview is { Final: > 0 }
+            ? totalHeight * (double)(standardTaken / Math.Max(preview.Taken, 0.000001m)) : 0;
+        var standardColor = Brush(owner, "LimsSuccessBrush");
+        graphic.Children.Add(new Border { Background = part?.IsInternalStandard == true ? standardColor : color, Opacity = .65, Height = totalHeight, Margin = new(5), VerticalAlignment = VerticalAlignment.Bottom, CornerRadius = new(0, 0, 10, 10) });
+        if (standardHeight > 0)
+            graphic.Children.Add(new Border { Background = standardColor, Opacity = .95, Height = standardHeight, Margin = new(5), VerticalAlignment = VerticalAlignment.Bottom, CornerRadius = new(0, 0, 10, 10) });
         for (var i = 0; i < 5; i++) graphic.Children.Add(new Border { Height = 1, Width = i % 2 == 0 ? 15 : 9, Background = Brush(owner, "LimsTextSecondaryBrush"), HorizontalAlignment = HorizontalAlignment.Left, VerticalAlignment = VerticalAlignment.Top, Margin = new(2, 8 + i * 25, 0, 0) });
         Cell(grid, graphic, 0);
         var stats = new StackPanel { Spacing = 7 };
@@ -116,6 +124,11 @@ internal static class SolutionGroupVisuals
         else
         {
             stats.Children.Add(Metric("Incorporado antes del aforo", preview.TakenDisplay));
+            if (part?.InternalStandard is { } standard)
+            {
+                var legend = Text("Estándar interno · " + standard.Source.Code + " · " + StockPresentation.Quantity(standard.VolumeTaken, standard.VolumeUnit), 11, true);
+                legend.Foreground = standardColor; stats.Children.Add(legend);
+            }
             stats.Children.Add(Metric("Volumen final preparado", preview.FinalDisplay));
             stats.Children.Add(Metric(preview.Exceeds ? "Exceso sobre aforo" : "Pendiente hasta aforo", preview.RemainingDisplay));
             var percent = Text(preview.Percent.ToString("0.##", CultureInfo.CurrentCulture) + " % incorporado", 12, true); percent.Foreground = color; stats.Children.Add(percent);
@@ -132,14 +145,21 @@ public sealed class SolutionResultView : UserControl
     {
         var stack = new StackPanel { Spacing = 10 };
         stack.Children.Add(SolutionGroupVisuals.Text(title, 14, true));
-        stack.Children.Add(SolutionGroupVisuals.Vessel(this, preview));
+        stack.Children.Add(SolutionGroupVisuals.Vessel(this, preview, part));
         if (error.Length > 0)
         { var text = SolutionGroupVisuals.Text(error); text.Foreground = SolutionGroupVisuals.Brush(this, "LimsDangerBrush"); stack.Children.Add(text); }
         if (part is not null)
         {
+            stack.Children.Add(SolutionGroupVisuals.Metric("Solvente de aforo", part.Solvent?.Display ?? "No registrado"));
             stack.Children.Add(SolutionGroupVisuals.Text(part.IsInternalStandard ? "CONCENTRACIONES · ESTÁNDAR INTERNO" : "CONCENTRACIONES FINALES", 11, true));
             stack.Children.Add(SolutionGroupVisuals.Concentrations(part));
             stack.Children.Add(SolutionGroupVisuals.SourceDetails(part.Source));
+            if (part.InternalStandard is { } standard)
+            {
+                stack.Children.Add(SolutionGroupVisuals.Text("ESTÁNDAR INTERNO · " + standard.Source.Code, 11, true));
+                foreach (var analyte in standard.Results) stack.Children.Add(SolutionGroupVisuals.Text(analyte.Display));
+                stack.Children.Add(SolutionGroupVisuals.SourceDetails(standard.Source));
+            }
         }
         else
         {

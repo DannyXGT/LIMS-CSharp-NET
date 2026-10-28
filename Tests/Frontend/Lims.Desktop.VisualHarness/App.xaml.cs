@@ -175,6 +175,12 @@ public partial class App : Microsoft.UI.Xaml.Application
                         var row = groupVm.AddComponent(); row.Source = row.Sources[data.TryGetProperty("sourceIndices", out var sourceIndices) ? sourceIndices[index].GetInt32() : 0];
                         row.Volume = volume.GetDecimal().ToString(CultureInfo.InvariantCulture);
                         row.FinalVolume = data.TryGetProperty("finalVolumes", out var finals) ? finals[index].GetDecimal().ToString(CultureInfo.InvariantCulture) : "100";
+                        if (data.TryGetProperty("solvent", out var solvent)) row.Solvent = row.Solvents.Single(s => s.Id == solvent.GetInt32());
+                        if (data.TryGetProperty("standardVolume", out var standardVolume))
+                        {
+                            row.InternalStandardSource = row.InternalStandardSources.Last();
+                            row.InternalStandardVolume = standardVolume.GetDecimal().ToString(CultureInfo.InvariantCulture);
+                        }
                     }
                     if (data.TryGetProperty("internalIndex", out var internalIndex)) groupVm.Components[internalIndex.GetInt32()].IsInternalStandard = true;
                     if (data.TryGetProperty("selectedIndex", out var selectedIndex)) groupVm.SelectedComponent = groupVm.Components[selectedIndex.GetInt32()];

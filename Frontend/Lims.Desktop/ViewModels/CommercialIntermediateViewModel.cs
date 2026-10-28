@@ -158,7 +158,7 @@ public sealed partial class CommercialIntermediateViewModel : ObservableObject
         nameof(BottleCount) => ReferenceMaterialInput.TryParsePackageCount(BottleCount, out _) ? "" : "Indique una cantidad entera positiva.",
         nameof(VolumeUnit) => VolumeUnit is null ? "Seleccione la unidad." : "",
         nameof(ReceivedDate) => ReceivedDate is null ? "Indique la fecha de ingreso." : "",
-        nameof(ExpirationDate) => ExpirationDate is null ? "Indique la expiración." : ReceivedDate is { } d && ExpirationDate.Value.Date < d.Date ? "La expiración debe ser igual o posterior al ingreso." : "",
+        nameof(ExpirationDate) => ExpirationDate is null ? "Indique la expiración." : HistoricalEntryPolicy.EnforcePreparationDates && ReceivedDate is { } d && ExpirationDate.Value.Date < d.Date ? "La expiración debe ser igual o posterior al ingreso." : "",
         nameof(Location) => Location is null ? "Seleccione la ubicación." : "",
         nameof(Storage) => string.IsNullOrWhiteSpace(Storage) ? "Indique las condiciones." : Storage.Trim().Length > 160 ? "Máximo 160 caracteres." : "",
         _ => ""

@@ -569,12 +569,17 @@ public sealed class StockPostgresTests
         public static async Task<Fixture> CreateAsync(decimal available, decimal purity = 100)
         {
             var connection = new NpgsqlConnectionStringBuilder(Environment.GetEnvironmentVariable("LIMS_STOCK_TEST_CONNECTION"));
-            if (connection.Host != "127.0.0.1" || connection.Database != "lims_stock_test" || connection.Port != 55439)
-                throw new InvalidOperationException("Stock tests require the isolated loopback database on port 55439.");
+            if (connection.Host != "127.0.0.1" || connection.Database != "lims_stock_test" || connection.Port is not (55439 or 55440))
+                throw new InvalidOperationException("Stock tests require the isolated loopback database on port 55439 or 55440.");
             var schema = "stock_" + Guid.NewGuid().ToString("N");
             await using (var admin = new NpgsqlConnection(connection.ConnectionString))
             {
                 await admin.OpenAsync();
+                await using var directoryQuery = new NpgsqlCommand("SELECT current_setting('data_directory')", admin);
+                var actualDirectory = Path.TrimEndingDirectorySeparator(Path.GetFullPath((string)(await directoryQuery.ExecuteScalarAsync())!));
+                var expectedDirectory = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../../../artifacts/validation/stock-postgres/data"));
+                if (!string.Equals(actualDirectory, expectedDirectory, StringComparison.OrdinalIgnoreCase))
+                    throw new InvalidOperationException("The database must belong to this workspace's isolated Stock test cluster.");
                 await using var command = new NpgsqlCommand("CREATE SCHEMA " + schema, admin);
                 await command.ExecuteNonQueryAsync();
             }

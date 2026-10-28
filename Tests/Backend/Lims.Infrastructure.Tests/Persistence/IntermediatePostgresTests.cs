@@ -124,7 +124,7 @@ public sealed class IntermediatePostgresTests
         await using var fixture = await StockPostgresTests.Fixture.CreateAsync(10000); var sources = await Stocks(fixture);
         await using var db = fixture.Context(); var service = Service(db); var request = Request(sources, 10, 15);
         Assert.Equal(ErrorCodes.InvalidSession, (await service.CreateAsync(request, 0, CancellationToken.None)).Error?.Code);
-        foreach (var invalid in new[] { request with { PreparationDate = Today.AddDays(1) }, request with { ExpirationDate = Today.AddDays(-1) }, request with { Calculation = request.Calculation with { MethodId = -1 } } })
+        foreach (var invalid in new[] { request with { PreparationDate = default }, request with { ExpirationDate = default }, request with { Calculation = request.Calculation with { MethodId = -1 } } })
             Assert.Equal(ErrorCodes.ValidationError, (await service.CreateAsync(invalid, 42, CancellationToken.None)).Error?.Code);
         var stale = request with { Calculation = request.Calculation with { Components = [request.Calculation.Components[0] with { SourceVersion = Guid.NewGuid() }] } };
         Assert.Equal(ErrorCodes.Conflict, (await service.CreateAsync(stale, 42, CancellationToken.None)).Error?.Code);

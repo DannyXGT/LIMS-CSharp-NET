@@ -28,7 +28,8 @@ public static class CommercialMaterials
         if (certificate.NominalConcentration is <= 0 || (certificate.NominalConcentration.HasValue && string.IsNullOrWhiteSpace(certificate.NominalUnit)) ||
             certificate.CoverageFactor is <= 0 || certificate.UseAfterOpeningMonths is <= 0 or > 1200 || certificate.UseAfterOpeningDays is <= 0 or > 36500 ||
             (certificate.UseAfterOpeningMonths.HasValue && certificate.UseAfterOpeningDays.HasValue) ||
-            certificate.OpenedDate > DateOnly.FromDateTime(now.ToOffset(TimeSpan.FromHours(-6)).DateTime) || certificate.OpenedDate < material.ReceivedDate)
+            (HistoricalEntryPolicy.EnforcePreparationDates &&
+            (certificate.OpenedDate > DateOnly.FromDateTime(now.ToOffset(TimeSpan.FromHours(-6)).DateTime) || certificate.OpenedDate < material.ReceivedDate)))
             throw new ArgumentException("Revise concentración nominal, cobertura y condiciones de apertura documentadas.");
         if (certificate.UseNominalConcentration)
         {
@@ -87,6 +88,7 @@ public static class CommercialMaterials
             material.ReceivedDate, material.EffectiveExpirationDate ?? material.ExpirationDate, material.Version,
             certificate.ComponentsForUse().Select(c => new IntermediateAnalyte(c.Id, c.Name, c.CasNumber, c.Lot ?? material.Lot,
                 c.CertifiedConcentration, c.ConcentrationUnit, material.Id, c.Id, c.ExpandedUncertainty)).ToArray(),
-            material.Lot, material.Brand, material.CatalogNumber, certificate.Matrix, certificate.Reference);
+            material.Lot, material.Brand, material.CatalogNumber, certificate.Matrix, certificate.Reference,
+            material.CommercialRoles.Any(r => r.Kind == "Intermedia"));
     }
 }

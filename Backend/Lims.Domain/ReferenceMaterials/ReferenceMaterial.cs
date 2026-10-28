@@ -30,7 +30,7 @@ public sealed class ReferenceMaterial
         string storageTemperature,
         ReferenceLocation location,
         int actorUserId,
-        DateTimeOffset now, string presentation = "Solid")
+        DateTimeOffset now, string presentation = "Solid", bool enforceDateValidation = true)
     {
         Presentation = presentation;
         ValidateId(id);
@@ -52,7 +52,7 @@ public sealed class ReferenceMaterial
             unit,
             packageCount,
             storageTemperature,
-            location);
+            location, enforceDateValidation);
         AvailableQuantity = TotalQuantity;
         Status = ReferenceMaterialStatus.Active;
         CreatedByUserId = actorUserId;
@@ -98,11 +98,11 @@ public sealed class ReferenceMaterial
         UpdatedByUserId = actor; UpdatedAt = now; Version = Guid.NewGuid();
     }
 
-    public void ConsumeCommercial(decimal quantity, int actor, DateTimeOffset now, DateOnly today)
+    public void ConsumeCommercial(decimal quantity, int actor, DateTimeOffset now, DateOnly today, bool enforceCurrentExpiration = true)
     {
-        if (Presentation == "Solid" || OpeningRequired || EffectiveStatus(today) != ReferenceMaterialStatus.Active)
+        if (Presentation == "Solid" || OpeningRequired || EffectiveStatus(enforceCurrentExpiration ? today : EffectiveExpirationDate ?? ExpirationDate) != ReferenceMaterialStatus.Active)
             throw new ArgumentException("El frasco comercial no está vigente o falta registrar su apertura.");
-        Consume(quantity, actor, now, today);
+        Consume(quantity, actor, now, today, enforceCurrentExpiration);
     }
 
     public Guid Id { get; private set; }
@@ -153,7 +153,7 @@ public sealed class ReferenceMaterial
         string storageTemperature,
         ReferenceLocation location,
         int actorUserId,
-        DateTimeOffset now)
+        DateTimeOffset now, bool enforceDateValidation = true)
     {
         EnsureEditable();
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(actorUserId);
@@ -184,7 +184,7 @@ public sealed class ReferenceMaterial
             unit,
             packageCount,
             storageTemperature,
-            location);
+            location, enforceDateValidation);
         AvailableQuantity = TotalQuantity - consumedQuantity;
         UpdatedByUserId = actorUserId;
         UpdatedAt = now;
@@ -195,7 +195,7 @@ public sealed class ReferenceMaterial
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(actorUserId);
         // Historical Stock entry may bypass current expiry; lifecycle and balance still apply.
-        if (EffectiveStatus(enforceCurrentExpiration ? today : ExpirationDate) != ReferenceMaterialStatus.Active)
+        if (EffectiveStatus(enforceCurrentExpiration ? today : EffectiveExpirationDate ?? ExpirationDate) != ReferenceMaterialStatus.Active)
             throw new InvalidOperationException("El estándar no está disponible para uso.");
         if (quantity <= 0 || quantity > AvailableQuantity || decimal.Round(quantity, 6) != quantity)
             throw new ArgumentOutOfRangeException(nameof(quantity), "No hay suficiente material disponible o la cantidad es inválida.");
@@ -268,7 +268,7 @@ public sealed class ReferenceMaterial
         ReferenceUnit unit,
         int packageCount,
         string storageTemperature,
-        ReferenceLocation location)
+        ReferenceLocation location, bool enforceDateValidation)
     {
         ArgumentNullException.ThrowIfNull(method);
         ArgumentNullException.ThrowIfNull(unit);
@@ -287,7 +287,7 @@ public sealed class ReferenceMaterial
             throw new ArgumentOutOfRangeException(nameof(purityPercent), "Purity must be greater than 0 and at most 100.");
         }
 
-        if (expirationDate < receivedDate)
+        if (enforceDateValidation && expirationDate < receivedDate)
         {
             throw new ArgumentException("Expiration date cannot be before received date.", nameof(expirationDate));
         }

@@ -17,6 +17,8 @@ artifacts/sql/*
 !artifacts/sql/reference_preparation_decimal_scale.sql
 !artifacts/sql/preflight_reference_preparation_decimal_scale.sql
 !artifacts/sql/reference_curve_aqs.sql
+!artifacts/sql/pause_preparation_date_validation.sql
+!artifacts/sql/preflight_preparation_date_validation.sql
 !artifacts/validation/
 artifacts/validation/*
 !artifacts/validation/intermedia-workspace/

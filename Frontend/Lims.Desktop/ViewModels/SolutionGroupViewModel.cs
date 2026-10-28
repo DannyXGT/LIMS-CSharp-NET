@@ -16,6 +16,16 @@ public sealed partial class SolutionPartViewModel : ObservableObject
 {
     public ObservableCollection<IntermediateSource> Sources { get; } = [];
     public ObservableCollection<SolutionSourceOption> SourceOptions { get; } = [];
+    public ObservableCollection<SolventOption> Solvents { get; } = [];
+    public ObservableCollection<IntermediateSource> InternalStandardSources { get; } = [];
+    [ObservableProperty] public partial SolventOption? Solvent { get; set; }
+    [ObservableProperty] public partial IntermediateSource? InternalStandardSource { get; set; }
+    [ObservableProperty] public partial string InternalStandardVolume { get; set; } = string.Empty;
+    [ObservableProperty] public partial string InternalStandardUnit { get; set; } = "mL";
+    public void ClearInternalStandard() { InternalStandardSource = null; InternalStandardVolume = string.Empty; }
+    public IntermediateComponentRequest? StandardRequest => InternalStandardSource is { } s &&
+        ReferenceMaterialInput.TryParseDecimal(InternalStandardVolume, 6, out var volume) && volume > 0
+        ? new(s.Id, s.Version, volume, InternalStandardUnit) : null;
     public IReadOnlyList<string> Units { get; } = ["mL", "L"];
     public IReadOnlyList<string> Roles { get; } = ["Solución principal", "Estándar interno"];
     public string Role { get => Roles[IsInternalStandard ? 1 : 0]; set => IsInternalStandard = value == Roles[1]; }
@@ -53,6 +63,10 @@ public sealed partial class SolutionPartViewModel : ObservableObject
 public sealed partial class SolutionGroupViewModel(string kind, ISolutionGroupApiClient api, ISessionService session) : ObservableObject
 {
     private readonly List<IntermediateSource> _sources = [];
+    private readonly List<SolventOption> _solvents = [];
+    [ObservableProperty] public partial bool SupportsDilutionAdditives { get; set; }
+    public string AdditivesMessage => SupportsDilutionAdditives ? string.Empty : "Actualice la API del servidor para seleccionar solvente y agregar una Intermedia como estándar interno.";
+    partial void OnSupportsDilutionAdditivesChanged(bool value) => OnPropertyChanged(nameof(AdditivesMessage));
     private CreateSolutionGroupRequest? _pending;
     private Guid _requestId = Guid.NewGuid();
     private int _revision;
@@ -154,8 +168,15 @@ public sealed partial class SolutionGroupViewModel(string kind, ISolutionGroupAp
             if (!result.IsSuccess || result.Value is null) { Message = ReferenceMaterialErrors.PreparationMessage(result.Error); return; }
             _updating = true; var methodId = Method?.Id;
             _sources.Clear(); _sources.AddRange(result.Value.Sources);
+            SupportsDilutionAdditives = result.Value.SupportsDilutionAdditives;
+            _solvents.Clear(); _solvents.AddRange(SupportsDilutionAdditives ? result.Value.Solvents ?? [] : []);
             Replace(Methods, result.Value.Methods); Method = Methods.FirstOrDefault(m => m.Id == methodId);
-            foreach (var row in Components) if (row.Source is { } previous) row.Source = _sources.Find(s => s.Id == previous.Id);
+            foreach (var row in Components)
+            {
+                if (row.Source is { } previous) row.Source = _sources.Find(s => s.Id == previous.Id);
+                if (row.InternalStandardSource is { } standard) row.InternalStandardSource = _sources.Find(s => s.Id == standard.Id);
+                if (row.Solvent is { } solvent) row.Solvent = _solvents.Find(s => s.Id == solvent.Id);
+            }
             _updating = false; UpdateSources(); Recalculate(); Message = string.Empty;
         }
         catch (HttpRequestException) { Message = "No se pudo conectar con el servidor."; }
@@ -168,13 +189,17 @@ public sealed partial class SolutionGroupViewModel(string kind, ISolutionGroupAp
         {
             Replace(row.Sources, _sources.Where(s => (s.Kind == "Intermedia" || MaterialPresentations.IsCommercial(s.Kind)) && (Method is null || s.MethodId == Method.Id)));
             Replace(row.SourceOptions, row.Sources.Select(s => new SolutionSourceOption(s)));
+            Replace(row.Solvents, _solvents);
+            Replace(row.InternalStandardSources, SupportsDilutionAdditives
+                ? _sources.Where(s => s.CanBeInternalStandard && (Method is null || s.MethodId == Method.Id)) : []);
             // Refresh the selected wrapper after replacing options without discarding the draft source.
             row.OnOptionsChanged();
         }
     }
     private void OnPartChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (e.PropertyName is nameof(SolutionPartViewModel.Source) or nameof(SolutionPartViewModel.Volume) or nameof(SolutionPartViewModel.Unit) or nameof(SolutionPartViewModel.FinalVolume) or nameof(SolutionPartViewModel.FinalUnit) or nameof(SolutionPartViewModel.IsInternalStandard))
+        if (e.PropertyName is nameof(SolutionPartViewModel.Source) or nameof(SolutionPartViewModel.Volume) or nameof(SolutionPartViewModel.Unit) or nameof(SolutionPartViewModel.FinalVolume) or nameof(SolutionPartViewModel.FinalUnit) or nameof(SolutionPartViewModel.IsInternalStandard)
+            or nameof(SolutionPartViewModel.Solvent) or nameof(SolutionPartViewModel.InternalStandardSource) or nameof(SolutionPartViewModel.InternalStandardVolume) or nameof(SolutionPartViewModel.InternalStandardUnit))
         { SelectedComponent = sender as SolutionPartViewModel; Recalculate(); }
     }
     public void Recalculate()
@@ -191,36 +216,43 @@ public sealed partial class SolutionGroupViewModel(string kind, ISolutionGroupAp
             {
                 try
                 {
-                    row.VolumePreview = new(StockUnits.ConvertVolume(taken, row.Unit, row.FinalUnit), final, row.FinalUnit);
+                    var standardVolume = row.StandardRequest is { } standard
+                        ? StockUnits.ConvertVolume(standard.VolumeTaken, standard.VolumeUnit, row.FinalUnit) : 0;
+                    row.VolumePreview = new(StockUnits.ConvertVolume(taken, row.Unit, row.FinalUnit) + standardVolume, final, row.FinalUnit);
                     row.FieldError = row.VolumePreview.Error;
                     if (row.Source is not null && Method is not null && !row.VolumePreview.Exceeds)
-                        row.Preview = SolutionGroupCalculator.Calculate(new(Method.Id, [new(row.Source.Id, row.Source.Version, taken, row.Unit, final, row.FinalUnit, row.IsInternalStandard)]), _sources).Parts[0] with { Position = row.Position };
+                        row.Preview = SolutionGroupCalculator.Calculate(new(Method.Id, [new(row.Source.Id, row.Source.Version, taken, row.Unit, final, row.FinalUnit, row.IsInternalStandard, row.Solvent?.Id, row.StandardRequest)]), _sources, _solvents).Parts[0] with { Position = row.Position };
                 }
                 catch (ArgumentException e) { row.FieldError = e.Message; }
                 catch (OverflowException) { row.FieldError = "Las cantidades exceden el rango admitido."; }
             }
             else if ((row.Volume.Length > 0 && !Parse(row.Volume, out _)) || (row.FinalVolume.Length > 0 && !Parse(row.FinalVolume, out _)))
                 row.FieldError = "Ingrese volúmenes positivos, con hasta 6 decimales.";
+            if ((row.InternalStandardSource is not null || row.InternalStandardVolume.Length > 0) && row.StandardRequest is null)
+                row.FieldError = "Seleccione la Intermedia del estándar interno e ingrese su volumen positivo.";
         }
         var today = DateTimeOffset.UtcNow.ToOffset(TimeSpan.FromHours(-6)).Date;
         if (Code.Trim().Length is not (> 0 and <= 40)) Validation = "Ingrese un código de hasta 40 caracteres.";
         else if (Name.Trim().Length > 200 || Notes.Trim().Length > 2000 || StorageTemperature.Trim().Length > 200) Validation = "Revise la longitud de los datos generales.";
         else if (Method is null) Validation = "Seleccione un método.";
-        else if (PreparationDate is null || ExpirationDate is null || PreparationDate.Value.Date > today || ExpirationDate.Value.Date < PreparationDate.Value.Date || ExpirationDate.Value.Date < today) Validation = "Revise las fechas de preparación y expiración.";
+        else if (PreparationDate is null || ExpirationDate is null || (HistoricalEntryPolicy.EnforcePreparationDates &&
+            (PreparationDate.Value.Date > today || ExpirationDate.Value.Date < PreparationDate.Value.Date || ExpirationDate.Value.Date < today))) Validation = "Revise las fechas de preparación y expiración.";
         if (TryRequest(out var request))
         {
             try
             {
-                Calculation = SolutionGroupCalculator.Calculate(request!, _sources);
+                Calculation = SolutionGroupCalculator.Calculate(request!, _sources, _solvents);
                 foreach (var part in Calculation.Parts)
                 {
                     var row = Components[part.Position]; row.Preview = part; row.ResultDisplay = part.ResultDisplay;
                     row.BalanceDisplay = Calculation.Debits.Single(d => d.Source.Id == part.Source.Id).Display;
                     var debit = Calculation.Debits.Single(d => d.Source.Id == part.Source.Id);
                     row.SourceBalance = $"Origen: {part.Source.AvailableDisplay} · Después del grupo: {StockPresentation.Quantity(debit.RemainingVolume, part.Source.VolumeUnit)}";
-                    if (PreparationDate is { } date && (DateOnly.FromDateTime(date.Date) < part.Source.PreparationDate || DateOnly.FromDateTime(date.Date) > part.Source.ExpirationDate)) Validation = "La preparación queda fuera de la vigencia de un origen.";
+                    if (HistoricalEntryPolicy.EnforcePreparationDates && PreparationDate is { } date && (DateOnly.FromDateTime(date.Date) < part.Source.PreparationDate || DateOnly.FromDateTime(date.Date) > part.Source.ExpirationDate)) Validation = "La preparación queda fuera de la vigencia de un origen.";
                 }
                 if (!Calculation.HasSufficientVolume) Validation = "El consumo acumulado supera el saldo de un origen.";
+                if (HistoricalEntryPolicy.EnforcePreparationDates && PreparationDate is { } prepared && Calculation.Debits.Any(d => DateOnly.FromDateTime(prepared.Date) < d.Source.PreparationDate || DateOnly.FromDateTime(prepared.Date) > d.Source.ExpirationDate))
+                    Validation = "La preparación queda fuera de la vigencia de un origen o estándar interno.";
             }
             catch (ArgumentException e) { Validation = e.Message; }
             catch (OverflowException) { Validation = "Las cantidades exceden el rango admitido."; }
@@ -235,7 +267,9 @@ public sealed partial class SolutionGroupViewModel(string kind, ISolutionGroupAp
         foreach (var row in Components)
         {
             if (row.Source is null || !Parse(row.Volume, out var taken) || !Parse(row.FinalVolume, out var final)) return false;
-            parts.Add(new(row.Source.Id, row.Source.Version, taken, row.Unit, final, row.FinalUnit, row.IsInternalStandard));
+            if ((row.InternalStandardSource is not null || row.InternalStandardVolume.Length > 0) && row.StandardRequest is null) return false;
+            if (!SupportsDilutionAdditives && (row.Solvent is not null || row.StandardRequest is not null)) return false;
+            parts.Add(new(row.Source.Id, row.Source.Version, taken, row.Unit, final, row.FinalUnit, row.IsInternalStandard, row.Solvent?.Id, row.StandardRequest));
         }
         request = new(Method.Id, parts); return true;
     }

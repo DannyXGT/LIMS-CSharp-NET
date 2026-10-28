@@ -80,6 +80,13 @@ public sealed class ReferencePreparation
             Solvents.Add(new StockSolvent(Id, row.SolventId, row.Percent, position));
     }
 
+    public void SetIntermediateSolvent(int solventId)
+    {
+        if (Kind != "Intermedia" || Solvents.Count != 0)
+            throw new InvalidOperationException("El solvente se registra al crear la Intermedia.");
+        Solvents.Add(new StockSolvent(Id, solventId, 100m, 0));
+    }
+
     public Guid Id { get; private set; }
     public string Code { get; private set; } = string.Empty;
     public string Name { get; private set; } = string.Empty;
@@ -127,9 +134,9 @@ public sealed class ReferencePreparation
 
     public static ReferencePreparation Intermediate(Guid id, string code, string name, int methodId, string methodName,
         decimal finalVolume, string unit, string resultsJson, DateOnly date, DateOnly expiration, int actor,
-        string? notes, DateTimeOffset now, string fingerprint, Guid? parent)
+        string? notes, DateTimeOffset now, string fingerprint, Guid? parent, bool enforceDateValidation = true)
     {
-        if (id == Guid.Empty || methodId <= 0 || actor <= 0 || finalVolume <= 0 || expiration < date)
+        if (id == Guid.Empty || methodId <= 0 || actor <= 0 || finalVolume <= 0 || (enforceDateValidation && expiration < date))
             throw new ArgumentException("Revise método, volumen, usuario y fechas de la Intermedia.");
         if (notes?.Trim().Length > 2000) throw new ArgumentException("Las observaciones admiten hasta 2000 caracteres.");
         return new ReferencePreparation
@@ -145,11 +152,11 @@ public sealed class ReferencePreparation
 
     public static ReferencePreparation SolutionGroup(Guid id, string kind, string code, string name, int methodId, string methodName,
         decimal totalProducedMl, string calculationJson, DateOnly date, DateOnly expiration, int actor, string? notes,
-        string? storageTemperature, DateTimeOffset now, string fingerprint)
+        string? storageTemperature, DateTimeOffset now, string fingerprint, bool enforceDateValidation = true)
     {
         if (kind is not ("Curva" or "AQS")) throw new ArgumentException("Tipo de preparación inválido.");
         var group = Intermediate(id, code, name, methodId, methodName, totalProducedMl, "mL", calculationJson,
-            date, expiration, actor, notes, now, fingerprint, null);
+            date, expiration, actor, notes, now, fingerprint, null, enforceDateValidation);
         group.Kind = kind;
         // Produced solutions have no downstream inventory in the verified Works/AQS procedure.
         group.AvailableVolume = 0;
@@ -158,9 +165,9 @@ public sealed class ReferencePreparation
         return group;
     }
 
-    public void ConsumeVolume(decimal quantity, int actor, DateTimeOffset now, DateOnly today)
+    public void ConsumeVolume(decimal quantity, int actor, DateTimeOffset now, DateOnly today, bool enforceDateValidation = true)
     {
-        if (Kind is not ("Stock" or "Intermedia") || Status != "Active" || ExpirationDate < today || quantity <= 0 || quantity > AvailableVolume || actor <= 0)
+        if (Kind is not ("Stock" or "Intermedia") || Status != "Active" || (enforceDateValidation && ExpirationDate < today) || quantity <= 0 || quantity > AvailableVolume || actor <= 0)
             throw new InvalidOperationException("El origen no tiene volumen disponible suficiente.");
         AvailableVolume -= quantity;
         UpdatedAt = now;

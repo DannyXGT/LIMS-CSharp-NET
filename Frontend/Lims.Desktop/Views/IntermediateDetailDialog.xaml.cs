@@ -16,6 +16,7 @@ public sealed partial class IntermediateDetailDialog : ContentDialog
     public string ContextDisplay => $"{Detail.Preparation.Method} · Preparado por {Detail.Preparation.PreparedBy} · {Detail.Preparation.DateDisplay}";
     public string VolumeDisplay => $"{Detail.Calculation.TakenDisplay} de componentes · Aforo {Detail.Calculation.FinalDisplay}";
     public string ExpirationDisplay => $"Expiración {Detail.Preparation.ExpirationDisplay}";
+    public string SolventDisplay => "Solvente de aforo: " + (Detail.Solvent?.Display ?? "No registrado");
     public string AuditDisplay => $"Creado por {Detail.Preparation.PreparedBy} · {Detail.CreatedDisplay}\nÚltima modificación por {Detail.UpdatedBy} · {Detail.UpdatedDisplay}";
     private void OnOpened(ContentDialog sender, ContentDialogOpenedEventArgs args)
     {

@@ -17,7 +17,7 @@ public sealed partial class IntermediateEditorDialog : ContentDialog
     public IntermediateEditorDialog(IntermediateViewModel viewModel, ICommercialPreparationApiClient? commercialApi = null)
     {
         ViewModel = viewModel; InitializeComponent(); InitializeEntry();
-        foreach (var field in new LimsPopupField[] { MethodSelect, ParentSelect, PreparationPicker, ExpirationPicker })
+        foreach (var field in new LimsPopupField[] { MethodSelect, ParentSelect, PreparationPicker, ExpirationPicker, SolventSelect })
             field.PopupBoundary = EditorScroll;
         EditorScroll.ViewChanged += (_, _) => LimsPopupField.CloseForRootAfterLayout(this);
     }

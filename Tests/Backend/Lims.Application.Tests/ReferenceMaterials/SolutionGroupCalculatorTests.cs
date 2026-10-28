@@ -5,6 +5,51 @@ namespace Lims.Application.Tests.ReferenceMaterials;
 public sealed class SolutionGroupCalculatorTests
 {
     [Fact]
+    public void InternalStandardSharesAforoButKeepsItsConcentrationAndPhysicalDebit()
+    {
+        var source = Source(); var standard = Source();
+        var part = Part(source, 10, 100) with { SolventId = 4,
+            InternalStandard = new(standard.Id, standard.Version, .002m, "L") };
+        var result = SolutionGroupCalculator.Calculate(new(1, [part]), [source, standard], [new(4, "Metanol", "MeOH", true, 0)]);
+        Assert.Equal(10, result.Parts[0].Results[0].Concentration);
+        Assert.Equal(2, result.Parts[0].InternalStandard!.Results[0].Concentration);
+        Assert.Equal("MeOH", result.Parts[0].Solvent!.Abbreviation);
+        Assert.Equal(2, result.Debits.Count);
+        Assert.Equal(98, result.Debits.Single(d => d.Source.Id == standard.Id).RemainingVolume);
+        Assert.Throws<ArgumentException>(() => SolutionGroupCalculator.Calculate(new(1, [part with { FinalVolume = 11 }]), [source, standard], [new(4, "Metanol", "MeOH", true, 0)]));
+    }
+
+    [Fact]
+    public void StandardAndPrincipalFromSameBottleAggregateConsumptionAcrossSolutions()
+    {
+        var source = Source() with { AvailableVolume = 25 };
+        var part = Part(source, 10, 100) with { InternalStandard = new(source.Id, source.Version, 5, "mL") };
+        var result = SolutionGroupCalculator.Calculate(new(1, [part, part]), [source]);
+        Assert.Equal(30, Assert.Single(result.Debits).Quantity);
+        Assert.False(result.HasSufficientVolume);
+    }
+
+    [Fact]
+    public void InvalidStandardOrSolventCannotEnterTheCalculation()
+    {
+        var source = Source(); var standard = Source();
+        var part = Part(source, 10, 100) with { InternalStandard = new(standard.Id, standard.Version, 1, "mL") };
+        foreach (var invalid in new[] { standard with { Kind = "Stock" }, standard with { MethodId = 2 },
+            standard with { Version = Guid.NewGuid() }, standard with { Analytes = [] } })
+            Assert.Throws<ArgumentException>(() => SolutionGroupCalculator.Calculate(new(1, [part]), [source, invalid]));
+        Assert.Throws<ArgumentException>(() => SolutionGroupCalculator.Calculate(new(1, [part with { SolventId = 999 }]), [source, standard], []));
+    }
+
+    [Fact]
+    public void CommercialInternalStandardRequiresAnExplicitIntermediateRole()
+    {
+        var source = Source(); var standard = Source() with { Kind = "CommercialMix", IsCommercialIntermediate = true };
+        var part = Part(source, 10, 100) with { InternalStandard = new(standard.Id, standard.Version, 1, "mL") };
+        Assert.NotNull(SolutionGroupCalculator.Calculate(new(1, [part]), [source, standard]).Parts[0].InternalStandard);
+        Assert.Throws<ArgumentException>(() => SolutionGroupCalculator.Calculate(new(1, [part]), [source, standard with { IsCommercialIntermediate = false }]));
+    }
+
+    [Fact]
     public void IndependentSolutionsRetainOwnAforoEveryAnalyteAndExplicitInternalRole()
     {
         var source = Source();

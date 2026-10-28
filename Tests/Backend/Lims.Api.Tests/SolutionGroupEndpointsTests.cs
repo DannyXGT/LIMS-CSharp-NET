@@ -76,11 +76,13 @@ public sealed class SolutionGroupEndpointsTests : IDisposable
         Assert.Equal(HttpStatusCode.Forbidden, (await _client.GetAsync(Path)).StatusCode);
     }
     [Fact]
-    public async Task InvalidDatesAndFormulaUnitsReturnHumanValidationErrors()
+    public async Task DateComparisonsArePausedButMissingDatesAndInvalidUnitsAreRejected()
     {
         _client.DefaultRequestHeaders.Authorization = Bearer("Administrador"); var request = Request();
-        using var invalidDate = await _client.PostAsJsonAsync(Path, request with { PreparationDate = request.PreparationDate.AddDays(1) });
-        Assert.Equal(HttpStatusCode.BadRequest, invalidDate.StatusCode);
+        using var historical = await _client.PostAsJsonAsync(Path, request with { PreparationDate = request.PreparationDate.AddDays(1), ExpirationDate = request.PreparationDate.AddYears(-2) });
+        Assert.Equal(HttpStatusCode.Created, historical.StatusCode);
+        using var missingDate = await _client.PostAsJsonAsync(Path, request with { ExpirationDate = default });
+        Assert.Equal(HttpStatusCode.BadRequest, missingDate.StatusCode);
         using var invalidUnit = await _client.PostAsJsonAsync(Path + "/preview", request.Calculation with { Parts = [request.Calculation.Parts[0] with { FinalVolumeUnit = "g" }] });
         Assert.Equal(HttpStatusCode.BadRequest, invalidUnit.StatusCode);
         Assert.Equal(ErrorCodes.ValidationError, (await invalidUnit.Content.ReadFromJsonAsync<ApiError>())!.Code);

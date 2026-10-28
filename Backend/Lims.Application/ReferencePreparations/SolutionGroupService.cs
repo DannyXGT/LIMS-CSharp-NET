@@ -12,7 +12,11 @@ public sealed class SolutionGroupService(ISolutionGroupRepository repository, Ti
     public Task<IntermediateOptions> OptionsAsync(CancellationToken ct) => repository.OptionsAsync(Today, ct);
     public async Task<OperationResult<SolutionCalculation>> PreviewAsync(SolutionCalculationRequest request, CancellationToken ct)
     {
-        try { return OperationResult.Success(SolutionGroupCalculator.Calculate(request, (await OptionsAsync(ct).ConfigureAwait(false)).Sources)); }
+        try
+        {
+            var options = await OptionsAsync(ct).ConfigureAwait(false);
+            return OperationResult.Success(SolutionGroupCalculator.Calculate(request, options.Sources, options.Solvents));
+        }
         catch (ArgumentException e) { return Fail<SolutionCalculation>(ErrorCodes.ValidationError, e.Message); }
         catch (OverflowException) { return Fail<SolutionCalculation>(ErrorCodes.ValidationError, "Las cantidades exceden el rango admitido."); }
     }
@@ -23,7 +27,8 @@ public sealed class SolutionGroupService(ISolutionGroupRepository repository, Ti
         if (!SolutionKinds.IsGroup(kind) || request.RequestId == Guid.Empty || request.Calculation is null ||
             request.Code?.Trim().Length is not (> 0 and <= 40) || request.Name?.Trim().Length > 200 ||
             request.Notes?.Trim().Length > 2000 || request.StorageTemperature?.Trim().Length > 200 ||
-            request.PreparationDate == default || request.PreparationDate > Today || request.ExpirationDate < Today || request.ExpirationDate < request.PreparationDate)
+            request.PreparationDate == default || request.ExpirationDate == default || (HistoricalEntryPolicy.EnforcePreparationDates &&
+            (request.PreparationDate > Today || request.ExpirationDate < Today || request.ExpirationDate < request.PreparationDate)))
             return Task.FromResult(Fail<SolutionGroupDetail>(ErrorCodes.ValidationError, "Revise código, fechas y datos de la preparación."));
         var fingerprint = Convert.ToHexString(SHA256.HashData(JsonSerializer.SerializeToUtf8Bytes(new { kind, request, actor })));
         return repository.CreateAsync(kind, request, actor, fingerprint, clock.GetUtcNow(), ct);

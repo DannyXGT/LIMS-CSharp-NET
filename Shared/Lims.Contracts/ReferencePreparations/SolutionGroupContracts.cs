@@ -8,12 +8,14 @@ public static class SolutionKinds
     public static bool IsGroup(string kind) => kind is "Curva" or "AQS";
 }
 public sealed record SolutionPartRequest(Guid SourceId, Guid SourceVersion, decimal VolumeTaken, string VolumeUnit,
-    decimal FinalVolume, string FinalVolumeUnit, bool IsInternalStandard = false);
+    decimal FinalVolume, string FinalVolumeUnit, bool IsInternalStandard = false, int? SolventId = null,
+    IntermediateComponentRequest? InternalStandard = null);
 public sealed record SolutionCalculationRequest(int MethodId, IReadOnlyList<SolutionPartRequest> Parts);
 public sealed record CreateSolutionGroupRequest(Guid RequestId, string Code, string? Name, SolutionCalculationRequest Calculation,
     DateOnly PreparationDate, DateOnly ExpirationDate, string? Notes, string? StorageTemperature = null);
 public sealed record SolutionPart(int Position, IntermediateSource Source, decimal VolumeTaken, string VolumeUnit,
-    decimal FinalVolume, string FinalVolumeUnit, bool IsInternalStandard, IReadOnlyList<IntermediateAnalyte> Results)
+    decimal FinalVolume, string FinalVolumeUnit, bool IsInternalStandard, IReadOnlyList<IntermediateAnalyte> Results,
+    SolventOption? Solvent = null, SolutionInternalStandard? InternalStandard = null)
 {
     [JsonIgnore] public string Label => $"Solución {Position + 1}" + (IsInternalStandard ? " · Estándar interno" : string.Empty);
     [JsonIgnore] public string TakenDisplay => StockPresentation.Quantity(VolumeTaken, VolumeUnit);
@@ -21,6 +23,8 @@ public sealed record SolutionPart(int Position, IntermediateSource Source, decim
     [JsonIgnore] public string ResultDisplay => string.Join("; ", Results.Select(a => a.Display));
     [JsonIgnore] public string TraceDisplay => $"{Source.Code} · {Source.Name} · {string.Join("; ", Source.Analytes.Select(a => $"{a.Name} · CAS {a.CasNumber} · Lote {a.Lot}"))}";
 }
+public sealed record SolutionInternalStandard(IntermediateSource Source, decimal VolumeTaken, string VolumeUnit,
+    IReadOnlyList<IntermediateAnalyte> Results);
 public sealed record SolutionSourceDebit(IntermediateSource Source, decimal Quantity, decimal RemainingVolume)
 {
     [JsonIgnore] public string Display => $"{Source.Code} · Disponible {Source.AvailableDisplay} · Consumo {StockPresentation.Quantity(Quantity, Source.VolumeUnit)} · Después {StockPresentation.Quantity(RemainingVolume, Source.VolumeUnit)}";

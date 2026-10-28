@@ -86,7 +86,10 @@ public sealed partial class SolutionGroupEditorDialog : ContentDialog
     private void OnExpirationChanged(object? sender, EventArgs args) { if (_ready) ViewModel.ExpirationDate = ExpirationPicker.Date; }
     private void OnPopupLoaded(object sender, RoutedEventArgs args) { if (sender is LimsPopupField field) field.PopupBoundary = field == ResultSelect ? ResultViewport : EditorScroll; }
     private void OnAdd(object sender, RoutedEventArgs args) { if (ViewModel.CanAddComponent) ViewModel.AddComponent(); }
-    private void OnAddInternal(object sender, RoutedEventArgs args) { if (ViewModel.CanAddComponent) ViewModel.AddComponent().IsInternalStandard = true; }
+    private void OnClearInternal(object sender, RoutedEventArgs args)
+    {
+        if (ViewModel.InputsEnabled && sender is Button { Tag: SolutionPartViewModel row }) row.ClearInternalStandard();
+    }
     private void OnSelectResult(object sender, RoutedEventArgs args)
     {
         if (sender is Button { Tag: SolutionPartViewModel row }) { ViewModel.SelectedComponent = row; if (EditorRoot.Width < 880) ResultPanel.StartBringIntoView(); }

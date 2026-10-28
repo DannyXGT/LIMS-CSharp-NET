@@ -1179,7 +1179,7 @@ namespace Lims.Infrastructure.Persistence.Migrations
                         {
                             t.HasCheckConstraint("ck_reference_materials_available_quantity", "available_quantity >= 0 AND available_quantity <= presentation_quantity * package_count");
 
-                            t.HasCheckConstraint("ck_reference_materials_dates", "expiration_date >= received_date");
+                            t.HasCheckConstraint("ck_reference_materials_dates", "presentation <> 'Solid' OR expiration_date >= received_date");
 
                             t.HasCheckConstraint("ck_reference_materials_package_count", "package_count > 0");
 
@@ -1815,7 +1815,7 @@ namespace Lims.Infrastructure.Persistence.Migrations
 
                     b.ToTable("reference_preparations", null, t =>
                         {
-                            t.HasCheckConstraint("ck_reference_preparations_dates", "(kind = 'Stock' OR expiration_date >= preparation_date) AND updated_at >= created_at");
+                            t.HasCheckConstraint("ck_reference_preparations_dates", "updated_at >= created_at");
 
                             t.HasCheckConstraint("ck_reference_preparations_identity", "length(trim(code)) > 0 AND length(trim(name)) > 0 AND length(request_fingerprint) = 64");
 

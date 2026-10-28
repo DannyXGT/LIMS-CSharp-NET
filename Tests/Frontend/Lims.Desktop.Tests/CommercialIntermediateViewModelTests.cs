@@ -77,12 +77,13 @@ public sealed class CommercialIntermediateViewModelTests
         Assert.Null(vm.AvailableVolume); Assert.Equal(0, vm.AvailabilityPercent); Assert.Equal("—", vm.AvailableDisplay);
     }
     [Fact]
-    public async Task PermissionRevocationAndInvalidDatesBlockSaveWithoutLosingDraft()
+    public async Task PermissionRevocationBlocksSaveAndDateComparisonsAreTemporarilyPaused()
     {
         var allowed = true; var api = new Api(); var vm = new CommercialIntermediateViewModel(api, "Ana", () => allowed);
         await vm.LoadAsync(); Fill(vm); vm.Paste("A\t\t50\tµg/mL"); Assert.True(vm.CanSave);
         allowed = false; Assert.False(vm.CanSave); Assert.Null(await vm.SaveAsync()); Assert.Empty(api.Requests);
-        allowed = true; vm.ExpirationDate = vm.ReceivedDate!.Value.AddDays(-1); Assert.False(vm.CanSave);
+        allowed = true; vm.ExpirationDate = vm.ReceivedDate!.Value.AddDays(-1); Assert.True(vm.CanSave);
+        vm.ExpirationDate = null; Assert.False(vm.CanSave);
         vm.ExpirationDate = vm.ReceivedDate; Assert.True(vm.CanSave); Assert.Single(vm.Rows);
     }
     private static async Task<CommercialIntermediateViewModel> Ready(Api api, bool filled = false)

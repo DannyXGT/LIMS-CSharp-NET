@@ -10,8 +10,10 @@ public sealed record IntermediateAnalyte(Guid MaterialId, string Name, string? C
 }
 public sealed record IntermediateSource(Guid Id, string Kind, string Code, string Name, int MethodId, string Method,
     decimal AvailableVolume, decimal InitialVolume, string VolumeUnit, DateOnly PreparationDate, DateOnly ExpirationDate,
-    Guid Version, IReadOnlyList<IntermediateAnalyte> Analytes, string? Lot = null, string? Brand = null, string? Catalog = null, string? Matrix = null, string? Certificate = null)
+    Guid Version, IReadOnlyList<IntermediateAnalyte> Analytes, string? Lot = null, string? Brand = null, string? Catalog = null, string? Matrix = null, string? Certificate = null,
+    bool IsCommercialIntermediate = false)
 {
+    [JsonIgnore] public bool CanBeInternalStandard => Kind == "Intermedia" || (MaterialPresentations.IsCommercial(Kind) && IsCommercialIntermediate);
     [JsonIgnore] public string KindLabel => Kind switch { "Stock" => "Stock interno", "Intermedia" => "Intermedia interna", _ => MaterialPresentations.Label(Kind) };
     [JsonIgnore] public string SearchDisplay => $"{Code} · {Name} · {string.Join(" · ", Analytes.Select(a => $"{(a.Name == Name ? "" : a.Name + " · ")}CAS {ReferenceMaterialPresentation.Optional(a.CasNumber)} · Lote {a.Lot}"))}";
     [JsonIgnore] public string AvailableDisplay => StockPresentation.Quantity(AvailableVolume, VolumeUnit);
@@ -31,12 +33,13 @@ public sealed record IntermediateSource(Guid Id, string Kind, string Code, strin
     [JsonIgnore] public string ConcentrationDisplay => string.Join("; ", Analytes.Select(a => a.Display));
     public override string ToString() => SearchDisplay;
 }
-public sealed record IntermediateOptions(IReadOnlyList<IntermediateMethod> Methods, IReadOnlyList<IntermediateSource> Sources);
+public sealed record IntermediateOptions(IReadOnlyList<IntermediateMethod> Methods, IReadOnlyList<IntermediateSource> Sources,
+    IReadOnlyList<SolventOption>? Solvents = null, bool SupportsDilutionAdditives = false);
 public sealed record IntermediateComponentRequest(Guid SourceId, Guid SourceVersion, decimal VolumeTaken, string VolumeUnit);
 public sealed record IntermediateCalculationRequest(int MethodId, decimal FinalVolume, string FinalVolumeUnit,
     IReadOnlyList<IntermediateComponentRequest> Components, Guid? DilutedPreparationId = null);
 public sealed record CreateIntermediateRequest(Guid RequestId, string Name, IntermediateCalculationRequest Calculation,
-    DateOnly PreparationDate, DateOnly ExpirationDate, string? Notes);
+    DateOnly PreparationDate, DateOnly ExpirationDate, string? Notes, int? SolventId = null);
 public sealed record IntermediateContribution(IntermediateSource Source, decimal VolumeTaken, string VolumeUnit,
     decimal RemainingVolume, IReadOnlyList<IntermediateAnalyte> Results)
 {
@@ -79,7 +82,8 @@ public sealed record IntermediateConsumption(Guid Id, Guid SourceId, string Sour
 }
 public sealed record IntermediateDetail(IntermediateSummary Preparation, IntermediateCalculation Calculation,
     IReadOnlyList<IntermediateConsumption> Consumptions, Guid? DilutedPreparationId, string? Notes,
-    DateTimeOffset CreatedAt, DateTimeOffset UpdatedAt, string UpdatedBy, Guid Version, IReadOnlyList<PreparationUsage>? UsageHistory = null)
+    DateTimeOffset CreatedAt, DateTimeOffset UpdatedAt, string UpdatedBy, Guid Version, IReadOnlyList<PreparationUsage>? UsageHistory = null,
+    SolventOption? Solvent = null)
 {
     [JsonIgnore] public string CreatedDisplay => ReferenceMaterialPresentation.LocalTimestamp(CreatedAt);
     [JsonIgnore] public string UpdatedDisplay => ReferenceMaterialPresentation.LocalTimestamp(UpdatedAt);

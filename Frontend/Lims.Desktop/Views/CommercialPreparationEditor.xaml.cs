@@ -80,7 +80,7 @@ public sealed partial class CommercialPreparationEditor : UserControl
         if (string.IsNullOrWhiteSpace(ProductNameBox.Text) || string.IsNullOrWhiteSpace(BrandBox.Text) || string.IsNullOrWhiteSpace(LotBox.Text) || string.IsNullOrWhiteSpace(StorageBox.Text) ||
             MethodSelect.SelectedItem is not ReferenceMethodOption method || LocationSelect.SelectedItem is not ReferenceLocationOption location ||
             VolumeUnitSelect.SelectedItem is not ReferenceUnitOption unit || !ReferenceMaterialInput.TryParseDecimal(VolumeBox.Text, 6, out var volume) || volume <= 0 ||
-            ReceivedPicker.Date is not { } received || ExpirationPicker.Date is not { } expires || expires.Date < received.Date)
+            ReceivedPicker.Date is not { } received || ExpirationPicker.Date is not { } expires || (HistoricalEntryPolicy.EnforcePreparationDates && expires.Date < received.Date))
             throw new ArgumentException("Complete producto, método, fabricante, lote, volumen, fechas y almacenamiento.");
         if (!ReferenceMaterialInput.TryParsePackageCount(BottleCountBox.Text, out var bottles)) throw new ArgumentException("Indique un número entero de frascos mayor que cero.");
         ComponentsEditor.SetSingleName(ProductNameBox.Text.Trim());

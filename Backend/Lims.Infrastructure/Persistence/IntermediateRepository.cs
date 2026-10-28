@@ -19,13 +19,15 @@ public sealed class IntermediateRepository(LimsDbContext db) : IIntermediateRepo
             .Select(m => new IntermediateMethod(m.Id, m.Name)).ToArrayAsync(cancellationToken).ConfigureAwait(false);
         var ids = methods.Select(m => m.Id).ToArray();
         var sources = await db.ReferencePreparations.AsNoTracking().Where(p => (p.Kind == "Stock" || p.Kind == "Intermedia") && p.Status == "Active" && p.AvailableVolume > 0 &&
-            p.ExpirationDate >= today && p.PreparationDate <= today && p.MethodId != null && ids.Contains(p.MethodId.Value) &&
+            (!HistoricalEntryPolicy.EnforcePreparationDates || (p.ExpirationDate >= today && p.PreparationDate <= today)) && p.MethodId != null && ids.Contains(p.MethodId.Value) &&
             (p.Kind == "Intermedia" || p.SourceMaterial!.Status == ReferenceMaterialStatus.Active))
             .OrderBy(p => p.Code).ToArrayAsync(cancellationToken).ConfigureAwait(false);
         var materials = await PreparationSources.Commercial(db).AsNoTracking().Where(m => m.Status == ReferenceMaterialStatus.Active &&
-            m.AvailableQuantity > 0 && !m.OpeningRequired && (m.EffectiveExpirationDate ?? m.ExpirationDate) >= today && m.ReceivedDate <= today && ids.Contains(m.MethodId))
+            m.AvailableQuantity > 0 && !m.OpeningRequired && (!HistoricalEntryPolicy.EnforcePreparationDates ||
+            ((m.EffectiveExpirationDate ?? m.ExpirationDate) >= today && m.ReceivedDate <= today)) && ids.Contains(m.MethodId))
             .OrderBy(m => m.Name).ToArrayAsync(cancellationToken).ConfigureAwait(false);
-        return new(methods, sources.Select(Source).Concat(materials.Select(PreparationSources.TrySource).OfType<IntermediateSource>()).ToArray());
+        return new(methods, sources.Select(Source).Concat(materials.Select(PreparationSources.TrySource).OfType<IntermediateSource>()).ToArray(),
+            await DilutionSolvents.CatalogAsync(db, cancellationToken).ConfigureAwait(false), true);
     }
 
     public Task<OperationResult<IntermediateDetail>> CreateAsync(CreateIntermediateRequest request, int actor, string fingerprint,
@@ -51,12 +53,13 @@ public sealed class IntermediateRepository(LimsDbContext db) : IIntermediateRepo
                     .OrderBy(p => p.Id).ToArrayAsync(cancellationToken).ConfigureAwait(false);
                 var materials = await PreparationSources.Commercial(db).Where(m => sourceIds.Contains(m.Id)).OrderBy(m => m.Id).ToArrayAsync(cancellationToken).ConfigureAwait(false);
                 var allSources = sources.Select(Source).Concat(materials.Select(PreparationSources.TrySource).OfType<IntermediateSource>()).ToArray();
-                if (allSources.Length != sourceIds.Length || materials.Any(m => !PreparationSources.Eligible(m, today)) || sources.Any(s => s.Status != "Active" || s.AvailableVolume <= 0 || s.ExpirationDate < today ||
+                if (allSources.Length != sourceIds.Length || materials.Any(m => !PreparationSources.Eligible(m, today)) || sources.Any(s => s.Status != "Active" || s.AvailableVolume <= 0 ||
+                    (HistoricalEntryPolicy.EnforcePreparationDates && (s.ExpirationDate < today || s.PreparationDate > today)) ||
                     (s.Kind == "Stock" && s.SourceMaterial?.Status != ReferenceMaterialStatus.Active)))
                     return Fail("Un origen ya no está disponible.", ErrorCodes.InvalidState);
                 if (request.Calculation.Components.Any(c => allSources.Single(s => s.Id == c.SourceId).Version != c.SourceVersion))
                     return Fail("Un origen cambió. Actualice su disponibilidad y vuelva a revisar la preparación.");
-                if (allSources.Any(s => request.PreparationDate < s.PreparationDate || request.PreparationDate > s.ExpirationDate))
+                if (HistoricalEntryPolicy.EnforcePreparationDates && allSources.Any(s => request.PreparationDate < s.PreparationDate || request.PreparationDate > s.ExpirationDate))
                     return Fail("La fecha de preparación debe estar dentro de la vigencia de todos los orígenes.", ErrorCodes.ValidationError);
                 var calculation = IntermediateCalculator.Calculate(request.Calculation, allSources);
                 if (calculation.ExceedsFinalVolume) return Fail("El volumen de los componentes supera el volumen de aforo.", ErrorCodes.ValidationError);
@@ -65,7 +68,14 @@ public sealed class IntermediateRepository(LimsDbContext db) : IIntermediateRepo
                 var code = string.Create(CultureInfo.InvariantCulture, $"INT-{request.PreparationDate:yyyyMMdd}-{sequence:D3}");
                 var preparation = ReferencePreparation.Intermediate(request.RequestId, code, request.Name, method.Id, method.Name,
                     request.Calculation.FinalVolume, request.Calculation.FinalVolumeUnit, JsonSerializer.Serialize(calculation.Results),
-                    request.PreparationDate, request.ExpirationDate, actor, request.Notes, now, fingerprint, request.Calculation.DilutedPreparationId);
+                    request.PreparationDate, request.ExpirationDate, actor, request.Notes, now, fingerprint, request.Calculation.DilutedPreparationId,
+                    HistoricalEntryPolicy.EnforcePreparationDates);
+                if (request.SolventId is { } solventId)
+                {
+                    if (!await db.ReferenceSolvents.AnyAsync(s => s.Id == solventId && s.IsActive, cancellationToken).ConfigureAwait(false))
+                        return Fail("Seleccione un solvente activo del catálogo.", ErrorCodes.ValidationError);
+                    preparation.SetIntermediateSolvent(solventId);
+                }
                 db.ReferencePreparations.Add(preparation);
                 for (var index = 0; index < calculation.Components.Count; index++)
                 {
@@ -143,9 +153,12 @@ public sealed class IntermediateRepository(LimsDbContext db) : IIntermediateRepo
         var consumptions = movements.Select(m => new IntermediateConsumption(m.Id, (m.SourcePreparationId ?? m.SourceMaterialId)!.Value,
             calculation.Components.Single(c => c.Source.Id == (m.SourcePreparationId ?? m.SourceMaterialId)).Source.Code, m.Quantity, m.Unit,
             m.BalanceBefore, m.BalanceAfter, actors.GetValueOrDefault(m.ActorUserId) ?? "Usuario no informado", m.OccurredAt)).ToArray();
+        var solvent = await db.StockSolvents.AsNoTracking().Where(s => s.PreparationId == id).OrderBy(s => s.Position)
+            .Select(s => new SolventOption(s.SolventId, s.Solvent.Name, s.Solvent.Abbreviation, s.Solvent.IsActive, s.Solvent.DisplayOrder))
+            .FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
         return new(Summary(preparation, components.Length, actors[preparation.PreparedByUserId], today), calculation, consumptions,
             preparation.DilutedPreparationId, preparation.Notes, preparation.CreatedAt, preparation.UpdatedAt,
-            actors.GetValueOrDefault(preparation.UpdatedByUserId ?? preparation.PreparedByUserId) ?? "Usuario no informado", preparation.Version, await PreparationListQuery.UsageAsync(db, id, cancellationToken).ConfigureAwait(false));
+            actors.GetValueOrDefault(preparation.UpdatedByUserId ?? preparation.PreparedByUserId) ?? "Usuario no informado", preparation.Version, await PreparationListQuery.UsageAsync(db, id, cancellationToken).ConfigureAwait(false), solvent);
     }
 
     private Task<Dictionary<int, string>> Actors(IEnumerable<int> ids, CancellationToken cancellationToken)

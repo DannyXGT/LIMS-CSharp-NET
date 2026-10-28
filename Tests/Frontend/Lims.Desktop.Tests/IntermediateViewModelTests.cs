@@ -10,6 +10,20 @@ namespace Lims.Desktop.Tests;
 public sealed class IntermediateViewModelTests
 {
     [Fact]
+    public async Task HistoricalAndFutureDatesDoNotBlockAnOtherwiseValidPreparation()
+    {
+        var api = new FakeApi(); var vm = await Ready(api);
+        var row = vm.AddComponent(); row.Source = api.Source; row.Volume = "1";
+        foreach (var date in new[] { new DateTimeOffset(2020, 1, 1, 0, 0, 0, TimeSpan.FromHours(-6)), DateTimeOffset.UtcNow.AddYears(2) })
+        {
+            vm.PreparationDate = date; vm.ExpirationDate = date.AddYears(-1);
+            Assert.True(vm.CanSave); Assert.Empty(vm.DateError); Assert.Empty(row.Error);
+        }
+        Assert.True(await vm.SaveAsync(default));
+        Assert.Equal(DateOnly.FromDateTime(vm.PreparationDate!.Value.Date), Assert.Single(api.Requests).PreparationDate);
+    }
+
+    [Fact]
     public async Task CommercialSelectionRoutesToPhysicalMaterialDetail()
     {
         var api = new FakeApi(); var vm = await Ready(api);

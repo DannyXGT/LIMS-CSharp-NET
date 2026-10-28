@@ -10,6 +10,48 @@ namespace Lims.Infrastructure.Tests.Persistence;
 public sealed class SolutionGroupPostgresTests
 {
     [StockPostgresFact]
+    public async Task SolventAndInternalStandardPersistTogetherWithIdempotentSharedDebit()
+    {
+        await using var f = await StockPostgresTests.Fixture.CreateAsync(10000);
+        var source = await Source(f);
+        await using var db = f.Context(); var service = Service(db);
+        var request = Request(source, "WITH-STANDARD", 10);
+        request = request with { Calculation = request.Calculation with { Parts = [request.Calculation.Parts[0] with {
+            SolventId = 4, InternalStandard = new(source.Id, source.Version, 5, "mL") }] } };
+        var saved = await service.CreateAsync("AQS", request, 42, default);
+        Assert.True(saved.IsSuccess, saved.Error?.Message);
+        Assert.Equal(15, Assert.Single(saved.Value!.Consumptions).Quantity);
+        Assert.Equal(85, (await Fresh(service, source.Id)).AvailableVolume);
+        Assert.True((await service.CreateAsync("AQS", request, 42, default)).IsSuccess);
+        await using var reread = f.Context();
+        var detail = (await Service(reread).GetAsync("AQS", request.RequestId, default)).Value!;
+        Assert.Equal("MeOH", detail.Calculation.Parts[0].Solvent!.Abbreviation);
+        Assert.Equal(source.Id, detail.Calculation.Parts[0].InternalStandard!.Source.Id);
+        Assert.Equal(85, (await Fresh(Service(reread), source.Id)).AvailableVolume);
+    }
+
+    [StockPostgresFact]
+    public async Task IntermediateSolventRoundTripsAndInvalidCatalogEntryConsumesNothing()
+    {
+        await using var f = await StockPostgresTests.Fixture.CreateAsync(10000);
+        await using var db = f.Context();
+        Assert.True((await new StockService(new StockRepository(db), TimeProvider.System).CreateAsync(f.Request(1000), 42, default)).IsSuccess);
+        var service = new IntermediateService(new IntermediateRepository(db), TimeProvider.System);
+        var options = (await service.OptionsAsync(default)).Value!;
+        Assert.True(options.SupportsDilutionAdditives); Assert.NotEmpty(options.Solvents!);
+        var source = options.Sources.Single(s => s.Kind == "Stock");
+        var request = new CreateIntermediateRequest(Guid.NewGuid(), "Intermedia con solvente", new(source.MethodId, 100, "mL",
+            [new(source.Id, source.Version, 10, "mL")]), Today, Today.AddDays(2), null, 4);
+        Assert.False((await service.CreateAsync(request with { SolventId = 999 }, 42, default)).IsSuccess);
+        var saved = await service.CreateAsync(request, 42, default);
+        Assert.True(saved.IsSuccess, saved.Error?.Message);
+        await using var reread = f.Context();
+        var detail = await new IntermediateRepository(reread).GetAsync(request.RequestId, Today, default);
+        Assert.Equal(4, detail!.Solvent!.Id);
+        Assert.Single(detail.Consumptions);
+    }
+
+    [StockPostgresFact]
     public async Task SeveralPhysicalOriginsCommitTogetherAndInjectedFailureRestoresBoth()
     {
         await using var f = await StockPostgresTests.Fixture.CreateAsync(10000); var first = await Source(f);

@@ -12,7 +12,8 @@ internal sealed class FixtureIntermediateApi : IIntermediateApiClient
     public Func<IEnumerable<IntermediateSummary>>? CommercialRows { get; set; }
     public string Scene { get; set; } = "Default";
     public int CreateCalls { get; private set; }
-    public Task<ApiCallResult<IntermediateOptions>> OptionsAsync(CancellationToken cancellationToken) => Task.FromResult(Ok(new IntermediateOptions([new(1, "Aminas aromáticas"), new(2, "Otro método · prueba")], Sources.ToArray())));
+    public static IReadOnlyList<SolventOption> Solvents { get; } = [new(4, "Metanol", "MeOH", true, 0), new(3, "Acetonitrilo", "ACN", true, 1)];
+    public Task<ApiCallResult<IntermediateOptions>> OptionsAsync(CancellationToken cancellationToken) => Task.FromResult(Ok(new IntermediateOptions([new(1, "Aminas aromáticas"), new(2, "Otro método · prueba")], Sources.ToArray(), Solvents, true)));
     public Task<ApiCallResult<IntermediateCalculation>> PreviewAsync(IntermediateCalculationRequest request, CancellationToken cancellationToken) => Task.FromResult(Ok(IntermediateCalculator.Calculate(request, Sources)));
     public Task<ApiCallResult<IntermediateDetail>> CreateAsync(CreateIntermediateRequest request, CancellationToken cancellationToken)
     {
@@ -33,7 +34,7 @@ internal sealed class FixtureIntermediateApi : IIntermediateApiClient
         var summary = new IntermediateSummary(request.RequestId, code, request.Name, "Aminas aromáticas", calculation.Components.Count,
             calculation.FinalVolume, calculation.VolumeUnit, calculation.FinalVolume, calculation.Results, request.PreparationDate,
             request.ExpirationDate, "Usuario de prueba", "Active");
-        var detail = new IntermediateDetail(summary, calculation, consumptions, request.Calculation.DilutedPreparationId, request.Notes, now, now, "Usuario de prueba", Guid.NewGuid());
+        var detail = new IntermediateDetail(summary, calculation, consumptions, request.Calculation.DilutedPreparationId, request.Notes, now, now, "Usuario de prueba", Guid.NewGuid(), Solvent: Solvents.SingleOrDefault(s => s.Id == request.SolventId));
         _prepared.Add(detail);
         Sources.Add(new(summary.Id, "Intermedia", code, summary.Name, 1, summary.Method, summary.AvailableVolume, summary.FinalVolume, summary.VolumeUnit,
             summary.PreparationDate, summary.ExpirationDate, detail.Version, summary.Results));

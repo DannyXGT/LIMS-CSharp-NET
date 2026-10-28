@@ -33,23 +33,26 @@ public sealed class SolutionGroupRepository(LimsDbContext db) : ISolutionGroupRe
                     return Fail("Agregue entre 1 y 100 soluciones completas.", ErrorCodes.ValidationError);
                 var method = await db.ReferenceMethods.AsNoTracking().SingleOrDefaultAsync(m => m.Id == request.Calculation.MethodId && m.IsActive, cancellationToken).ConfigureAwait(false);
                 if (method is null) return Fail("Seleccione un método activo.", ErrorCodes.ValidationError);
-                var ids = request.Calculation.Parts.Select(p => p.SourceId).Distinct().ToArray();
+                var ids = request.Calculation.Parts.SelectMany(p => p.InternalStandard is { } s
+                    ? new[] { p.SourceId, s.SourceId } : new[] { p.SourceId }).Distinct().ToArray();
                 var sources = await db.ReferencePreparations.Where(p => ids.Contains(p.Id) && p.Kind == "Intermedia").OrderBy(p => p.Id).ToArrayAsync(cancellationToken).ConfigureAwait(false);
                 var materials = await PreparationSources.Commercial(db).Where(m => ids.Contains(m.Id)).OrderBy(m => m.Id).ToArrayAsync(cancellationToken).ConfigureAwait(false);
                 var options = sources.Select(Source).Concat(materials.Select(PreparationSources.TrySource).OfType<IntermediateSource>()).ToArray();
-                if (options.Length != ids.Length || materials.Any(m => !PreparationSources.Eligible(m, today)) || sources.Any(s => s.Kind != "Intermedia" || s.Status != "Active" || s.AvailableVolume <= 0 || s.ExpirationDate < today || s.PreparationDate > today))
+                if (options.Length != ids.Length || materials.Any(m => !PreparationSources.Eligible(m, today)) || sources.Any(s => s.Kind != "Intermedia" || s.Status != "Active" || s.AvailableVolume <= 0 ||
+                    (HistoricalEntryPolicy.EnforcePreparationDates && (s.ExpirationDate < today || s.PreparationDate > today))))
                     return Fail("Un origen ya no está disponible.", ErrorCodes.InvalidState);
                 if (request.Calculation.Parts.Any(p => options.Single(s => s.Id == p.SourceId).Version != p.SourceVersion))
                     return Fail("Un origen cambió. Actualice los orígenes y revise sus saldos.");
-                if (options.Any(s => request.PreparationDate < s.PreparationDate || request.PreparationDate > s.ExpirationDate))
+                if (HistoricalEntryPolicy.EnforcePreparationDates && options.Any(s => request.PreparationDate < s.PreparationDate || request.PreparationDate > s.ExpirationDate))
                     return Fail("La preparación debe estar dentro de la vigencia de todos los orígenes.", ErrorCodes.ValidationError);
-                var calculation = SolutionGroupCalculator.Calculate(request.Calculation, options);
+                var calculation = SolutionGroupCalculator.Calculate(request.Calculation, options,
+                    await DilutionSolvents.CatalogAsync(db, cancellationToken).ConfigureAwait(false));
                 if (!calculation.HasSufficientVolume) return Fail("El consumo total del grupo supera el saldo de un origen.", ErrorCodes.InvalidState);
                 var preparation = ReferencePreparation.SolutionGroup(request.RequestId, kind, request.Code,
                     string.IsNullOrWhiteSpace(request.Name) ? request.Code : request.Name, method.Id, method.Name,
                     calculation.Parts.Sum(p => StockUnits.ConvertVolume(p.FinalVolume, p.FinalVolumeUnit, "mL")),
                     JsonSerializer.Serialize(calculation), request.PreparationDate, request.ExpirationDate, actor,
-                    request.Notes, request.StorageTemperature, now, fingerprint);
+                    request.Notes, request.StorageTemperature, now, fingerprint, HistoricalEntryPolicy.EnforcePreparationDates);
                 db.ReferencePreparations.Add(preparation);
                 // Persist each distinct physical source once. Per-solution aforo, role, analytes and aliquots remain in ResultsJson.
                 var position = 0;

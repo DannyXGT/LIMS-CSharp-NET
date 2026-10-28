@@ -27,8 +27,9 @@
      <Grid x:Name="Workspace" ColumnSpacing="16" RowSpacing="12">
       <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition x:Name="ResultColumn" Width="380"/></Grid.ColumnDefinitions><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
       <StackPanel Spacing="8">
+       <TextBlock Text="{x:Bind ViewModel.AdditivesMessage, Mode=OneWay}" Style="{StaticResource LimsCaptionStyle}" TextWrapping="Wrap"/>
        <Grid><TextBlock Text="{x:Bind ViewModel.SolutionsLabel}" Style="{StaticResource LimsSectionTitleStyle}" FontSize="13"/><Button Content="Actualizar orígenes" HorizontalAlignment="Right" Click="OnRefresh" Style="{StaticResource LimsUtilityActionStyle}"/></Grid>
-       <StackPanel Orientation="Horizontal" Spacing="8"><Button Content="{x:Bind ViewModel.AddLabel}" Click="OnAdd" IsEnabled="{x:Bind ViewModel.CanAddComponent, Mode=OneWay}" Style="{StaticResource LimsAddActionStyle}"/><Button Content="Estándar interno" Click="OnAddInternal" IsEnabled="{x:Bind ViewModel.CanAddComponent, Mode=OneWay}" Style="{StaticResource LimsAddActionStyle}"/></StackPanel>
+       <StackPanel Orientation="Horizontal" Spacing="8"><Button Content="{x:Bind ViewModel.AddLabel}" Click="OnAdd" IsEnabled="{x:Bind ViewModel.CanAddComponent, Mode=OneWay}" Style="{StaticResource LimsAddActionStyle}"/></StackPanel>
        <ItemsControl ItemsSource="{x:Bind ViewModel.Components}"><ItemsControl.ItemTemplate><DataTemplate x:DataType="vm:SolutionPartViewModel">
         <Border Background="{ThemeResource LimsSurfaceSecondaryBrush}" BorderBrush="{ThemeResource LimsBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="10" Margin="0,0,0,8">
          <StackPanel Spacing="6">
@@ -37,9 +38,8 @@
            <Button design:LimsAction.Icon="ViewDetail" Grid.Column="1" Content="Ver resultado" Tag="{x:Bind}" Click="OnSelectResult" Style="{StaticResource LimsUtilityActionStyle}"/>
            <Button ToolTipService.ToolTip="Eliminar" Grid.Column="2" Tag="{x:Bind}" Click="OnRemove" Style="{StaticResource LimsRemoveActionStyle}" AutomationProperties.Name="Quitar solución" />
           </Grid>
-          <Grid ColumnSpacing="8"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="156"/></Grid.ColumnDefinitions>
+          <Grid ColumnSpacing="8"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
            <design:LimsSearchSelect ItemsSource="{x:Bind SourceOptions}" SelectedItem="{x:Bind SourceOption, Mode=TwoWay}" DisplayMemberPath="Label" PlaceholderText="Seleccione origen interno o comercial" AutomationProperties.Name="Origen de la solución" Loaded="OnPopupLoaded"/>
-           <design:LimsSelect Grid.Column="1" ItemsSource="{x:Bind Roles}" SelectedItem="{x:Bind Role, Mode=TwoWay}" AutomationProperties.Name="Rol de la solución" ToolTipService.ToolTip="{x:Bind RoleExplanation, Mode=OneWay}" Loaded="OnPopupLoaded"/>
           </Grid>
           <Grid ColumnSpacing="6"><Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="65"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="65"/></Grid.ColumnDefinitions>
            <TextBlock Text="Tomado" FontSize="11" VerticalAlignment="Center"/>
@@ -48,6 +48,15 @@
            <TextBlock Grid.Column="3" Text="Aforo" FontSize="11" VerticalAlignment="Center"/>
            <TextBox Grid.Column="4" Text="{x:Bind FinalVolume, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource LimsCompactTextBoxStyle}" AutomationProperties.Name="Volumen de aforo" Tag="{x:Bind}" Loaded="OnVolumeLoaded"/>
            <design:LimsSelect Grid.Column="5" ItemsSource="{x:Bind Units}" SelectedItem="{x:Bind FinalUnit, Mode=TwoWay}" AutomationProperties.Name="Unidad de aforo" Loaded="OnPopupLoaded"/>
+          </Grid>
+          <TextBlock Text="Solvente de aforo" Style="{StaticResource LimsFormLabelStyle}"/>
+          <design:LimsSearchSelect ItemsSource="{x:Bind Solvents}" SelectedItem="{x:Bind Solvent, Mode=TwoWay}" DisplayMemberPath="Display" PlaceholderText="Seleccione solvente" AutomationProperties.Name="Solvente de aforo" Loaded="OnPopupLoaded"/>
+          <TextBlock Text="Estándar interno · Intermedia (opcional)" Style="{StaticResource LimsFormLabelStyle}"/>
+          <design:LimsSearchSelect ItemsSource="{x:Bind InternalStandardSources}" SelectedItem="{x:Bind InternalStandardSource, Mode=TwoWay}" DisplayMemberPath="SearchDisplay" PlaceholderText="Seleccione una Intermedia" AutomationProperties.Name="Intermedia del estándar interno" Loaded="OnPopupLoaded"/>
+          <Grid ColumnSpacing="6"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="70"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+           <TextBox Header="Volumen de estándar interno" Text="{x:Bind InternalStandardVolume, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource LimsCompactTextBoxStyle}" AutomationProperties.Name="Volumen de estándar interno" Tag="{x:Bind}" Loaded="OnVolumeLoaded"/>
+           <design:LimsSelect Grid.Column="1" VerticalAlignment="Bottom" ItemsSource="{x:Bind Units}" SelectedItem="{x:Bind InternalStandardUnit, Mode=TwoWay}" AutomationProperties.Name="Unidad de estándar interno" Loaded="OnPopupLoaded"/>
+           <Button Grid.Column="2" VerticalAlignment="Bottom" Content="Quitar" Tag="{x:Bind}" Click="OnClearInternal" Style="{StaticResource LimsUtilityActionStyle}" AutomationProperties.Name="Quitar estándar interno"/>
           </Grid>
           <TextBlock Text="{x:Bind Source.MetadataDisplay, Mode=OneWay}" FontSize="11" TextWrapping="Wrap"/>
            <TextBlock Text="{x:Bind CardSummary, Mode=OneWay}" FontSize="11" Foreground="{ThemeResource LimsTextSecondaryBrush}" TextWrapping="Wrap"/>

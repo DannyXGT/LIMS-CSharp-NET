@@ -83,6 +83,10 @@ public sealed partial class IntermediateViewModel(IIntermediateApiClient api, IS
     partial void OnListMessageChanged(string value) => NotifyListState();
 
     public ObservableCollection<IntermediateMethod> Methods { get; } = [];
+    public ObservableCollection<SolventOption> Solvents { get; } = [];
+    [ObservableProperty] public partial string SolventMessage { get; set; } = string.Empty;
+    [ObservableProperty] public partial SolventOption? Solvent { get; set; }
+    partial void OnSolventChanged(SolventOption? value) => Recalculate();
     public ObservableCollection<IntermediateSource> DilutionSources { get; } = [];
     public IReadOnlyList<string> SourceTypes { get; } = ["Stock preparado", "Solución comercial", "Mix comercial"];
     [ObservableProperty] public partial string SourceType { get; set; } = "Stock preparado";
@@ -142,7 +146,7 @@ public sealed partial class IntermediateViewModel(IIntermediateApiClient api, IS
     {
         _updating = true;
         ClearComponents(); _pending = null; _requestId = Guid.NewGuid(); Created = null;
-        Name = FinalVolume = Notes = Message = string.Empty; FinalUnit = "mL"; Method = null; DilutedSource = null;
+        Name = FinalVolume = Notes = Message = string.Empty; FinalUnit = "mL"; Method = null; DilutedSource = null; Solvent = null;
         PreparationDate = DateTimeOffset.UtcNow.ToOffset(TimeSpan.FromHours(-6)); ExpirationDate = null;
         _updating = false; Recalculate();
     }
@@ -158,6 +162,10 @@ public sealed partial class IntermediateViewModel(IIntermediateApiClient api, IS
             _updating = true;
             _sources.Clear(); _sources.AddRange(response.Value.Sources);
             Replace(Methods, response.Value.Methods);
+            var solventId = Solvent?.Id;
+            SolventMessage = response.Value.SupportsDilutionAdditives ? string.Empty : "Actualice la API del servidor para seleccionar y guardar el solvente de aforo.";
+            Replace(Solvents, response.Value.SupportsDilutionAdditives ? response.Value.Solvents ?? [] : []);
+            Solvent = Solvents.FirstOrDefault(s => s.Id == solventId);
             Method = Methods.FirstOrDefault(m => m.Id == previousMethod?.Id);
             foreach (var row in Components)
                 if (row.Source is { } source && _sources.Find(s => s.Id == source.Id) is { } fresh) row.Source = fresh;
@@ -206,8 +214,8 @@ public sealed partial class IntermediateViewModel(IIntermediateApiClient api, IS
         NameError = Name.Trim().Length is > 0 and <= 200 ? string.Empty : "Ingrese el nombre de la solución.";
         MethodError = Method is null ? "Seleccione un método." : string.Empty;
         var today = DateTimeOffset.UtcNow.ToOffset(TimeSpan.FromHours(-6)).Date;
-        DateError = PreparationDate is null || ExpirationDate is null || PreparationDate.Value.Date > today ||
-            ExpirationDate.Value.Date < PreparationDate.Value.Date || ExpirationDate.Value.Date < today
+        DateError = PreparationDate is null || ExpirationDate is null || (HistoricalEntryPolicy.EnforcePreparationDates &&
+            (PreparationDate.Value.Date > today || ExpirationDate.Value.Date < PreparationDate.Value.Date || ExpirationDate.Value.Date < today))
             ? "Seleccione preparación y expiración válidas; la preparación no puede ser futura." : string.Empty;
         VolumeError = Parse(FinalVolume, out var final) && final > 0 ? string.Empty : "Ingrese un volumen de aforo positivo.";
         foreach (var row in Components)
@@ -220,7 +228,7 @@ public sealed partial class IntermediateViewModel(IIntermediateApiClient api, IS
                 var debit = SafeVolume(volume, row.Unit, source.VolumeUnit);
                 row.BalanceDisplay = $"Disponible {source.AvailableDisplay} · Después {StockPresentation.Quantity(source.AvailableVolume - debit, source.VolumeUnit)}";
                 if (debit > source.AvailableVolume) row.Error = "No hay volumen disponible suficiente en este origen.";
-                if (PreparationDate is { } date && (DateOnly.FromDateTime(date.Date) < source.PreparationDate || DateOnly.FromDateTime(date.Date) > source.ExpirationDate))
+                if (HistoricalEntryPolicy.EnforcePreparationDates && PreparationDate is { } date && (DateOnly.FromDateTime(date.Date) < source.PreparationDate || DateOnly.FromDateTime(date.Date) > source.ExpirationDate))
                     row.Error = "La fecha de preparación queda fuera de la vigencia del origen.";
             }
         }
@@ -254,7 +262,7 @@ public sealed partial class IntermediateViewModel(IIntermediateApiClient api, IS
         if (_pending is null)
         {
             if (!TryCalculationRequest(out var calculation)) return false;
-            _pending = new(_requestId, Name.Trim(), calculation!, DateOnly.FromDateTime(PreparationDate!.Value.Date), DateOnly.FromDateTime(ExpirationDate!.Value.Date), Notes);
+            _pending = new(_requestId, Name.Trim(), calculation!, DateOnly.FromDateTime(PreparationDate!.Value.Date), DateOnly.FromDateTime(ExpirationDate!.Value.Date), Notes, Solvent?.Id);
         }
         IsBusy = true; Message = string.Empty;
         try

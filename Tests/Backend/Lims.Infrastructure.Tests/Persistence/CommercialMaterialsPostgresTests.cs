@@ -331,13 +331,19 @@ public sealed class CommercialMaterialsPostgresTests
     }
 
     [StockPostgresFact]
-    public async Task ExpiredMissingOpeningAndMassFractionAreStoredButNeverOfferedOrConsumed()
+    public async Task ExpirationIsTemporarilyIgnoredButMissingOpeningAndMassFractionStillBlockConsumption()
     {
         await using var fixture = await StockPostgresTests.Fixture.CreateAsync(100);
         await using var db = fixture.Context(); var materials = Materials(db);
-        var expired = Request() with { ReceivedDate = new(2023, 1, 1), ExpirationDate = new(2025, 3, 31),
+        var expired = Request() with { ReceivedDate = Today.AddDays(5), ExpirationDate = new(2025, 3, 31),
             Commercial = Certificate() with { OpenedDate = new(2023, 3, 1) } };
-        foreach (var request in new[] { expired, Request() with { Commercial = Certificate() with { OpenedDate = null } },
+        var historical = await materials.CreateAsync(expired, 42, default);
+        Assert.True(historical.IsSuccess, historical.Error?.Message);
+        Assert.Contains((await Intermediates(db).OptionsAsync(default)).Value!.Sources, s => s.Id == historical.Value!.Id);
+        Assert.True((await Intermediates(db).CreateAsync(Dilute(historical.Value!, 1), 42, default)).IsSuccess);
+        var fresh = (await materials.GetAsync(historical.Value!.Id, default)).Value!;
+        Assert.True((await Groups(db).CreateAsync("Curva", Group(fresh, "HISTORICAL-COMMERCIAL", 1), 42, default)).IsSuccess);
+        foreach (var request in new[] { Request() with { Commercial = Certificate() with { OpenedDate = null } },
             Request() with { Commercial = Certificate() with { Components = [new(Guid.NewGuid(), "Aluminio", null, 974, "µg/g", 5)] } } })
         {
             var registered = await materials.CreateAsync(request, 42, default);
@@ -346,7 +352,7 @@ public sealed class CommercialMaterialsPostgresTests
             Assert.False((await Intermediates(db).CreateAsync(Dilute(registered.Value!, 1), 42, default)).IsSuccess);
             Assert.False((await Groups(db).CreateAsync("Curva", Group(registered.Value!, Guid.NewGuid().ToString("N"), 1), 42, default)).IsSuccess);
         }
-        Assert.Empty(await db.ReferencePreparations.ToArrayAsync()); Assert.Empty(await db.ReferenceMaterialMovements.ToArrayAsync());
+        Assert.Equal(2, await db.ReferencePreparations.CountAsync()); Assert.Equal(2, await db.ReferenceMaterialMovements.CountAsync());
     }
 
     [StockPostgresFact]

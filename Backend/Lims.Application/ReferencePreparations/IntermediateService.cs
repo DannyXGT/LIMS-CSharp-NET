@@ -23,8 +23,9 @@ public sealed class IntermediateService(IIntermediateRepository repository, Time
         ArgumentNullException.ThrowIfNull(request);
         if (actorUserId <= 0) return Task.FromResult(Fail<IntermediateDetail>(ErrorCodes.InvalidSession, "La sesión no es válida o expiró."));
         if (request.RequestId == Guid.Empty || request.Calculation is null || request.Name?.Trim().Length is not (> 0 and <= 200) ||
-            request.Notes?.Trim().Length > 2000 || request.PreparationDate == default || request.PreparationDate > Today ||
-            request.ExpirationDate < request.PreparationDate || request.ExpirationDate < Today)
+            request.Notes?.Trim().Length > 2000 || request.PreparationDate == default || request.ExpirationDate == default ||
+            (HistoricalEntryPolicy.EnforcePreparationDates && (request.PreparationDate > Today ||
+            request.ExpirationDate < request.PreparationDate || request.ExpirationDate < Today)))
             return Task.FromResult(Fail<IntermediateDetail>(ErrorCodes.ValidationError, "Revise nombre, fechas y observaciones de la Intermedia."));
         var fingerprint = Convert.ToHexString(SHA256.HashData(JsonSerializer.SerializeToUtf8Bytes(new { request, actorUserId })));
         return repository.CreateAsync(request, actorUserId, fingerprint, clock.GetUtcNow(), cancellationToken);

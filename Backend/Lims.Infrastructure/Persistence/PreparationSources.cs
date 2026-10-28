@@ -14,8 +14,9 @@ internal static class PreparationSources
         .Include(m => m.Method).Include(m => m.Unit).Include(m => m.CertifiedComponents).Include(m => m.CommercialRoles)
         .Where(m => m.Presentation == MaterialPresentations.Solution || m.Presentation == MaterialPresentations.Mix);
 
-    public static bool Eligible(ReferenceMaterial m, DateOnly today) => !m.OpeningRequired && m.ReceivedDate <= today &&
-        m.EffectiveStatus(today) == ReferenceMaterialStatus.Active && m.Method.IsActive;
+    public static bool Eligible(ReferenceMaterial m, DateOnly today) => !m.OpeningRequired &&
+        (!HistoricalEntryPolicy.EnforcePreparationDates || m.ReceivedDate <= today) &&
+        m.EffectiveStatus(HistoricalEntryPolicy.EnforcePreparationDates ? today : m.EffectiveExpirationDate ?? m.ExpirationDate) == ReferenceMaterialStatus.Active && m.Method.IsActive;
 
     public static IntermediateSource? TrySource(ReferenceMaterial m)
     {
@@ -35,7 +36,7 @@ internal static class PreparationSources
             var debit = StockUnits.ConvertVolume(volume, unit, source.Unit.Symbol);
             component = new(destination.Id, source, position, volume, unit, json, now);
             movement = new(destination, source, component, debit, now);
-            source.ConsumeCommercial(debit, actor, now, today);
+            source.ConsumeCommercial(debit, actor, now, today, HistoricalEntryPolicy.EnforcePreparationDates);
         }
         else
         {
@@ -43,7 +44,7 @@ internal static class PreparationSources
             var debit = StockUnits.ConvertVolume(volume, unit, source.FinalVolumeUnit);
             component = new(destination.Id, source, position, volume, unit, json, now);
             movement = new(destination, source, component, debit, now);
-            source.ConsumeVolume(debit, actor, now, today);
+            source.ConsumeVolume(debit, actor, now, today, HistoricalEntryPolicy.EnforcePreparationDates);
         }
         db.ReferencePreparationComponents.Add(component);
         db.ReferenceMaterialMovements.Add(movement);

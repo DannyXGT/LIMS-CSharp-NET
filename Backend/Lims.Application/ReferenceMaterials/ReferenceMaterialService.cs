@@ -2,6 +2,7 @@ using Lims.Application.Common;
 using Lims.Application.ReferenceMaterials.Ports;
 using Lims.Contracts.Errors;
 using Lims.Contracts.ReferenceMaterials;
+using Lims.Contracts.ReferencePreparations;
 using Lims.Domain.ReferenceMaterials;
 
 namespace Lims.Application.ReferenceMaterials;
@@ -125,7 +126,7 @@ public sealed class ReferenceMaterialService(
                 request.StorageTemperature,
                 catalogs.Location,
                 actorUserId,
-                timeProvider.GetUtcNow(), request.Presentation);
+                timeProvider.GetUtcNow(), request.Presentation, EnforceMaterialDates(request.Presentation));
             CommercialMaterials.Apply(material, request.Commercial, actorUserId, timeProvider.GetUtcNow());
 
             repository.Add(material);
@@ -193,7 +194,7 @@ public sealed class ReferenceMaterialService(
                 request.StorageTemperature,
                 catalogs.Location,
                 actorUserId,
-                timeProvider.GetUtcNow());
+                timeProvider.GetUtcNow(), EnforceMaterialDates(request.Presentation));
             CommercialMaterials.Apply(material, request.Commercial, actorUserId, timeProvider.GetUtcNow());
         }
         catch (InvalidOperationException exception)
@@ -302,7 +303,7 @@ public sealed class ReferenceMaterialService(
                 replacementRequest.StorageTemperature,
                 catalogs.Location,
                 actorUserId,
-                now, replacementRequest.Presentation);
+                now, replacementRequest.Presentation, EnforceMaterialDates(replacementRequest.Presentation));
             CommercialMaterials.Apply(replacement, replacementRequest.Commercial, actorUserId, now);
 
             source.ReplaceWith(replacement.Id, request.Reason, actorUserId, now);
@@ -431,6 +432,8 @@ public sealed class ReferenceMaterialService(
             material.EffectiveExpirationDate, material.OpeningHistory.OrderBy(a => a.ChangedAt).Select(a => new MaterialOpeningAudit(a.Id, a.PreviousDate, a.OpenedDate, a.ActorUserId, a.ChangedAt)).ToArray(), display.Movements);
     }
 
+    private static bool EnforceMaterialDates(string presentation) =>
+        !MaterialPresentations.IsCommercial(presentation) || HistoricalEntryPolicy.EnforcePreparationDates;
     private DateOnly Today() => DateOnly.FromDateTime(timeProvider.GetUtcNow().ToOffset(TimeSpan.FromHours(-6)).DateTime);
 
     private static string? NormalizeOptional(string? value) =>

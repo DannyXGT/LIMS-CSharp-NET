@@ -12,6 +12,47 @@ public sealed class SolutionGroupViewModelTests
     [Theory]
     [InlineData("Curva")]
     [InlineData("AQS")]
+    public async Task HistoricalAndFutureDatesAlsoBypassInternalStandardValidity(string kind)
+    {
+        var api = new FakeApi(); var vm = await Ready(kind, api);
+        var row = Add(vm, api.Source, "10", "100");
+        row.InternalStandardSource = row.InternalStandardSources[0]; row.InternalStandardVolume = "1";
+        foreach (var date in new[] { new DateTimeOffset(2020, 1, 1, 0, 0, 0, TimeSpan.FromHours(-6)), DateTimeOffset.UtcNow.AddYears(2) })
+        {
+            vm.PreparationDate = date; vm.ExpirationDate = date.AddYears(-1);
+            Assert.True(vm.CanSave); Assert.Empty(vm.Validation);
+        }
+        Assert.True(await vm.SaveAsync(default));
+    }
+
+    [Fact]
+    public async Task StandardWithinSolutionIncludesVolumeAndSurvivesSaveWithSolvent()
+    {
+        var api = new FakeApi(); var vm = await Ready("AQS", api);
+        var row = Add(vm, api.Source, "10", "100");
+        row.Solvent = row.Solvents[0]; row.InternalStandardSource = row.InternalStandardSources[0];
+        Assert.False(vm.CanSave);
+        row.InternalStandardVolume = "5";
+        Assert.True(vm.CanSave); Assert.Equal(15, row.VolumePreview!.Taken);
+        Assert.Equal(15, Assert.Single(vm.Calculation!.Debits).Quantity);
+        Assert.True(await vm.SaveAsync(default));
+        var part = Assert.Single(Assert.Single(api.Requests).Calculation.Parts);
+        Assert.Equal(4, part.SolventId); Assert.Equal(5, part.InternalStandard!.VolumeTaken);
+        Assert.NotNull(vm.Created!.Calculation.Parts[0].InternalStandard);
+    }
+
+    [Fact]
+    public async Task CombinedOverflowAndIncompleteStandardBlockSaveAndClearRestoresIt()
+    {
+        var api = new FakeApi(); var vm = await Ready("Curva", api);
+        var row = Add(vm, api.Source, "10", "12");
+        row.InternalStandardSource = row.InternalStandardSources[0]; row.InternalStandardVolume = "5";
+        Assert.False(vm.CanSave); Assert.True(row.VolumePreview!.Exceeds);
+        row.ClearInternalStandard(); Assert.True(vm.CanSave);
+    }
+    [Theory]
+    [InlineData("Curva")]
+    [InlineData("AQS")]
     public async Task ThreeMultianalyteSolutionsShareOneDebitAndKeepExactDisplayedResults(string kind)
     {
         var api = new FakeApi(); var vm = await Ready(kind, api);
@@ -159,7 +200,7 @@ public sealed class SolutionGroupViewModelTests
         public List<CreateSolutionGroupRequest> Requests { get; } = [];
         private SolutionGroupDetail? _created;
         public Task<ApiCallResult<IntermediateOptions>> OptionsAsync(string kind, CancellationToken cancellationToken)
-        { OptionCalls++; return Task.FromResult(Ok(new IntermediateOptions([new(1, "Ensayo")], HideSource ? [] : [Source]))); }
+        { OptionCalls++; return Task.FromResult(Ok(new IntermediateOptions([new(1, "Ensayo")], HideSource ? [] : [Source], [new(4, "Metanol", "MeOH", true, 0)], true))); }
         public Task<ApiCallResult<SolutionCalculation>> PreviewAsync(string kind, SolutionCalculationRequest request, CancellationToken cancellationToken) => Task.FromResult(Ok(SolutionGroupCalculator.Calculate(request, [Source])));
         public async Task<ApiCallResult<SolutionGroupDetail>> CreateAsync(string kind, CreateSolutionGroupRequest request, CancellationToken cancellationToken)
         {
@@ -170,7 +211,7 @@ public sealed class SolutionGroupViewModelTests
             {
                 Writes++;
                 _created = new(new(request.RequestId, kind, request.Code, request.Name ?? request.Code, "Ensayo", request.Calculation.Parts.Count, Source.Code, request.PreparationDate, request.ExpirationDate, "Ana López", "Active"),
-                    SolutionGroupCalculator.Calculate(request.Calculation, [Source]), [], request.Notes, request.StorageTemperature, DateTimeOffset.UtcNow, Guid.NewGuid());
+                    SolutionGroupCalculator.Calculate(request.Calculation, [Source], [new(4, "Metanol", "MeOH", true, 0)]), [], request.Notes, request.StorageTemperature, DateTimeOffset.UtcNow, Guid.NewGuid());
             }
             if (LoseResponse && Requests.Count == 1) throw new HttpRequestException("Lost response after commit");
             return Ok(_created);

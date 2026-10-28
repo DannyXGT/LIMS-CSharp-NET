@@ -23,14 +23,14 @@ internal sealed class FixtureSolutionGroupApi : ISolutionGroupApiClient
             new(1, 100, "mL", intermediate.Sources.Where(s => s.Kind == "Stock").Select(s => new IntermediateComponentRequest(s.Id, s.Version, 5, "mL")).ToArray()),
             today, today.AddDays(200), "Segundo origen exclusivamente fixture visual"), default).GetAwaiter().GetResult();
     }
-    public Task<ApiCallResult<IntermediateOptions>> OptionsAsync(string kind, CancellationToken cancellationToken) => Task.FromResult(Ok(new IntermediateOptions([new(1, "Aminas aromáticas")], _intermediate.Sources.Where(s => s.Kind == "Intermedia" && s.AvailableVolume > 0).ToArray())));
-    public Task<ApiCallResult<SolutionCalculation>> PreviewAsync(string kind, SolutionCalculationRequest request, CancellationToken cancellationToken) => Task.FromResult(Ok(SolutionGroupCalculator.Calculate(request, _intermediate.Sources)));
+    public Task<ApiCallResult<IntermediateOptions>> OptionsAsync(string kind, CancellationToken cancellationToken) => Task.FromResult(Ok(new IntermediateOptions([new(1, "Aminas aromáticas")], _intermediate.Sources.Where(s => s.Kind == "Intermedia" && s.AvailableVolume > 0).ToArray(), FixtureIntermediateApi.Solvents, true)));
+    public Task<ApiCallResult<SolutionCalculation>> PreviewAsync(string kind, SolutionCalculationRequest request, CancellationToken cancellationToken) => Task.FromResult(Ok(SolutionGroupCalculator.Calculate(request, _intermediate.Sources, FixtureIntermediateApi.Solvents)));
     public Task<ApiCallResult<SolutionGroupDetail>> CreateAsync(string kind, CreateSolutionGroupRequest request, CancellationToken cancellationToken)
     {
         CreateCalls++;
         if (Scene == "CreateError") return Task.FromResult(new ApiCallResult<SolutionGroupDetail>(false, null, new(ErrorCodes.InvalidState, "El origen cambió. Actualice su disponibilidad.", "VISUAL-409"), 409));
         if (_groups.Find(g => g.Preparation.Id == request.RequestId) is { } previous) return Task.FromResult(Ok(previous));
-        var calculation = SolutionGroupCalculator.Calculate(request.Calculation, _intermediate.Sources);
+        var calculation = SolutionGroupCalculator.Calculate(request.Calculation, _intermediate.Sources, FixtureIntermediateApi.Solvents);
         if (!calculation.HasSufficientVolume) return Task.FromResult(new ApiCallResult<SolutionGroupDetail>(false, null, new(ErrorCodes.InvalidState, "Saldo insuficiente.", ""), 409));
         var now = DateTimeOffset.UtcNow;
         var movements = calculation.Debits.Select(d => new IntermediateConsumption(Guid.NewGuid(), d.Source.Id, d.Source.Code, d.Quantity, d.Source.VolumeUnit, d.Source.AvailableVolume, d.RemainingVolume, "Usuario de prueba", now)).ToArray();

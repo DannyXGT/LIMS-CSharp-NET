@@ -293,7 +293,7 @@ public sealed class LimsDbContext(DbContextOptions<LimsDbContext> options) : DbC
                     "package_count > 0");
                 table.HasCheckConstraint(
                     "ck_reference_materials_dates",
-                    "expiration_date >= received_date");
+                    "presentation <> 'Solid' OR expiration_date >= received_date");
                 table.HasCheckConstraint(
                     "ck_reference_materials_available_quantity",
                     "available_quantity >= 0 AND available_quantity <= presentation_quantity * package_count");

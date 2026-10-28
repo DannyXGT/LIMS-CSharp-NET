@@ -30,5 +30,6 @@ public sealed record SolutionVolumePreview(decimal Taken, decimal Final, string 
     public string RemainingDisplay => StockPresentation.Quantity(Math.Abs(Remaining), Unit);
     public string Error => Exceeds ? $"Exceso de {RemainingDisplay}. Reduzca el volumen tomado o aumente el aforo." : string.Empty;
     public static SolutionVolumePreview From(SolutionPart part) => new(
-        StockUnits.ConvertVolume(part.VolumeTaken, part.VolumeUnit, part.FinalVolumeUnit), part.FinalVolume, part.FinalVolumeUnit);
+        StockUnits.ConvertVolume(part.VolumeTaken, part.VolumeUnit, part.FinalVolumeUnit) +
+        (part.InternalStandard is { } s ? StockUnits.ConvertVolume(s.VolumeTaken, s.VolumeUnit, part.FinalVolumeUnit) : 0), part.FinalVolume, part.FinalVolumeUnit);
 }
