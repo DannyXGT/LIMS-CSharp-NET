@@ -10,6 +10,30 @@ namespace Lims.Desktop.Tests;
 public sealed class IntermediateViewModelTests
 {
     [Fact]
+    public async Task ActiveCatalogEnablesSolventSelectionAndSendsItToSave()
+    {
+        var api = new FakeApi { SupportsDilutionAdditives = true, Solvents = [new(4, "Metanol", "MeOH", true, 0), new(3, "Inactivo", "X", false, 1)] };
+        var vm = await Ready(api);
+        Assert.True(vm.CanSelectSolvent); Assert.Empty(vm.SolventMessage);
+        vm.Solvent = Assert.Single(vm.Solvents);
+        var row = vm.AddComponent(); row.Source = api.Source; row.Volume = "1";
+        await vm.LoadOptionsAsync(default);
+        Assert.Equal(4, vm.Solvent!.Id);
+        Assert.True(await vm.SaveAsync(default));
+        Assert.Equal(4, Assert.Single(api.Requests).SolventId);
+    }
+
+    [Theory]
+    [InlineData(true, "No hay solventes activos")]
+    [InlineData(false, "Actualice la API")]
+    public async Task MissingCatalogExplainsWhySolventSelectionIsUnavailable(bool supported, string reason)
+    {
+        var vm = await Ready(new FakeApi { SupportsDilutionAdditives = supported });
+        Assert.False(vm.CanSelectSolvent); Assert.Empty(vm.Solvents);
+        Assert.Contains(reason, vm.SolventMessage);
+    }
+
+    [Fact]
     public async Task HistoricalAndFutureDatesDoNotBlockAnOtherwiseValidPreparation()
     {
         var api = new FakeApi(); var vm = await Ready(api);
@@ -132,13 +156,15 @@ public sealed class IntermediateViewModelTests
     }
     private sealed class FakeApi : IIntermediateApiClient
     {
+        public bool SupportsDilutionAdditives { get; init; }
+        public IReadOnlyList<SolventOption>? Solvents { get; init; }
         public ApiError? CreateError { get; set; }
         public IntermediateSource Source { get; } = new(Guid.NewGuid(), "Stock", "STK-20261007-001", "Analito", 1, "Ensayo", 200, 200, "mL", new(2026, 1, 1), new(2099, 1, 1), Guid.NewGuid(), [new(Guid.NewGuid(), "Analito", null, "LOTE", 100, "mg/L")]);
         public int OptionCalls { get; private set; } public int PreviewCalls { get; private set; }
         public bool LoseFirstResponse { get; init; }
         public List<CreateIntermediateRequest> Requests { get; } = [];
         private IntermediateDetail? _created;
-        public Task<ApiCallResult<IntermediateOptions>> OptionsAsync(CancellationToken cancellationToken) { OptionCalls++; return Task.FromResult(Ok(new IntermediateOptions([new(1, "Ensayo"), new(2, "Otro método")], [Source]))); }
+        public Task<ApiCallResult<IntermediateOptions>> OptionsAsync(CancellationToken cancellationToken) { OptionCalls++; return Task.FromResult(Ok(new IntermediateOptions([new(1, "Ensayo"), new(2, "Otro método")], [Source], Solvents, SupportsDilutionAdditives))); }
         public Task<ApiCallResult<IntermediateCalculation>> PreviewAsync(IntermediateCalculationRequest request, CancellationToken cancellationToken) { PreviewCalls++; return Task.FromResult(Ok(IntermediateCalculator.Calculate(request, [Source]))); }
         public Task<ApiCallResult<IntermediateDetail>> CreateAsync(CreateIntermediateRequest request, CancellationToken cancellationToken)
         {

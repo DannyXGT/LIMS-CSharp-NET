@@ -8,7 +8,10 @@ namespace Lims.Desktop.Http;
 internal sealed class IntermediateApiClient(IHttpClientFactory clients) : IIntermediateApiClient
 {
     private const string Path = "api/reference-materials/preparations/intermediate";
-    public Task<ApiCallResult<IntermediateOptions>> OptionsAsync(CancellationToken cancellationToken) => SendAsync<IntermediateOptions>(HttpMethod.Get, Path + "/options", null, cancellationToken);
+    public async Task<ApiCallResult<IntermediateOptions>> OptionsAsync(CancellationToken cancellationToken) =>
+        await DilutionOptionsCatalog.CompleteAsync(
+            await SendAsync<IntermediateOptions>(HttpMethod.Get, Path + "/options", null, cancellationToken).ConfigureAwait(false),
+            new StockApiClient(clients), cancellationToken).ConfigureAwait(false);
     public Task<ApiCallResult<IntermediateCalculation>> PreviewAsync(IntermediateCalculationRequest request, CancellationToken cancellationToken) =>
         SendAsync<IntermediateCalculation>(HttpMethod.Post, Path + "/preview", JsonContent.Create(request), cancellationToken);
     public Task<ApiCallResult<IntermediateDetail>> CreateAsync(CreateIntermediateRequest request, CancellationToken cancellationToken) =>

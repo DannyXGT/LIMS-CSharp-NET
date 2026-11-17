@@ -20,6 +20,8 @@ El servidor recalcula y acumula los consumos por botella física, incluso cuando
 
 Se deben actualizar la API y el cliente. La API anuncia `supportsDilutionAdditives` en las opciones; un servidor anterior no ofrece las nuevas selecciones y el cliente muestra el motivo. La selección de solvente es explícita y no se asigna automáticamente.
 
+Si una API que admite el guardado omite el catálogo o lo devuelve vacío, Intermedia, Curva y AQS consultan el mismo endpoint persistente de solventes que Stock. No se deduce compatibilidad de guardado por la existencia del catálogo. Los errores de esa consulta se muestran para poder reintentar con «Actualizar orígenes»; un catálogo sin solventes activos deja el selector deshabilitado con una explicación junto al campo. Agregar soluciones y cambiar el método conservan el catálogo y la selección cuando los solventes no han cambiado.
+
 No se agregó una migración: Intermedia reutiliza `stock_solvents` y el catálogo `reference_solvents`; Curva/AQS conservan el solvente y el estándar interno en el cálculo histórico JSON existente. Se requieren las migraciones previas de solventes y Curva/AQS del proyecto. Esta corrección no aplica SQL ni publica servicios en producción.
 
 ## Verificación

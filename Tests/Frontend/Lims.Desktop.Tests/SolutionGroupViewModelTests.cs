@@ -12,6 +12,119 @@ public sealed class SolutionGroupViewModelTests
     [Theory]
     [InlineData("Curva")]
     [InlineData("AQS")]
+    public async Task CommonAforoAppliesToExistingAndNewSolutionsWithoutChangingAliquotsOrSelection(string kind)
+    {
+        var api = new FakeApi(); var vm = await Ready(kind, api);
+        var first = vm.AddComponent(); first.Source = api.Source; first.Volume = "2";
+        Assert.False(vm.CanSave);
+        vm.CommonFinalVolume = "25";
+        var second = vm.AddComponent(); second.Source = api.Source; second.Volume = "3";
+        Assert.All(vm.Components, r => { Assert.False(r.UseCustomFinalVolume); Assert.Equal("25", r.FinalVolume); });
+        Assert.True(vm.CanSave); Assert.Equal(8, first.Preview!.Results[0].Concentration);
+        Assert.Equal(12, second.Preview!.Results[0].Concentration);
+        vm.SelectedComponent = first;
+        vm.CommonFinalVolume = "20";
+        Assert.Same(first, vm.SelectedComponent);
+        Assert.Equal("2", first.Volume); Assert.Equal("3", second.Volume);
+        Assert.Equal(5, Assert.Single(vm.Calculation!.Debits).Quantity);
+        Assert.True(await vm.SaveAsync(default));
+        Assert.All(Assert.Single(api.Requests).Calculation.Parts, p => Assert.Equal(20, p.FinalVolume));
+    }
+
+    [Theory]
+    [InlineData("Curva")]
+    [InlineData("AQS")]
+    public async Task IndividualAforoKeepsItsVolumeAndUnitUntilReturnedToCommon(string kind)
+    {
+        var api = new FakeApi(); var vm = await Ready(kind, api);
+        vm.CommonFinalVolume = "25";
+        var shared = vm.AddComponent(); shared.Source = api.Source; shared.Volume = "2";
+        var custom = vm.AddComponent(); custom.Source = api.Source; custom.Volume = "3";
+        custom.UseCustomFinalVolume = true;
+        Assert.Equal("25", custom.FinalVolume);
+        custom.FinalVolume = "0.05"; custom.FinalUnit = "L";
+        vm.CommonFinalVolume = "0.1"; vm.CommonFinalUnit = "L";
+        Assert.Equal("0.1", shared.FinalVolume); Assert.Equal("L", shared.FinalUnit);
+        Assert.Equal("0.05", custom.FinalVolume); Assert.Equal("L", custom.FinalUnit);
+        Assert.Equal(6, custom.Preview!.Results[0].Concentration);
+        custom.UseCustomFinalVolume = false;
+        Assert.Equal("0.1", custom.FinalVolume); Assert.Equal("L", custom.FinalUnit);
+        Assert.Equal(3, custom.Preview!.Results[0].Concentration);
+        Assert.True(await vm.SaveAsync(default));
+        Assert.All(Assert.Single(api.Requests).Calculation.Parts, p => { Assert.Equal(0.1m, p.FinalVolume); Assert.Equal("L", p.FinalVolumeUnit); });
+    }
+
+    [Theory]
+    [InlineData("Curva")]
+    [InlineData("AQS")]
+    public async Task InvalidCommonAforoClearsPreviewsAndBlocksSaveWithoutChangingAnException(string kind)
+    {
+        var api = new FakeApi(); var vm = await Ready(kind, api); vm.CommonFinalVolume = "25";
+        var shared = vm.AddComponent(); shared.Source = api.Source; shared.Volume = "2";
+        var custom = Add(vm, api.Source, "3", "50");
+        foreach (var invalid in new[] { "", "0", "-1", "abc", "0.0000001" })
+        {
+            vm.CommonFinalVolume = invalid;
+            Assert.False(vm.CanSave); Assert.Null(shared.Preview);
+            Assert.NotNull(custom.Preview); Assert.Equal("50", custom.FinalVolume);
+        }
+        vm.CommonFinalVolume = "1";
+        Assert.True(shared.VolumePreview!.Exceeds); Assert.False(vm.CanSave);
+        vm.CommonFinalVolume = "25";
+        Assert.True(vm.CanSave); Assert.Empty(vm.CommonFinalVolumeError);
+    }
+
+    [Theory]
+    [InlineData("Curva")]
+    [InlineData("AQS")]
+    public async Task SharedAforoIncludesInternalStandardAndDraftResetClearsTheCommonSetting(string kind)
+    {
+        var api = new FakeApi(); var vm = await Ready(kind, api); vm.CommonFinalVolume = "12";
+        var row = vm.AddComponent(); row.Source = api.Source; row.Volume = "10";
+        row.InternalStandardSource = row.InternalStandardSources[0]; row.InternalStandardVolume = "5";
+        Assert.False(vm.CanSave); Assert.True(row.VolumePreview!.Exceeds);
+        vm.CommonFinalVolume = "25";
+        Assert.True(vm.CanSave); Assert.Equal(15, row.VolumePreview.Taken);
+        Assert.Equal(15, Assert.Single(vm.Calculation!.Debits).Quantity);
+        vm.BeginNew(); Assert.Empty(vm.CommonFinalVolume); Assert.Equal("mL", vm.CommonFinalUnit);
+        var empty = vm.AddComponent(); Assert.False(empty.UseCustomFinalVolume); Assert.Empty(empty.FinalVolume);
+    }
+
+    [Theory]
+    [InlineData("Curva")]
+    [InlineData("AQS")]
+    public async Task LostSaveResponseKeepsTheResolvedCommonAforoForAnIdenticalRetry(string kind)
+    {
+        var api = new FakeApi { LoseResponse = true }; var vm = await Ready(kind, api); vm.CommonFinalVolume = "25";
+        var row = vm.AddComponent(); row.Source = api.Source; row.Volume = "2";
+        Assert.False(await vm.SaveAsync(default)); Assert.False(vm.InputsEnabled);
+        Assert.Equal("25", vm.CommonFinalVolume); Assert.Equal("25", row.FinalVolume);
+        Assert.True(await vm.SaveAsync(default)); Assert.Equal(api.Requests[0], api.Requests[1]);
+        Assert.Equal(25, Assert.Single(api.Requests[1].Calculation.Parts).FinalVolume); Assert.Equal(1, api.Writes);
+    }
+
+    [Theory]
+    [InlineData("Curva")]
+    [InlineData("AQS")]
+    public async Task AddingSolutionsAndRefreshingOptionsKeepTheSelectedSolvent(string kind)
+    {
+        var api = new FakeApi(); var vm = await Ready(kind, api);
+        var row = Add(vm, api.Source, "10", "100");
+        row.Solvent = Assert.Single(row.Solvents);
+        Assert.True(row.CanSelectSolvent); Assert.Empty(row.SolventMessage);
+        // A bound selector receives collection resets while options are refreshed.
+        var resets = 0;
+        row.Solvents.CollectionChanged += (_, _) => resets++;
+        vm.AddComponent();
+        await vm.LoadOptionsAsync(default);
+        Assert.Equal(0, resets);
+        Assert.Equal(4, row.Solvent!.Id);
+        Assert.Equal(4, row.Preview!.Solvent!.Id);
+    }
+
+    [Theory]
+    [InlineData("Curva")]
+    [InlineData("AQS")]
     public async Task HistoricalAndFutureDatesAlsoBypassInternalStandardValidity(string kind)
     {
         var api = new FakeApi(); var vm = await Ready(kind, api);
@@ -177,7 +290,7 @@ public sealed class SolutionGroupViewModelTests
     }
     private static SolutionPartViewModel Add(SolutionGroupViewModel vm, IntermediateSource source, string volume, string final)
     {
-        var row = vm.AddComponent(); row.Source = source; row.Volume = volume; row.FinalVolume = final; return row;
+        var row = vm.AddComponent(); row.Source = source; row.Volume = volume; row.UseCustomFinalVolume = true; row.FinalVolume = final; return row;
     }
     private sealed class Session(string role, IReadOnlyList<string> permissions) : ISessionService
     {

@@ -126,6 +126,7 @@ public sealed partial class IntermediateViewModel(IIntermediateApiClient api, IS
         (NameError.Length == 0 && MethodError.Length == 0 && DateError.Length == 0 && VolumeError.Length == 0 && Notes.Trim().Length <= 2000 &&
         Calculation is { ExceedsFinalVolume: false, HasSufficientVolume: true } && Components.All(c => c.Error.Length == 0)));
     public bool InputsEnabled => !IsBusy && !IsLoadingOptions && _pending is null;
+    public bool CanSelectSolvent => Solvents.Count > 0;
     public bool HasNameError => NameError.Length > 0 && Name.Length > 0;
     public bool HasDateError => DateError.Length > 0 && ExpirationDate is not null;
     public bool HasVolumeError => VolumeError.Length > 0 && FinalVolume.Length > 0;
@@ -163,8 +164,11 @@ public sealed partial class IntermediateViewModel(IIntermediateApiClient api, IS
             _sources.Clear(); _sources.AddRange(response.Value.Sources);
             Replace(Methods, response.Value.Methods);
             var solventId = Solvent?.Id;
-            SolventMessage = response.Value.SupportsDilutionAdditives ? string.Empty : "Actualice la API del servidor para seleccionar y guardar el solvente de aforo.";
-            Replace(Solvents, response.Value.SupportsDilutionAdditives ? response.Value.Solvents ?? [] : []);
+            Replace(Solvents, response.Value.SupportsDilutionAdditives ? (response.Value.Solvents ?? []).Where(s => s.IsActive) : []);
+            SolventMessage = !response.Value.SupportsDilutionAdditives
+                ? "Actualice la API del servidor para seleccionar y guardar el solvente de aforo."
+                : Solvents.Count == 0 ? "No hay solventes activos. Revise el catálogo compartido del servidor y pulse Actualizar orígenes." : string.Empty;
+            OnPropertyChanged(nameof(CanSelectSolvent));
             Solvent = Solvents.FirstOrDefault(s => s.Id == solventId);
             Method = Methods.FirstOrDefault(m => m.Id == previousMethod?.Id);
             foreach (var row in Components)

@@ -8,6 +8,7 @@ using Lims.Infrastructure.Alerts;
 using Lims.Api.Dashboard;
 using Lims.Application.Dashboard;
 using Lims.Api.Health;
+using Lims.Api.Planning;
 using Lims.Api.Permissions;
 using Lims.Application.Permissions;
 using Lims.Contracts.Permissions;
@@ -90,6 +91,7 @@ try
     builder.Services.AddScoped<ISolutionGroupRepository, SolutionGroupRepository>();
     builder.Services.AddScoped<SolutionGroupService>();
     builder.Services.AddLimsAlerts(builder.Configuration);
+    builder.Services.AddLimsPlanning(connectionString);
 
     builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
     {
@@ -195,6 +197,7 @@ try
     app.MapStockEndpoints();
     app.MapIntermediateEndpoints();
     app.MapSolutionGroupEndpoints();
+    app.MapPlanningEndpoints();
     app.MapHealthChecks("/health/live", new HealthCheckOptions
     {
         Predicate = static _ => false,

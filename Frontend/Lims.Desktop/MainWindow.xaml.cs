@@ -40,6 +40,15 @@ public sealed partial class MainWindow : Window
             SystemSearch.ItemsSource = null;
         };
         navigation.Initialize(RootContent, loginPage, shellPage);
+        if (navigation is Lims.Desktop.Planning.WorkspaceNavigationService workspaces)
+        {
+            workspaces.AppWindowForHost = this;
+            workspaces.LaboratoryVisibilityChanged += visible =>
+            {
+                SystemSearch.Visibility = NotificationsHost.Visibility = visible ? Visibility.Visible : Visibility.Collapsed;
+                if (!visible) { SystemSearch.Text = string.Empty; SystemSearch.ItemsSource = null; }
+            };
+        }
         navigation.ShowLogin();
     }
 

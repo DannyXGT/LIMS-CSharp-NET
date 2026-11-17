@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Specialized;
+using System.ComponentModel;
 using Lims.DesignSystem.Presentation;
 using Microsoft.UI.Input;
 using Microsoft.UI.Xaml;
@@ -20,6 +21,7 @@ public class LimsSelect : LimsPopupField
     private TextBox? _search;
     private Grid? _panel;
     private bool _syncing;
+    private INotifyPropertyChanged? _labelSource;
     public event EventHandler<EventArgs>? SelectionChanged;
     public event EventHandler<string>? SearchTextChanged;
     protected virtual bool SearchEnabled => false;
@@ -54,6 +56,8 @@ public class LimsSelect : LimsPopupField
         _list.Style = (Style)Application.Current.Resources["LimsPopupListStyle"];
         _list.ItemsSource = _filter.Visible;
         _list.ItemClick += (_, e) => Commit(e.ClickedItem);
+        Loaded += (_, _) => ObserveSelectedLabel();
+        Unloaded += (_, _) => { if (_labelSource is not null) _labelSource.PropertyChanged -= OnSelectedLabelChanged; _labelSource = null; };
         Surface.AddHandler(CharacterReceivedEvent, new TypedEventHandler<UIElement, CharacterReceivedRoutedEventArgs>((_, e) =>
         {
             if (!SearchEnabled || _search is null || _search.FocusState != FocusState.Unfocused || e.Character < 32) return;
@@ -68,6 +72,18 @@ public class LimsSelect : LimsPopupField
     private string Label(object item) => Read(item, DisplayMemberPath)?.ToString() ?? string.Empty;
     private static object? Read(object? item, string path) => string.IsNullOrEmpty(path) ? item : item?.GetType().GetProperty(path)?.GetValue(item);
     protected override string? SelectedLabel => SelectedItem is null ? null : Label(SelectedItem);
+    private void ObserveSelectedLabel()
+    {
+        if (_labelSource is not null) _labelSource.PropertyChanged -= OnSelectedLabelChanged;
+        _labelSource = SelectedItem as INotifyPropertyChanged;
+        if (_labelSource is not null) _labelSource.PropertyChanged += OnSelectedLabelChanged;
+        UpdateLabel();
+    }
+    private void OnSelectedLabelChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (string.IsNullOrEmpty(e.PropertyName) || string.IsNullOrEmpty(DisplayMemberPath) || e.PropertyName == DisplayMemberPath)
+            UpdateLabel();
+    }
 
     private static void OnItemsChanged(DependencyObject sender, DependencyPropertyChangedEventArgs args)
     {
@@ -94,7 +110,7 @@ public class LimsSelect : LimsPopupField
             select.SelectedValue = Read(args.NewValue, select.SelectedValuePath);
             select._syncing = false;
         }
-        select.UpdateLabel();
+        select.ObserveSelectedLabel();
         select.SelectionChanged?.Invoke(select, EventArgs.Empty);
     }
     private static void OnValueChanged(DependencyObject sender, DependencyPropertyChangedEventArgs args)

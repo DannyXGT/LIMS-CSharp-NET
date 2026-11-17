@@ -169,12 +169,13 @@ public partial class App : Microsoft.UI.Xaml.Application
                     groupVm.Method = groupVm.Methods[0]; groupVm.Code = data.GetProperty("code").GetString()!;
                     groupVm.Name = "Grupo multianalito · validación visual";
                     foreach (var row in groupVm.Components.ToArray()) groupVm.RemoveComponent(row);
+                    groupVm.CommonFinalVolume = "100"; groupVm.CommonFinalUnit = "mL";
                     foreach (var volume in data.GetProperty("volumes").EnumerateArray())
                     {
                         var index = groupVm.Components.Count;
                         var row = groupVm.AddComponent(); row.Source = row.Sources[data.TryGetProperty("sourceIndices", out var sourceIndices) ? sourceIndices[index].GetInt32() : 0];
                         row.Volume = volume.GetDecimal().ToString(CultureInfo.InvariantCulture);
-                        row.FinalVolume = data.TryGetProperty("finalVolumes", out var finals) ? finals[index].GetDecimal().ToString(CultureInfo.InvariantCulture) : "100";
+                        if (data.TryGetProperty("finalVolumes", out var finals)) { row.UseCustomFinalVolume = true; row.FinalVolume = finals[index].GetDecimal().ToString(CultureInfo.InvariantCulture); }
                         if (data.TryGetProperty("solvent", out var solvent)) row.Solvent = row.Solvents.Single(s => s.Id == solvent.GetInt32());
                         if (data.TryGetProperty("standardVolume", out var standardVolume))
                         {
@@ -188,8 +189,22 @@ public partial class App : Microsoft.UI.Xaml.Application
                 case "groupEdit":
                     var edited = GroupPage(data).ViewModel.Components[data.GetProperty("index").GetInt32()];
                     if (data.TryGetProperty("volume", out var editedVolume)) edited.Volume = editedVolume.GetString()!;
-                    if (data.TryGetProperty("finalVolume", out var editedFinal)) edited.FinalVolume = editedFinal.GetString()!;
+                    if (data.TryGetProperty("customAforo", out var customAforo)) edited.UseCustomFinalVolume = customAforo.GetBoolean();
+                    if (data.TryGetProperty("finalVolume", out var editedFinal)) { edited.UseCustomFinalVolume = true; edited.FinalVolume = editedFinal.GetString()!; }
+                    if (data.TryGetProperty("finalUnit", out var editedFinalUnit)) { edited.UseCustomFinalVolume = true; edited.FinalUnit = editedFinalUnit.GetString()!; }
                     break;
+                case "groupCommonAforo":
+                    var commonVm = GroupPage(data).ViewModel;
+                    if (data.TryGetProperty("volume", out var commonVolume)) commonVm.CommonFinalVolume = commonVolume.GetString()!;
+                    if (data.TryGetProperty("unit", out var commonUnit)) commonVm.CommonFinalUnit = commonUnit.GetString()!;
+                    break;
+                case "groupAdd": GroupPage(data).ViewModel.AddComponent(); break;
+                case "groupRemove":
+                    var removeVm = GroupPage(data).ViewModel;
+                    removeVm.RemoveComponent(removeVm.Components[data.GetProperty("index").GetInt32()]); break;
+                case "groupSelect":
+                    var selectVm = GroupPage(data).ViewModel;
+                    selectVm.SelectedComponent = selectVm.Components[data.GetProperty("index").GetInt32()]; break;
                 case "groupDetailSelect": ((ListView)GroupPage(data).DetailDialog!.FindName("SolutionsList")).SelectedIndex = data.GetProperty("index").GetInt32(); break;
                 case "groupDetailScroll": ((ScrollViewer)GroupPage(data).DetailDialog!.FindName("DetailScroll")).ChangeView(null, data.GetProperty("offset").GetDouble(), null, true); break;
                 case "groupScroll": ((ScrollViewer)GroupPage(data).Editor!.FindName("EditorScroll")).ChangeView(null, data.GetProperty("offset").GetDouble(), null, true); break;
@@ -202,7 +217,11 @@ public partial class App : Microsoft.UI.Xaml.Application
                     File.WriteAllText(Path.Combine(_directory, "group-report.json"), JsonSerializer.Serialize(new {
                         fixtureOnly = true, interDbModified = false, gp.ViewModel.Kind, gp.ViewModel.CanSave, gp.ViewModel.Validation,
                         gp.ViewModel.VisibleValidation,
-                        rows = gp.ViewModel.Components.Select(r => new { r.Title, sourceId = r.Source?.Id, r.SourceBalance, r.FieldError, r.VolumePreview, r.Preview }).ToArray(),
+                        gp.ViewModel.CommonFinalVolume, gp.ViewModel.CommonFinalUnit,
+                        selectedTitle = gp.ViewModel.SelectedComponent?.Title,
+                        selectorTitle = ge is null ? null : Microsoft.UI.Xaml.Automation.AutomationProperties.GetHelpText((LimsSelect)ge.FindName("ResultSelect")),
+                        resultTitle = ge is null ? null : (((Lims.Desktop.Controls.SolutionResultView)ge.FindName("ResultView")).Content as StackPanel)?.Children.OfType<TextBlock>().FirstOrDefault()?.Text,
+                        rows = gp.ViewModel.Components.Select(r => new { r.Title, sourceId = r.Source?.Id, r.FinalVolume, r.FinalUnit, r.UseCustomFinalVolume, r.Solvent, r.CanSelectSolvent, r.SourceBalance, r.FieldError, r.VolumePreview, r.Preview }).ToArray(),
                         gp.ViewModel.Message, gp.ViewModel.Created, gp.ViewModel.Calculation, gp.ViewModel.Page, gp.ViewModel.TotalCount,
                         sources = _intermediateApi.Sources.Where(s => s.Kind == "Intermedia").ToArray(), _solutionApi!.CreateCalls,
                         scale = gp.XamlRoot.RasterizationScale, width = gp.XamlRoot.Size.Width, height = gp.XamlRoot.Size.Height,
@@ -389,6 +408,7 @@ public partial class App : Microsoft.UI.Xaml.Application
                         _intermediatePage.ViewModel.CanSave, _intermediatePage.ViewModel.Calculation,
                         _intermediatePage.ViewModel.OccupiedPercent, _intermediatePage.ViewModel.VolumeError,
                         _intermediatePage.ViewModel.Message,
+                        _intermediatePage.ViewModel.Solvent, _intermediatePage.ViewModel.CanSelectSolvent,
                         EditorWidth = (_intermediatePage.Editor?.FindName("EditorRoot") as FrameworkElement)?.ActualWidth,
                         EditorHeight = (_intermediatePage.Editor?.FindName("EditorRoot") as FrameworkElement)?.ActualHeight,
                         ResultStacked = _intermediatePage.Editor?.FindName("ResultPanel") is FrameworkElement intResult && Grid.GetRow(intResult) == 1,

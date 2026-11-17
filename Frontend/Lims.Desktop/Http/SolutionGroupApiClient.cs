@@ -8,7 +8,10 @@ namespace Lims.Desktop.Http;
 internal sealed class SolutionGroupApiClient(IHttpClientFactory clients) : ISolutionGroupApiClient
 {
     private static string Path(string kind) => "api/reference-materials/preparations/" + (kind == "Curva" ? "curve" : "aqs");
-    public Task<ApiCallResult<IntermediateOptions>> OptionsAsync(string kind, CancellationToken cancellationToken) => SendAsync<IntermediateOptions>(HttpMethod.Get, Path(kind) + "/options", null, cancellationToken);
+    public async Task<ApiCallResult<IntermediateOptions>> OptionsAsync(string kind, CancellationToken cancellationToken) =>
+        await DilutionOptionsCatalog.CompleteAsync(
+            await SendAsync<IntermediateOptions>(HttpMethod.Get, Path(kind) + "/options", null, cancellationToken).ConfigureAwait(false),
+            new StockApiClient(clients), cancellationToken).ConfigureAwait(false);
     public Task<ApiCallResult<SolutionCalculation>> PreviewAsync(string kind, SolutionCalculationRequest request, CancellationToken cancellationToken) =>
         SendAsync<SolutionCalculation>(HttpMethod.Post, Path(kind) + "/preview", JsonContent.Create(request), cancellationToken);
     public Task<ApiCallResult<SolutionGroupDetail>> CreateAsync(string kind, CreateSolutionGroupRequest request, CancellationToken cancellationToken) =>

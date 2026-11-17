@@ -57,7 +57,8 @@ public partial class App : Application
         builder.Services.AddSingleton(options);
         builder.Services.AddSingleton<ISecureStorage, PasswordVaultSecureStorage>();
         builder.Services.AddSingleton<ISessionService, SessionService>();
-        builder.Services.AddSingleton<INavigationService, NavigationService>();
+        builder.Services.AddSingleton<Lims.Desktop.Planning.PlanningApiClient>();
+        builder.Services.AddSingleton<INavigationService, Lims.Desktop.Planning.WorkspaceNavigationService>();
         builder.Services.AddSingleton<IAuthenticationGateway, AuthenticationGateway>();
         builder.Services.AddSingleton<IAuthenticationApiClient, AuthenticationApiClient>();
         builder.Services.AddSingleton<IReferenceMaterialsApiClient, ReferenceMaterialsApiClient>();

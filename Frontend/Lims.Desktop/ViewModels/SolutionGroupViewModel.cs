@@ -17,6 +17,9 @@ public sealed partial class SolutionPartViewModel : ObservableObject
     public ObservableCollection<IntermediateSource> Sources { get; } = [];
     public ObservableCollection<SolutionSourceOption> SourceOptions { get; } = [];
     public ObservableCollection<SolventOption> Solvents { get; } = [];
+    public bool CanSelectSolvent => Solvents.Count > 0;
+    [ObservableProperty] public partial string SolventMessage { get; set; } = string.Empty;
+    public void RefreshSolventState() => OnPropertyChanged(nameof(CanSelectSolvent));
     public ObservableCollection<IntermediateSource> InternalStandardSources { get; } = [];
     [ObservableProperty] public partial SolventOption? Solvent { get; set; }
     [ObservableProperty] public partial IntermediateSource? InternalStandardSource { get; set; }
@@ -35,6 +38,13 @@ public sealed partial class SolutionPartViewModel : ObservableObject
     [ObservableProperty] public partial string Unit { get; set; } = "mL";
     [ObservableProperty] public partial string FinalVolume { get; set; } = string.Empty;
     [ObservableProperty] public partial string FinalUnit { get; set; } = "mL";
+    [ObservableProperty] public partial bool UseCustomFinalVolume { get; set; }
+    public bool UsesCommonFinalVolume => !UseCustomFinalVolume;
+    public string CommonAforoDisplay => string.IsNullOrWhiteSpace(FinalVolume)
+        ? "Aforo común: pendiente" : $"Aforo común: {FinalVolume} {FinalUnit}";
+    partial void OnUseCustomFinalVolumeChanged(bool value) => OnPropertyChanged(nameof(UsesCommonFinalVolume));
+    partial void OnFinalVolumeChanged(string value) => OnPropertyChanged(nameof(CommonAforoDisplay));
+    partial void OnFinalUnitChanged(string value) => OnPropertyChanged(nameof(CommonAforoDisplay));
     [ObservableProperty] public partial bool IsInternalStandard { get; set; }
     [ObservableProperty] public partial string ResultDisplay { get; set; } = "Complete origen y volúmenes.";
     [ObservableProperty] public partial string BalanceDisplay { get; set; } = string.Empty;
@@ -65,7 +75,9 @@ public sealed partial class SolutionGroupViewModel(string kind, ISolutionGroupAp
     private readonly List<IntermediateSource> _sources = [];
     private readonly List<SolventOption> _solvents = [];
     [ObservableProperty] public partial bool SupportsDilutionAdditives { get; set; }
-    public string AdditivesMessage => SupportsDilutionAdditives ? string.Empty : "Actualice la API del servidor para seleccionar solvente y agregar una Intermedia como estándar interno.";
+    public string AdditivesMessage => !SupportsDilutionAdditives
+        ? "Actualice la API del servidor para seleccionar solvente y agregar una Intermedia como estándar interno."
+        : _solvents.Count == 0 ? "No hay solventes activos. Revise el catálogo compartido del servidor y pulse Actualizar orígenes." : string.Empty;
     partial void OnSupportsDilutionAdditivesChanged(bool value) => OnPropertyChanged(nameof(AdditivesMessage));
     private CreateSolutionGroupRequest? _pending;
     private Guid _requestId = Guid.NewGuid();
@@ -77,7 +89,7 @@ public sealed partial class SolutionGroupViewModel(string kind, ISolutionGroupAp
     public string CreateLabel => Kind == "Curva" ? "Nueva Curva" : "Nuevo AQS";
     public string SaveLabel => "Guardar " + Kind;
     public bool IsCurve => Kind == "Curva";
-    public string WorkflowDescription => IsCurve ? "Preparación de soluciones de calibración · aforo independiente por solución" : "Control de calidad AQS · origen principal y estándar interno de otro grupo cuando aplique";
+    public string WorkflowDescription => IsCurve ? "Preparación de soluciones de calibración · aforo común con excepciones por solución" : "Control de calidad AQS · aforo común con excepciones por solución";
     public string SolutionsLabel => IsCurve ? "SOLUCIONES DE CALIBRACIÓN" : "CONTROLES DEL GRUPO AQS";
     public string CodeLabel => IsCurve ? "Código de la Curva" : "Código AQS";
     public string AddLabel => IsCurve ? "Agregar solución" : "Agregar control AQS";
@@ -90,6 +102,24 @@ public sealed partial class SolutionGroupViewModel(string kind, ISolutionGroupAp
     [ObservableProperty] public partial string Name { get; set; } = string.Empty;
     [ObservableProperty] public partial string Notes { get; set; } = string.Empty;
     [ObservableProperty] public partial string StorageTemperature { get; set; } = string.Empty;
+    public IReadOnlyList<string> VolumeUnits { get; } = ["mL", "L"];
+    [ObservableProperty] public partial string CommonFinalVolume { get; set; } = string.Empty;
+    [ObservableProperty] public partial string CommonFinalUnit { get; set; } = "mL";
+    public string CommonFinalVolumeError => CommonFinalVolume.Length > 0 && !Parse(CommonFinalVolume, out _)
+        ? "Ingrese un aforo positivo, con hasta 6 decimales." : string.Empty;
+    public bool HasCommonFinalVolumeError => CommonFinalVolumeError.Length > 0;
+    partial void OnCommonFinalVolumeChanged(string value) { OnPropertyChanged(nameof(CommonFinalVolumeError)); OnPropertyChanged(nameof(HasCommonFinalVolumeError)); ApplyCommonAforo(); }
+    partial void OnCommonFinalUnitChanged(string value) => ApplyCommonAforo();
+    private void ApplyCommonAforo()
+    {
+        if (_updating) return;
+        _updating = true;
+        foreach (var row in Components.Where(r => !r.UseCustomFinalVolume))
+        {
+            row.FinalVolume = CommonFinalVolume; row.FinalUnit = CommonFinalUnit;
+        }
+        _updating = false; Recalculate();
+    }
     [ObservableProperty] public partial DateTimeOffset? PreparationDate { get; set; }
     [ObservableProperty] public partial DateTimeOffset? ExpirationDate { get; set; }
     [ObservableProperty] public partial string Message { get; set; } = string.Empty;
@@ -149,13 +179,15 @@ public sealed partial class SolutionGroupViewModel(string kind, ISolutionGroupAp
         foreach (var row in Components) row.PropertyChanged -= OnPartChanged;
         Components.Clear(); SelectedComponent = null; _pending = null; _requestId = Guid.NewGuid(); Created = null; Calculation = null;
         Code = Name = Notes = StorageTemperature = Message = string.Empty; Method = null;
+        CommonFinalVolume = string.Empty; CommonFinalUnit = "mL";
         PreparationDate = DateTimeOffset.UtcNow.ToOffset(TimeSpan.FromHours(-6));
         ExpirationDate = PreparationDate.Value.AddDays(Kind == "Curva" ? 188 : 2);
         _updating = false; Recalculate();
     }
     public SolutionPartViewModel AddComponent()
     {
-        var row = new SolutionPartViewModel(); row.PropertyChanged += OnPartChanged; Components.Add(row); SelectedComponent = row; UpdateSources(); Recalculate(); return row;
+        var row = new SolutionPartViewModel { Position = Components.Count, FinalVolume = CommonFinalVolume, FinalUnit = CommonFinalUnit };
+        row.PropertyChanged += OnPartChanged; Components.Add(row); SelectedComponent = row; UpdateSources(); Recalculate(); return row;
     }
     public void RemoveComponent(SolutionPartViewModel row) { row.PropertyChanged -= OnPartChanged; Components.Remove(row); if (SelectedComponent == row) SelectedComponent = Components.FirstOrDefault(); Recalculate(); }
     public async Task LoadOptionsAsync(CancellationToken ct)
@@ -169,7 +201,8 @@ public sealed partial class SolutionGroupViewModel(string kind, ISolutionGroupAp
             _updating = true; var methodId = Method?.Id;
             _sources.Clear(); _sources.AddRange(result.Value.Sources);
             SupportsDilutionAdditives = result.Value.SupportsDilutionAdditives;
-            _solvents.Clear(); _solvents.AddRange(SupportsDilutionAdditives ? result.Value.Solvents ?? [] : []);
+            _solvents.Clear(); _solvents.AddRange(SupportsDilutionAdditives ? (result.Value.Solvents ?? []).Where(s => s.IsActive) : []);
+            OnPropertyChanged(nameof(AdditivesMessage));
             Replace(Methods, result.Value.Methods); Method = Methods.FirstOrDefault(m => m.Id == methodId);
             foreach (var row in Components)
             {
@@ -189,7 +222,10 @@ public sealed partial class SolutionGroupViewModel(string kind, ISolutionGroupAp
         {
             Replace(row.Sources, _sources.Where(s => (s.Kind == "Intermedia" || MaterialPresentations.IsCommercial(s.Kind)) && (Method is null || s.MethodId == Method.Id)));
             Replace(row.SourceOptions, row.Sources.Select(s => new SolutionSourceOption(s)));
-            Replace(row.Solvents, _solvents);
+            // Adding a solution or changing method does not change the solvent catalog.
+            if (!row.Solvents.SequenceEqual(_solvents)) Replace(row.Solvents, _solvents);
+            row.SolventMessage = AdditivesMessage;
+            row.RefreshSolventState();
             Replace(row.InternalStandardSources, SupportsDilutionAdditives
                 ? _sources.Where(s => s.CanBeInternalStandard && (Method is null || s.MethodId == Method.Id)) : []);
             // Refresh the selected wrapper after replacing options without discarding the draft source.
@@ -198,6 +234,17 @@ public sealed partial class SolutionGroupViewModel(string kind, ISolutionGroupAp
     }
     private void OnPartChanged(object? sender, PropertyChangedEventArgs e)
     {
+        if (_updating) return;
+        if (e.PropertyName == nameof(SolutionPartViewModel.UseCustomFinalVolume) && sender is SolutionPartViewModel changed)
+        {
+            if (!changed.UseCustomFinalVolume)
+            {
+                _updating = true;
+                changed.FinalVolume = CommonFinalVolume; changed.FinalUnit = CommonFinalUnit;
+                _updating = false;
+            }
+            Recalculate(); return;
+        }
         if (e.PropertyName is nameof(SolutionPartViewModel.Source) or nameof(SolutionPartViewModel.Volume) or nameof(SolutionPartViewModel.Unit) or nameof(SolutionPartViewModel.FinalVolume) or nameof(SolutionPartViewModel.FinalUnit) or nameof(SolutionPartViewModel.IsInternalStandard)
             or nameof(SolutionPartViewModel.Solvent) or nameof(SolutionPartViewModel.InternalStandardSource) or nameof(SolutionPartViewModel.InternalStandardVolume) or nameof(SolutionPartViewModel.InternalStandardUnit))
         { SelectedComponent = sender as SolutionPartViewModel; Recalculate(); }
