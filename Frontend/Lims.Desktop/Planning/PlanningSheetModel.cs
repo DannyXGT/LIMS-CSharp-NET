@@ -19,11 +19,13 @@ public sealed record SheetPastePreview(IReadOnlyList<SheetPasteCell> Cells)
 public sealed class PlanningSheetModel
 {
     public static readonly IReadOnlyList<SheetColumn> AvailableColumns=[
-        new("Job","JOB",154),new("InDate","Fecha ingreso",108),new("DueDate","Due Date",112),new("OriginalTest","Prueba original",230),
-        new("Laboratory","Laboratorio",125),new("Service","Servicio",112),new("DigitizationState","Digitación",115),new("DigitizedAt","Hora",100),
-        new("TestedOn","Fecha prueba",104),new("DigitizedBy","Digitado por",120),new("Responsible","Responsable",150,true),new("Observation","Observación",193,true),
-        new("Origin","Origen",110),new("Equivalence","Equivalencia",190,false,false),new("ExecutionType","Tipo ejecución",135,false,false)];
+        new("InDate","Fecha Ingreso",108),new("DueDate","Due Date",112),new("JobState","Estado",175),new("Job","JOB",190),new("OriginalTest","Prueba",230),
+        new("Laboratory","Laboratorio",125),new("DigitizedAt","Hora",100),new("TestedOn","Fecha Prueba",110),new("DigitizationState","Estado de digitación",150),new("DigitizedBy","Digitado por",120),
+        new("Equivalence","Equivalencia",190,false,false),new("Service","Servicio",112,false,false),new("Buyer","Buyer",150,false,false),new("Vendor","Vendor",170,false,false),new("Usd","USD",100,false,false),
+        new("Responsible","Responsable",150,true,false),new("Observation","Observación",193,true,false),new("OnHold","On Hold",100,false,false),new("JobLabel","Etiqueta",120,false,false),new("NoProgram","Programación",125,false,false),
+        new("Origin","Origen",110,false,false),new("ExecutionType","Tipo ejecución",135,false,false)];
     public ObservableCollection<PlanningRow> Rows{get;}=[];
+    public Func<int,string,string>? DisplayValue {get;set;}
     public List<SheetColumn> Columns{get;}=AvailableColumns.Where(c=>c.InitiallyVisible).ToList();
     public SheetCell Active{get;private set;}
     public SheetCell Anchor{get;private set;}
@@ -35,16 +37,19 @@ public sealed class PlanningSheetModel
         Active=new(Math.Clamp(row,0,Rows.Count-1),Math.Clamp(column,0,Columns.Count-1));End=Active;if(!extend)Anchor=Active;
     }
     public void SelectColumn(int column){if(Rows.Count==0)return;Select(0,column);Select(Rows.Count-1,column,true);}
+    public void SelectAll(){if(Rows.Count==0||Columns.Count==0)return;Select(0,0);Select(Rows.Count-1,Columns.Count-1,true);}
     public bool Contains(int row,int column){var r=Range;return row>=r.Top&&row<=r.Bottom&&column>=r.Left&&column<=r.Right;}
-    public string Value(int row,int column)=>Value(Rows[row],Columns[column].Key);
+    public string Value(int row,int column)=>DisplayValue?.Invoke(row,Columns[column].Key)??Value(Rows[row],Columns[column].Key);
     public static string Value(PlanningRow row,string key)=>key switch
     {
-        "Job"=>row.Job,"InDate"=>row.InDate?.ToString("yyyy-MM-dd",CultureInfo.InvariantCulture)??"","DueDate"=>row.DueDate?.ToString("yyyy-MM-dd",CultureInfo.InvariantCulture)??"",
+        "JobState"=>row.JobState,"Job"=>row.Job,"InDate"=>row.InDate?.ToString("yyyy-MM-dd",CultureInfo.InvariantCulture)??"","DueDate"=>row.DueDate?.ToString("yyyy-MM-dd",CultureInfo.InvariantCulture)??"",
         "OriginalTest"=>row.OriginalTest??"","Equivalence"=>row.Equivalence??"","Laboratory"=>row.Laboratory??"","Service"=>row.Service??"",
         "DigitizationState"=>row.DigitizationState=="Digitado"?"Digitada":row.DigitizationState=="NoProgramar"?"NO PROGRAMAR":row.DigitizationState,
         "DigitizedAt"=>row.DigitizedAt?.ToOffset(TimeSpan.FromHours(-6)).ToString("HH:mm:ss",CultureInfo.InvariantCulture)??"",
         "TestedOn"=>row.TestedOn?.ToString("yyyy-MM-dd",CultureInfo.InvariantCulture)??"","DigitizedBy"=>row.DigitizedBy??"","Responsible"=>row.Responsible??"",
-        "Observation"=>row.Observation??"","ExecutionType"=>row.ExecutionType??"","Origin"=>row.OriginLabel,_=>""
+        "Observation"=>row.Observation??"","ExecutionType"=>row.ExecutionType??"","Origin"=>row.OriginLabel,
+        "Buyer"=>row.Buyer??"","Vendor"=>row.Vendor??"","Usd"=>row.Usd?.ToString("0.####",CultureInfo.InvariantCulture)??"",
+        "OnHold"=>row.OnHold?"On Hold":"Activo","JobLabel"=>row.JobLabel??"","NoProgram"=>row.NoProgram?"NO PROGRAMAR":"",_=>""
     };
     private static string Quote(string value)=>value.IndexOfAny(['\t','\n','\r','"'])<0?value:"\""+value.Replace("\"","\"\"",StringComparison.Ordinal)+"\"";
     public string Copy()
@@ -84,6 +89,7 @@ public sealed class PlanningSheetModel
             {
                 before=Value(row,col);var column=Columns[col];var item=Rows[row];
                 if(!allowed)status="Omitido · sin permiso de edición WIP";
+                else if(item.OnHold)status="Omitido · JOB On Hold";
                 else if(!column.Editable||item.ExecutionId is null)status="Omitido · columna protegida";
                 else if(after==before)status="Omitido · sin cambios";
                 else if(after.Length>(column.Key=="Responsible"?150:2000)||after.Any(ch=>char.IsControl(ch)&&ch!='\n')||(column.Key=="Responsible"&&after.Contains('\n')))status="Inválido · longitud o caracteres no permitidos";

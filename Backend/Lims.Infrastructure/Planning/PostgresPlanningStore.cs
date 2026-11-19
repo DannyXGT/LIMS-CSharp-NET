@@ -47,10 +47,10 @@ public sealed partial class PostgresPlanningStore(PlanningDatabase database) : I
     }
     private static async Task<List<StoredEpisode>> Episodes(NpgsqlConnection c, NpgsqlTransaction? tx, string[] jobs, CancellationToken ct)
     {
-        await using var cmd = Command(c, tx, "SELECT id,job,buyer,vendor,service,in_date,due_date,amount,currency,usd,version,manual_fields,source_in_date FROM planning.episodes WHERE job=ANY(@jobs)", ("jobs", jobs));
+        await using var cmd = Command(c, tx, "SELECT id,job,buyer,vendor,service,in_date,due_date,amount,currency,usd,version,manual_fields,source_in_date,official_fields::text FROM planning.episodes WHERE job=ANY(@jobs)", ("jobs", jobs));
         await using var reader = await cmd.ExecuteReaderAsync(ct).ConfigureAwait(false);
         var result = new List<StoredEpisode>();
-        while (await reader.ReadAsync(ct).ConfigureAwait(false)) result.Add(new(reader.GetGuid(0), reader.GetString(1), Wip(reader, 2), reader.GetInt64(10), reader.GetFieldValue<string[]>(11), NullableDate(reader, 12)));
+        while (await reader.ReadAsync(ct).ConfigureAwait(false)) result.Add(new(reader.GetGuid(0), reader.GetString(1), Wip(reader, 2), reader.GetInt64(10), reader.GetFieldValue<string[]>(11), NullableDate(reader, 12),Read<PlanningOfficialState>(reader.GetString(13))));
         return result;
     }
     private static WipValues Wip(NpgsqlDataReader r, int o) => new(NullableString(r,o), NullableString(r,o+1), NullableString(r,o+2), NullableDate(r,o+3), NullableDate(r,o+4), r.IsDBNull(o+5)?null:r.GetDecimal(o+5), NullableString(r,o+6), r.IsDBNull(o+7)?null:r.GetDecimal(o+7));
@@ -67,9 +67,10 @@ public sealed partial class PostgresPlanningStore(PlanningDatabase database) : I
     { await using var c=await database.Source.OpenConnectionAsync(ct).ConfigureAwait(false); return await Mappings(c,null,ct).ConfigureAwait(false); }
     private static async Task<List<PlanningEquivalence>> Mappings(NpgsqlConnection c,NpgsqlTransaction? tx,CancellationToken ct)
     {
-        await using var cmd=Command(c,tx,"SELECT original_test,equivalence,laboratory,no_program,version FROM planning.equivalences ORDER BY original_test");
+        // Legacy HTML also stores the explicit NO PROGRAMAR decision in the laboratory field. Preserve its original values.
+        await using var cmd=Command(c,tx,"SELECT original_test,equivalence,laboratory,(no_program OR upper(coalesce(trim(laboratory),''))='NO PROGRAMAR'),version FROM planning.equivalences ORDER BY original_test");
         await using var r=await cmd.ExecuteReaderAsync(ct).ConfigureAwait(false); var result=new List<PlanningEquivalence>();
-        while(await r.ReadAsync(ct).ConfigureAwait(false)) result.Add(new(r.GetString(0),NullableString(r,1),NullableString(r,2),r.GetBoolean(3),r.GetInt64(4)));
+        while(await r.ReadAsync(ct).ConfigureAwait(false)) result.Add(new(r.GetString(0),NullableString(r,1),NullableString(r,2),!r.IsDBNull(3)&&r.GetBoolean(3),r.GetInt64(4)));
         return result;
     }
     public async Task<PlanningImportPreview> PreviewAsync(PlanningImportInput input, int actor, CancellationToken ct)
@@ -87,8 +88,12 @@ public sealed partial class PostgresPlanningStore(PlanningDatabase database) : I
         var executions=await Executions(c,tx,episodes.Select(e=>e.Id).ToArray(),ct).ConfigureAwait(false);
         var plan=PlanningReconciler.Plan(input,episodes,executions,await Mappings(c,tx,ct).ConfigureAwait(false));
         var id=Guid.NewGuid();
+        var newIds=plan.Episodes.Where(e=>e.IsNew).Select(e=>e.Id).ToHashSet();
+        var changedIds=plan.Changes.Where(c=>c.Entity is "WIP" or "OfficialState").Select(c=>c.EpisodeId).ToHashSet();
         var preview=new PlanningImportPreview(id,"Preview",revision,input.Cut,input.Files,plan.Changes,plan.Reviews,plan.Issues,DateTimeOffset.UtcNow,
-            plan.Episodes.Count(e=>e.IsNew),plan.Executions.Count(e=>e.Action=="Create"),plan.Changes.Count(e=>e.Entity=="WIP" && e.Action=="UpdateSource"),plan.Executions.Count(e=>e.Action=="LinkManual"));
+            plan.Episodes.Count(e=>e.IsNew),plan.Executions.Count(e=>e.Action=="Create"),plan.Changes.Where(e=>e.Entity is "WIP" or "OfficialState" && e.Action=="UpdateSource" && !newIds.Contains(e.EpisodeId??Guid.Empty)).Select(e=>e.EpisodeId).Distinct().Count(),plan.Executions.Count(e=>e.Action=="LinkManual"),
+            plan.Episodes.Count(e=>!e.IsNew&&!changedIds.Contains(e.Id)),
+            plan.Reviews.Count(r=>r.Category=="ExecutionIdentity"),plan.Reviews.Count(r=>r.Category is not ("BothFiles" or "ManualManaged")));
         // An unapplied stale preview can be superseded only by its creator; original files and audit remain in history.
         await using(var owner=Command(c,tx,"SELECT actor_id FROM planning.batches WHERE fingerprint=@hash",("hash",input.Fingerprint)))
         {
@@ -128,32 +133,21 @@ public sealed partial class PostgresPlanningStore(PlanningDatabase database) : I
         if(preview.CreatedAt < DateTimeOffset.UtcNow.AddHours(-24)) throw new PlanningConflictException("La vista previa venció. Valide nuevamente los archivos.");
         if(plan.Issues.Any(i=>i.Blocking)) throw new PlanningValidationException("Corrija los errores estructurales antes de confirmar.");
         var audit=new List<ImportAudit>();
+        await CopyEpisodes(c,tx,id,plan.Episodes,ct).ConfigureAwait(false);
+        var changesByEpisode=plan.Changes.ToLookup(c=>c.EpisodeId);
         foreach(var episode in plan.Episodes)
         {
-            var w=episode.Source;
-            await Execute(c,tx,"""
-                INSERT INTO planning.episodes(id,job,source_in_date,buyer,vendor,service,in_date,due_date,amount,currency,usd,source_batch_id,source_row)
-                VALUES(@id,@job,@indate::date,@buyer,@vendor,@service,@indate::date,@due::date,@amount::numeric,@currency,@usd::numeric,@batch,@row)
-                ON CONFLICT(id) DO UPDATE SET
-                buyer=CASE WHEN 'Buyer'=ANY(planning.episodes.manual_fields) THEN planning.episodes.buyer ELSE EXCLUDED.buyer END,
-                vendor=CASE WHEN 'Vendor'=ANY(planning.episodes.manual_fields) THEN planning.episodes.vendor ELSE EXCLUDED.vendor END,
-                service=CASE WHEN 'Service'=ANY(planning.episodes.manual_fields) THEN planning.episodes.service ELSE EXCLUDED.service END,
-                in_date=CASE WHEN 'InDate'=ANY(planning.episodes.manual_fields) THEN planning.episodes.in_date ELSE EXCLUDED.in_date END,
-                due_date=CASE WHEN 'DueDate'=ANY(planning.episodes.manual_fields) THEN planning.episodes.due_date ELSE EXCLUDED.due_date END,
-                amount=CASE WHEN 'Amount'=ANY(planning.episodes.manual_fields) THEN planning.episodes.amount ELSE EXCLUDED.amount END,
-                currency=CASE WHEN 'Currency'=ANY(planning.episodes.manual_fields) THEN planning.episodes.currency ELSE EXCLUDED.currency END,
-                usd=CASE WHEN 'Usd'=ANY(planning.episodes.manual_fields) THEN planning.episodes.usd ELSE EXCLUDED.usd END,
-                source_batch_id=EXCLUDED.source_batch_id,source_row=EXCLUDED.source_row,version=planning.episodes.version+1
-                """,ct,("id",episode.Id),("job",episode.Job),("indate",w.InDate),("buyer",w.Buyer),("vendor",w.Vendor),("service",w.Service),
-                ("due",w.DueDate),("amount",w.Amount),("currency",w.Currency),("usd",w.Usd),("batch",id),("row",episode.SourceRow)).ConfigureAwait(false);
-            audit.Add(new(episode.Id,episode.IsNew?"WipImported":"WipSourceObserved",new { BatchId=id,episode.Source }));
+            audit.Add(new(episode.Id,episode.IsNew?"WipImported":"WipSourceObserved",new { BatchId=id,episode.Source,episode.Official,Changes=changesByEpisode[episode.Id].ToArray() }));
         }
+        foreach(var change in plan.Changes.Where(c=>c.Entity=="OfficialState"&&c.EpisodeId is not null))
+            audit.Add(new(change.EpisodeId!.Value,"OfficialStateImported",new { BatchId=id,Before=JsonSerializer.Deserialize<JsonElement>(change.Before),After=JsonSerializer.Deserialize<JsonElement>(change.After) }));
         await CopyExecutions(c,plan.Executions,ct).ConfigureAwait(false);
         foreach(var execution in plan.Executions)
         {
             if(execution.Action!="Observe") audit.Add(new(execution.EpisodeId,execution.Action=="LinkManual"?"ManualSourceLinked":"TestImported",new { BatchId=id,execution.Id,execution.OriginalTest }));
         }
         await CopySources(c,id,input,plan,ct).ConfigureAwait(false);
+        await RefreshSummaryTray(c,tx,plan.Episodes.Select(e=>e.Id).Concat(plan.Executions.Select(e=>e.EpisodeId)).Distinct().ToArray(),ct).ConfigureAwait(false);
         await ReconcileImportIncidents(c,tx,plan.Episodes.Select(e=>e.Id).Concat(plan.Executions.Select(e=>e.EpisodeId)).Distinct().ToArray(),audit,ct).ConfigureAwait(false);
         await CopyImportAudit(c,actor,audit,ct).ConfigureAwait(false);
         await Execute(c,tx,"UPDATE planning.batches SET status='Applied',applied_at=now() WHERE id=@id",ct,("id",id)).ConfigureAwait(false);
@@ -174,7 +168,7 @@ public sealed partial class PostgresPlanningStore(PlanningDatabase database) : I
             await Execute(c,tx,"""
                 INSERT INTO planning.incidents(id,episode_id,kind,state,reason) VALUES(@id,@episode,@kind,@state,'Conciliación de datos persistidos')
                 ON CONFLICT(episode_id,kind,execution_id) DO UPDATE SET
-                state=CASE WHEN @pending AND planning.incidents.state='Held' THEN 'Held' ELSE @state END,
+                state=CASE WHEN @pending AND planning.incidents.state IN ('Held','Excluded') THEN planning.incidents.state ELSE @state END,
                 version=planning.incidents.version+1
                 """,ct,("id",Guid.NewGuid()),("episode",episode),("kind",kind),("state",pending?"Pending":"Resolved"),("pending",pending)).ConfigureAwait(false);
         }
@@ -183,9 +177,15 @@ public sealed partial class PostgresPlanningStore(PlanningDatabase database) : I
     public async Task<IReadOnlyList<PlanningBatch>> BatchesAsync(CancellationToken ct)
     {
         await using var c=await database.Source.OpenConnectionAsync(ct).ConfigureAwait(false);
-        await using var cmd=Command(c,null,"SELECT id,status,summary_name,report_name,cut_window,day,created_at,applied_at FROM planning.batches ORDER BY created_at DESC,id LIMIT 200");
+        await using var cmd=Command(c,null,"""
+            SELECT b.id,b.status,b.summary_name,b.report_name,b.cut_window,b.day,b.created_at,b.applied_at,b.actor_id,u.nombre,
+              coalesce((preview->>'newJobs')::int,0),coalesce((preview->>'newTests')::int,0),coalesce((preview->>'updatedJobs')::int,0),
+              (SELECT count(DISTINCT ch->>'episodeId')::int FROM jsonb_array_elements(coalesce(preview->'changes','[]'::jsonb)) ch WHERE ch->>'entity'='WIP' AND ch->>'action'='UpdateSource'),
+              coalesce((preview->>'pendingReview')::int,0)
+            FROM planning.batches b LEFT JOIN public.usuarios u ON u.id=b.actor_id ORDER BY b.created_at DESC,b.id LIMIT 200
+            """);
         await using var r=await cmd.ExecuteReaderAsync(ct).ConfigureAwait(false); var items=new List<PlanningBatch>();
-        while(await r.ReadAsync(ct).ConfigureAwait(false)) items.Add(new(r.GetGuid(0),r.GetString(1),r.GetString(2),r.GetString(3),r.GetString(4),r.GetFieldValue<DateOnly>(5),r.GetFieldValue<DateTimeOffset>(6),r.IsDBNull(7)?null:r.GetFieldValue<DateTimeOffset>(7)));
+        while(await r.ReadAsync(ct).ConfigureAwait(false)) items.Add(new(r.GetGuid(0),r.GetString(1),r.GetString(2),r.GetString(3),r.GetString(4),r.GetFieldValue<DateOnly>(5),r.GetFieldValue<DateTimeOffset>(6),r.IsDBNull(7)?null:r.GetFieldValue<DateTimeOffset>(7),r.GetInt32(8),NullableString(r,9),r.GetInt32(10),r.GetInt32(11),r.GetInt32(12),r.GetInt32(13),r.GetInt32(14)));
         return items;
     }
 }

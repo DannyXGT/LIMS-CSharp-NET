@@ -1,4 +1,4 @@
-﻿param([switch]$Desktop)
+﻿param([switch]$Desktop,[string]$DesktopOutput)
 $ErrorActionPreference='Stop'
 $workspace=[IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 $local=Join-Path $workspace 'artifacts\planificacion-dev'
@@ -21,7 +21,14 @@ try{
     if($Desktop){
         $env:Desktop__ApiBaseUrl='https://localhost:7441/';$env:Desktop__EnvironmentName='Development';$env:Desktop__RequestTimeoutSeconds='120'
         $candidates=@('Frontend\Lims.Desktop\bin\x64\Debug\net10.0-windows10.0.26100.0\win-x64','Frontend\Lims.Desktop\bin\Debug\net10.0-windows10.0.26100.0\win-x64')
-        $latest=$candidates|ForEach-Object{Get-Item -LiteralPath (Join-Path (Join-Path $workspace $_) 'Lims.Desktop.dll') -ErrorAction SilentlyContinue}|Sort-Object LastWriteTimeUtc -Descending|Select-Object -First 1
+        if($DesktopOutput){
+            $requested=[IO.Path]::GetFullPath((Join-Path $workspace $DesktopOutput))
+            $allowedOutputs=@($candidates|ForEach-Object{[IO.Path]::GetFullPath((Join-Path $workspace $_))})
+            if($allowedOutputs -notcontains $requested){throw 'La salida del cliente debe ser una compilación conocida dentro del repositorio.'}
+            $latest=Get-Item -LiteralPath (Join-Path $requested 'Lims.Desktop.dll') -ErrorAction Stop
+        }else{
+            $latest=$candidates|ForEach-Object{Get-Item -LiteralPath (Join-Path (Join-Path $workspace $_) 'Lims.Desktop.dll') -ErrorAction SilentlyContinue}|Sort-Object LastWriteTimeUtc -Descending|Select-Object -First 1
+        }
         if(-not $latest){throw 'Primero compile el cliente x64.'}
         $output=$latest.DirectoryName
         $stage=Join-Path $local ('desktop-validation-'+[Guid]::NewGuid().ToString('N'))

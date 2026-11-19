@@ -26,7 +26,7 @@ public static class PlanningImportReader
             try
             {
                 var table = XlsxTableReader.Read(bytes, headers, ct);
-                var columns = table.Headers.Select((h, i) => (h, i)).Where(x => x.h.Length > 0).ToDictionary(x => x.h, x => x.i, StringComparer.Ordinal);
+                var columns = table.Headers.Select((h, i) => (h, i)).Where(x => x.h.Length > 0).ToDictionary(x => x.h, x => x.i, StringComparer.OrdinalIgnoreCase);
                 var dates = new List<DateOnly>();
                 var unverifiedUsd = 0; var externalClosed = 0;
                 foreach (var row in table.Rows)
@@ -37,7 +37,7 @@ public static class PlanningImportReader
                         if (!columns.TryGetValue(header, out var index)) return null;
                         var cell = row.Cells.GetValueOrDefault(index);
                         var value = cell?.Value.Trim();
-                        if (cell?.Formula == true || cell?.Type == "e" || value?.Length > max || value?.Any(char.IsControl) == true)
+                        if (cell?.Formula == true || cell?.Type == "e" || value?.Length > max || value?.Any(ch=>char.IsControl(ch)&&ch is not ('\r' or '\n' or '\t')) == true)
                             throw new InvalidDataException($"{file}, fila {row.Number}: campo {header} calculado, inválido o demasiado largo.");
                         return string.IsNullOrEmpty(value) ? null : value;
                     }
@@ -49,10 +49,10 @@ public static class PlanningImportReader
                     var job = Cell(file == "Summary" ? "Report #" : "Report_no", 200)?.ToUpperInvariant();
                     if (string.IsNullOrWhiteSpace(job)) { issues.Add(new(file, row.Number, "JOB_REQUIRED", "Falta JOB.", true)); continue; }
                     var fields = new Dictionary<string, string?>(StringComparer.Ordinal);
-                    // Only observed business fields are archived; arbitrary workbook columns are not accepted as executable rules.
-                    foreach (var header in new[] { "Report #", "Reg Date", "Delivery Date", "Close Date", "Buyer", "Vendor", "Service Type", "Sample Status", "PI Total Amt", "PI currency", "Report_no", "Buyer_Name", "Service_Type", "Test_Name", "Reporter", "Coordinator", "NOTE_FROM_COORDINATOR", "NOTE_FROM_LAB" })
-                        if (columns.ContainsKey(header)) fields[header] = Cell(header, 4096);
+                    // Archive original headers/values without interpreting unverified columns as rules.
+                    foreach (var header in table.Headers.Where(h=>h.Length>0)) fields[header] = Cell(header,16384);
                     WipValues? wip = null;
+                    PlanningOfficialState? official=null;
                     string? test = null;
                     if (file == "Summary")
                     {
@@ -66,23 +66,43 @@ public static class PlanningImportReader
                                 issues.Add(new(file, row.Number, "AMOUNT_INVALID", "PI Total Amt no es un decimal no negativo verificable.", true));
                             else amount = parsed;
                         }
-                        var currency = Cell("PI currency", 20)?.ToUpperInvariant();
+                        var currency = Cell("PI Currency", 20)?.ToUpperInvariant();
                         var usd = currency == "USD" ? amount : null;
-                        if (amount is not null && currency != "USD") unverifiedUsd++;
+                        decimal? rate=null;
+                        if(Cell("PI ExRate") is {} rawRate)
+                        {
+                            if(!decimal.TryParse(rawRate,NumberStyles.AllowDecimalPoint,CultureInfo.InvariantCulture,out var parsedRate)||parsedRate<=0)
+                                issues.Add(new(file,row.Number,"RATE_INVALID","PI ExRate debe ser un decimal positivo; no se calcula USD con una tasa supuesta.",true));
+                            else rate=parsedRate;
+                        }
+                        // Verified legacy Summary rule: GTQ / PI ExRate. Never assume a missing rate equals one.
+                        if(currency=="GTQ"&&rate is >0&&amount is not null)
+                        {
+                            usd=Math.Round(amount.Value/rate.Value,2,MidpointRounding.AwayFromZero);
+                            if(usd>99999999999999.9999m)issues.Add(new(file,row.Number,"USD_OUT_OF_RANGE","USD convertido excede el límite financiero.",true));
+                        }
+                        if(amount is not null&&usd is null)unverifiedUsd++;
                         wip = new(Cell("Buyer", 512), Cell("Vendor", 512), Cell("Service Type", 200), registered, due, amount, currency, usd);
+                        string? Status(string a,string b)
+                        {
+                            var first=Cell(a,200);var second=Cell(b,200);
+                            if(first is not null&&second is not null&&first!=second)issues.Add(new(file,row.Number,"STATUS_CONFLICT",$"{a} y {b} son incompatibles. Revise el encabezado de autoridad.",true));
+                            return first??second;
+                        }
+                        official=new(Status("Sample Status","Status Sample"),Status("Job Status","Status Job"),Date("Close Date"),rate,Cell("Customer_status",200));
                         if (registered is null || due is null) issues.Add(new(file, row.Number, "WIP_DATES_INCOMPLETE", "Información WIP incompleta: no se inventan fechas."));
                         if (Date("Close Date") is not null) externalClosed++;
                     }
                     else
                     {
                         test = Cell("Test_Name");
-                        if (test is null) { issues.Add(new(file, row.Number, "TEST_REQUIRED", "Falta Test_Name.", true)); continue; }
+                        if (test is null) issues.Add(new(file, row.Number, "TEST_REQUIRED", "Test_Name no informado. Se conserva la fila en Datos incompletos, sin inventar ejecución ni equivalencia."));
                     }
-                    rows.Add(new(file, table.Sheet, row.Number, job, test, wip, JsonSerializer.Serialize(fields)));
+                    rows.Add(new(file, table.Sheet, row.Number, job, test, wip, JsonSerializer.Serialize(fields),official));
                 }
                 var min = dates.Count > 0 ? dates.Min() : (DateOnly?)null;
-                if (unverifiedUsd > 0) issues.Add(new(file, 0, "USD_UNVERIFIED", $"{unverifiedUsd:N0} importes sin moneda USD explícita o tasa verificada. USD se conserva desconocido; cada valor original queda en procedencia."));
-                if (externalClosed > 0) issues.Add(new(file, 0, "EXTERNAL_CLOSE", $"{externalClosed:N0} referencias con Close Date externo. Se archivan sin cerrar ni eliminar registros locales; las pruebas coincidentes quedan en conciliación."));
+                if (unverifiedUsd > 0) issues.Add(new(file, 0, "USD_UNVERIFIED", $"{unverifiedUsd:N0} importes sin moneda USD explícita ni conversión GTQ con PI ExRate positivo (regla del HTML original). USD se conserva desconocido; cada valor original queda en procedencia."));
+                if (externalClosed > 0) issues.Add(new(file, 0, "EXTERNAL_CLOSE", $"{externalClosed:N0} referencias con Close Date externo. Se conserva separado del estado y la digitación; no cierra ni elimina registros locales."));
                 var max = dates.Count > 0 ? dates.Max() : (DateOnly?)null;
                 files.Add(new(file, Path.GetFileName(name), Hash(bytes), table.Rows.Count, min, max,
                     file == "Summary" ? "Reg Date observado; no acredita fechas ausentes del archivo" : "Report List observado no acredita cobertura temporal: no contiene fechas verificadas"));

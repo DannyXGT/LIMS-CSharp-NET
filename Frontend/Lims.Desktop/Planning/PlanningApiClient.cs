@@ -25,11 +25,30 @@ public sealed class PlanningApiClient(IHttpClientFactory clients)
     public Task<PlanningCall<JobDossier>> Dossier(Guid id,CancellationToken ct)=>Send<JobDossier>(HttpMethod.Get,$"/api/planning/jobs/{id:D}",null,ct);
     public Task<PlanningCall<IReadOnlyList<PlanningNoteSaved>>> SaveNotes(PlanningNoteBatch request,CancellationToken ct)=>Send<IReadOnlyList<PlanningNoteSaved>>(HttpMethod.Post,"/api/planning/notes",request,ct);
     public Task<PlanningCall<bool>> SaveWip(Guid id,WipEdit request,CancellationToken ct)=>Send<bool>(HttpMethod.Put,$"/api/planning/jobs/{id:D}/wip",request,ct);
+    public Task<PlanningCall<PlanningJobControl>> SaveControl(Guid id,PlanningControlEdit request,CancellationToken ct)=>Send<PlanningJobControl>(HttpMethod.Put,$"/api/planning/jobs/{id:D}/control",request,ct);
     public Task<PlanningCall<bool>> Manual(Guid id,ManualTestRequest request,CancellationToken ct)=>Send<bool>(HttpMethod.Post,$"/api/planning/jobs/{id:D}/manual-tests",request,ct);
     public Task<PlanningCall<bool>> Incident(Guid id,IncidentDecision request,CancellationToken ct)=>Send<bool>(HttpMethod.Put,$"/api/planning/incidents/{id:D}",request,ct);
     public Task<PlanningCall<IReadOnlyList<PlanningBatch>>> Batches(CancellationToken ct)=>Send<IReadOnlyList<PlanningBatch>>(HttpMethod.Get,"/api/planning/imports",null,ct);
     public Task<PlanningCall<PlanningImportPreview>> Batch(Guid id,CancellationToken ct)=>Send<PlanningImportPreview>(HttpMethod.Get,$"/api/planning/imports/{id:D}",null,ct);
-    public Task<PlanningCall<IReadOnlyList<ImportReview>>> Reviews(CancellationToken ct)=>Send<IReadOnlyList<ImportReview>>(HttpMethod.Get,"/api/planning/reviews",null,ct);
+    public Task<PlanningCall<PlanningImportInspection>> InspectImport(Guid id,CancellationToken ct)=>Send<PlanningImportInspection>(HttpMethod.Get,$"/api/planning/imports/{id:D}/inspection",null,ct);
+    public Task<PlanningCall<bool>> ReviewDecision(PlanningReviewDecision request,CancellationToken ct)=>Send<bool>(HttpMethod.Put,"/api/planning/reviews/decision",request,ct);
+    public Task<PlanningCall<PlanningReviewPage>> Reviews(CancellationToken ct,string? category=null,string? search=null,int page=1)=>Send<PlanningReviewPage>(HttpMethod.Get,"/api/planning/reviews?category="+Uri.EscapeDataString(category??"")+"&search="+Uri.EscapeDataString(search??"")+"&page="+page.ToString(CultureInfo.InvariantCulture),null,ct);
+    public Task<PlanningCall<PlanningReviewWorkspace>> ReviewWorkspace(PlanningReviewQuery query,CancellationToken ct)=>Send<PlanningReviewWorkspace>(HttpMethod.Get,"/api/planning/reviews/workspace?"+ReviewQuery(query),null,ct);
+    public async Task<PlanningCall<byte[]>> ExportReviews(PlanningReviewQuery query,CancellationToken ct)
+    {
+        try
+        {
+            using var response=await clients.CreateClient(ApiClientNames.Authorized).PostAsJsonAsync("/api/planning/reviews/export",query,ct).ConfigureAwait(false);
+            return response.IsSuccessStatusCode?new(true,await response.Content.ReadAsByteArrayAsync(ct).ConfigureAwait(false),null,(int)response.StatusCode):new(false,null,await Error(response,ct).ConfigureAwait(false),(int)response.StatusCode);
+        }
+        catch(HttpRequestException){return new(false,null,"No se pudo conectar con la API.",0);}
+    }
+    private static string ReviewQuery(PlanningReviewQuery query)=>string.Join('&',new Dictionary<string,string?>{
+        ["Category"]=query.Category,["Situation"]=query.Situation,["Search"]=query.Search,["Sort"]=query.Sort,["Descending"]=query.Descending.ToString(),
+        ["Page"]=query.Page.ToString(CultureInfo.InvariantCulture),["PageSize"]=query.PageSize.ToString(CultureInfo.InvariantCulture),["ColumnFilters"]=query.ColumnFilters,
+        ["Scope"]=query.Scope,["BatchId"]=query.BatchId?.ToString(),["ImportedFrom"]=query.ImportedFrom?.ToString("yyyy-MM-dd",CultureInfo.InvariantCulture),["ImportedUntil"]=query.ImportedUntil?.ToString("yyyy-MM-dd",CultureInfo.InvariantCulture),
+        ["Test"]=query.Test,["Laboratory"]=query.Laboratory,["Origin"]=query.Origin,["SelectedKeys"]=query.SelectedKeys
+    }.Where(p=>!string.IsNullOrEmpty(p.Value)).Select(p=>p.Key+"="+Uri.EscapeDataString(p.Value!)));
     public Task<PlanningCall<PlanningImportResult>> Confirm(Guid id,CancellationToken ct)=>Send<PlanningImportResult>(HttpMethod.Post,$"/api/planning/imports/{id:D}/confirm",null,ct);
     public Task<PlanningCall<IReadOnlyList<PlanningEquivalence>>> Equivalences(CancellationToken ct)=>Send<IReadOnlyList<PlanningEquivalence>>(HttpMethod.Get,"/api/planning/equivalences",null,ct);
     public Task<PlanningCall<bool>> SaveEquivalence(EquivalenceDecision request,CancellationToken ct)=>Send<bool>(HttpMethod.Put,"/api/planning/equivalences",request,ct);
@@ -86,6 +105,7 @@ public sealed class PlanningApiClient(IHttpClientFactory clients)
         ["Search"]=query.Search,["Test"]=query.Test,["Laboratory"]=query.Laboratory,["Service"]=query.Service,["State"]=query.State,
         ["Buyer"]=query.Buyer,["Vendor"]=query.Vendor,["Equivalence"]=query.Equivalence,["Incident"]=query.Incident,
         ["SearchMode"]=query.SearchMode,["InFrom"]=query.InFrom?.ToString("yyyy-MM-dd",CultureInfo.InvariantCulture),["InUntil"]=query.InUntil?.ToString("yyyy-MM-dd",CultureInfo.InvariantCulture),["Overdue"]=query.Overdue.ToString(),
+        ["Scope"]=query.Scope,["OnHold"]=query.OnHold?.ToString(),["Tagged"]=query.Tagged?.ToString(),["Label"]=query.Label,["ColumnFilters"]=query.ColumnFilters,["BatchId"]=query.BatchId?.ToString(),
         ["From"]=query.From?.ToString("yyyy-MM-dd",CultureInfo.InvariantCulture),["Until"]=query.Until?.ToString("yyyy-MM-dd",CultureInfo.InvariantCulture),
         ["Sort"]=query.Sort,["Descending"]=query.Descending.ToString(),["Page"]=query.Page.ToString(CultureInfo.InvariantCulture),["PageSize"]=query.PageSize.ToString(CultureInfo.InvariantCulture)
     }.Where(p=>!string.IsNullOrEmpty(p.Value)).Select(p=>p.Key+"="+Uri.EscapeDataString(p.Value!)));

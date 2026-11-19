@@ -1,4 +1,4 @@
-﻿param([ValidateSet('All','Selection','Paste','Edit','Status','Filters','Inspect')][string]$Step='All')
+﻿param([ValidateSet('All','Selection','Paste','Edit','Status','Filters','Inspect')][string]$Step='All',[string]$EvidenceName='consulta-evidence')
 $ErrorActionPreference='Stop'
 $helpers=[IO.File]::ReadAllText((Join-Path $PSScriptRoot 'validate-planning-desktop.ps1'))
 $start=$helpers.IndexOf('$ErrorActionPreference=')
@@ -10,17 +10,20 @@ $roots=[Windows.Automation.AutomationElement]::RootElement.FindAll([Windows.Auto
 $window=$roots|Where-Object{$_.Current.Name -eq 'LIMS'}|Select-Object -First 1
 if(-not $window){throw 'No se encontro la ventana principal LIMS del proceso de validacion.'}
 $mainWindow=$window
-$evidence=Join-Path $local 'consulta-evidence'
+$evidence=Join-Path $local $EvidenceName
 New-Item -ItemType Directory -Path $evidence -Force|Out-Null
 Add-Type -AssemblyName System.Windows.Forms
 Add-Type @'
 using System;
 using System.Runtime.InteropServices;
 public static class ConsultaInput {
+ [DllImport("user32.dll")] public static extern IntPtr SetThreadDpiAwarenessContext(IntPtr c);
+ [DllImport("user32.dll")] public static extern uint GetWindowThreadProcessId(IntPtr h,out uint p);
  [DllImport("user32.dll")] public static extern bool SetCursorPos(int x,int y);
  [DllImport("user32.dll")] public static extern void mouse_event(uint flags,uint x,uint y,uint data,UIntPtr extra);
 }
 '@
+[ConsultaInput]::SetThreadDpiAwarenessContext([IntPtr](-4))|Out-Null
 $process=Get-Process -Id $window.Current.ProcessId
 $allowed=[IO.Path]::GetFullPath((Join-Path $workspace 'artifacts\planificacion-dev\desktop-validation-'))
 if(-not $process.Path.StartsWith($allowed,[StringComparison]::OrdinalIgnoreCase)){throw 'Solo se admite el ejecutable de validacion aislado.'}
@@ -32,6 +35,7 @@ $headers=@{Authorization='Bearer '+$auth.accessToken}
 $source=Get-Content -LiteralPath (Join-Path $local 'acceptance-api.json') -Raw|ConvertFrom-Json
 $job=$source.sourceJob
 $runId=[DateTime]::UtcNow.ToString('HHmmssfff')
+@{RunId=$runId;SourceJob=$job}|ConvertTo-Json|Set-Content -LiteralPath (Join-Path $evidence 'run-info.json') -Encoding UTF8
 $checks=[Collections.Generic.List[string]]::new()
 function Passed([string]$name){$checks.Add($name);@{Passed=$checks.ToArray();Boundary='Actual WinUI interaction + Windows clipboard + authenticated local API and PostgreSQL';SourceJob=$job;Database='lims_planning_dev'}|ConvertTo-Json -Depth 5|Set-Content -LiteralPath (Join-Path $evidence ('acceptance-'+$Step+'.json')) -Encoding UTF8;Write-Output ('PASS: '+$name)}
 function Api-Jobs([string]$query){Invoke-RestMethod -Uri ('https://localhost:7441/api/planning/jobs?'+$query) -Headers $headers}
@@ -53,7 +57,7 @@ function Click-Element($element,[switch]$Double){
     if($Double){Start-Sleep -Milliseconds 90;[ConsultaInput]::mouse_event(2,0,0,0,[UIntPtr]::Zero);[ConsultaInput]::mouse_event(4,0,0,0,[UIntPtr]::Zero)}
     Start-Sleep -Milliseconds 180
 }
-function Keys([string]$keys){[Windows.Forms.SendKeys]::SendWait($keys);Start-Sleep -Milliseconds 200}
+function Keys([string]$keys){$owner=0;[ConsultaInput]::GetWindowThreadProcessId([PlanningCapture]::GetForegroundWindow(),[ref]$owner)|Out-Null;if($owner -ne $window.Current.ProcessId){throw 'El foco no pertenece al cliente aislado; no se envían teclas globales.'};[Windows.Forms.SendKeys]::SendWait($keys);Start-Sleep -Milliseconds 200}
 function Wait-Text([string]$pattern,[int]$seconds=20){
     $deadline=[DateTime]::UtcNow.AddSeconds($seconds)
     do{
@@ -62,13 +66,36 @@ function Wait-Text([string]$pattern,[int]$seconds=20){
     }while([DateTime]::UtcNow -lt $deadline)
     Inspect-Window;throw "No aparecio el estado: $pattern"
 }
-function Search-Job([string]$text){Set-NamedValue 'Buscar JOB' $text;Invoke-Named 'Buscar';Wait-Text 'Resultados completos filtrados*'|Out-Null;Start-Sleep -Milliseconds 400}
+function Count-Text($page){$c=$page.counts;('{0} {1} · {2} {3}' -f $c.executions.ToString('N0',[Globalization.CultureInfo]::InvariantCulture),$(if($c.executions -eq 1){'ejecución'}else{'ejecuciones'}),$c.jobs.ToString('N0',[Globalization.CultureInfo]::InvariantCulture),$(if($c.jobs -eq 1){'JOB'}else{'JOBs'}))}
+function Search-Job([string]$text){Set-NamedValue 'Buscar JOB' $text;Invoke-Named 'Buscar';$expected=Api-Jobs ('Search='+[uri]::EscapeDataString($text));Wait-Text (Count-Text $expected)|Out-Null;Start-Sleep -Milliseconds 400}
 function Select-First{
     $list=Find-Named 'Tabla de Consulta de Jobs';$scroll=$null
     if($list.TryGetCurrentPattern([Windows.Automation.ScrollPattern]::Pattern,[ref]$scroll) -and $scroll.Current.VerticallyScrollable){$scroll.SetScrollPercent(-1,0);Start-Sleep -Milliseconds 200}
     Click-Element (Cell 1 1)
 }
+function History-Scope {
+    Invoke-Named 'Filtros';$scope=Find-Named 'Alcance de datos';$expand=$scope.GetCurrentPattern([Windows.Automation.ExpandCollapsePattern]::Pattern);$expand.Expand();Invoke-Named 'Histórico completo';$expand.Collapse();Invoke-Named 'Aplicar filtros';Start-Sleep -Milliseconds 500
+}
+function Show-Notes {
+    Invoke-Named 'Columnas'
+    foreach($title in @('Responsable','Observación')){
+        $check=$window.FindAll([Windows.Automation.TreeScope]::Descendants,[Windows.Automation.PropertyCondition]::new([Windows.Automation.AutomationElement]::ControlTypeProperty,[Windows.Automation.ControlType]::CheckBox))|Where-Object{$_.Current.Name -eq $title}|Select-Object -First 1
+        $toggle=$check.GetCurrentPattern([Windows.Automation.TogglePattern]::Pattern);if($toggle.Current.ToggleState -eq [Windows.Automation.ToggleState]::Off){$toggle.Toggle()}
+    }
+    Keys '{ESC}'
+}
 if($Step -eq 'Inspect'){Inspect-Window;exit 0}
+Invoke-Named 'Consulta de Jobs';Find-Named 'Buscar JOB'|Out-Null
+History-Scope
+Invoke-Named 'Columnas';Invoke-Named 'Restablecer columnas';Keys '{ESC}'
+if($Step -in @('All','Paste','Edit')){Show-Notes}
+# A previous visual pass may leave a different server sort. Establish JOB ascending
+# through the real controls before comparing cells with the default API query.
+$reset=$window.FindAll([Windows.Automation.TreeScope]::Descendants,[Windows.Automation.PropertyCondition]::new([Windows.Automation.AutomationElement]::NameProperty,'Restablecer filtros'))|Where-Object{-not $_.Current.IsOffscreen}|Select-Object -First 1
+if($reset){Invoke-Named 'Restablecer filtros';Start-Sleep -Milliseconds 600}
+Invoke-Named 'Ordenar por JOB';Start-Sleep -Milliseconds 600
+$initial=Api-Jobs 'PageSize=100'
+if((Cell 1 4).Current.Name -notlike ('*'+$initial.items[0].job)){Invoke-Named 'Ordenar por JOB';Start-Sleep -Milliseconds 600}
 Search-Job $job
 $before=Api-Jobs ('Search='+[uri]::EscapeDataString($job)+'&PageSize=100')
 if($before.items.Count -lt 10){throw 'El JOB real debe tener al menos 10 ejecuciones para esta aceptacion.'}
@@ -77,13 +104,14 @@ Passed 'Consulta dentro del AppShell original y JOB fuente consultado'
 if($Step -in @('All','Selection')){
     Select-First
     Keys '^c'
-    if([Windows.Forms.Clipboard]::GetText() -ne $job){throw 'Copia de una celda incorrecta.'}
+    if([Windows.Forms.Clipboard]::GetText() -ne $before.items[0].inDate){throw 'Copia de una celda incorrecta.'}
     Passed 'Una celda copiada exactamente'
+    Keys '{RIGHT 2}';Keys '^c';if([Windows.Forms.Clipboard]::GetText() -ne $before.items[0].jobState){throw 'Estado no se copia con su valor original.'};Passed 'Estado oficial original copiado con Ctrl+C';Select-First
     Keys '+({RIGHT}{RIGHT}{RIGHT}{DOWN}{DOWN}{DOWN}{DOWN})'
-    Wait-Text 'Selección: 5 fila(s) × 4 columna(s)*'|Out-Null
+    Wait-Text '5 filas × 4 columnas'|Out-Null
     Keys '^c'
     $copied=[Windows.Forms.Clipboard]::GetText()
-    $expected=($before.items|Select-Object -First 5|ForEach-Object{$_.job+"`t"+$_.inDate+"`t"+$_.dueDate+"`t"+$_.originalTest}) -join "`r`n"
+    $expected=($before.items|Select-Object -First 5|ForEach-Object{$_.inDate+"`t"+$_.dueDate+"`t"+$_.jobState+"`t"+$_.job}) -join "`r`n"
     if($copied -ne $expected){throw 'El contenido tabulado no corresponde exactamente al rango 5 x 4.'}
     [IO.File]::WriteAllText((Join-Path $evidence 'seleccion-5x4.tsv'),$copied,[Text.UTF8Encoding]::new($false))
     Capture-Window $window '02-seleccion-5x4'
@@ -103,7 +131,8 @@ if($Step -in @('All','Selection')){
         Start-Sleep -Milliseconds 50
     }
     [ConsultaInput]::mouse_event(4,0,0,0,[UIntPtr]::Zero)
-    Wait-Text 'Selección: 5 fila(s) × 4 columna(s)*'|Out-Null
+    Start-Sleep -Milliseconds 300
+    Wait-Text '5 filas × 4 columnas'|Out-Null
     Keys '^c';if([Windows.Forms.Clipboard]::GetText() -ne $expected){throw 'El rango arrastrado no coincide con el copiado esperado.'}
     Passed 'Arrastre rectangular real con raton'
     Select-First
@@ -147,11 +176,11 @@ if($Step -in @('All','Paste')){
     Wait-Text 'Guardado: 10 celda(s)*'|Out-Null
     $saved=Api-Jobs ('Search='+[uri]::EscapeDataString($job)+'&PageSize=100')
     for($i=0;$i -lt 10;$i++){if($saved.items[$i].observation -ne $values[$i]){throw 'El pegado no persistio en PostgreSQL.'}}
-    for($i=0;$i -lt $before.items.Count;$i++){foreach($property in @('job','inDate','dueDate','originalTest','equivalence','laboratory','digitizedAt','digitizedBy','testedOn','executionId')){if($before.items[$i].$property -ne $saved.items[$i].$property){throw "Cambio en columna protegida: $property"}}}
+    for($i=0;$i -lt $before.items.Count;$i++){foreach($property in @('job','inDate','dueDate','originalTest','equivalence','laboratory','digitizedAt','digitizedBy','testedOn','executionId','sampleStatus','officialJobStatus','jobState')){if($before.items[$i].$property -ne $saved.items[$i].$property){throw "Cambio en columna protegida: $property"}}}
     @{Count=10;Column='Observation';Values=$values;ExecutionIds=@($saved.items|Select-Object -First 10|ForEach-Object{$_.executionId});VerifiedAgainst='Authenticated local API re-read after UI confirmation';ProtectedColumnsUnchanged=$true}|ConvertTo-Json -Depth 5|Set-Content -LiteralPath (Join-Path $evidence 'pegado-persistido.json') -Encoding UTF8
     Capture-Window $window '04-pegado-persistido'
     Passed 'Ctrl+V de 10 valores, revision, confirmacion y persistencia; columnas importadas intactas'
-    Select-First;[Windows.Forms.Clipboard]::SetText('NO CAMBIAR JOB');Keys '^v';Wait-Text 'Inicio F1 C1*0 válidos*1 omitidos'|Out-Null;Invoke-Named 'Cancelar';Start-Sleep -Milliseconds 500
+    Click-Element (Cell 1 4);[Windows.Forms.Clipboard]::SetText('NO CAMBIAR JOB');Keys '^v';Wait-Text 'Inicio F1 C4*0 válidos*1 omitidos'|Out-Null;Invoke-Named 'Cancelar';Start-Sleep -Milliseconds 500
     Passed 'Pegado sobre JOB protegido omitido y cancelable'
 }
 if($Step -in @('All','Edit')){
@@ -192,7 +221,7 @@ if($Step -in @('All','Status')){
     Invoke-Named 'WIP';Find-Named 'Buyer / Marca'|Out-Null;Start-Sleep -Milliseconds 300;Capture-Window $window '07-estado-job-wip'
     Invoke-Named 'Historial';Wait-Text 'Historial · últimos 1000*'|Out-Null;Start-Sleep -Milliseconds 300;Capture-Window $window '08-estado-job-historial'
     Invoke-Named 'Copiar estado para Teams';$teams=[Windows.Forms.Clipboard]::GetText()
-    if($teams -notlike ('JOB: '+$job+'*') -or $teams -notlike '*Estado oficial: No verificado*'){throw 'Resumen para Teams incorrecto.'}
+    if($teams -notlike ('JOB: '+$job+'*') -or $teams -notlike ('*Estado oficial: '+$before.items[0].jobState+'*')){throw 'Resumen para Teams incorrecto.'}
     [IO.File]::WriteAllText((Join-Path $evidence 'estado-para-teams.txt'),$teams,[Text.UTF8Encoding]::new($false))
     $dossier.GetCurrentPattern([Windows.Automation.WindowPattern]::Pattern).Close();$window=$mainWindow
     [PlanningCapture]::SetForegroundWindow([IntPtr]$window.Current.NativeWindowHandle)|Out-Null
@@ -209,19 +238,19 @@ if($Step -in @('All','Status')){
     Passed 'Solo tabla y recuperacion de herramientas'
 }
 if($Step -in @('All','Filters')){
-    Invoke-Named 'Limpiar';Wait-Text 'Página 1*'|Out-Null;Start-Sleep -Milliseconds 400
+    Invoke-Named 'Restablecer filtros';Wait-Text '1–100 de *'|Out-Null;Start-Sleep -Milliseconds 400
     $all=Api-Jobs 'PageSize=100';$second=$all.items|Where-Object{$_.job -ne $job}|Select-Object -First 1
     if(-not $second){$second=(Api-Jobs 'Page=2&PageSize=100').items|Select-Object -First 1}
     Search-Job ($job+"`n"+$second.job)
     $multi=Api-Jobs ('Search='+[uri]::EscapeDataString($job+"`n"+$second.job))
-    Wait-Text ('Página 1* / '+('{0:N0}' -f $multi.total)+' filas')|Out-Null
+    Wait-Text (Count-Text $multi)|Out-Null
     Passed 'Busqueda multiple de JOBs con saltos de linea'
-    Invoke-Named 'Limpiar';Start-Sleep -Milliseconds 500;Invoke-Named 'Siguiente';Wait-Text 'Página 2*'|Out-Null
+    Invoke-Named 'Restablecer filtros';Start-Sleep -Milliseconds 500;Invoke-Named 'Siguiente';Wait-Text '101–200 de *'|Out-Null
     $page2=Api-Jobs 'Page=2&PageSize=100'
-    Select-First;Keys '^c';if([Windows.Forms.Clipboard]::GetText() -ne $page2.items[0].job){throw 'Paginacion no coincide con el servidor.'}
+    Click-Element (Cell 1 4);Keys '^c';if([Windows.Forms.Clipboard]::GetText() -ne $page2.items[0].job){throw 'Paginacion no coincide con el servidor.'}
     Passed 'Paginacion del servidor con registros de otra pagina'
-    Invoke-Named 'Filtros';Set-NamedValue 'Ingreso desde · yyyy-MM-dd' '2040-01-01';Invoke-Named 'Aplicar filtros';Wait-Text 'Sin resultados.'|Out-Null
-    Invoke-Named 'Limpiar';Wait-Text 'Resultados completos filtrados*'|Out-Null
+    Invoke-Named 'Filtros';Set-NamedValue 'Ingreso desde · yyyy-MM-dd' '2040-01-01';Invoke-Named 'Aplicar filtros';Wait-Text '0 ejecuciones · 0 JOBs'|Out-Null
+    Invoke-Named 'Restablecer filtros';Wait-Text (Count-Text $all)|Out-Null
     Passed 'Filtro de ingreso actua sobre consulta completa y puede limpiarse'
 }
 Search-Job $job

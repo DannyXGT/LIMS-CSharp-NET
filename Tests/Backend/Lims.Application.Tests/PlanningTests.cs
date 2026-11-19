@@ -9,6 +9,15 @@ namespace Lims.Application.Tests;
 public sealed class PlanningTests
 {
     [Fact]
+    public void MissingSourceTestNameIsArchivedAsIncompleteDataWithoutInventingExecution()
+    {
+        var input=PlanningImportReader.Read("summary.xlsx",Workbook(["Report #","Reg Date","Delivery Date"],[["J1","2026-11-16","2026-11-20"]]),
+            "report.xlsx",Workbook(["Report_no","Test_Name"],[["J1",""]]),new("First",new(2026,11,18)));
+        Assert.DoesNotContain(input.Issues,i=>i.Blocking);Assert.Contains(input.Issues,i=>i.Code=="TEST_REQUIRED");
+        Assert.Contains(input.Rows,r=>r.File=="Report List"&&r.Test is null);
+        var plan=PlanningReconciler.Plan(input,[],[],[]);Assert.Empty(plan.Executions);Assert.Contains(plan.Reviews,r=>r.Category=="MissingTestName");
+    }
+    [Fact]
     public void UnknownCurrencyNeverBecomesZeroUsdAndBuyerIsNotVendor()
     {
         var input=PlanningImportReader.Read("summary.xlsx",Workbook(["Report #","Reg Date","Delivery Date","Buyer","Vendor","PI Total Amt"],[["J1","2026-11-16","2026-11-20","BUYER","VENDOR","120.50"]]),
@@ -51,10 +60,19 @@ public sealed class PlanningTests
         Assert.NotEqual(previous,Assert.Single(plan.Episodes).Id);Assert.Contains(plan.Reviews,r=>r.Category=="Episode");
     }
     [Fact]
+    public void SeveralSummaryDatesCannotBothClaimTheSameReportOnlyEpisode()
+    {
+        var orphan=Guid.NewGuid();var first=Wip();var second=first with{InDate=new(2026,11,17)};
+        var plan=PlanningReconciler.Plan(Input([new("Summary","S",2,"J1",null,first,"{}"),new("Summary","S",3,"J1",null,second,"{}"),new("Report List","R",2,"J1","AZO",null,"{}")]),
+            [new(orphan,"J1",new(null,null,null,null,null,null,null,null),0,[])],[new(Guid.NewGuid(),orphan,"AZO",null,null,"ReportList")],[]);
+        Assert.Equal(2,plan.Episodes.Count);Assert.Equal(2,plan.Episodes.Select(e=>e.Id).Distinct().Count());Assert.DoesNotContain(plan.Episodes,e=>e.Id==orphan);
+        Assert.Empty(plan.Executions);Assert.Contains(plan.Reviews,r=>r.Category=="ExecutionIdentity");
+    }
+    [Fact]
     public void ExternalCloseArchivesSourceWithoutInventingLocalClosure()
     {
         var w=Wip();var plan=PlanningReconciler.Plan(Input([new("Summary","S",2,"J1",null,w,"{\"Close Date\":\"2026-11-16\"}")]),[],[],[]);
-        Assert.Empty(plan.Episodes);Assert.Empty(plan.Executions);
+        Assert.Single(plan.Episodes);Assert.Empty(plan.Executions);
     }
     [Fact]
     public void NoProgramDecisionIsClassificationAndDoesNotDeleteTest()
@@ -63,6 +81,22 @@ public sealed class PlanningTests
         Assert.True(Assert.Single(plan.Executions).NoProgram);Assert.DoesNotContain(plan.Reviews,r=>r.Category=="MissingEquivalence");
     }
     public static WipValues Wip()=>new("Buyer",null,"Regular",new(2026,11,16),new(2026,11,20),null,null,null);
+    [Fact]
+    public void RealSummaryHeadersKeepStatesSeparateAndApplyVerifiedLegacyGtqRateWithoutDiscardingOriginalValues()
+    {
+        var input=PlanningImportReader.Read("summary.xlsx",Workbook(["Report #","Reg Date","Delivery Date","PI Currency","PI Total Amt","PI ExRate","Sample Status","Status Job","Customer_status","Close Date"],
+            [["J1","2026-11-16","2026-11-20","GTQ","780","7.8","Registered","Open","Hold Payment","2026-11-17"]]),"report.xlsx",Workbook(["Report_no","Test_Name"],[["J1","AZO"]]),new("Noon",new(2026,11,16)));
+        Assert.DoesNotContain(input.Issues,i=>i.Blocking);var row=Assert.Single(input.Rows,r=>r.File=="Summary");
+        Assert.Equal("Registered",row.Official!.SampleStatus);Assert.Equal("Open",row.Official.JobStatus);Assert.Equal("Hold Payment",row.Official.CustomerStatus);Assert.Equal(7.8m,row.Official.ExchangeRate);
+        Assert.Equal("GTQ",row.Wip!.Currency);Assert.Equal(100m,row.Wip.Usd);Assert.Equal(780m,row.Wip.Amount);Assert.Contains("PI Currency",row.Fields);
+    }
+    [Fact]
+    public void GtqWithoutAnExplicitPositiveRateNeverDefaultsToOne()
+    {
+        var input=PlanningImportReader.Read("summary.xlsx",Workbook(["Report #","Reg Date","Delivery Date","PI Currency","PI Total Amt"],[["J1","2026-11-16","2026-11-20","GTQ","780"]]),
+            "report.xlsx",Workbook(["Report_no","Test_Name"],[["J1","AZO"]]),new("Noon",new(2026,11,16)));
+        Assert.Null(Assert.Single(input.Rows,r=>r.File=="Summary").Wip!.Usd);Assert.Contains(input.Issues,i=>i.Code=="USD_UNVERIFIED");
+    }
     public static PlanningImportInput Input(IReadOnlyList<PlanningSourceRow> rows,string? hash=null)=>new(new("Noon",new(2026,11,16)),[1],[2],"summary.xlsx","report.xlsx",hash??Guid.NewGuid().ToString("N"),[],rows,[]);
     public static byte[] Workbook(string[] headers,string[][] rows)
     {

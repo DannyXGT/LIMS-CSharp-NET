@@ -20,6 +20,9 @@ public sealed partial class PostgresPlanningStore
         if(request.Cells.GroupBy(c=>(c.ExecutionId,c.Column)).Any(g=>g.Count()>1))throw new PlanningValidationException("Una celda no puede aparecer dos veces en el lote.");
         await using var c=await database.Source.OpenConnectionAsync(ct).ConfigureAwait(false);
         await using var tx=await c.BeginTransactionAsync(ct).ConfigureAwait(false);
+        await Revision(c,tx,true,ct).ConfigureAwait(false);
+        await using(var held=Command(c,tx,"SELECT EXISTS(SELECT 1 FROM planning.executions x JOIN planning.episodes e ON e.id=x.episode_id JOIN planning.job_controls jc ON jc.job=upper(trim(e.job)) WHERE x.id=ANY(@ids) AND jc.on_hold)",("ids",request.Cells.Select(cell=>cell.ExecutionId).Distinct().ToArray())))
+            if((bool)(await held.ExecuteScalarAsync(ct).ConfigureAwait(false))!)throw new PlanningValidationException("El lote contiene un JOB On Hold. No se guardó ninguna celda; consulte el motivo en el expediente.");
         var result=new List<PlanningNoteSaved>();var batch=Guid.NewGuid();
         // Consistent lock order avoids deadlocks between overlapping pastes. Import fields are never written here.
         foreach(var group in request.Cells.GroupBy(x=>x.ExecutionId).OrderBy(g=>g.Key))

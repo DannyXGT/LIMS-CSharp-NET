@@ -42,14 +42,21 @@ internal static class PlanningEndpoints
         {var dossier=await store.DossierAsync(id,ct).ConfigureAwait(false);return dossier is null?Results.NotFound():Results.Ok(dossier);});
         group.MapPut("/jobs/{id:guid}/wip",async(Guid id,WipEdit request,IPlanningStore store,HttpContext context,CancellationToken ct)=>
         {await store.EditWipAsync(id,request,Actor(context),ct).ConfigureAwait(false);return Results.NoContent();}).RequireAuthorization(PlanningPermissions.EditWip);
+        group.MapPut("/jobs/{id:guid}/control",async(Guid id,PlanningControlEdit request,IPlanningStore store,HttpContext context,CancellationToken ct)=>
+            Results.Ok(await store.SaveControlAsync(id,request,Actor(context),ct).ConfigureAwait(false))).RequireAuthorization(PlanningPermissions.EditWip);
         group.MapPost("/jobs/{id:guid}/manual-tests",async(Guid id,ManualTestRequest request,IPlanningStore store,HttpContext context,CancellationToken ct)=>
         {await store.AddManualTestAsync(id,request,Actor(context),ct).ConfigureAwait(false);return Results.NoContent();}).RequireAuthorization(PlanningPermissions.ManualTests);
         group.MapPut("/incidents/{id:guid}",async(Guid id,IncidentDecision request,IPlanningStore store,HttpContext context,CancellationToken ct)=>
         {await store.DecideIncidentAsync(id,request,Actor(context),ct).ConfigureAwait(false);return Results.NoContent();}).RequireAuthorization(PlanningPermissions.EditWip);
-        group.MapGet("/imports",async(IPlanningStore store,CancellationToken ct)=>Results.Ok(await store.BatchesAsync(ct).ConfigureAwait(false))).RequireAuthorization(PlanningPermissions.Import);
+        group.MapGet("/imports",async(IPlanningStore store,CancellationToken ct)=>Results.Ok(await store.BatchesAsync(ct).ConfigureAwait(false)));
         group.MapGet("/imports/{id:guid}",async(Guid id,IPlanningStore store,CancellationToken ct)=>
         {var preview=await store.BatchPreviewAsync(id,ct).ConfigureAwait(false);return preview is null?Results.NotFound():Results.Ok(preview);}).RequireAuthorization(PlanningPermissions.Import);
-        group.MapGet("/reviews",async(IPlanningStore store,CancellationToken ct)=>Results.Ok(await store.ReviewsAsync(ct).ConfigureAwait(false)));
+        group.MapGet("/reviews",async(string? category,string? search,int? page,int? pageSize,IPlanningStore store,CancellationToken ct)=>Results.Ok(await store.ReviewPageAsync(category,search,page??1,pageSize??200,ct).ConfigureAwait(false)));
+        group.MapGet("/reviews/workspace",async([AsParameters]PlanningReviewQuery query,IPlanningStore store,CancellationToken ct)=>Results.Ok(await store.ReviewWorkspaceAsync(query,ct).ConfigureAwait(false)));
+        group.MapPut("/reviews/decision",async(PlanningReviewDecision request,IPlanningStore store,HttpContext context,CancellationToken ct)=>{await store.DecideReviewAsync(request,Actor(context),ct).ConfigureAwait(false);return Results.NoContent();}).RequireAuthorization(PlanningPermissions.EditWip);
+        group.MapGet("/imports/{id:guid}/inspection",async(Guid id,IPlanningStore store,CancellationToken ct)=>{var result=await store.InspectImportAsync(id,ct).ConfigureAwait(false);return result is null?Results.NotFound():Results.Ok(result);}).RequireAuthorization(PlanningPermissions.Import);
+        group.MapGet("/reviews/export",async([AsParameters]PlanningReviewQuery query,IPlanningStore store,CancellationToken ct)=>Results.File(await store.ExportReviewsAsync(query,ct).ConfigureAwait(false),"text/csv; charset=utf-8","Revision de importaciones.csv"));
+        group.MapPost("/reviews/export",async(PlanningReviewQuery query,IPlanningStore store,CancellationToken ct)=>Results.File(await store.ExportReviewsAsync(query,ct).ConfigureAwait(false),"text/csv; charset=utf-8","Revision de importaciones.csv"));
         group.MapPost("/imports/preview",Preview).RequireAuthorization(PlanningPermissions.Import);
         group.MapPost("/imports/{id:guid}/confirm",async(Guid id,IPlanningStore store,HttpContext context,CancellationToken ct)=>Results.Ok(await store.ConfirmAsync(id,Actor(context),ct).ConfigureAwait(false))).RequireAuthorization(PlanningPermissions.Import);
         group.MapGet("/equivalences",async(IPlanningStore store,CancellationToken ct)=>Results.Ok(await store.EquivalencesAsync(ct).ConfigureAwait(false)));

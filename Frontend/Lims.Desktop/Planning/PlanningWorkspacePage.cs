@@ -27,6 +27,8 @@ public sealed class PlanningWorkspacePage : Page, IDisposable
     {
         _api=api;_back=back;Background=PlanningUi.Brush("LimsBackgroundBrush");
         _jobs=new(api,OpenDossier,()=>_current?.Permissions??[]);_imports=new(api,OpenDossier,()=>_current?.Permissions??[]);
+        _imports.OpenImportedJobs+=async id=>{_content.Content=_jobs;await _jobs.OpenBatch(id);};
+        _imports.Applied+=async()=>{await _jobs.RefreshPreservingSelection();foreach(var window in _windows.ToArray())await window.RefreshData();};
         var layout=PlanningUi.Rows(GridLength.Auto,new(1,GridUnitType.Star));layout.RowSpacing=0;
         PlanningUi.Place(layout,_message,0);PlanningUi.Place(layout,_content,1);Content=layout;
         Loaded+=async(_,_)=>{await RefreshAccess();_timer.Start();};
@@ -47,6 +49,7 @@ public sealed class PlanningWorkspacePage : Page, IDisposable
             {
                 _tabs.Children.Clear();Sections.Clear();Tab("Consulta de Jobs",_jobs,()=>_jobs.Load());
                 if(access.Permissions.Contains(PlanningPermissions.Import,StringComparer.Ordinal))Tab("Importaciones",_imports,()=>_imports.Load());
+                Tab("Bandejas de revisión",_imports,()=>_imports.OpenReviewWorkspace());
                 if(access.Permissions.Contains(PlanningPermissions.Equivalences,StringComparer.Ordinal))
                 {var view=new PlanningEquivalencesView(_api);Tab("Equivalencias",view,()=>view.Load());}
                 if(access.Administration){var view=new PlanningAccessView(_api);Tab("Accesos",view,()=>view.Load());}
@@ -62,7 +65,7 @@ public sealed class PlanningWorkspacePage : Page, IDisposable
     private Task OpenDossier(Guid id)
     {
         if(_current is null)return Task.CompletedTask;
-        var window=new PlanningDossierWindow(_api,id,_current.Permissions);_windows.Add(window);PlanningUi.Track(window);window.Closed+=(_,_)=>_windows.Remove(window);window.Activate();return Task.CompletedTask;
+        var window=new PlanningDossierWindow(_api,id,_current.Permissions);window.ControlChanged+=()=>ReferenceEquals(_content.Content,_jobs)?_jobs.RefreshPreservingSelection():ReferenceEquals(_content.Content,_imports)?_imports.Load():Task.CompletedTask;_windows.Add(window);PlanningUi.Track(window);window.Closed+=(_,_)=>_windows.Remove(window);window.Activate();return Task.CompletedTask;
     }
     public void Clear()
     {

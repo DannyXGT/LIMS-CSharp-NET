@@ -21,10 +21,14 @@ public sealed class PlanningAuthorizationTests : IDisposable
     [InlineData("/api/planning/jobs")]
     [InlineData("/api/planning/imports")]
     [InlineData("/api/planning/reviews")]
+    [InlineData("/api/planning/reviews/workspace")]
+    [InlineData("/api/planning/reviews/export")]
+    [InlineData("/api/planning/imports/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa/inspection")]
     [InlineData("/api/planning/export")]
     public async Task AllReadsRequireExistingAuthenticatedSession(string path)=>Assert.Equal(HttpStatusCode.Unauthorized,(await _client.GetAsync(path)).StatusCode);
     [Theory]
     [InlineData("/api/planning/jobs/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa/wip","PUT")]
+    [InlineData("/api/planning/jobs/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa/control","PUT")]
     [InlineData("/api/planning/jobs/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa/manual-tests","POST")]
     [InlineData("/api/planning/imports/preview","POST")]
     [InlineData("/api/planning/imports/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa/confirm","POST")]
@@ -32,6 +36,7 @@ public sealed class PlanningAuthorizationTests : IDisposable
     [InlineData("/api/planning/equivalences","PUT")]
     [InlineData("/api/planning/source-resolution","POST")]
     [InlineData("/api/planning/notes","POST")]
+    [InlineData("/api/planning/reviews/decision","PUT")]
     [InlineData("/api/planning/access/users/42","PUT")]
     public async Task ReadPermissionDoesNotAuthorizeDirectWritesEvenWithOldAdministratorToken(string path,string method)
     {

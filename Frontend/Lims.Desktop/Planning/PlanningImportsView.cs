@@ -1,117 +1,156 @@
 using System.Globalization;
 using Lims.Contracts.Planning;
+using Lims.DesignSystem.Controls;
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Controls;
 
 namespace Lims.Desktop.Planning;
 
-public sealed class PlanningImportsView : Grid, IDisposable
+public sealed partial class PlanningImportsView : Grid, IDisposable
 {
     private readonly PlanningApiClient _api;
     private readonly Func<Guid,Task> _open;
     private readonly Func<IReadOnlyList<string>> _permissions;
-    private string? _summary,_report;
     private PlanningImportPreview? _preview;
-    private readonly TextBlock _files=PlanningUi.Text("Selecciona ambos archivos XLSX.",13,true);
-    private readonly TextBlock _status=PlanningUi.Text("",13,true);
-    private readonly ComboBox _window=new(){Header="Corte",ItemsSource=new[]{"Primera carga","Mediodía · 12:00","Última carga · 17:50"},SelectedIndex=0,Width=210};
-    private readonly TextBox _day=PlanningUi.Field("Día operativo · yyyy-MM-dd",DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeBySystemTimeZoneId(DateTimeOffset.UtcNow,"Central America Standard Time").DateTime).ToString("yyyy-MM-dd",CultureInfo.InvariantCulture),10);
-    private static readonly string[] Categories=["","SummaryWithoutReport","MissingTests","MissingVendor","MissingEquivalence","ManualManaged","ExecutionIdentity","BothFiles","ReportWithoutSummary","ExternalClosed","Episode"];
-    private readonly ComboBox _category=new(){Header="Bandeja",ItemsSource=Categories.Select(c=>c.Length==0?"Todas":PlanningLabels.Category(c)).ToArray(),SelectedIndex=0,MinWidth=210};
-    private readonly ListView _reviews=new(){SelectionMode=ListViewSelectionMode.Single};
-    private readonly ListView _changes=new(){SelectionMode=ListViewSelectionMode.Single};
-    private readonly ListView _history=new(){SelectionMode=ListViewSelectionMode.Single};
-    private readonly Button _confirm;
-    private IReadOnlyList<ImportReview> _allReviews=[];
+    private bool _busy,_initialized,_shortWindow;
+    private readonly TextBlock _status=PlanningUi.Text("",12,true);
+    private readonly ProgressBar _progress=new(){Height=2,Visibility=Visibility.Collapsed};
+    private readonly ContentControl _section=new(){HorizontalContentAlignment=HorizontalAlignment.Stretch,VerticalContentAlignment=VerticalAlignment.Stretch};
+    private readonly LimsTabStrip _tabs=new();
+    private readonly LimsTabItem _previewTab=new(){Label="Nueva importación"};
+    private readonly Expander _flow=new(){HorizontalAlignment=HorizontalAlignment.Stretch,HorizontalContentAlignment=HorizontalAlignment.Stretch};
+    private readonly Grid _results=new(){ColumnSpacing=0};
+    private readonly ContentControl _resultHost=new(){HorizontalContentAlignment=HorizontalAlignment.Stretch};
+    private Border? _resultSurface;
+    private FrameworkElement _reviewPanel=null!,_differencePanel=null!,_historyPanel=null!;
+    private Button _new=null!,_confirm=null!;
     private CancellationTokenSource? _load;
+    public event Func<Task>? Applied;
+    public event Func<Guid,Task>? OpenImportedJobs;
+    private readonly List<Window> _importWindows=[];
     public PlanningImportsView(PlanningApiClient api,Func<Guid,Task> open,Func<IReadOnlyList<string>> permissions)
     {
-        _api=api;_open=open;_permissions=permissions;RowSpacing=10;
-        RowDefinitions.Add(new(){Height=GridLength.Auto});RowDefinitions.Add(new(){Height=GridLength.Auto});RowDefinitions.Add(new(){Height=new(1,GridUnitType.Star)});
-        _confirm=PlanningUi.Button("Confirmar lote revisado",Confirm,true,()=>_preview is {Status:"Preview"} p&&!p.Issues.Any(i=>i.Blocking));_confirm.IsEnabled=false;
-        var instructions=PlanningUi.Text("Primera: Summary del día anterior; Report List ≈ -5/+3 meses. Mediodía: archivos del día. Última: Summary del día; Report List ≈ -3/+3 meses. La cobertura se comprueba con los campos disponibles.",12,true);
-        PlanningUi.Place(this,PlanningUi.Surface(PlanningUi.Stack(instructions,PlanningUi.Row(_window,_day,PlanningUi.Button("Summary XLSX",async()=>await Pick(true)),PlanningUi.Button("Report List XLSX",async()=>await Pick(false))),_files,
-            PlanningUi.Row(PlanningUi.Button("Validar y conciliar",Preview,true),_confirm,PlanningUi.Button("Bandejas persistidas",Load)),_status)),0);
-        PlanningUi.Place(this,PlanningUi.Row(_category,PlanningUi.Button("Abrir expediente seleccionado",OpenReview),PlanningUi.Button("Conciliar fila ambigua",Resolve)),1);
-        var pivot=new Pivot();pivot.Items.Add(new PivotItem{Header="Conciliación",Content=_reviews});pivot.Items.Add(new PivotItem{Header="Cambios y errores",Content=_changes});pivot.Items.Add(new PivotItem{Header="Historial de lotes · últimos 200",Content=_history});PlanningUi.Place(this,pivot,2);
-        _reviews.ItemTemplate=ReviewTemplate();_changes.ItemTemplate=TextTemplate();
-        _category.SelectionChanged+=(_,_)=>Filter();
+        _api=api;_open=open;_permissions=permissions;RowSpacing=8;
+        foreach(var height in new[]{GridLength.Auto,GridLength.Auto,GridLength.Auto,GridLength.Auto,GridLength.Auto,new GridLength(1,GridUnitType.Star)})RowDefinitions.Add(new(){Height=height});
+        var title=PlanningUi.Text("Centro de Importaciones",22);title.FontWeight=Microsoft.UI.Text.FontWeights.SemiBold;
+        var labels=PlanningUi.Stack(title,PlanningUi.Text("Actualización y conciliación de JOBs desde TIPS",12,true));labels.Spacing=2;
+        var heading=new Grid{ColumnSpacing=12};heading.ColumnDefinitions.Add(new(){Width=GridLength.Auto});heading.ColumnDefinitions.Add(new());heading.ColumnDefinitions.Add(new(){Width=GridLength.Auto});
+        var icon=new Border{Width=38,Height=38,CornerRadius=new(8),Background=PlanningUi.Brush("LimsAccentSoftBrush"),Child=new LimsIcon{Icon=LimsIconKind.Import,Size=22,Foreground=PlanningUi.Brush("LimsAccentBrush")}};
+        heading.Children.Add(icon);Grid.SetColumn(labels,1);heading.Children.Add(labels);
+        _new=Action("Nueva importación",LimsIconKind.Add,()=>{BeginImport();return Task.CompletedTask;},true);
+        var history=Action("Ver historial",LimsIconKind.Traceability,async()=>{_tabs.SelectedIndex=2;await LoadHistory(CancellationToken.None);});
+        history.Visibility=Visibility.Collapsed;_new.Visibility=Visibility.Collapsed;var actions=PlanningUi.Row();actions.Spacing=8;Grid.SetColumn(actions,2);heading.Children.Add(actions);
+        PlanningUi.Place(this,heading,0);
+        BuildFlow();PlanningUi.Place(this,_flow,2);PlanningUi.Place(this,_resultHost,3);
+        _reviewPanel=ReviewPanel();_differencePanel=DifferencePanel();_historyPanel=HistoryPanel();
+        _tabs.Items.Add(_previewTab);_tabs.Items.Add(new(){Label="Bandejas de revisión"});_tabs.Items.Add(new(){Label="Historial"});
+        AutomationProperties.SetName(_tabs,"Secciones del Centro de Importaciones");
+        _tabs.SelectionChanged+=(_,_)=>SelectSection();_tabs.SelectedIndex=1;PlanningUi.Place(this,_tabs,1);
+        var message=PlanningUi.Stack(_progress,_status);message.Spacing=2;PlanningUi.Place(this,message,4);PlanningUi.Place(this,_section,5);
+        _flow.Header="Nueva importación · selecciona Summary y Report List";_flow.IsExpanded=false;
+        SizeChanged+=(_,e)=>{_shortWindow=e.NewSize.Height<650;CompactSurface();};_flow.RegisterPropertyChangedCallback(Expander.IsExpandedProperty,(_,_)=>CompactSurface());
+        SelectSection();
     }
-    private static DataTemplate TextTemplate()=>(DataTemplate)Microsoft.UI.Xaml.Markup.XamlReader.Load("<DataTemplate xmlns='http://schemas.microsoft.com/winfx/2006/xaml/presentation'><TextBlock Text='{Binding}' TextWrapping='Wrap' Margin='8' Foreground='{ThemeResource LimsTextPrimaryBrush}'/></DataTemplate>");
-    private static DataTemplate ReviewTemplate()=>(DataTemplate)Microsoft.UI.Xaml.Markup.XamlReader.Load("<DataTemplate xmlns='http://schemas.microsoft.com/winfx/2006/xaml/presentation'><StackPanel Margin='8' Spacing='4'><StackPanel Orientation='Horizontal' Spacing='14'><TextBlock Text='{Binding CategoryLabel}' FontWeight='SemiBold'/><TextBlock Text='{Binding Job}'/><TextBlock Text='{Binding OriginalTest}'/></StackPanel><TextBlock Text='{Binding Description}' TextWrapping='Wrap' Foreground='{ThemeResource LimsTextSecondaryBrush}'/></StackPanel></DataTemplate>");
-    private async Task Pick(bool summary)
+    private void CompactSurface()
     {
-        try{var path=await PlanningUi.PickFile(XamlRoot);if(path is null)return;if(summary)_summary=path;else _report=path;_preview=null;_confirm.IsEnabled=false;_files.Text=$"Summary: {Path.GetFileName(_summary)??"sin seleccionar"} · Report List: {Path.GetFileName(_report)??"sin seleccionar"}";}
-        catch(Exception e)when(e is IOException or UnauthorizedAccessException){_status.Text=e.Message;}
+        _resultHost.Visibility=Visibility.Collapsed;
+
     }
-    private async Task Preview()
+    private static Button Action(string text,LimsIconKind icon,Func<Task> action,bool primary=false)
     {
-        _confirm.IsEnabled=false;_preview=null;
-        if(_summary is null||_report is null){_status.Text="Selecciona Summary y Report List.";return;}
-        if(!DateOnly.TryParseExact(_day.Text,"yyyy-MM-dd",CultureInfo.InvariantCulture,DateTimeStyles.None,out var day)){_status.Text="Usa fecha yyyy-MM-dd.";return;}
-        foreach(var path in new[]{_summary,_report})if(new FileInfo(path).Length>5*1024*1024){_status.Text="Máximo 5 MiB por archivo.";return;}
-        Cancel();_load=new();var ct=_load.Token;_status.Text="Validando archivos y preparando conciliación...";
-        try
+        var button=PlanningUi.Button(text,action,primary);LimsAction.SetIcon(button,icon);AutomationProperties.SetName(button,text);button.MinHeight=34;return button;
+    }
+    private static Border Surface(UIElement child,Thickness? padding=null)=>new(){Child=child,Background=PlanningUi.Brush("LimsSurfaceBrush"),BorderBrush=PlanningUi.Brush("LimsBorderBrush"),BorderThickness=new(1),CornerRadius=new(8),Padding=padding??new Thickness(12)};
+    private static Grid Split(FrameworkElement left,FrameworkElement right)
+    {
+        var grid=new Grid{ColumnSpacing=8};grid.ColumnDefinitions.Add(new());grid.ColumnDefinitions.Add(new(){Width=GridLength.Auto});grid.Children.Add(left);Grid.SetColumn(right,1);grid.Children.Add(right);return grid;
+    }
+    private static Grid ResponsiveSplit(FrameworkElement left,FrameworkElement right)
+    {
+        var grid=Split(left,right);grid.RowDefinitions.Add(new(){Height=GridLength.Auto});grid.RowDefinitions.Add(new(){Height=GridLength.Auto});grid.RowSpacing=6;
+        grid.SizeChanged+=(_,e)=>{var narrow=e.NewSize.Width<900;Grid.SetColumnSpan(left,narrow?2:1);Grid.SetColumn(right,narrow?0:1);Grid.SetRow(right,narrow?1:0);Grid.SetColumnSpan(right,narrow?2:1);right.HorizontalAlignment=HorizontalAlignment.Right;};return grid;
+    }
+    private void Message(string text){_status.Text=text;_status.Visibility=string.IsNullOrEmpty(text)?Visibility.Collapsed:Visibility.Visible;}
+    private void Busy(bool busy,string? text=null)
+    {
+        _busy=busy;_new.IsEnabled=!busy;_progress.IsIndeterminate=busy;_progress.Visibility=busy?Visibility.Visible:Visibility.Collapsed;
+        _flow.IsEnabled=!busy;_confirm.IsEnabled=!busy&&_step==3&&_preview is{Status:"Preview"} p&&!p.Issues.Any(i=>i.Blocking);
+        if(text is not null)Message(text);
+    }
+    private void SelectSection()
+    {
+        if(_tabs.SelectedIndex==0&&!_busy&&_preview?.Status=="Applied"){BeginImport();}
+        _flow.Visibility=_tabs.SelectedIndex==0?Visibility.Visible:Visibility.Collapsed;
+        _resultHost.Visibility=Visibility.Collapsed;
+        _section.Content=_tabs.SelectedIndex switch{0=>_differencePanel,2=>_historyPanel,_=>_reviewPanel};
+        if(_tabs.SelectedIndex==0&&_preview is{} preview)ShowDifferences(preview);
+        _differencePanel.Visibility=_preview is null?Visibility.Collapsed:Visibility.Visible;
+    }
+    private void Show(PlanningImportPreview preview,bool history=false)
+    {
+        _preview=preview;
+        if(history){_updatingFlow=true;_summary=_report=null;_day.Date=new DateTimeOffset(preview.Cut.Day.ToDateTime(TimeOnly.MinValue),TimeSpan.FromHours(-6));_window.SelectedIndex=preview.Cut.Window switch{"Noon"=>1,"Last"=>2,_=>0};_updatingFlow=false;}
+        UpdateFiles(preview);SetStep(preview.Status=="Applied"?4:2);
+        _differencePanel.Visibility=Visibility.Visible;
+        _flow.Header=$"{(preview.Status=="Applied"?"Lote confirmado":"Importación en revisión")} · {preview.Cut.Day:yyyy-MM-dd} · {CutLabel(preview.Cut.Window)} · Procedencia y validación";
+        _flow.IsExpanded=preview.Status!="Applied";ShowResults(preview);SetReviewBatch(preview.Id);
+        _previewTab.IsEnabled=true;_tabs.SelectedIndex=preview.Status=="Applied"?1:0;
+        ShowDifferences(preview);
+    }
+    private static string CutLabel(string cut)=>cut switch{"Noon"=>"Mediodía","Last"=>"Última carga",_=>"Primera carga"};
+    private void ShowResults(PlanningImportPreview preview)
+    {
+        _results.Children.Clear();_results.ColumnDefinitions.Clear();
+        var wip=preview.Changes.Where(c=>c.Entity=="WIP"&&c.Action=="UpdateSource").Select(c=>c.EpisodeId).Distinct().Count();
+        var metrics=new (string Label,int Count,string Kind)[]{("JOBs nuevos",preview.NewJobs,"NewJobs"),("Pruebas nuevas",preview.NewTests,"NewTests"),("JOBs actualizados",preview.UpdatedJobs,"Updated"),("Cambios WIP",wip,"WIP"),("Por revisar en el lote",preview.PendingReview,"Review")};
+        foreach(var (label,count,kind) in metrics)
         {
-            var result=await _api.Preview(Path.GetFileName(_summary),await File.ReadAllBytesAsync(_summary,ct),Path.GetFileName(_report),await File.ReadAllBytesAsync(_report,ct),new(_window.SelectedIndex switch{1=>"Noon",2=>"Last",_=>"First"},day),ct);
-            if(ct.IsCancellationRequested)return;if(!result.IsSuccess||result.Value is null){_status.Text=result.Error??"No se pudo validar.";return;}
-            Show(result.Value);
+            var col=_results.ColumnDefinitions.Count;_results.ColumnDefinitions.Add(new());
+            var value=PlanningUi.Text(count.ToString("N0",CultureInfo.InvariantCulture),21);value.FontWeight=Microsoft.UI.Text.FontWeights.SemiBold;
+            if(kind=="Review")value.Foreground=PlanningUi.Brush("LimsWarningBrush");
+            var stack=PlanningUi.Stack(value,PlanningUi.Text(label,12,true));stack.Spacing=1;
+            var button=new Button{Content=stack,HorizontalAlignment=HorizontalAlignment.Stretch,HorizontalContentAlignment=HorizontalAlignment.Left,Padding=new(12,5,12,5),Background=PlanningUi.Brush("LimsSurfaceBrush"),BorderThickness=new(0)};
+            AutomationProperties.SetName(button,label+": "+count.ToString(CultureInfo.InvariantCulture));
+            button.Click+=(_,_)=>{_metricKind=kind;_tabs.SelectedIndex=0;FilterDifferences();};
+            Grid.SetColumn(button,col);_results.Children.Add(button);
         }
-        catch(OperationCanceledException)when(ct.IsCancellationRequested){ }
-        catch(Exception e)when(e is IOException or UnauthorizedAccessException){_status.Text=e.Message;}
-    }
-    private void Show(PlanningImportPreview preview)
-    {
-        _preview=preview;_allReviews=preview.Reviews.Select(r=>r with{BatchId=preview.Id}).ToArray();Filter();
-        _status.Text=$"{PlanningLabels.State(preview.Status)} · {preview.NewJobs:N0} JOBs nuevos · {preview.NewTests:N0} pruebas nuevas · {preview.UpdatedJobs:N0} cambios WIP · {preview.LinkedManualTests:N0} vínculos a pruebas manuales.";
-        _changes.ItemsSource=preview.Files.Select(f=>$"{f.File} · {f.Name} · {f.Rows:N0} filas · {f.Earliest:yyyy-MM-dd} / {f.Latest:yyyy-MM-dd} · {f.CoverageBasis} · SHA256 {f.Sha256}")
-            .Concat(preview.Issues.Select(i=>$"{(i.Blocking?"ERROR":"Aviso")} · {i.File}:{i.Row} · {i.Code} · {i.Message}"))
-            .Concat(preview.Changes.Select(c=>$"{c.Action} · {c.Entity} · {c.Job} · {c.OriginalTest}\nAntes: {c.Before}\nDespués: {c.After}")).ToArray();
-        _confirm.IsEnabled=preview.Status=="Preview"&&!preview.Issues.Any(i=>i.Blocking);
-    }
-    private async Task Confirm()
-    {
-        if(_preview is not {Status:"Preview"} preview)return;
-        if(!await PlanningUi.Confirm(XamlRoot,"Confirmar importación",$"Se guardarán {preview.NewJobs:N0} JOBs y {preview.NewTests:N0} pruebas nuevas, {preview.UpdatedJobs:N0} cambios WIP y {preview.LinkedManualTests:N0} vínculos manuales. Las excepciones sin resolver quedarán en revisión."))return;
-        _confirm.IsEnabled=false;var result=await _api.Confirm(preview.Id,CancellationToken.None);
-        _status.Text=result.IsSuccess?$"Lote confirmado · {result.Value?.NewJobs} JOBs · {result.Value?.NewTests} pruebas · {result.Value?.LinkedManualTests} vínculos manuales. Historial conservado.":result.Error??"No se pudo confirmar.";
-        if(result.IsSuccess){_preview=preview with{Status="Applied"};await RefreshReviews();}
+        _resultSurface??=Surface(_results,new Thickness(0,3,0,3));_resultHost.Content=_resultSurface;
     }
     public async Task Load()
     {
-        Cancel();_load=new();var ct=_load.Token;
+        var canImport=_permissions().Contains(PlanningPermissions.Import,StringComparer.Ordinal);_new.Visibility=Visibility.Collapsed;_previewTab.IsEnabled=canImport;
+        if(_busy)return;Busy(true,"Actualizando bandejas e historial…");Cancel();_load=new();var ct=_load.Token;var begin=false;
         try
         {
-            await RefreshReviews(ct);var result=await _api.Batches(ct);if(ct.IsCancellationRequested)return;
-            if(!result.IsSuccess){_status.Text=result.Error??"No se pudo leer el historial.";return;}
-            _history.Items.Clear();foreach(var batch in result.Value??[])
-            {var button=PlanningUi.Button($"{batch.CreatedAt:g} · {PlanningLabels.State(batch.Status)} · {batch.SummaryName} / {batch.ReportName}",async()=>{var detail=await _api.Batch(batch.Id,CancellationToken.None);if(detail.IsSuccess&&detail.Value is {} p)Show(p);else _status.Text=detail.Error??"Lote no disponible.";});_history.Items.Add(button);}
-            if(_preview is null)_status.Text="Bandejas calculadas con decisiones persistidas. Se muestran hasta 2000 incidencias; filtra Consulta para revisar cada expediente.";
+            await LoadHistory(ct);if(ct.IsCancellationRequested)return;
+            if(!_initialized)
+            {
+                _initialized=true;var latest=_batches.FirstOrDefault(b=>b.Status=="Applied");
+                if(latest is not null){SetReviewBatch(latest.Id);if(canImport){var result=await _api.Batch(latest.Id,ct);if(result.IsSuccess&&result.Value is{} preview)Show(preview,true);}}
+                else begin=canImport;
+            }
+            await RefreshReviews(ct);
         }
         catch(OperationCanceledException)when(ct.IsCancellationRequested){ }
+        finally{Busy(false);if(begin)BeginImport();else if(_status.Text=="Actualizando bandejas e historial…")Message("");}
     }
-    private async Task RefreshReviews(CancellationToken ct=default)
-    {var result=await _api.Reviews(ct);if(ct.IsCancellationRequested)return;if(result.IsSuccess){_allReviews=result.Value??[];Filter();}else _status.Text=result.Error??"No se pudieron consultar las bandejas.";}
-    private void Filter()=>_reviews.ItemsSource=_category.SelectedIndex<=0?_allReviews:_allReviews.Where(r=>r.Category==Categories[_category.SelectedIndex]).ToArray();
-    private async Task OpenReview()
-    {if(_reviews.SelectedItem is ImportReview{EpisodeId:{} id})await _open(id);else _status.Text="Seleccione una incidencia con episodio; las filas sin episodio requieren conciliación.";}
-    private async Task Resolve()
+    private async Task Changed()
+    {await RefreshReviews();if(Applied is{} applied)await applied();}
+    public async Task OpenReviewWorkspace(Guid? batch=null)
     {
-        if(!_permissions().Contains(PlanningPermissions.ManualTests,StringComparer.Ordinal)){_status.Text="Necesita permiso de conciliación manual.";return;}
-        if(_reviews.SelectedItem is not ImportReview{SourceRow:>0,BatchId:{} batch} review||_preview?.Status=="Preview"){_status.Text="Seleccione una fila ambigua de un lote confirmado en las bandejas persistidas.";return;}
-        var result=await _api.Jobs(new(Search:review.Job,PageSize:500),CancellationToken.None);if(!result.IsSuccess){_status.Text=result.Error??"No se pudieron consultar los episodios.";return;}
-        var episodes=(result.Value?.Items??[]).Where(r=>r.Job==review.Job).DistinctBy(r=>r.EpisodeId).ToArray();
-        if(episodes.Length==0){_status.Text="Primero cargue un Summary con WIP del JOB; no se inventa el episodio.";return;}
-        var combo=new ComboBox{Header="Episodio de ingreso",ItemsSource=episodes.Select(e=>$"{e.Job} · {e.InDate:yyyy-MM-dd} · {e.EpisodeId}").ToArray(),SelectedIndex=0,MinWidth=500};
-        var existing=PlanningUi.Field("UUID de ejecución existente (vacío para crear una nueva)",max:36);var reason=PlanningUi.Field("Motivo / verificación de identidad",max:1000);
-        var dialog=new ContentDialog{XamlRoot=XamlRoot,Title="Conciliar identidad fuente",Content=PlanningUi.Stack(combo,existing,reason),PrimaryButtonText="Guardar conciliación",CloseButtonText="Cancelar",DefaultButton=ContentDialogButton.Close};
-        if(await dialog.ShowAsync()!=ContentDialogResult.Primary)return;
-        var episode=episodes[combo.SelectedIndex];var dossier=await _api.Dossier(episode.EpisodeId,CancellationToken.None);if(!dossier.IsSuccess||dossier.Value is null){_status.Text=dossier.Error??"Expediente no disponible.";return;}
-        Guid? execution=null;if(!string.IsNullOrWhiteSpace(existing.Text)){if(!Guid.TryParse(existing.Text,out var parsed)){_status.Text="UUID de ejecución inválido.";return;}execution=parsed;}
-        var saved=await _api.Resolve(new(batch,review.SourceRow,episode.EpisodeId,execution,execution is null,dossier.Value.Version,reason.Text),CancellationToken.None);
-        _status.Text=saved.IsSuccess?"Identidad conciliada y auditada.":saved.Error??"No se pudo conciliar.";if(saved.IsSuccess)await RefreshReviews();
+        if(_busy)return;
+        _tabs.SelectedIndex=1;_situation.SelectedIndex=1;_reviewPage=1;if(batch is{} id)SetReviewBatch(id);
+        await Load();
+        if(batch is{} selected&&_reviewBatch!=selected){SetReviewBatch(selected);await RefreshReviews();}
     }
-    public void Cancel(){_load?.Cancel();_load?.Dispose();_load=null;}
-    public void Clear(){Cancel();_preview=null;_allReviews=[];_reviews.ItemsSource=null;_changes.ItemsSource=null;_history.Items.Clear();_status.Text="";_confirm.IsEnabled=false;_summary=_report=null;_files.Text="Selecciona ambos archivos XLSX.";}
-    public void Dispose()=>Clear();
+    private void TrackImportWindow(Window window){_importWindows.Add(window);PlanningUi.Track(window);window.Closed+=(_,_)=>_importWindows.Remove(window);window.Activate();}
+    private async Task Summary(Guid id)
+    {
+        var result=await _api.InspectImport(id,CancellationToken.None);if(result.Value is not{} data){Message(result.Error??"No se pudo consultar el resumen.");return;}
+        TrackImportWindow(new PlanningImportSummaryWindow(data,async batch=>{if(OpenImportedJobs is{} open)await open(batch);},batch=>OpenReviewWorkspace(batch)));
+    }
+    public void Cancel(){_searchDelay.Stop();_detailDelay.Stop();_detailLoad?.Cancel();_load?.Cancel();_load?.Dispose();_load=null;_reviewLoad?.Cancel();}
+    public void Clear(){Cancel();foreach(var window in _manualWindows.ToArray())window.Close();foreach(var window in _importWindows.ToArray())window.Close();_preview=null;_initialized=false;_summary=_report=null;_reviewRows=[];_reviewCells.Model.Rows.Clear();CloseReviewDetail();_changes.ItemsSource=null;_history.ItemsSource=null;_resultHost.Content=null;Message("");_flow.IsExpanded=false;}
+    public void Dispose(){Clear();_reviewLoad?.Dispose();foreach(var window in _manualWindows.ToArray())window.Close();}
 }

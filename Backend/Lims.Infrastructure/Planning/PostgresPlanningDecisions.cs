@@ -38,22 +38,40 @@ public sealed partial class PostgresPlanningStore
     {
         ArgumentNullException.ThrowIfNull(request);var reason=Reason(request.Reason);
         var test=Required(request.OriginalTest,2048,"Prueba original");var equivalent=Required(request.Equivalence,512,"Equivalencia");var lab=Required(request.Laboratory,200,"Laboratorio");
+        if(lab.Equals("NO PROGRAMAR",StringComparison.OrdinalIgnoreCase))throw new PlanningValidationException("NO PROGRAMAR es una decisión del catálogo, no un laboratorio para asignación manual de pruebas.");
         await using var c=await database.Source.OpenConnectionAsync(ct).ConfigureAwait(false);await using var tx=await c.BeginTransactionAsync(ct).ConfigureAwait(false);
         await Revision(c,tx,true,ct).ConfigureAwait(false);await CheckEpisode(c,tx,id,request.Version,ct).ConfigureAwait(false);
+        if(request.CatalogueVersion is{} catalogueVersion)
+        {
+            var map=(await Mappings(c,tx,ct).ConfigureAwait(false)).SingleOrDefault(m=>PlanningReconciler.TestKey(m.OriginalTest)==PlanningReconciler.TestKey(test));
+            if(map is null||map.Version!=catalogueVersion||map.NoProgram||map.Equivalence!=equivalent||map.Laboratory!=lab)
+                throw new PlanningConflictException("La clasificación del catálogo cambió o no es válida. Recargue el catálogo antes de asignar la prueba.");
+        }
         var execution=Guid.NewGuid();await InsertExecution(c,tx,execution,id,test,equivalent,lab,false,"Manual",ct).ConfigureAwait(false);
         await Execute(c,tx,"UPDATE planning.episodes SET version=version+1 WHERE id=@id",ct,("id",id)).ConfigureAwait(false);
-        await Audit(c,tx,id,"ManualTestAdded",actor,reason,new{ExecutionId=execution,OriginalTest=test,Equivalence=equivalent,Laboratory=lab},ct).ConfigureAwait(false);
+        await Audit(c,tx,id,"ManualTestAdded",actor,reason,new{ExecutionId=execution,OriginalTest=test,Equivalence=equivalent,Laboratory=lab,request.CatalogueVersion},ct).ConfigureAwait(false);
         await RefreshIncidents(c,tx,id,actor,ct).ConfigureAwait(false);await Bump(c,tx,ct).ConfigureAwait(false);await tx.CommitAsync(ct).ConfigureAwait(false);
     }
     public async Task DecideIncidentAsync(Guid id,IncidentDecision request,int actor,CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(request);var reason=Reason(request.Reason);
-        if(request.State is not ("Held" or "Pending"))throw new PlanningValidationException("Puede retener con motivo o devolver a revisión. Resolver depende de datos válidos persistidos.");
+        if(request.State is not ("Held" or "Pending" or "Resolved" or "Excluded"))throw new PlanningValidationException("Seleccione pendiente, retener, excluir justificadamente o resolver manualmente.");
         await using var c=await database.Source.OpenConnectionAsync(ct).ConfigureAwait(false);await using var tx=await c.BeginTransactionAsync(ct).ConfigureAwait(false);
         await Revision(c,tx,true,ct).ConfigureAwait(false);Guid episode;
-        await using(var cmd=Command(c,tx,"UPDATE planning.incidents SET state=@state,reason=@reason,version=version+1 WHERE id=@id AND version=@version AND state<>'Resolved' RETURNING episode_id",("state",request.State),("reason",reason),("id",id),("version",request.Version)))
+        if(request.State=="Resolved")
+        {
+            await using var valid=Command(c,tx,"""
+                SELECT EXISTS(SELECT 1 FROM planning.incidents i WHERE i.id=@id AND i.kind='SummaryWithoutReport'
+                AND EXISTS(SELECT 1 FROM planning.executions x WHERE x.episode_id=i.episode_id AND x.origin='Manual'
+                  AND nullif(trim(x.equivalence),'') IS NOT NULL AND nullif(trim(x.laboratory),'') IS NOT NULL))
+                """,("id",id));
+            if(await valid.ExecuteScalarAsync(ct).ConfigureAwait(false) is not true)throw new PlanningValidationException("Resolver manualmente requiere una incidencia Solo Summary y pruebas manuales con equivalencia y laboratorio verificados.");
+        }
+        string? before;
+        await using(var read=Command(c,tx,"SELECT state FROM planning.incidents WHERE id=@id",("id",id)))before=await read.ExecuteScalarAsync(ct).ConfigureAwait(false) as string;
+        await using(var cmd=Command(c,tx,"UPDATE planning.incidents SET state=@state,reason=@reason,manual_resolved=(@state IN ('Resolved','Excluded')),version=version+1 WHERE id=@id AND version=@version AND (state NOT IN ('Resolved','Excluded') OR kind='SummaryWithoutReport' OR @state='Pending') RETURNING episode_id",("state",request.State),("reason",reason),("id",id),("version",request.Version)))
             episode=(Guid)(await cmd.ExecuteScalarAsync(ct).ConfigureAwait(false)??throw new PlanningConflictException("La incidencia cambió o ya está resuelta. Recargue el expediente."));
-        await Audit(c,tx,episode,"IncidentDecision",actor,reason,new { IncidentId=id,request.State },ct).ConfigureAwait(false);
+        await Audit(c,tx,episode,"IncidentDecision",actor,reason,new { IncidentId=id,Before=before,request.State },ct).ConfigureAwait(false);
         await Bump(c,tx,ct).ConfigureAwait(false);await tx.CommitAsync(ct).ConfigureAwait(false);
     }
     public async Task SaveEquivalenceAsync(EquivalenceDecision request,int actor,CancellationToken ct)
@@ -89,6 +107,7 @@ public sealed partial class PostgresPlanningStore
         {var candidate=(await Executions(c,tx,[request.EpisodeId],ct).ConfigureAwait(false)).SingleOrDefault(t=>t.Id==execution);if(candidate is null || PlanningReconciler.TestKey(candidate.OriginalTest)!=PlanningReconciler.TestKey(test))throw new PlanningValidationException("La ejecución elegida no coincide con el episodio y la prueba originales.");}
         await Execute(c,tx,"UPDATE planning.source_rows SET episode_id=@episode,execution_id=@execution WHERE batch_id=@batch AND file='Report List' AND row_number=@row",ct,("episode",request.EpisodeId),("execution",execution),("batch",request.BatchId),("row",request.ReportRow)).ConfigureAwait(false);
         await Execute(c,tx,"UPDATE planning.episodes SET version=version+1 WHERE id=@id",ct,("id",request.EpisodeId)).ConfigureAwait(false);
+        await RefreshSummaryTray(c,tx,[request.EpisodeId],ct).ConfigureAwait(false);
         await Audit(c,tx,request.EpisodeId,"SourceIdentityResolved",actor,reason,new{request.BatchId,request.ReportRow,ExecutionId=execution,request.CreateExecution},ct).ConfigureAwait(false);
         await RefreshIncidents(c,tx,request.EpisodeId,actor,ct).ConfigureAwait(false);await Bump(c,tx,ct).ConfigureAwait(false);await tx.CommitAsync(ct).ConfigureAwait(false);
     }
