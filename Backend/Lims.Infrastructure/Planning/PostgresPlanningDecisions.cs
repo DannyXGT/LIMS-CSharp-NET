@@ -113,7 +113,7 @@ public sealed partial class PostgresPlanningStore
     }
     public async Task<IReadOnlyList<PlanningAccessUser>> AccessUsersAsync(CancellationToken ct)
     {
-        await using var c=await database.Source.OpenConnectionAsync(ct).ConfigureAwait(false);
+        await using var c=await (identities?.Source ?? database.Source).OpenConnectionAsync(ct).ConfigureAwait(false);
         await using var cmd=Command(c,null,"SELECT u.id,u.nombre,coalesce(d.nombre,'Sin departamento'),coalesce(array_agg(p.permiso_key) FILTER(WHERE p.permiso_key=ANY(@codes)),'{}') FROM public.usuarios u LEFT JOIN public.departamentos d ON d.id=u.id_departamento LEFT JOIN public.usuarios_permisos p ON p.id_usuario=u.id WHERE u.activo GROUP BY u.id,u.nombre,d.nombre ORDER BY u.nombre",("codes",PlanningPermissions.All.ToArray()));
         await using var r=await cmd.ExecuteReaderAsync(ct).ConfigureAwait(false);var users=new List<PlanningAccessUser>();
         while(await r.ReadAsync(ct).ConfigureAwait(false))users.Add(new(r.GetInt32(0),r.GetString(1),r.GetString(2),r.GetFieldValue<string[]>(3)));
@@ -124,13 +124,17 @@ public sealed partial class PostgresPlanningStore
         ArgumentNullException.ThrowIfNull(request);var reason=Reason(request.Reason);
         if(request.Permissions is null || request.Permissions.Any(p=>!PlanningPermissions.All.Contains(p,StringComparer.Ordinal)) || request.Permissions.Distinct(StringComparer.Ordinal).Count()!=request.Permissions.Count)
             throw new PlanningValidationException("Seleccione permisos de Planificación válidos, sin duplicados.");
-        await using var c=await database.Source.OpenConnectionAsync(ct).ConfigureAwait(false);await using var tx=await c.BeginTransactionAsync(ct).ConfigureAwait(false);
-        await Revision(c,tx,true,ct).ConfigureAwait(false);
-        await using(var check=Command(c,tx,"SELECT activo FROM public.usuarios WHERE id=@id",("id",userId)))if(await check.ExecuteScalarAsync(ct).ConfigureAwait(false) is not true)throw new PlanningValidationException("Usuario inexistente o inactivo.");
-        var before=(await AccessUsersAsync(ct).ConfigureAwait(false)).Single(u=>u.Id==userId).Permissions;
+        await using var c=await (identities?.Source ?? database.Source).OpenConnectionAsync(ct).ConfigureAwait(false);await using var tx=await c.BeginTransactionAsync(ct).ConfigureAwait(false);
+        await using(var check=Command(c,tx,"SELECT activo FROM public.usuarios WHERE id=@id FOR UPDATE",("id",userId)))if(await check.ExecuteScalarAsync(ct).ConfigureAwait(false) is not true)throw new PlanningValidationException("Usuario inexistente o inactivo.");
+        string[] before;
+        await using(var read=Command(c,tx,"SELECT coalesce(array_agg(permiso_key ORDER BY permiso_key),'{}') FROM public.usuarios_permisos WHERE id_usuario=@id AND permiso_key=ANY(@codes)",("id",userId),("codes",PlanningPermissions.All.ToArray())))
+            before=(string[])(await read.ExecuteScalarAsync(ct).ConfigureAwait(false))!;
         await Execute(c,tx,"DELETE FROM public.usuarios_permisos WHERE id_usuario=@id AND permiso_key=ANY(@codes)",ct,("id",userId),("codes",PlanningPermissions.All.ToArray())).ConfigureAwait(false);
         foreach(var code in request.Permissions)await Execute(c,tx,"INSERT INTO public.usuarios_permisos(id_usuario,permiso_key) VALUES(@id,@code)",ct,("id",userId),("code",code)).ConfigureAwait(false);
-        await Audit(c,tx,null,"PlanningAccessChanged",actor,reason,new{UserId=userId,Before=before,After=request.Permissions},ct).ConfigureAwait(false);
-        await Bump(c,tx,ct).ConfigureAwait(false);await tx.CommitAsync(ct).ConfigureAwait(false);
+        await Execute(c,tx,"""
+            INSERT INTO public.planning_access_history(id,user_id,actor_id,reason,before_permissions,after_permissions)
+            VALUES(@id,@user,@actor,@reason,@before,@after)
+            """,ct,("id",Guid.NewGuid()),("user",userId),("actor",actor),("reason",reason),("before",before),("after",request.Permissions.ToArray())).ConfigureAwait(false);
+        await tx.CommitAsync(ct).ConfigureAwait(false);
     }
 }

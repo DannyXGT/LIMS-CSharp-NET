@@ -11,7 +11,7 @@ public sealed partial class PostgresPlanningStore
         await using var c=await database.Source.OpenConnectionAsync(ct).ConfigureAwait(false);
         await using var tx=await c.BeginTransactionAsync(System.Data.IsolationLevel.RepeatableRead,ct).ConfigureAwait(false);
         PlanningImportInput input;PlanningPlan plan;PlanningImportPreview preview;string? actor;DateTimeOffset? applied;
-        await using(var cmd=Command(c,tx,"SELECT b.input::text,b.plan::text,b.preview::text,b.status,u.nombre,b.applied_at FROM planning.batches b LEFT JOIN public.usuarios u ON u.id=b.actor_id WHERE b.id=@id",("id",id)))
+        await using(var cmd=Command(c,tx,"SELECT b.input::text,b.plan::text,b.preview::text,b.status,u.nombre,b.applied_at FROM planning.batches b LEFT JOIN planning.actors u ON u.id=b.actor_id WHERE b.id=@id",("id",id)))
         await using(var r=await cmd.ExecuteReaderAsync(ct).ConfigureAwait(false))
         {
             if(!await r.ReadAsync(ct).ConfigureAwait(false))return null;

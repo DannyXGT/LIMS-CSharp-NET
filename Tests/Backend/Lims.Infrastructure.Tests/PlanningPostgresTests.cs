@@ -19,6 +19,78 @@ public sealed class RealPlanningDatabaseFactAttribute : FactAttribute
 public sealed class PlanningPostgresTests
 {
     [PlanningDatabaseFact]
+    public async Task IdentityUpgradePreservesExistingBatchEpisodeExecutionAndHistory()
+    {
+        await using var db=await TestDatabase.Create(false);
+        var preview=await db.Store.PreviewAsync(Input(Summary(),Report()),1,default);
+        await db.Store.ConfirmAsync(preview.Id,1,default);
+        var row=Assert.Single((await db.Store.QueryAsync(new(),default)).Items);
+        var before=await db.Scalar("SELECT count(*) FROM planning.history");
+        await db.Sql(PlanningIdentitySchema.Sql+PlanningIdentitySchema.AccessSql);
+        var dossier=(await db.Store.DossierAsync(row.EpisodeId,default))!;
+        Assert.Equal(row.ExecutionId,Assert.Single(dossier.Tests).ExecutionId);
+        Assert.Equal(preview.Id,Assert.Single(await db.Store.BatchesAsync(default)).Id);
+        Assert.All(dossier.History,h=>Assert.Equal("Actor sintético local",h.ActorName));
+        Assert.Equal(before,await db.Scalar("SELECT count(*) FROM planning.history"));
+        Assert.Equal(0L,await db.Scalar("SELECT count(*) FROM pg_constraint WHERE connamespace='planning'::regnamespace AND confrelid='public.usuarios'::regclass"));
+    }
+
+    [PlanningDatabaseFact]
+    public async Task SeparateIdentityDatabasePreservesImportNamesHistoryAndHostPermissions()
+    {
+        await using var host=await TestDatabase.Create();
+        await using var target=await TestDatabase.Create();
+        await target.Sql("DELETE FROM planning.actors; DROP TABLE public.planning_access_history; DROP TABLE public.usuarios_permisos; DROP TABLE public.usuarios; DROP TABLE public.departamentos;");
+        await using var identities=new PlanningIdentityDatabase(host.ConnectionString);
+        var store=new PostgresPlanningStore(target._database,identities);
+        await identities.RegisterActorAsync(target._database,1,default);
+        var preview=await store.PreviewAsync(Input(Summary()),1,default);
+        await store.ConfirmAsync(preview.Id,1,default);
+        var episode=Assert.Single((await store.QueryAsync(new(),default)).Items).EpisodeId;
+        var dossier=(await store.DossierAsync(episode,default))!;
+        Assert.NotEmpty(dossier.History);
+        Assert.All(dossier.History,h=>Assert.Equal("Actor sintético local",h.ActorName));
+        Assert.Equal("Actor sintético local",Assert.Single(await store.BatchesAsync(default)).ActorName);
+        Assert.NotNull(await store.InspectImportAsync(preview.Id,default));
+        var review=Assert.Single((await store.ReviewWorkspaceAsync(new(Category:"SummaryWithoutReport"),default)).Items);
+        await store.DecideReviewAsync(new(review.Key,review.Category,review.Version,"Held","Retener en prueba separada"),1,default);
+        Assert.Equal("Actor sintético local",Assert.Single((await store.ReviewWorkspaceAsync(new(Category:"SummaryWithoutReport"),default)).Items).DecidedBy);
+        await host.Sql("INSERT INTO public.usuarios_permisos VALUES(1,'stock.view')");
+        await store.SaveAccessAsync(1,new([PlanningPermissions.View],"Permiso real en host de prueba"),1,default);
+        Assert.Contains(PlanningPermissions.View,Assert.Single(await store.AccessUsersAsync(default)).Permissions);
+        Assert.Equal(1L,await host.Scalar("SELECT count(*) FROM public.planning_access_history WHERE actor_id=1 AND user_id=1"));
+        Assert.Equal(1L,await host.Scalar("SELECT count(*) FROM public.usuarios_permisos WHERE permiso_key='stock.view'"));
+        Assert.Equal(0L,await host.Scalar("SELECT count(*) FROM planning.batches"));
+        Assert.Equal(true,await target.Scalar("SELECT to_regclass('public.usuarios') IS NULL"));
+        Assert.Equal(true,await target.Scalar("SELECT to_regclass('public.usuarios_permisos') IS NULL"));
+    }
+
+    [PlanningDatabaseFact]
+    public async Task SeparateIdentityRejectsUnknownOrInactiveActorWithoutRegisteringIt()
+    {
+        await using var host=await TestDatabase.Create();await using var target=await TestDatabase.Create();
+        await using var identities=new PlanningIdentityDatabase(host.ConnectionString);
+        await Assert.ThrowsAsync<PlanningValidationException>(()=>identities.RegisterActorAsync(target._database,999,default));
+        await host.Sql("UPDATE public.usuarios SET activo=false WHERE id=1");
+        await target.Sql("DELETE FROM planning.actors");
+        await Assert.ThrowsAsync<PlanningValidationException>(()=>identities.RegisterActorAsync(target._database,1,default));
+        Assert.Equal(0L,await target.Scalar("SELECT count(*) FROM planning.actors"));
+    }
+
+    [PlanningDatabaseFact]
+    public async Task HostPermissionAuditFailureRollsBackGrantWithoutPlanningDependency()
+    {
+        await using var host=await TestDatabase.Create();await using var target=await TestDatabase.Create();
+        await using var identities=new PlanningIdentityDatabase(host.ConnectionString);
+        var store=new PostgresPlanningStore(target._database,identities);
+        await host.Sql("INSERT INTO public.usuarios_permisos VALUES(1,'stock.view'); ALTER TABLE public.planning_access_history ADD CONSTRAINT reject_fixture CHECK(false)");
+        await Assert.ThrowsAsync<PostgresException>(()=>store.SaveAccessAsync(1,new([PlanningPermissions.View],"Fallo de auditoría de prueba"),1,default));
+        Assert.Equal(1L,await host.Scalar("SELECT count(*) FROM public.usuarios_permisos WHERE permiso_key='stock.view'"));
+        Assert.Equal(0L,await host.Scalar("SELECT count(*) FROM public.usuarios_permisos WHERE permiso_key LIKE 'planning.%'"));
+        Assert.Equal(0L,await host.Scalar("SELECT count(*) FROM public.planning_access_history"));
+    }
+
+    [PlanningDatabaseFact]
     public async Task ManualResolutionSurvivesReimportAndLaterSourceLinkWithoutLosingDigitization()
     {
         await using var db=await TestDatabase.Create();var store=db.Store;
@@ -396,17 +468,24 @@ public sealed class PlanningPostgresTests
     {
         private readonly string _admin;
         private readonly string _name;
-        private readonly PlanningDatabase _database;
+        internal readonly PlanningDatabase _database;
+        public string ConnectionString { get; }
         public PostgresPlanningStore Store{get;}
-        private TestDatabase(string admin,string name,PlanningDatabase database){_admin=admin;_name=name;_database=database;Store=new(database);}
-        public static async Task<TestDatabase> Create()
+        private TestDatabase(string admin,string name,PlanningDatabase database,string connectionString){_admin=admin;_name=name;_database=database;ConnectionString=connectionString;Store=new(database);}
+        public static async Task<TestDatabase> Create(bool migrateIdentity=true)
         {
             var cs=new NpgsqlConnectionStringBuilder(Environment.GetEnvironmentVariable("LIMS_PLANNING_TEST_CONNECTION"));
             if(cs.Host!="127.0.0.1"||cs.Port!=55441||cs.Database!="lims_planning_dev")throw new InvalidOperationException("Se rechaza cualquier servidor/base distinta de la copia local autorizada.");
             cs.Database="postgres";var admin=cs.ConnectionString;var name="lims_planning_ci_"+Guid.NewGuid().ToString("N");
             await using(var c=new NpgsqlConnection(admin)){await c.OpenAsync();await using var cmd=new NpgsqlCommand("CREATE DATABASE "+name,c);await cmd.ExecuteNonQueryAsync();}
-            cs.Database=name;var database=new PlanningDatabase(cs.ConnectionString);var fixture=new TestDatabase(admin,name,database);
+            cs.Database=name;var database=new PlanningDatabase(cs.ConnectionString);var fixture=new TestDatabase(admin,name,database,cs.ConnectionString);
             await fixture.Sql("CREATE TABLE public.departamentos(id integer PRIMARY KEY,nombre text);CREATE TABLE public.usuarios(id integer PRIMARY KEY,nombre text,id_departamento integer,activo boolean);CREATE TABLE public.usuarios_permisos(id_usuario integer,permiso_key text,PRIMARY KEY(id_usuario,permiso_key));INSERT INTO public.usuarios VALUES(1,'Actor sintético local',NULL,true);"+PlanningSchema.Sql+PlanningNotesSchema.Sql+PlanningControlsSchema.Sql+PlanningOfficialSchema.Sql+PlanningReviewSchema.Sql);
+            if(migrateIdentity)
+            {
+                await fixture.Sql(PlanningIdentitySchema.Sql+PlanningIdentitySchema.AccessSql);
+                await using var identity = new PlanningIdentityDatabase(cs.ConnectionString);
+                await identity.RegisterActorAsync(database,1,default);
+            }
             return fixture;
         }
         public async Task Sql(string sql){await using var c=await _database.Source.OpenConnectionAsync();await using var cmd=new NpgsqlCommand(sql,c);await cmd.ExecuteNonQueryAsync();}

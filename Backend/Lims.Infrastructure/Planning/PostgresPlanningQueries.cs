@@ -115,7 +115,7 @@ public sealed partial class PostgresPlanningStore
         await using(var cmd=Command(c,tx,"SELECT id,kind,state,reason,version FROM planning.incidents WHERE episode_id=@id ORDER BY kind",("id",episodeId)))
         await using(var r=await cmd.ExecuteReaderAsync(ct).ConfigureAwait(false))while(await r.ReadAsync(ct).ConfigureAwait(false))incidents.Add(new(r.GetGuid(0),episodeId,r.GetString(1),r.GetString(2),NullableString(r,3),r.GetInt64(4)));
         var history=new List<PlanningHistory>();
-        await using(var cmd=Command(c,tx,"SELECT h.id,h.action,h.actor_id,h.at,h.reason,h.details::text,u.nombre FROM planning.history h JOIN public.usuarios u ON u.id=h.actor_id WHERE episode_id=@id ORDER BY at DESC,h.id LIMIT 1000",("id",episodeId)))
+        await using(var cmd=Command(c,tx,"SELECT h.id,h.action,h.actor_id,h.at,h.reason,h.details::text,u.nombre FROM planning.history h JOIN planning.actors u ON u.id=h.actor_id WHERE episode_id=@id ORDER BY at DESC,h.id LIMIT 1000",("id",episodeId)))
         await using(var r=await cmd.ExecuteReaderAsync(ct).ConfigureAwait(false))while(await r.ReadAsync(ct).ConfigureAwait(false))history.Add(new(r.GetGuid(0),r.GetString(1),r.GetInt32(2),r.GetFieldValue<DateTimeOffset>(3),r.GetString(4),r.GetString(5),NullableString(r,6)));
         var sources=new List<PlanningSource>();
         await using(var cmd=Command(c,tx,"SELECT s.batch_id,s.file,s.sheet,s.row_number,CASE WHEN s.file='Summary' THEN b.summary_sha256 ELSE b.report_sha256 END,b.applied_at,s.fields::text FROM planning.source_rows s JOIN planning.batches b ON b.id=s.batch_id WHERE s.episode_id=@id ORDER BY b.applied_at DESC,s.file,s.row_number LIMIT 2000",("id",episodeId)))

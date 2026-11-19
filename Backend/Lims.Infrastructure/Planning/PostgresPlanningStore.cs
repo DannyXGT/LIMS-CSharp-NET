@@ -8,7 +8,7 @@ using NpgsqlTypes;
 
 namespace Lims.Infrastructure.Planning;
 
-public sealed partial class PostgresPlanningStore(PlanningDatabase database) : IPlanningStore
+public sealed partial class PostgresPlanningStore(PlanningDatabase database, PlanningIdentityDatabase? identities = null) : IPlanningStore
 {
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web);
     private static string Serialize<T>(T value) => JsonSerializer.Serialize(value, Json);
@@ -182,7 +182,7 @@ public sealed partial class PostgresPlanningStore(PlanningDatabase database) : I
               coalesce((preview->>'newJobs')::int,0),coalesce((preview->>'newTests')::int,0),coalesce((preview->>'updatedJobs')::int,0),
               (SELECT count(DISTINCT ch->>'episodeId')::int FROM jsonb_array_elements(coalesce(preview->'changes','[]'::jsonb)) ch WHERE ch->>'entity'='WIP' AND ch->>'action'='UpdateSource'),
               coalesce((preview->>'pendingReview')::int,0)
-            FROM planning.batches b LEFT JOIN public.usuarios u ON u.id=b.actor_id ORDER BY b.created_at DESC,b.id LIMIT 200
+            FROM planning.batches b LEFT JOIN planning.actors u ON u.id=b.actor_id ORDER BY b.created_at DESC,b.id LIMIT 200
             """);
         await using var r=await cmd.ExecuteReaderAsync(ct).ConfigureAwait(false); var items=new List<PlanningBatch>();
         while(await r.ReadAsync(ct).ConfigureAwait(false)) items.Add(new(r.GetGuid(0),r.GetString(1),r.GetString(2),r.GetString(3),r.GetString(4),r.GetFieldValue<DateOnly>(5),r.GetFieldValue<DateTimeOffset>(6),r.IsDBNull(7)?null:r.GetFieldValue<DateTimeOffset>(7),r.GetInt32(8),NullableString(r,9),r.GetInt32(10),r.GetInt32(11),r.GetInt32(12),r.GetInt32(13),r.GetInt32(14)));

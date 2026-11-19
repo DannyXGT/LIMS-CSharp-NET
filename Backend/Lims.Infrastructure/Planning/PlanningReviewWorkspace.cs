@@ -163,8 +163,8 @@ public sealed partial class PostgresPlanningStore
               p.buyer,p.vendor,p.service,p.usd,p.state,p.reason,p.version,p.original_test,p.equivalence,p.laboratory,p.batch_id,p.source_row,
               coalesce(du.nombre,decision.actor_name),coalesce(p.decided_at,decision.at),p.origin,p.imported_at FROM (SELECT *
             """+where+filters+" ORDER BY "+sort+(query.Descending?" DESC":" ASC")+" NULLS LAST,key LIMIT @take OFFSET @skip) p "+"""
-            LEFT JOIN public.usuarios du ON du.id=p.decision_actor LEFT JOIN LATERAL (
-              SELECT u.nombre AS actor_name,h.at FROM planning.history h JOIN public.usuarios u ON u.id=h.actor_id
+            LEFT JOIN planning.actors du ON du.id=p.decision_actor LEFT JOIN LATERAL (
+              SELECT u.nombre AS actor_name,h.at FROM planning.history h JOIN planning.actors u ON u.id=h.actor_id
               WHERE p.incident_id IS NOT NULL AND h.episode_id=p.episode_id AND h.action='IncidentDecision'
                 AND h.details->>'incidentId'=p.incident_id::text ORDER BY h.at DESC,h.id DESC LIMIT 1
             ) decision ON true

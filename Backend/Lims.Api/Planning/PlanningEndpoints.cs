@@ -10,9 +10,10 @@ namespace Lims.Api.Planning;
 
 internal static class PlanningEndpoints
 {
-    public static void AddLimsPlanning(this IServiceCollection services,string connectionString)
+    public static void AddLimsPlanning(this IServiceCollection services,string connectionString,string identityConnectionString)
     {
         services.AddSingleton(new PlanningDatabase(connectionString));
+        services.AddSingleton(new PlanningIdentityDatabase(identityConnectionString));
         services.AddScoped<IPlanningStore,PostgresPlanningStore>();
         services.Configure<FormOptions>(options=>options.MultipartBodyLengthLimit=12*1024*1024);
         foreach(var permission in PlanningPermissions.All)
@@ -31,7 +32,19 @@ internal static class PlanningEndpoints
         var group=endpoints.MapGroup("/api/planning").WithTags("Planning").RequireAuthorization(PlanningPermissions.View);
         group.AddEndpointFilter(async(context,next)=>
         {
-            try{return await next(context).ConfigureAwait(false);}
+            try
+            {
+                if (!HttpMethods.IsGet(context.HttpContext.Request.Method) &&
+                    !context.HttpContext.Request.Path.StartsWithSegments("/api/planning/access") &&
+                    !context.HttpContext.Request.Path.StartsWithSegments("/api/planning/reviews/export"))
+                {
+                    var services=context.HttpContext.RequestServices;
+                    await services.GetRequiredService<PlanningIdentityDatabase>().RegisterActorAsync(
+                        services.GetRequiredService<PlanningDatabase>(),Actor(context.HttpContext),
+                        context.HttpContext.RequestAborted).ConfigureAwait(false);
+                }
+                return await next(context).ConfigureAwait(false);
+            }
             catch(PlanningConflictException e){return Results.Problem(statusCode:409,title:"Conflicto de revisión",detail:e.Message);}
             catch(PlanningValidationException e){return Results.Problem(statusCode:400,title:"Validación de Planificación",detail:e.Message);}
         });

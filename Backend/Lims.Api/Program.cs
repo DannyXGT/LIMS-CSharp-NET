@@ -91,7 +91,10 @@ try
     builder.Services.AddScoped<ISolutionGroupRepository, SolutionGroupRepository>();
     builder.Services.AddScoped<SolutionGroupService>();
     builder.Services.AddLimsAlerts(builder.Configuration);
-    builder.Services.AddLimsPlanning(connectionString);
+    var planningConnection = builder.Configuration.GetConnectionString("Planning");
+    builder.Services.AddLimsPlanning(
+        string.IsNullOrWhiteSpace(planningConnection) ? connectionString : planningConnection,
+        connectionString);
 
     builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
     {
