@@ -12,6 +12,7 @@ public sealed record PlanningImportInput(ImportCut Cut, byte[] Summary, byte[] R
     string Fingerprint, IReadOnlyList<FileCoverage> Files, IReadOnlyList<PlanningSourceRow> Rows, IReadOnlyList<ImportIssue> Issues);
 public sealed record StoredEpisode(Guid Id, string Job, WipValues Wip, long Version, IReadOnlyList<string> ManualFields, DateOnly? SourceInDate = null,PlanningOfficialState? Official=null);
 public sealed record StoredExecution(Guid Id, Guid EpisodeId, string OriginalTest, string? Equivalence, string? Laboratory, string Origin);
+public sealed record StoredSourceIdentity(string ReportHash,int Row,string Sheet,Guid ExecutionId);
 public sealed record ProposedEpisode(Guid Id, string Job, WipValues Source, bool IsNew, int SourceRow,PlanningOfficialState? Official=null,bool HasSummary=true);
 public sealed record ProposedExecution(Guid Id, Guid EpisodeId, string Job, string OriginalTest, string? Equivalence,
     string? Laboratory, bool NoProgram, string Action, IReadOnlyList<int> SourceRows);
@@ -22,6 +23,10 @@ public sealed class PlanningValidationException(string message) : Exception(mess
 
 public interface IPlanningStore
 {
+    Task<ReportListPage> ReportListAsync(ReportListQuery query,CancellationToken ct);
+    Task<ReportListResult> CheckReportAsync(ReportListCheck request,int actor,bool administrator,CancellationToken ct);
+    Task KeepReportAsync(ReportListKeep request,int actor,CancellationToken ct);
+    Task<ReportListResult> ScanReportAsync(ReportListScan request,int actor,CancellationToken ct);
     Task<PlanningPage> QueryAsync(PlanningQuery query, CancellationToken ct);
     Task<byte[]> ExportAsync(PlanningQuery query, CancellationToken ct);
     Task<JobDossier?> DossierAsync(Guid episodeId, CancellationToken ct);

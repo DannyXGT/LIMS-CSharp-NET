@@ -49,6 +49,18 @@ internal static class PlanningEndpoints
             catch(PlanningValidationException e){return Results.Problem(statusCode:400,title:"Validación de Planificación",detail:e.Message);}
         });
         group.MapGet("/jobs",async([AsParameters]PlanningQuery query,IPlanningStore store,CancellationToken ct)=>Results.Ok(await store.QueryAsync(query,ct).ConfigureAwait(false)));
+        group.MapGet("/report-list",async([AsParameters]ReportListQuery query,IPlanningStore store,CancellationToken ct)=>Results.Ok(await store.ReportListAsync(query,ct).ConfigureAwait(false)));
+        group.MapPost("/report-list/check",async(ReportListCheck request,IPlanningStore store,HttpContext context,CancellationToken ct)=>
+        {
+            if(!request.Checked||request.AdminOverride)return Results.Problem(statusCode:403,detail:"Las correcciones requieren permiso de revisión.");
+            return Results.Ok(await store.CheckReportAsync(request,Actor(context),false,ct).ConfigureAwait(false));
+        }).RequireAuthorization(PlanningPermissions.ReportMark);
+        group.MapPost("/report-list/correction",async(ReportListCheck request,IPlanningStore store,HttpContext context,CancellationToken ct)=>
+            Results.Ok(await store.CheckReportAsync(request,Actor(context),context.User.IsInRole("Administrador"),ct).ConfigureAwait(false))).RequireAuthorization(PlanningPermissions.ReportReview);
+        group.MapPut("/report-list/keep",async(ReportListKeep request,IPlanningStore store,HttpContext context,CancellationToken ct)=>
+        {await store.KeepReportAsync(request,Actor(context),ct).ConfigureAwait(false);return Results.NoContent();}).RequireAuthorization(PlanningPermissions.ReportReview);
+        group.MapPost("/report-list/scan",async(ReportListScan request,IPlanningStore store,HttpContext context,CancellationToken ct)=>
+            Results.Ok(await store.ScanReportAsync(request,Actor(context),ct).ConfigureAwait(false))).RequireAuthorization(PlanningPermissions.ReportMark);
         group.MapPost("/notes",async(PlanningNoteBatch request,IPlanningStore store,HttpContext context,CancellationToken ct)=>Results.Ok(await store.EditNotesAsync(request,Actor(context),ct).ConfigureAwait(false))).RequireAuthorization(PlanningPermissions.EditWip);
         group.MapGet("/export",async([AsParameters]PlanningQuery query,IPlanningStore store,CancellationToken ct)=>Results.File(await store.ExportAsync(query,ct).ConfigureAwait(false),"text/csv; charset=utf-8","Consulta de Jobs.csv"));
         group.MapGet("/jobs/{id:guid}",async(Guid id,IPlanningStore store,CancellationToken ct)=>

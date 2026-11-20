@@ -6,6 +6,7 @@ namespace Lims.Infrastructure.Planning;
 
 public sealed partial class PostgresPlanningStore
 {
+    private const string PlanningTestSql="CASE WHEN x.id IS NULL THEN 'WIP sin pruebas' WHEN x.no_program OR upper(coalesce(trim(x.laboratory),''))='NO PROGRAMAR' THEN 'NO PROGRAMAR' ELSE coalesce(nullif(trim(x.equivalence),''),'Sin equivalencia') END";
     private const string OfficialStateSql="coalesce(nullif(e.official_fields->>'sampleStatus',''),nullif(e.official_fields->>'jobStatus',''),'No informado')";
     private const string DigitizationSql="CASE WHEN x.digitized_at IS NOT NULL AND x.tested_on IS NOT NULL THEN 'Digitado' WHEN x.digitized_at IS NOT NULL OR x.tested_on IS NOT NULL THEN 'Información incompleta' ELSE 'Sin información' END";
     private static (string Sql,IReadOnlyList<(string,object?)> Args) ColumnConditions(string? json)
@@ -22,7 +23,7 @@ public sealed partial class PostgresPlanningStore
             if(value.Length>2000||value.Any(char.IsControl))throw new PlanningValidationException("Valor de filtro inválido.");
             var expression=key switch
             {
-                "JobState"=>OfficialStateSql,"Job"=>"e.job||' '||coalesce(jc.label,'')","OriginalTest"=>"x.original_test","Equivalence"=>"x.equivalence",
+                "JobState"=>OfficialStateSql,"Job"=>"e.job||' '||coalesce(jc.label,'')","PlanningTest"=>PlanningTestSql,"OriginalTest"=>"x.original_test","Equivalence"=>"x.equivalence",
                 "Laboratory"=>"x.laboratory","Service"=>"e.service","Buyer"=>"e.buyer","Vendor"=>"e.vendor",
                 "Responsible"=>"x.responsible","Observation"=>"x.observation","DigitizedBy"=>"x.digitized_by",
                 "DigitizedAt"=>"to_char(x.digitized_at AT TIME ZONE 'America/Guatemala','HH24:MI:SS')",

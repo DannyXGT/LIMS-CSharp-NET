@@ -8,7 +8,8 @@ public static class PlanningReconciler
     public static string TestKey(string value) => value.Trim().ToUpperInvariant();
 
     public static PlanningPlan Plan(PlanningImportInput input, IReadOnlyList<StoredEpisode> existing,
-        IReadOnlyList<StoredExecution> tests, IReadOnlyList<PlanningEquivalence> mappings)
+        IReadOnlyList<StoredExecution> tests, IReadOnlyList<PlanningEquivalence> mappings,
+        IReadOnlyList<StoredSourceIdentity>? sourceIdentities=null)
     {
         ArgumentNullException.ThrowIfNull(input);
         var changes = new List<ImportChange>(); var reviews = new List<ImportReview>();
@@ -19,6 +20,8 @@ public static class PlanningReconciler
         var testsByEpisode=tests.ToLookup(t=>t.EpisodeId);
         var reportJobs=input.Rows.Where(r=>r.File=="Report List").Select(r=>r.Job).ToHashSet(StringComparer.Ordinal);
         var map = mappings.ToDictionary(m => TestKey(m.OriginalTest), StringComparer.Ordinal);
+        var reportHash=PlanningImportReader.Hash(input.Report);
+        var documentLinks=(sourceIdentities??[]).Where(s=>s.ReportHash==reportHash).ToLookup(s=>(s.Sheet,s.Row));
         var summaries = input.Rows.Where(r => r.File == "Summary").ToList();
         var summaryDatesByJob=summaries.GroupBy(r=>r.Job,StringComparer.Ordinal).ToDictionary(g=>g.Key,g=>g.Select(r=>r.Wip!.InDate).Distinct().Count(),StringComparer.Ordinal);
         foreach (var group in summaries.GroupBy(r => (r.Job, r.Wip!.InDate)))
@@ -58,6 +61,24 @@ public static class PlanningReconciler
             foreach (var group in jobGroup.Where(r=>!string.IsNullOrWhiteSpace(r.Test)).GroupBy(r => TestKey(r.Test!)))
             {
                 var row = group.First();
+                // A byte-identical source document plus its persisted, reviewed row link is evidence.
+                // Row order in a different document is never used as execution identity.
+                var linked=group.Select(source=>(Source:source,Ids:documentLinks[(source.Sheet,source.Row)]
+                    .Select(s=>s.ExecutionId).Distinct().ToArray())).ToArray();
+                if(id is not null && linked.All(l=>l.Ids.Length==1 && testsByEpisode[id.Value].Any(t=>t.Id==l.Ids[0]&&TestKey(t.OriginalTest)==group.Key)))
+                {
+                    foreach(var link in linked)
+                    {
+                        var linkedExecution=testsByEpisode[id.Value].Single(t=>t.Id==link.Ids[0]);
+                        map.TryGetValue(group.Key,out var current);
+                        executions.Add(new(linkedExecution.Id,id.Value,row.Job,linkedExecution.OriginalTest,
+                            linkedExecution.Origin=="Manual"?linkedExecution.Equivalence:current?.Equivalence??linkedExecution.Equivalence,
+                            linkedExecution.Origin=="Manual"?linkedExecution.Laboratory:current?.Laboratory??linkedExecution.Laboratory,
+                            current?.NoProgram==true,"Observe",[link.Source.Row]));
+                        if(linkedExecution.Origin=="Manual")reviews.Add(new("ManualManaged",row.Job,id,row.Test,"Vínculo fuente ya conciliado: se conserva la ejecución manual y su marcado.",link.Source.Row));
+                    }
+                    continue;
+                }
                 if (id is null || group.Count() > 1)
                 { foreach (var source in group) reviews.Add(new("ExecutionIdentity", row.Job, id, source.Test, "La fuente no distingue episodios/repeticiones. Vincule explícitamente o cree una ejecución autorizada.", source.Row)); continue; }
                 var candidates = testsByEpisode[id.Value].Where(t => TestKey(t.OriginalTest) == group.Key).ToArray();

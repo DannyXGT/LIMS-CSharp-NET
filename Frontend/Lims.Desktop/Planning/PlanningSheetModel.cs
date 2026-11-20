@@ -19,9 +19,9 @@ public sealed record SheetPastePreview(IReadOnlyList<SheetPasteCell> Cells)
 public sealed class PlanningSheetModel
 {
     public static readonly IReadOnlyList<SheetColumn> AvailableColumns=[
-        new("InDate","Fecha Ingreso",108),new("DueDate","Due Date",112),new("JobState","Estado",175),new("Job","JOB",190),new("OriginalTest","Prueba",230),
+        new("InDate","Fecha Ingreso",108),new("DueDate","Due Date",112),new("JobState","Estado",175),new("Job","JOB",190),new("PlanningTest","Prueba",230),
         new("Laboratory","Laboratorio",125),new("DigitizedAt","Hora",100),new("TestedOn","Fecha Prueba",110),new("DigitizationState","Estado de digitación",150),new("DigitizedBy","Digitado por",120),
-        new("Equivalence","Equivalencia",190,false,false),new("Service","Servicio",112,false,false),new("Buyer","Buyer",150,false,false),new("Vendor","Vendor",170,false,false),new("Usd","USD",100,false,false),
+        new("OriginalTest","Nombre técnico original",260,false,false),new("Equivalence","Equivalencia",190,false,false),new("Service","Servicio",112,false,false),new("Buyer","Buyer",150,false,false),new("Vendor","Vendor",170,false,false),new("Usd","USD",100,false,false),
         new("Responsible","Responsable",150,true,false),new("Observation","Observación",193,true,false),new("OnHold","On Hold",100,false,false),new("JobLabel","Etiqueta",120,false,false),new("NoProgram","Programación",125,false,false),
         new("Origin","Origen",110,false,false),new("ExecutionType","Tipo ejecución",135,false,false)];
     public ObservableCollection<PlanningRow> Rows{get;}=[];
@@ -43,7 +43,7 @@ public sealed class PlanningSheetModel
     public static string Value(PlanningRow row,string key)=>key switch
     {
         "JobState"=>row.JobState,"Job"=>row.Job,"InDate"=>row.InDate?.ToString("yyyy-MM-dd",CultureInfo.InvariantCulture)??"","DueDate"=>row.DueDate?.ToString("yyyy-MM-dd",CultureInfo.InvariantCulture)??"",
-        "OriginalTest"=>row.OriginalTest??"","Equivalence"=>row.Equivalence??"","Laboratory"=>row.Laboratory??"","Service"=>row.Service??"",
+        "PlanningTest"=>row.PlanningTest,"OriginalTest"=>row.OriginalTest??"","Equivalence"=>row.Equivalence??"","Laboratory"=>row.Laboratory??"","Service"=>row.Service??"",
         "DigitizationState"=>row.DigitizationState=="Digitado"?"Digitada":row.DigitizationState=="NoProgramar"?"NO PROGRAMAR":row.DigitizationState,
         "DigitizedAt"=>row.DigitizedAt?.ToOffset(TimeSpan.FromHours(-6)).ToString("HH:mm:ss",CultureInfo.InvariantCulture)??"",
         "TestedOn"=>row.TestedOn?.ToString("yyyy-MM-dd",CultureInfo.InvariantCulture)??"","DigitizedBy"=>row.DigitizedBy??"","Responsible"=>row.Responsible??"",

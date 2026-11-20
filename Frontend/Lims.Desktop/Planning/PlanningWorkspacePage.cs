@@ -15,6 +15,7 @@ public sealed class PlanningWorkspacePage : Page, IDisposable
     private readonly DispatcherTimer _timer=new(){Interval=TimeSpan.FromSeconds(15)};
     private readonly PlanningJobsView _jobs;
     private readonly PlanningImportsView _imports;
+    private readonly PlanningReportListView _reportList;
     private readonly List<PlanningDossierWindow> _windows=[];
     private CancellationTokenSource? _access;
     private WorkspaceAccess? _current;
@@ -27,6 +28,8 @@ public sealed class PlanningWorkspacePage : Page, IDisposable
     {
         _api=api;_back=back;Background=PlanningUi.Brush("LimsBackgroundBrush");
         _jobs=new(api,OpenDossier,()=>_current?.Permissions??[]);_imports=new(api,OpenDossier,()=>_current?.Permissions??[]);
+        _reportList=new(api,OpenDossier,()=>_current?.Permissions??[],()=>_current?.Administration==true);
+        _reportList.Changed+=async()=>{await _jobs.RefreshPreservingSelection();foreach(var window in _windows.ToArray())await window.RefreshData();};
         _imports.OpenImportedJobs+=async id=>{_content.Content=_jobs;await _jobs.OpenBatch(id);};
         _imports.Applied+=async()=>{await _jobs.RefreshPreservingSelection();foreach(var window in _windows.ToArray())await window.RefreshData();};
         var layout=PlanningUi.Rows(GridLength.Auto,new(1,GridUnitType.Star));layout.RowSpacing=0;
@@ -48,6 +51,7 @@ public sealed class PlanningWorkspacePage : Page, IDisposable
             if(changed)
             {
                 _tabs.Children.Clear();Sections.Clear();Tab("Consulta de Jobs",_jobs,()=>_jobs.Load());
+                Tab("Report List / Digitación",_reportList,()=>_reportList.Load());
                 if(access.Permissions.Contains(PlanningPermissions.Import,StringComparer.Ordinal))Tab("Importaciones",_imports,()=>_imports.Load());
                 Tab("Bandejas de revisión",_imports,()=>_imports.OpenReviewWorkspace());
                 if(access.Permissions.Contains(PlanningPermissions.Equivalences,StringComparer.Ordinal))
@@ -69,9 +73,9 @@ public sealed class PlanningWorkspacePage : Page, IDisposable
     }
     public void Clear()
     {
-        _timer.Stop();_access?.Cancel();_jobs.Cancel();_imports.Cancel();_jobs.Clear();_imports.Clear();_content.Content=null;_tabs.Children.Clear();_current=null;
+        _timer.Stop();_access?.Cancel();_jobs.Cancel();_imports.Cancel();_jobs.Clear();_imports.Clear();_reportList.Clear();_content.Content=null;_tabs.Children.Clear();_current=null;
         Sections.Clear();SectionsChanged?.Invoke();_message.Visibility=Visibility.Visible;
         foreach(var window in _windows.ToArray())window.Close();
     }
-    public void Dispose(){Clear();_access?.Dispose();_access=null;_jobs.Dispose();_imports.Dispose();}
+    public void Dispose(){Clear();_access?.Dispose();_access=null;_jobs.Dispose();_imports.Dispose();_reportList.Dispose();}
 }

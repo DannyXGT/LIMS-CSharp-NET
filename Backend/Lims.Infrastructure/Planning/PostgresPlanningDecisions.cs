@@ -48,6 +48,7 @@ public sealed partial class PostgresPlanningStore
                 throw new PlanningConflictException("La clasificación del catálogo cambió o no es válida. Recargue el catálogo antes de asignar la prueba.");
         }
         var execution=Guid.NewGuid();await InsertExecution(c,tx,execution,id,test,equivalent,lab,false,"Manual",ct).ConfigureAwait(false);
+        await ReopenReportAlerts(c,tx,ct).ConfigureAwait(false);
         await Execute(c,tx,"UPDATE planning.episodes SET version=version+1 WHERE id=@id",ct,("id",id)).ConfigureAwait(false);
         await Audit(c,tx,id,"ManualTestAdded",actor,reason,new{ExecutionId=execution,OriginalTest=test,Equivalence=equivalent,Laboratory=lab,request.CatalogueVersion},ct).ConfigureAwait(false);
         await RefreshIncidents(c,tx,id,actor,ct).ConfigureAwait(false);await Bump(c,tx,ct).ConfigureAwait(false);await tx.CommitAsync(ct).ConfigureAwait(false);

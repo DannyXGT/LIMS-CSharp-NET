@@ -1,4 +1,4 @@
-using System.Globalization;
+﻿using System.Globalization;
 using Lims.Contracts.Planning;
 using Lims.DesignSystem.Presentation;
 using Lims.DesignSystem.Controls;
@@ -129,7 +129,7 @@ public sealed partial class PlanningJobsView : Grid,IDisposable
         AutomationProperties.SetName(button,name);ToolTipService.SetToolTip(button,name);button.Click+=async(_,_)=>await action();return button;
     }
     private static TextBox Labeled(TextBox field,string label){field.Header=label;return field;}
-    private TextBox? FilterField(string key)=>key switch{"Job"=>_search,"OriginalTest"=>_test,"Equivalence"=>_equivalence,"Laboratory"=>_lab,"Service"=>_service,"InDate"=>_inFrom,"DueDate"=>_from,_=>null};
+    private TextBox? FilterField(string key)=>key switch{"Job"=>_search,"Equivalence"=>_equivalence,"Laboratory"=>_lab,"Service"=>_service,"InDate"=>_inFrom,"DueDate"=>_from,_=>null};
     private void UpdateFilters()
     {
         if(_reset is null)return;
@@ -140,7 +140,7 @@ public sealed partial class PlanningJobsView : Grid,IDisposable
     }
     private static TextBox Field(string name,int width,int max=512)
     {var field=PlanningUi.Field(name,max:max);field.Header=null;field.PlaceholderText=name;field.Width=width;field.MinHeight=36;AutomationProperties.SetName(field,name);return field;}
-    private static string SortKey(string key)=>key switch{"OriginalTest"=>"test","DigitizationState"=>"state",_=>char.ToLowerInvariant(key[0])+key[1..]};
+    private static string SortKey(string key)=>key switch{"PlanningTest"=>"test","OriginalTest"=>"originalTest","DigitizationState"=>"state",_=>char.ToLowerInvariant(key[0])+key[1..]};
     private Task Search(){_page=1;return Load();}
     private Guid? _batchId;
     public async Task OpenBatch(Guid id)

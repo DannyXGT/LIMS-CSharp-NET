@@ -1,4 +1,4 @@
-using System.Text.Json;
+﻿using System.Text.Json;
 using Lims.Contracts.Planning;
 using Npgsql;
 
@@ -21,7 +21,7 @@ public sealed partial class PostgresPlanningStore
     {
         ArgumentNullException.ThrowIfNull(query);
         var size=Math.Clamp(query.PageSize,1,maximum);var page=Math.Clamp(query.Page,1,1000000);
-        var sort=query.Sort switch { "jobState"=>OfficialStateSql, "inDate"=>"e.in_date", "dueDate"=>"e.due_date", "test"=>"x.original_test", "equivalence"=>"x.equivalence", "laboratory"=>"x.laboratory", "service"=>"e.service", "digitizedAt"=>"(x.digitized_at AT TIME ZONE 'America/Guatemala')::time", "testedOn"=>"x.tested_on", "digitizedBy"=>"x.digitized_by", "state"=>DigitizationSql, "responsible"=>"x.responsible", "observation"=>"x.observation", "executionType"=>"x.execution_type", "origin"=>"x.origin","buyer"=>"e.buyer","vendor"=>"e.vendor","usd"=>"e.usd","onHold"=>"coalesce(jc.on_hold,false)","jobLabel"=>"jc.label","noProgram"=>"x.no_program", _=>"e.job" };
+        var sort=query.Sort switch { "jobState"=>OfficialStateSql, "inDate"=>"e.in_date", "dueDate"=>"e.due_date", "test"=>PlanningTestSql, "originalTest"=>"x.original_test", "equivalence"=>"x.equivalence", "laboratory"=>"x.laboratory", "service"=>"e.service", "digitizedAt"=>"(x.digitized_at AT TIME ZONE 'America/Guatemala')::time", "testedOn"=>"x.tested_on", "digitizedBy"=>"x.digitized_by", "state"=>DigitizationSql, "responsible"=>"x.responsible", "observation"=>"x.observation", "executionType"=>"x.execution_type", "origin"=>"x.origin","buyer"=>"e.buyer","vendor"=>"e.vendor","usd"=>"e.usd","onHold"=>"coalesce(jc.on_hold,false)","jobLabel"=>"jc.label","noProgram"=>"x.no_program", _=>"e.job" };
         if(query.SearchMode is not ("Contains" or "Exact" or "Prefix"))throw new Application.Planning.PlanningValidationException("Modo de búsqueda inválido.");
         if(query.Scope is not ("History" or "Operational"))throw new Application.Planning.PlanningValidationException("Seleccione período operativo o histórico completo.");
         var today=DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeBySystemTimeZoneId(DateTimeOffset.UtcNow,"Central America Standard Time").DateTime);
@@ -96,8 +96,8 @@ public sealed partial class PostgresPlanningStore
             if(text.Length>0&&"=+-@\t\r".Contains(text[0],StringComparison.Ordinal))text="'"+text;
             return "\""+text.Replace("\"","\"\"",StringComparison.Ordinal)+"\"";
         }
-        var csv=new System.Text.StringBuilder("\uFEFFFecha Ingreso,Due Date,Estado,JOB,Prueba,Equivalencia,Laboratorio,Hora,Fecha Prueba,Estado de digitación,Digitado por,Servicio,Buyer,Vendor,USD,On Hold,Etiqueta,NO PROGRAMAR,Responsable,Observación,Tipo ejecución,Origen,Episodio,Ejecución,Alcance\r\n");
-        foreach(var row in page.Items)csv.AppendLine(string.Join(',',new object?[]{row.InDate,row.DueDate,row.JobState,row.Job,row.OriginalTest,row.Equivalence,row.Laboratory,row.DigitizedAt?.ToOffset(TimeSpan.FromHours(-6)).ToString("HH:mm:ss",System.Globalization.CultureInfo.InvariantCulture),row.TestedOn,row.DigitizationState,row.DigitizedBy,row.Service,row.Buyer,row.Vendor,row.Usd,row.OnHold,row.JobLabel,row.NoProgram,row.Responsible,row.Observation,row.ExecutionType,row.Origin,row.EpisodeId,row.ExecutionId,page.Scope?.Mode}.Select(Cell)));
+        var csv=new System.Text.StringBuilder("\uFEFFFecha Ingreso,Due Date,Estado,JOB,Prueba,Nombre t?cnico original,Equivalencia,Laboratorio,Hora,Fecha Prueba,Estado de digitación,Digitado por,Servicio,Buyer,Vendor,USD,On Hold,Etiqueta,NO PROGRAMAR,Responsable,Observación,Tipo ejecución,Origen,Episodio,Ejecución,Alcance\r\n");
+        foreach(var row in page.Items)csv.AppendLine(string.Join(',',new object?[]{row.InDate,row.DueDate,row.JobState,row.Job,row.PlanningTest,row.OriginalTest,row.Equivalence,row.Laboratory,row.DigitizedAt?.ToOffset(TimeSpan.FromHours(-6)).ToString("HH:mm:ss",System.Globalization.CultureInfo.InvariantCulture),row.TestedOn,row.DigitizationState,row.DigitizedBy,row.Service,row.Buyer,row.Vendor,row.Usd,row.OnHold,row.JobLabel,row.NoProgram,row.Responsible,row.Observation,row.ExecutionType,row.Origin,row.EpisodeId,row.ExecutionId,page.Scope?.Mode}.Select(Cell)));
         return System.Text.Encoding.UTF8.GetBytes(csv.ToString());
     }
     public async Task<JobDossier?> DossierAsync(Guid episodeId,CancellationToken ct)

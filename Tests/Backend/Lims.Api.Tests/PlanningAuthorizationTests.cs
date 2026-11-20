@@ -19,6 +19,7 @@ public sealed class PlanningAuthorizationTests : IDisposable
     [Theory]
     [InlineData("/api/workspaces")]
     [InlineData("/api/planning/jobs")]
+    [InlineData("/api/planning/report-list")]
     [InlineData("/api/planning/imports")]
     [InlineData("/api/planning/reviews")]
     [InlineData("/api/planning/reviews/workspace")]
@@ -36,6 +37,10 @@ public sealed class PlanningAuthorizationTests : IDisposable
     [InlineData("/api/planning/equivalences","PUT")]
     [InlineData("/api/planning/source-resolution","POST")]
     [InlineData("/api/planning/notes","POST")]
+    [InlineData("/api/planning/report-list/check","POST")]
+    [InlineData("/api/planning/report-list/correction","POST")]
+    [InlineData("/api/planning/report-list/keep","PUT")]
+    [InlineData("/api/planning/report-list/scan","POST")]
     [InlineData("/api/planning/reviews/decision","PUT")]
     [InlineData("/api/planning/access/users/42","PUT")]
     public async Task ReadPermissionDoesNotAuthorizeDirectWritesEvenWithOldAdministratorToken(string path,string method)

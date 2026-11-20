@@ -1,4 +1,4 @@
-namespace Lims.Contracts.Planning;
+﻿namespace Lims.Contracts.Planning;
 
 public static class PlanningPermissions
 {
@@ -7,7 +7,9 @@ public static class PlanningPermissions
     public const string EditWip = "planning.wip.edit";
     public const string ManualTests = "planning.tests.manual";
     public const string Equivalences = "planning.equivalences.manage";
-    public static IReadOnlyList<string> All { get; } = [View, Import, EditWip, ManualTests, Equivalences];
+    public const string ReportMark = "planning.report.mark";
+    public const string ReportReview = "planning.report.review";
+    public static IReadOnlyList<string> All { get; } = [View, Import, EditWip, ManualTests, Equivalences, ReportMark, ReportReview];
 }
 
 public sealed record WorkspaceAccess(bool Laboratory, bool Planning, bool Administration, IReadOnlyList<string> Permissions, string? Notice = null);
@@ -23,11 +25,12 @@ public sealed record PlanningRow(Guid EpisodeId, Guid? ExecutionId, string Job, 
     string? Buyer, string? Vendor, bool HasIncidents, string? Responsible = null, string? Observation = null, long NoteVersion = 0,
     bool OnHold = false, string? JobLabel = null, string? HoldReason = null, long ControlVersion = 0, decimal? Usd = null,bool NoProgram=false,string? SampleStatus=null,string? OfficialJobStatus=null)
 {
+    public string PlanningTest => ExecutionId is null ? "WIP sin pruebas" : NoProgram ? "NO PROGRAMAR" : string.IsNullOrWhiteSpace(Equivalence) ? "Sin equivalencia" : Equivalence;
     public string JobState => SampleStatus ?? OfficialJobStatus ?? "No informado";
     public bool Complete => ExecutionId is not null && DigitizedAt is not null && TestedOn is not null;
     public bool OperationalPending => ExecutionId is not null && !OnHold && !Complete;
     [System.Text.Json.Serialization.JsonIgnore] public string OriginLabel => Origin == "ReportList" ? "Report List" : Origin == "Manual" ? "Manual" : "Summary";
-    public override string ToString() => $"{Job} · {OriginalTest ?? "WIP sin pruebas"} · {DigitizationState}";
+    public override string ToString() => $"{Job} · {PlanningTest} · {DigitizationState}";
 }
 public sealed record PlanningCounts(int Jobs,int Executions,int Digitized,int Pending,int Unknown,
     int Records = 0,int Overdue = 0,int OnHoldTests = 0,int OnHoldJobs = 0,int TaggedJobs = 0);
@@ -118,5 +121,5 @@ public static class PlanningLabels
         "ExecutionIdentity" => "Identidad por conciliar", "ReportWithoutSummary" => "Report List sin Summary", "ExternalClosed" => "Close Date externo", "Episode" => "Revisar episodio", _ => code
     };
     public static string State(string code) => code switch { "Preview" => "En revisión", "Applied" => "Confirmado", "Pending" => "Pendiente", "Held" => "Retenido", "Resolved" => "Resuelto", "Excluded"=>"Excluido justificadamente", _ => code };
-    public static string Permission(string code) => code switch { PlanningPermissions.View => "Consultar Planificación", PlanningPermissions.Import => "Revisar y confirmar importaciones", PlanningPermissions.EditWip => "Editar WIP y retener incidencias", PlanningPermissions.ManualTests => "Agregar pruebas y conciliar identidades", PlanningPermissions.Equivalences => "Administrar equivalencias y NO PROGRAMAR", _ => code };
+    public static string Permission(string code) => code switch { PlanningPermissions.ReportMark => "Marcar Report List y escanear", PlanningPermissions.ReportReview => "Corregir marcados y permanencia", PlanningPermissions.View => "Consultar Planificación", PlanningPermissions.Import => "Revisar y confirmar importaciones", PlanningPermissions.EditWip => "Editar WIP y retener incidencias", PlanningPermissions.ManualTests => "Agregar pruebas y conciliar identidades", PlanningPermissions.Equivalences => "Administrar equivalencias y NO PROGRAMAR", _ => code };
 }

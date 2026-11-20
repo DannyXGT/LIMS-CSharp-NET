@@ -16,7 +16,7 @@ public sealed class RealPlanningDatabaseFactAttribute : FactAttribute
         if(string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("LIMS_PLANNING_TEST_CONNECTION"))||!File.Exists(Path.Combine((Environment.GetEnvironmentVariable("USERPROFILE")??Environment.GetFolderPath(Environment.SpecialFolder.UserProfile)),"Downloads","a0_-_pro-invoice_summary_17Nov2026045852237.xlsx")))Skip="Requiere los XLSX reales autorizados y PostgreSQL CI local aislado.";
     }
 }
-public sealed class PlanningPostgresTests
+public sealed partial class PlanningPostgresTests
 {
     [PlanningDatabaseFact]
     public async Task IdentityUpgradePreservesExistingBatchEpisodeExecutionAndHistory()
@@ -202,7 +202,7 @@ public sealed class PlanningPostgresTests
         Assert.Empty((await db.Store.QueryAsync(new(InFrom:new(2026,11,17)),default)).Items);
         Assert.Equal(25,(await db.Store.QueryAsync(new(Search:"j1;OTHER",Until:new(2026,11,21)),default)).Total);
         var sorted=await db.Store.QueryAsync(new(Sort:"test",Descending:true,PageSize:5),default);
-        Assert.Equal(first.Total,sorted.Total);Assert.NotEqual(first.Items[0].OriginalTest,sorted.Items[0].OriginalTest);
+        Assert.Equal(first.Total,sorted.Total);Assert.All(sorted.Items,r=>Assert.Equal("Sin equivalencia",r.PlanningTest));
     }
     [PlanningDatabaseFact]
     public async Task HtmlRulesRequireBothFieldsIncludeTodayAndKeepUnknownIndependentOfHold()
@@ -332,9 +332,9 @@ public sealed class PlanningPostgresTests
         Assert.True((await store.ConfirmAsync(preview.Id,1,default)).AlreadyApplied);
         await store.AddManualTestAsync(row.EpisodeId,new(dossier.Version,actual.Test!,"DIMENSIONAL","Physical","CI local: repetición autorizada de una prueba real"),1,default);
         preview=await store.PreviewAsync(complete with{Fingerprint=Guid.NewGuid().ToString("N")},1,default);
-        Assert.Contains(preview.Reviews,r=>r.Category=="ExecutionIdentity"&&r.OriginalTest==actual.Test);await store.ConfirmAsync(preview.Id,1,default);
+        Assert.DoesNotContain(preview.Reviews,r=>r.Category=="ExecutionIdentity"&&r.OriginalTest==actual.Test);await store.ConfirmAsync(preview.Id,1,default);
         Assert.Equal(25,(await store.DossierAsync(row.EpisodeId,default))!.Tests.Count);
-        var reviewPage=await store.ReviewPageAsync("ExecutionIdentity",job,1,1,default);Assert.Equal(1,reviewPage.Total);Assert.Single(reviewPage.Items);
+        var reviewPage=await store.ReviewPageAsync("ExecutionIdentity",job,1,1,default);Assert.Equal(0,reviewPage.Total);Assert.Empty(reviewPage.Items);
     }
     [RealPlanningDatabaseFact]
     public async Task RealReviewWorkspaceFiltersDecisionsCatalogueAndExportRemainConsistentAcrossReimport()
@@ -482,7 +482,7 @@ public sealed class PlanningPostgresTests
             await fixture.Sql("CREATE TABLE public.departamentos(id integer PRIMARY KEY,nombre text);CREATE TABLE public.usuarios(id integer PRIMARY KEY,nombre text,id_departamento integer,activo boolean);CREATE TABLE public.usuarios_permisos(id_usuario integer,permiso_key text,PRIMARY KEY(id_usuario,permiso_key));INSERT INTO public.usuarios VALUES(1,'Actor sintético local',NULL,true);"+PlanningSchema.Sql+PlanningNotesSchema.Sql+PlanningControlsSchema.Sql+PlanningOfficialSchema.Sql+PlanningReviewSchema.Sql);
             if(migrateIdentity)
             {
-                await fixture.Sql(PlanningIdentitySchema.Sql+PlanningIdentitySchema.AccessSql);
+                await fixture.Sql(PlanningIdentitySchema.Sql+PlanningIdentitySchema.AccessSql+ReportListSchema.Sql);
                 await using var identity = new PlanningIdentityDatabase(cs.ConnectionString);
                 await identity.RegisterActorAsync(database,1,default);
             }

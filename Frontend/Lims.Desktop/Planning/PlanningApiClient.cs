@@ -22,6 +22,19 @@ public sealed class PlanningApiClient(IHttpClientFactory clients)
             "Planificación todavía no está disponible en esta API. Puedes continuar en los módulos actuales autorizados."),null,200);
     }
     public Task<PlanningCall<PlanningPage>> Jobs(PlanningQuery query,CancellationToken ct)=>Send<PlanningPage>(HttpMethod.Get,"/api/planning/jobs?"+Query(query),null,ct);
+    public async Task<PlanningCall<ReportListPage>> ReportList(ReportListQuery query,CancellationToken ct)
+    {
+        var result=await Send<ReportListPage>(HttpMethod.Get,"/api/planning/report-list?"+string.Join('&',new Dictionary<string,string?>{
+        ["Search"]=query.Search,["View"]=query.View,["Laboratory"]=query.Laboratory,["Test"]=query.Test,["Service"]=query.Service,["Buyer"]=query.Buyer,
+        ["Page"]=query.Page.ToString(CultureInfo.InvariantCulture),["PageSize"]=query.PageSize.ToString(CultureInfo.InvariantCulture),
+        ["Sort"]=query.Sort,["Descending"]=query.Descending.ToString(),["VerifiedBy"]=query.VerifiedBy,["Block"]=query.Block?.ToString(CultureInfo.InvariantCulture),
+        ["CheckedDate"]=query.CheckedDate?.ToString("yyyy-MM-dd",CultureInfo.InvariantCulture),["Revision"]=query.Revision?.ToString(CultureInfo.InvariantCulture)
+        }.Where(p=>!string.IsNullOrEmpty(p.Value)).Select(p=>p.Key+"="+Uri.EscapeDataString(p.Value!))),null,ct).ConfigureAwait(false);
+        return result.StatusCode==404?result with { Error="Report List todavía no está disponible en el servidor configurado. Se requiere actualizar el servidor para usar este módulo." }:result;
+    }
+    public Task<PlanningCall<ReportListResult>> CheckReport(ReportListCheck request,bool correction,CancellationToken ct)=>Send<ReportListResult>(HttpMethod.Post,"/api/planning/report-list/"+(correction?"correction":"check"),request,ct);
+    public Task<PlanningCall<bool>> KeepReport(ReportListKeep request,CancellationToken ct)=>Send<bool>(HttpMethod.Put,"/api/planning/report-list/keep",request,ct);
+    public Task<PlanningCall<ReportListResult>> ScanReport(ReportListScan request,CancellationToken ct)=>Send<ReportListResult>(HttpMethod.Post,"/api/planning/report-list/scan",request,ct);
     public Task<PlanningCall<JobDossier>> Dossier(Guid id,CancellationToken ct)=>Send<JobDossier>(HttpMethod.Get,$"/api/planning/jobs/{id:D}",null,ct);
     public Task<PlanningCall<IReadOnlyList<PlanningNoteSaved>>> SaveNotes(PlanningNoteBatch request,CancellationToken ct)=>Send<IReadOnlyList<PlanningNoteSaved>>(HttpMethod.Post,"/api/planning/notes",request,ct);
     public Task<PlanningCall<bool>> SaveWip(Guid id,WipEdit request,CancellationToken ct)=>Send<bool>(HttpMethod.Put,$"/api/planning/jobs/{id:D}/wip",request,ct);

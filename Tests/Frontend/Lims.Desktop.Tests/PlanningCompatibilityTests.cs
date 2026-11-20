@@ -8,6 +8,14 @@ namespace Lims.Desktop.Tests;
 public sealed class PlanningCompatibilityTests
 {
     [Fact]
+    public async Task OlderServerReportsMissingReportListWithoutPretendingItIsAnEmptyList()
+    {
+        using var factory=new ClientFactory(_=>new(HttpStatusCode.NotFound));
+        var result=await new PlanningApiClient(factory).ReportList(new(),default);
+        Assert.False(result.IsSuccess);Assert.Null(result.Value);Assert.Equal(404,result.StatusCode);
+        Assert.Contains("servidor",result.Error);Assert.Contains("actualizar",result.Error);
+    }
+    [Fact]
     public async Task ExistingApiKeepsAuthorizedLaboratoryAvailableWithoutAnotherLogin()
     {
         var paths=new List<string>();

@@ -86,7 +86,11 @@ public sealed partial class PostgresPlanningStore(PlanningDatabase database, Pla
         var jobs=input.Rows.Select(r=>r.Job).Distinct(StringComparer.Ordinal).ToArray();
         var episodes=await Episodes(c,tx,jobs,ct).ConfigureAwait(false);
         var executions=await Executions(c,tx,episodes.Select(e=>e.Id).ToArray(),ct).ConfigureAwait(false);
-        var plan=PlanningReconciler.Plan(input,episodes,executions,await Mappings(c,tx,ct).ConfigureAwait(false));
+        var links=new List<StoredSourceIdentity>();
+        await using(var cmd=Command(c,tx,"SELECT DISTINCT b.report_sha256,s.row_number,s.sheet,s.execution_id FROM planning.source_rows s JOIN planning.batches b ON b.id=s.batch_id WHERE b.status='Applied' AND b.report_sha256=@hash AND s.file='Report List' AND s.execution_id IS NOT NULL",("hash",PlanningImportReader.Hash(input.Report))))
+        await using(var r=await cmd.ExecuteReaderAsync(ct).ConfigureAwait(false))
+            while(await r.ReadAsync(ct).ConfigureAwait(false))links.Add(new(r.GetString(0),r.GetInt32(1),r.GetString(2),r.GetGuid(3)));
+        var plan=PlanningReconciler.Plan(input,episodes,executions,await Mappings(c,tx,ct).ConfigureAwait(false),links);
         var id=Guid.NewGuid();
         var newIds=plan.Episodes.Where(e=>e.IsNew).Select(e=>e.Id).ToHashSet();
         var changedIds=plan.Changes.Where(c=>c.Entity is "WIP" or "OfficialState").Select(c=>c.EpisodeId).ToHashSet();
@@ -147,6 +151,7 @@ public sealed partial class PostgresPlanningStore(PlanningDatabase database, Pla
             if(execution.Action!="Observe") audit.Add(new(execution.EpisodeId,execution.Action=="LinkManual"?"ManualSourceLinked":"TestImported",new { BatchId=id,execution.Id,execution.OriginalTest }));
         }
         await CopySources(c,id,input,plan,ct).ConfigureAwait(false);
+        await ReopenReportAlerts(c,tx,ct).ConfigureAwait(false);
         await RefreshSummaryTray(c,tx,plan.Episodes.Select(e=>e.Id).Concat(plan.Executions.Select(e=>e.EpisodeId)).Distinct().ToArray(),ct).ConfigureAwait(false);
         await ReconcileImportIncidents(c,tx,plan.Episodes.Select(e=>e.Id).Concat(plan.Executions.Select(e=>e.EpisodeId)).Distinct().ToArray(),audit,ct).ConfigureAwait(false);
         await CopyImportAudit(c,actor,audit,ct).ConfigureAwait(false);

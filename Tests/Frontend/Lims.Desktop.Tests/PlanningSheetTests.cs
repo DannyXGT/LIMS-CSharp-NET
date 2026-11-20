@@ -1,10 +1,18 @@
-using Lims.Contracts.Planning;
+﻿using Lims.Contracts.Planning;
 using Lims.Desktop.Planning;
 
 namespace Lims.Desktop.Tests;
 
 public sealed class PlanningSheetTests
 {
+    [Fact]
+    public void MainTestCellCopiesApprovedNameAndNeverFallsBackToTechnicalName()
+    {
+        var model=Sheet(1);var column=model.Columns.FindIndex(c=>c.Key=="PlanningTest");model.Select(0,column);
+        Assert.Equal("Prueba 0",model.Copy());model.Rows[0]=model.Rows[0] with{Equivalence=null};Assert.Equal("Sin equivalencia",model.Copy());
+        model.Rows[0]=model.Rows[0] with{NoProgram=true};Assert.Equal("NO PROGRAMAR",model.Copy());
+        Assert.Equal("Prueba 0",PlanningSheetModel.Value(model.Rows[0],"OriginalTest"));
+    }
     [Fact]
     public void SelectAllCopiesOnlyTheLoadedPageIncludingTheLastCellAndNeverMakesSourceColumnsEditable()
     {
@@ -19,7 +27,7 @@ public sealed class PlanningSheetTests
     {
         var model=new PlanningSheetModel();
         if(editable)model.Columns.AddRange(PlanningSheetModel.AvailableColumns.Where(c=>c.Editable));
-        for(int i=0;i<count;i++)model.Rows.Add(new(Guid.NewGuid(),Guid.NewGuid(),"JOB"+i,new(2026,11,16),new(2026,11,20),"Prueba "+i,null,"Físico","Regular",null,null,"Sin información",null,null,"ReportList","Buyer",null,false));
+        for(int i=0;i<count;i++)model.Rows.Add(new(Guid.NewGuid(),Guid.NewGuid(),"JOB"+i,new(2026,11,16),new(2026,11,20),"Prueba "+i,"Prueba "+i,"Físico","Regular",null,null,"Sin información",null,null,"ReportList","Buyer",null,false));
         return model;
     }
     [Fact]
@@ -56,7 +64,7 @@ public sealed class PlanningSheetTests
     [Fact]
     public void InitialColumnsFollowHtmlAndHeldUnknownRowsStayReadOnlyAndOperationallyExcluded()
     {
-        var m=Sheet(1,editable:true);Assert.Equal(["InDate","DueDate","JobState","Job","OriginalTest","Laboratory","DigitizedAt","TestedOn","DigitizationState","DigitizedBy"],m.Columns.Take(10).Select(c=>c.Key));
+        var m=Sheet(1,editable:true);Assert.Equal(["InDate","DueDate","JobState","Job","PlanningTest","Laboratory","DigitizedAt","TestedOn","DigitizationState","DigitizedBy"],m.Columns.Take(10).Select(c=>c.Key));
         Assert.True(m.Rows[0].OperationalPending);Assert.True(PlanningStatusText.Unknown(m.Rows[0]));
         m.Rows[0]=m.Rows[0]with{OnHold=true,JobLabel="OEKO"};Assert.False(m.Rows[0].OperationalPending);Assert.True(PlanningStatusText.Unknown(m.Rows[0]));
         m.Select(0,10);Assert.Equal(0,m.Preview("No escribir",true).Valid);m.Select(0,3);Assert.Equal("JOB0",m.Copy());

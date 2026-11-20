@@ -20,7 +20,7 @@ try{
     }
     if($Desktop){
         $env:Desktop__ApiBaseUrl='https://localhost:7441/';$env:Desktop__EnvironmentName='Development';$env:Desktop__RequestTimeoutSeconds='120'
-        $candidates=@('Frontend\Lims.Desktop\bin\x64\Debug\net10.0-windows10.0.26100.0\win-x64','Frontend\Lims.Desktop\bin\Debug\net10.0-windows10.0.26100.0\win-x64')
+        $candidates=@('Frontend\Lims.Desktop\bin\x64\Debug\net10.0-windows10.0.26100.0\win-x64','Frontend\Lims.Desktop\bin\Debug\net10.0-windows10.0.26100.0\win-x64','Frontend\Lims.Desktop\bin\Release\net10.0-windows10.0.26100.0\win-x64')
         if($DesktopOutput){
             $requested=[IO.Path]::GetFullPath((Join-Path $workspace $DesktopOutput))
             $allowedOutputs=@($candidates|ForEach-Object{[IO.Path]::GetFullPath((Join-Path $workspace $_))})
