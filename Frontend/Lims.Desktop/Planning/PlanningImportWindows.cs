@@ -23,7 +23,7 @@ public sealed class PlanningImportReviewWindow : Window
     private readonly Grid _layout=PlanningUi.Rows(GridLength.Auto,GridLength.Auto,GridLength.Auto,new(1,GridUnitType.Star),GridLength.Auto);
     private readonly TextBlock _metrics=PlanningUi.Text("",14),_message=PlanningUi.Text("",12,true),_footer=PlanningUi.Text("",12,true);
     private readonly CheckBox _defer=new(){Content="Importar registros válidos y dejar explícitamente las equivalencias pendientes"};
-    private readonly ComboBox _section=new(){ItemsSource=new[]{"A · Emergencias nuevas","B · Summary sin Report List","C · Report List sin Summary","D · Buyer y Vendor","E · Pruebas sin nombre asignado"},SelectedIndex=0,MinWidth=310};
+    private readonly ComboBox _section=new(){ItemsSource=new[]{"A · Emergencias nuevas","B · Summary sin Report List","C · Report List sin Summary","D · Buyer y Vendor","E · Pruebas sin nombre asignado","F · Admisión al trabajo activo","G · Reglas de negocio aplicadas","H · Diferencias entre fuentes"},SelectedIndex=0,MinWidth=310};
     private readonly TextBox _search=PlanningUi.Field("Buscar JOB o prueba",max:2000);
     private readonly ListView _rows=new(){SelectionMode=ListViewSelectionMode.Extended,IsMultiSelectCheckBoxEnabled=false};
     private readonly Grid _table=PlanningUi.Rows(new GridLength(36),new(1,GridUnitType.Star));
@@ -65,12 +65,13 @@ public sealed class PlanningImportReviewWindow : Window
     {
         var p=_data.Preview;_metrics.Text=$"{_data.NewCombinations:N0} combinaciones JOB + prueba nuevas · {p.NewJobs:N0} JOBs nuevos · Existentes: {p.UnchangedJobs+p.UpdatedJobs:N0} JOBs / {_data.ExistingTests:N0} pruebas · {_data.NewEmergencies:N0} emergencias nuevas";
         _footer.Text=$"{_data.ProcessedRows:N0} filas fuente a procesar · {p.NewTests:N0} ejecuciones nuevas · {_data.PendingEquivalences:N0} nombres por clasificar · {p.Issues.Count(i=>i.Blocking)} errores críticos";
+        if(p.Admissions is{} admissions)_footer.Text+=$" · {admissions.Count(a=>a.State=="Active"):N0} admitidas al trabajo activo · {admissions.Count(a=>a.State!="Active"):N0} conservadas fuera del trabajo activo";
         _defer.Visibility=_data.PendingEquivalences>0?Visibility.Visible:Visibility.Collapsed;
         _message.Text=string.Join(" · ",p.Issues.Where(i=>i.Blocking).Select(i=>$"{i.File}, fila {i.Row}: {i.Message}"));Filter();
     }
     private void Filter()
     {
-        var category=_section.SelectedIndex switch{1=>"SummaryWithoutReport",2=>"ReportWithoutSummary",3=>"MissingParty",4=>"MissingEquivalence",_=>"Emergency"};
+        var category=_section.SelectedIndex switch{1=>"SummaryWithoutReport",2=>"ReportWithoutSummary",3=>"MissingParty",4=>"MissingEquivalence",5=>"Admission",6=>"BusinessRule",7=>"SourceConflict",_=>"Emergency"};
         BuildRows(category);
         _visible=_data.Items.Where(r=>(r.Category==category||category=="MissingParty"&&r.Category=="PartyComplemented")&&((r.Job+" "+r.OriginalTest+" "+r.Explanation).Contains(_search.Text,StringComparison.OrdinalIgnoreCase))).ToArray();
         _rows.ItemsSource=_visible;_message.Text=$"{_visible.Length:N0} registros en esta sección. "+(_section.SelectedIndex is 1 or 2?"Report List no contiene fechas de cobertura verificables; la ausencia no demuestra pérdida.":_section.SelectedIndex==4?"Agrupados por nombre original; conserva los JOBs relacionados.":"");Actions();

@@ -23,7 +23,8 @@ public sealed class PlanningSheetModel
         new("Laboratory","Laboratorio",125),new("DigitizedAt","Hora",100),new("TestedOn","Fecha Prueba",110),new("DigitizationState","Estado de digitación",150),new("DigitizedBy","Digitado por",120),
         new("OriginalTest","Nombre técnico original",260,false,false),new("Equivalence","Equivalencia",190,false,false),new("Service","Servicio",112,false,false),new("Buyer","Buyer",150,false,false),new("Vendor","Vendor",170,false,false),new("Usd","USD",100,false,false),
         new("Responsible","Responsable",150,true,false),new("Observation","Observación",193,true,false),new("OnHold","On Hold",100,false,false),new("JobLabel","Etiqueta",120,false,false),new("NoProgram","Programación",125,false,false),
-        new("Origin","Origen",110,false,false),new("ExecutionType","Tipo ejecución",135,false,false)];
+        new("Origin","Origen",110,false,false),new("ExecutionType","Tipo ejecución",135,false,false),
+        new("ScheduleReviewState","Chequeo de horario",165,false,false),new("ScheduleReviewedBy","Chequeado por",150,false,false),new("ScheduleReviewedAt","Fecha de chequeo",170,false,false),new("ExecutionId","Ejecución",285,false,false)];
     public ObservableCollection<PlanningRow> Rows{get;}=[];
     public Func<int,string,string>? DisplayValue {get;set;}
     public List<SheetColumn> Columns{get;}=AvailableColumns.Where(c=>c.InitiallyVisible).ToList();
@@ -49,7 +50,9 @@ public sealed class PlanningSheetModel
         "TestedOn"=>row.TestedOn?.ToString("yyyy-MM-dd",CultureInfo.InvariantCulture)??"","DigitizedBy"=>row.DigitizedBy??"","Responsible"=>row.Responsible??"",
         "Observation"=>row.Observation??"","ExecutionType"=>row.ExecutionType??"","Origin"=>row.OriginLabel,
         "Buyer"=>row.Buyer??"","Vendor"=>row.Vendor??"","Usd"=>row.Usd?.ToString("0.####",CultureInfo.InvariantCulture)??"",
-        "OnHold"=>row.OnHold?"On Hold":"Activo","JobLabel"=>row.JobLabel??"","NoProgram"=>row.NoProgram?"NO PROGRAMAR":"",_=>""
+        "OnHold"=>row.OnHold?"On Hold":"Activo","JobLabel"=>row.JobLabel??"","NoProgram"=>row.NoProgram?"NO PROGRAMAR":"",
+        "ScheduleReviewState"=>row.ScheduleReviewState??(row.Complete?"Sin sesión de chequeo":"Pendiente de digitación"),"ScheduleReviewedBy"=>row.ScheduleReviewedBy??"",
+        "ScheduleReviewedAt"=>row.ScheduleReviewedAt?.ToOffset(TimeSpan.FromHours(-6)).ToString("yyyy-MM-dd HH:mm:ss",CultureInfo.InvariantCulture)??"","ExecutionId"=>row.ExecutionId?.ToString()??"",_=>""
     };
     private static string Quote(string value)=>value.IndexOfAny(['\t','\n','\r','"'])<0?value:"\""+value.Replace("\"","\"\"",StringComparison.Ordinal)+"\"";
     public string Copy()

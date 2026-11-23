@@ -24,13 +24,13 @@ internal static class PlanningUi
     public static Grid Rows(params GridLength[] heights)
     {var grid=new Grid{RowSpacing=12};foreach(var height in heights)grid.RowDefinitions.Add(new(){Height=height});return grid;}
     public static void Place(Grid grid,FrameworkElement child,int row){Grid.SetRow(child,row);grid.Children.Add(child);}
-    public static async Task<string?> PickFile(XamlRoot root,bool save=false)
+    public static async Task<string?> PickFile(XamlRoot root,bool save=false,string suggestedName="Consulta de Jobs")
     {
         var window=WindowFor(root);if(window is null)throw new InvalidOperationException("La ventana no está disponible.");
         var handle=WinRT.Interop.WindowNative.GetWindowHandle(window);
         if(save)
         {
-            var picker=new FileSavePicker{SuggestedFileName="Consulta de Jobs"};picker.FileTypeChoices.Add("CSV UTF-8",[".csv"]);WinRT.Interop.InitializeWithWindow.Initialize(picker,handle);
+            var picker=new FileSavePicker{SuggestedFileName=suggestedName};picker.FileTypeChoices.Add("CSV UTF-8",[".csv"]);WinRT.Interop.InitializeWithWindow.Initialize(picker,handle);
             return (await picker.PickSaveFileAsync())?.Path;
         }
         else

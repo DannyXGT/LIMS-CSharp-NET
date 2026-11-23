@@ -1,12 +1,27 @@
 using System.Net;
 using System.Net.Http.Json;
 using Lims.Contracts.Permissions;
+using Lims.Contracts.Planning;
 using Lims.Desktop.Planning;
 
 namespace Lims.Desktop.Tests;
 
 public sealed class PlanningCompatibilityTests
 {
+    [Fact]
+    public async Task ScheduleRequestsOmitAbsentRevisionAndEncodeSearchBeforeFirstPage()
+    {
+        var queries=new List<string>();
+        using var factory=new ClientFactory(request=>
+        {
+            queries.Add(request.RequestUri!.Query);
+            return new(HttpStatusCode.OK){Content=JsonContent.Create(new ReportSchedulePage([],0,1,100,42))};
+        });
+        var api=new PlanningApiClient(factory);
+        Assert.True((await api.ReportSchedules(new(Search:"JOB & PH"),default)).IsSuccess);
+        Assert.DoesNotContain("Revision",queries[0]);Assert.Contains("Search=JOB%20%26%20PH",queries[0]);
+        await api.ReportSchedules(new(Page:2,Revision:42),default);Assert.Contains("Revision=42",queries[1]);
+    }
     [Fact]
     public async Task OlderServerReportsMissingReportListWithoutPretendingItIsAnEmptyList()
     {

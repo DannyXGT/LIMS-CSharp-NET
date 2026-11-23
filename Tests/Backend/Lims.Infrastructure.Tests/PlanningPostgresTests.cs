@@ -352,7 +352,7 @@ public sealed partial class PlanningPostgresTests
         Assert.NotNull(row.Buyer);Assert.NotNull(row.InDate);Assert.NotNull(row.IncidentId);
         Assert.Single((await store.ReviewWorkspaceAsync(query with{ColumnFilters="{\"State\":\"Pendiente\"}"},default)).Items);
         Assert.Single((await store.ReviewWorkspaceAsync(new(Category:"MissingVendor",Search:"GUAT26011849",ColumnFilters:"{\"Vendor\":\"No informado\"}"),default)).Items);
-        var counts=page.Counters;Assert.Contains(counts,c=>c.Category=="SummaryWithoutReport"&&c.Pending>0);Assert.Equal(10,counts.Count);
+        var counts=page.Counters;Assert.Contains(counts,c=>c.Category=="SummaryWithoutReport"&&c.Pending>0);Assert.Contains(counts,c=>c.Category=="Admission"&&c.Total==0);Assert.Equal(11,counts.Count);
         var filtered=await store.ReviewWorkspaceAsync(query with{ColumnFilters="{\"Job\":\"DOES_NOT_EXIST\"}"},default);Assert.Empty(filtered.Items);Assert.All(filtered.Counters,c=>Assert.Equal(0,c.Total));
         var dates=await store.ReviewWorkspaceAsync(query with{ColumnFilters="{\"InDateFrom\":\"2040-01-01\"}"},default);Assert.Equal(0,dates.Total);
         await Assert.ThrowsAsync<PlanningValidationException>(()=>store.ReviewWorkspaceAsync(query with{Sort="job; DROP TABLE planning.episodes"},default));
@@ -482,7 +482,7 @@ public sealed partial class PlanningPostgresTests
             await fixture.Sql("CREATE TABLE public.departamentos(id integer PRIMARY KEY,nombre text);CREATE TABLE public.usuarios(id integer PRIMARY KEY,nombre text,id_departamento integer,activo boolean);CREATE TABLE public.usuarios_permisos(id_usuario integer,permiso_key text,PRIMARY KEY(id_usuario,permiso_key));INSERT INTO public.usuarios VALUES(1,'Actor sintético local',NULL,true);"+PlanningSchema.Sql+PlanningNotesSchema.Sql+PlanningControlsSchema.Sql+PlanningOfficialSchema.Sql+PlanningReviewSchema.Sql);
             if(migrateIdentity)
             {
-                await fixture.Sql(PlanningIdentitySchema.Sql+PlanningIdentitySchema.AccessSql+ReportListSchema.Sql);
+                await fixture.Sql(PlanningIdentitySchema.Sql+PlanningIdentitySchema.AccessSql+ReportListSchema.Sql+ReportScheduleSchema.Sql);
                 await using var identity = new PlanningIdentityDatabase(cs.ConnectionString);
                 await identity.RegisterActorAsync(database,1,default);
             }

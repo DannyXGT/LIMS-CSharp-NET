@@ -16,7 +16,7 @@ public sealed class WorkspaceNavigationService(PlanningApiClient api,ISessionSer
     {
         _host=host;_login=loginView;_laboratory=shellView;
         _selector=new WorkspaceSelectorPage(api,session,Open,async()=>{await authentication.LogoutAsync(CancellationToken.None);ShowLogin();});
-        _planning=new PlanningWorkspacePage(api,()=>ShowAuthenticatedShell());
+        _planning=new PlanningWorkspacePage(api,()=>ShowAuthenticatedShell(),()=>session.Profile?.Id);
         if(shellView is ShellPage shell)shell.AttachWorkspaceSelector(ShowAuthenticatedShell);
         if(shellView is ShellPage planningShell)
         {

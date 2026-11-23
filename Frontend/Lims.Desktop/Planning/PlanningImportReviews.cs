@@ -14,9 +14,13 @@ namespace Lims.Desktop.Planning;
 public sealed partial class PlanningImportsView
 {
     private sealed record ReviewColumn(string Key,string Label,int Width);
-    private static readonly (string Key,string Label)[] Queues=[("SummaryWithoutReport","Solo Summary"),("ReportWithoutSummary","Solo Report List"),("MissingParty","Sin Buyer/Vendor"),("MissingEquivalence","Sin equivalencia"),("MissingTests","Pruebas por agregar"),("IncompleteData","Datos incompletos"),("Reviewed","Retenidos y resueltos")];
-    private static readonly ReviewColumn[] AllReviewColumns=[new("Job","JOB",210),new("InDate","Fecha ingreso",112),new("DueDate","Due Date",112),new("OfficialState","Estado TIPS",155),new("Buyer","Buyer",180),new("Vendor","Vendor",180),new("Service","Servicio",115),new("Usd","USD",95),new("State","Situación",115),new("Reason","Motivo",300),new("OriginalTest","Prueba original",280),new("Equivalence","Equivalencia",180),new("Laboratory","Laboratorio",120),new("Origin","Origen",110),new("ImportedAt","Fecha de lote",160)];
-    private readonly StackPanel _queueButtons=new(){Orientation=Orientation.Horizontal,Spacing=4};
+    private static readonly (string Key,string Label)[] Queues=[("SummaryWithoutReport","Solo Summary"),("ReportWithoutSummary","Solo Report List"),("MissingParty","Sin Buyer/Vendor"),("MissingEquivalence","Sin equivalencia"),("MissingTests","Pruebas por agregar"),("IncompleteData","Datos incompletos"),("Admission","Admisión al trabajo activo"),("Reviewed","Retenidos y resueltos")];
+    private static readonly ReviewColumn[] AllReviewColumns=[new("Job","JOB",185),new("Reason","Motivo",280),new("State","Situación",100),new("InDate","Fecha ingreso",105),new("DueDate","Due Date",105),new("OfficialState","Estado TIPS",145),new("Buyer","Buyer",165),new("Vendor","Vendor",175),new("Service","Servicio",110),new("Usd","USD",90),new("OriginalTest","Prueba original",280),new("Equivalence","Equivalencia",180),new("Laboratory","Laboratorio",120),new("Origin","Origen",110),new("ImportedAt","Fecha de lote",160)];
+    private readonly StackPanel _queueButtons=new(){Spacing=4};
+    private sealed record QueueChoice(string Key,string Label);
+    private readonly ComboBox _queuePicker=new(){DisplayMemberPath=nameof(QueueChoice.Label),Width=240,Visibility=Visibility.Collapsed};
+    private readonly Dictionary<string,(Button Button,TextBlock Title,TextBlock Count,TextBlock Pending)> _queueNavigation=[];
+    private bool _paintingQueue;
     private readonly TextBox _reviewSearch=PlanningUi.Field("",max:2000);
     private readonly ComboBox _situation=new(){ItemsSource=new[]{"Abiertos (pendientes y retenidos)","Pendientes","Retenidos","Resueltos","Todos","Excluidos justificadamente"},SelectedIndex=1,Width=200};
     private sealed record BatchChoice(Guid? Id,string Label);
@@ -53,23 +57,34 @@ public sealed partial class PlanningImportsView
         Test:_reviewTest.Text,Laboratory:_reviewLab.Text,Origin:_reviewOrigin.SelectedIndex switch{1=>"Summary",2=>"ReportList",3=>"Manual",_=>null});
     private Grid ReviewPanel()
     {
-        var layout=PlanningUi.Rows(GridLength.Auto,GridLength.Auto,GridLength.Auto,GridLength.Auto,new(1,GridUnitType.Star),GridLength.Auto);layout.RowSpacing=8;
-        var title=PlanningUi.Text("Bandejas de revisión",18);title.FontWeight=Microsoft.UI.Text.FontWeights.SemiBold;
+        var layout=new Grid{ColumnSpacing=10};layout.ColumnDefinitions.Add(new(){Width=GridLength.Auto});layout.ColumnDefinitions.Add(new(){Width=new(1,GridUnitType.Star)});
+        var content=PlanningUi.Rows(GridLength.Auto,new(1,GridUnitType.Star),GridLength.Auto);content.RowSpacing=8;Grid.SetColumn(content,1);layout.Children.Add(content);
         _reviewScope.Style=(Style)Application.Current.Resources["LimsCompactComboBoxStyle"];AutomationProperties.SetName(_reviewScope,"Alcance de bandejas");
         _reviewScope.SelectionChanged+=async(_,_)=>{if(!_paintingScope&&_reviewScope.SelectedItem is BatchChoice choice){_reviewBatch=choice.Id;_reviewPage=1;CloseReviewDetail();await RefreshReviews();}};
-        PlanningUi.Place(layout,Split(title,_reviewScope),0);
-        PlanningUi.Place(layout,new ScrollViewer{Content=_queueButtons,HorizontalScrollBarVisibility=ScrollBarVisibility.Auto,VerticalScrollBarVisibility=ScrollBarVisibility.Disabled,HorizontalScrollMode=ScrollMode.Enabled},1);
+        var railTitle=PlanningUi.Text("Bandejas",14);railTitle.FontWeight=Microsoft.UI.Text.FontWeights.SemiBold;railTitle.Margin=new(10,4,0,6);
+        var railCountLabel=PlanningUi.Text("Casos",11,true);railCountLabel.Margin=new(0,4,10,6);railCountLabel.VerticalAlignment=VerticalAlignment.Center;
+        var railContent=PlanningUi.Rows(GridLength.Auto,new(1,GridUnitType.Star),GridLength.Auto);railContent.RowSpacing=4;PlanningUi.Place(railContent,Split(railTitle,railCountLabel),0);PlanningUi.Place(railContent,new ScrollViewer{Content=_queueButtons,HorizontalScrollBarVisibility=ScrollBarVisibility.Disabled,VerticalScrollBarVisibility=ScrollBarVisibility.Auto},1);
+        var overlap=PlanningUi.Text("Un caso puede aparecer en varias bandejas.",11,true);overlap.Margin=new(10,8,10,4);PlanningUi.Place(railContent,overlap,2);
+        var rail=Surface(railContent,new Thickness(6));rail.Width=224;AutomationProperties.SetName(rail,"Bandejas disponibles y sus contadores");layout.Children.Add(rail);
+        _queuePicker.Style=(Style)Application.Current.Resources["LimsCompactComboBoxStyle"];AutomationProperties.SetName(_queuePicker,"Bandeja de revisión");_queuePicker.Margin=new(0,0,8,0);
+        _queuePicker.SelectionChanged+=async(_,_)=>{if(!_paintingQueue&&_queuePicker.SelectedItem is QueueChoice choice&&choice.Key!=_reviewCategory)await SelectQueue(choice.Key);};
+        layout.SizeChanged+=(_,e)=>{var compact=e.NewSize.Width<1100;rail.Visibility=compact?Visibility.Collapsed:Visibility.Visible;_queuePicker.Visibility=compact?Visibility.Visible:Visibility.Collapsed;layout.ColumnSpacing=compact?0:10;};
         _reviewSearch.Header=null;_reviewSearch.PlaceholderText="Buscar JOB o prueba";_reviewSearch.MinWidth=160;AutomationProperties.SetName(_reviewSearch,"Buscar JOB en revisión");
         _reviewSearch.KeyDown+=async(_,e)=>{if(e.Key==VirtualKey.Enter){_reviewPage=1;await RefreshReviews();e.Handled=true;}};
         _reviewSearch.TextChanged+=(_,_)=>{_searchDelay.Stop();_searchDelay.Start();};
         _searchDelay.Tick+=async(_,_)=>{_searchDelay.Stop();_reviewPage=1;await RefreshReviews();};
         _situation.Style=(Style)Application.Current.Resources["LimsCompactComboBoxStyle"];AutomationProperties.SetName(_situation,"Situación de revisión");
         _situation.SelectionChanged+=async(_,_)=>{if(_switchingQueue)return;_reviewPage=1;await RefreshReviews();};
-        var more=Action("Filtros",LimsIconKind.Filter,()=>Task.CompletedTask);more.Flyout=ReviewFilters();
-        var columns=Action("Columnas",LimsIconKind.Results,()=>Task.CompletedTask);columns.Flyout=ReviewColumns();
+        var more=ReviewIcon("Filtros",LimsIconKind.Filter);more.Flyout=ReviewFilters();
+        var columns=ReviewIcon("Columnas",LimsIconKind.Administration);columns.Flyout=ReviewColumns();
         var export=Action("Exportar",LimsIconKind.Export,()=>Task.CompletedTask);var menu=new MenuFlyout();
         foreach(var (label,mode) in new[]{("Registros filtrados",0),("Filas seleccionadas",1),("Categoría completa en este alcance",2)}){var item=new MenuFlyoutItem{Text=label};item.Click+=async(_,_)=>await ExportReviewScope(mode);menu.Items.Add(item);}export.Flyout=menu;
-        var tools=PlanningUi.Row(_situation,more,columns,export);tools.Spacing=6;PlanningUi.Place(layout,Split(_reviewSearch,tools),2);
+        _situation.Width=165;
+        var searchEntry=new Grid();_reviewSearch.Padding=new(32,5,8,5);searchEntry.Children.Add(_reviewSearch);searchEntry.Children.Add(new LimsIcon{Icon=LimsIconKind.Search,Size=15,HorizontalAlignment=HorizontalAlignment.Left,VerticalAlignment=VerticalAlignment.Center,Margin=new(10,0,0,0),Foreground=PlanningUi.Brush("LimsTextSecondaryBrush"),IsHitTestVisible=false});
+        var searchGroup=new Grid();searchGroup.ColumnDefinitions.Add(new(){Width=GridLength.Auto});searchGroup.ColumnDefinitions.Add(new(){Width=new(1,GridUnitType.Star)});searchGroup.Children.Add(_queuePicker);Grid.SetColumn(searchEntry,1);searchGroup.Children.Add(searchEntry);
+        var tools=PlanningUi.Row(_situation,more,columns,export);tools.Spacing=6;tools.VerticalAlignment=VerticalAlignment.Center;
+        var query=new Grid{ColumnSpacing=8};query.ColumnDefinitions.Add(new(){Width=new(1,GridUnitType.Star)});query.ColumnDefinitions.Add(new(){Width=GridLength.Auto});query.RowDefinitions.Add(new(){Height=GridLength.Auto});query.RowDefinitions.Add(new(){Height=GridLength.Auto});query.Children.Add(searchGroup);Grid.SetColumn(tools,1);query.Children.Add(tools);
+        query.SizeChanged+=(_,e)=>{var narrow=e.NewSize.Width<800;Grid.SetColumnSpan(searchGroup,narrow?2:1);Grid.SetRow(tools,narrow?1:0);Grid.SetColumn(tools,narrow?0:1);Grid.SetColumnSpan(tools,narrow?2:1);tools.Margin=narrow?new(0,6,0,0):new(0);};
         _openReview=Action("Expediente",LimsIconKind.ViewDetail,OpenSelectedReview);
         _addTests=Action("Agregar pruebas",LimsIconKind.Add,AddTests,true);_hold=Action("Retener",LimsIconKind.Lock,()=>DecideReview("Held"));
         _resolve=Action("Resolver",LimsIconKind.Check,()=>DecideReview("Resolved"));_reopen=Action("Reabrir",LimsIconKind.Refresh,()=>DecideReview("Pending"));
@@ -82,11 +97,12 @@ public sealed partial class PlanningImportsView
         foreach(var button in new[]{_openReview,_addTests,_completeData,_equivalence,_identity,_hold,_resolve,_reopen,_exclude})button.Click+=(_,_)=>{actions.Hide();UpdateReviewActions();};
         _detailButton=Action("Ver detalle",LimsIconKind.ViewDetail,async()=>{_detailOpen=true;await ShowReviewDetail();});
         var contextual=PlanningUi.Row(_detailButton,_reviewActions);contextual.Spacing=6;
-        _queueSummary.MaxLines=2;PlanningUi.Place(layout,Split(_queueSummary,contextual),3);
+        _queueSummary.MaxLines=2;_queueSummary.VerticalAlignment=VerticalAlignment.Center;
+        var toolbar=PlanningUi.Rows(GridLength.Auto,GridLength.Auto);toolbar.RowSpacing=6;PlanningUi.Place(toolbar,query,0);PlanningUi.Place(toolbar,Split(_queueSummary,contextual),1);PlanningUi.Place(content,Surface(toolbar,new Thickness(10,8,10,8)),0);
         BuildDetailHost();
         var area=new Grid();area.Children.Add(Surface(_reviewCells,new Thickness(0)));_reviewEmpty.HorizontalAlignment=HorizontalAlignment.Center;_reviewEmpty.VerticalAlignment=VerticalAlignment.Center;_reviewEmpty.IsHitTestVisible=false;area.Children.Add(_reviewEmpty);
         _reviewDetailHost.Children.Add(area);_reviewDetailHost.ColumnDefinitions.Add(new(){Width=new(1,GridUnitType.Star)});_reviewDetailHost.ColumnDefinitions.Add(new(){Width=GridLength.Auto});
-        Grid.SetColumn(_reviewDetail,1);_reviewDetailHost.Children.Add(_reviewDetail);PlanningUi.Place(layout,_reviewDetailHost,4);
+        Grid.SetColumn(_reviewDetail,1);_reviewDetailHost.Children.Add(_reviewDetail);PlanningUi.Place(content,_reviewDetailHost,1);
         _reviewCells.CopyRequested+=CopyReviews;_reviewCells.OpenRequested+=OpenSelectedReview;
         _reviewCells.PasteRequested+=()=>{Message("Las fuentes son de solo lectura. Usa Completar datos para una corrección WIP autorizada con motivo y procedencia.");return Task.CompletedTask;};
         _reviewCells.SortRequested+=async key=>{_reviewDescending=_reviewSort==key&&!_reviewDescending;_reviewSort=key;_reviewPage=1;await RefreshReviews();};
@@ -96,29 +112,48 @@ public sealed partial class PlanningImportsView
         _reviewPrevious=Action("Anterior",LimsIconKind.ChevronLeft,async()=>{if(_reviewPage>1){_reviewPage--;await RefreshReviews();}});
         _reviewNext=Action("Siguiente",LimsIconKind.ChevronRight,async()=>{_reviewPage++;await RefreshReviews();});_reviewPrevious.IsEnabled=_reviewNext.IsEnabled=false;
         var page=PlanningUi.Row(_reviewPrevious,_reviewNext);page.Spacing=6;
-        var footer=PlanningUi.Stack(_reviewCount,_reviewSelection);footer.Spacing=1;PlanningUi.Place(layout,Split(footer,page),5);
-        ToolTipService.SetToolTip(_reviewCells,"Ctrl+C copiar · Ctrl+A página cargada · Shift+flechas ampliar · Enter expediente. Fuentes protegidas.");
+        var footer=PlanningUi.Stack(_reviewCount,_reviewSelection);footer.Spacing=1;PlanningUi.Place(content,Split(footer,page),2);
+        AutomationProperties.SetHelpText(_reviewCells,"Ctrl+C copiar · Ctrl+A página cargada · Shift+flechas ampliar · Enter expediente. Fuentes protegidas.");
         _reviewDetailHost.SizeChanged+=(_,e)=>_reviewDetail.MaxWidth=Math.Max(280,Math.Min(440,e.NewSize.Width*.48));
         BuildReviewTable();PaintQueueCounters([]);UpdateReviewActions();return layout;
+    }
+    private static Button ReviewIcon(string name,LimsIconKind icon)
+    {
+        var button=new Button{Content=new LimsIcon{Icon=icon,Size=16},Style=(Style)Application.Current.Resources["LimsIconButtonStyle"],Width=36,MinWidth=36,Padding=new(6)};
+        AutomationProperties.SetName(button,name);ToolTipService.SetToolTip(button,name);return button;
     }
     private readonly DispatcherTimer _searchDelay=new(){Interval=TimeSpan.FromMilliseconds(350)},_detailDelay=new(){Interval=TimeSpan.FromMilliseconds(160)};
     private bool _switchingQueue;
     private void PaintQueueCounters(IReadOnlyList<PlanningReviewCounter> counters)
     {
-        _reviewCounters=counters;_queueButtons.Children.Clear();
+        _reviewCounters=counters;
         foreach(var (key,label) in Queues)
         {
             var c=counters.FirstOrDefault(c=>c.Category==key);var active=key==_reviewCategory;
-            var caption=PlanningUi.Text(label,12,!active);caption.TextWrapping=TextWrapping.NoWrap;
-            var count=PlanningUi.Text(c is null?"—":c.Total.ToString("N0",CultureInfo.InvariantCulture),11);count.FontWeight=Microsoft.UI.Text.FontWeights.SemiBold;
-            var badge=new Border{Child=count,Padding=new(5,1,5,1),CornerRadius=new(4),Background=PlanningUi.Brush(active?"LimsAccentSoftBrush":"LimsSurfaceSecondaryBrush")};
-            var pending=PlanningUi.Text(c is null?"":$"{c.Pending:N0} pend.",10,true);pending.TextWrapping=TextWrapping.NoWrap;
-            var content=PlanningUi.Row(caption,badge,pending);content.Spacing=6;
-            var button=new Button{Content=content,Padding=new(9,7,9,7),Background=PlanningUi.Brush(active?"LimsAccentSoftBrush":"LimsBackgroundBrush"),BorderBrush=PlanningUi.Brush(active?"LimsAccentBrush":"LimsBorderBrush"),BorderThickness=new(0,0,0,2),CornerRadius=new(0)};
-            Motion.SetIsEnabled(button,true);
-            AutomationProperties.SetName(button,label);AutomationProperties.SetHelpText(button,CounterDescription(c));ToolTipService.SetToolTip(button,CounterDescription(c));button.Click+=async(_,_)=>await SelectQueue(key);_queueButtons.Children.Add(button);
+            if(!_queueNavigation.TryGetValue(key,out var entry))
+            {
+                var caption=PlanningUi.Text(label,12);caption.MaxLines=2;caption.VerticalAlignment=VerticalAlignment.Center;caption.TextAlignment=TextAlignment.Left;
+                var count=PlanningUi.Text("—",14);count.FontWeight=Microsoft.UI.Text.FontWeights.SemiBold;count.Margin=new(8,0,0,0);count.VerticalAlignment=VerticalAlignment.Center;count.TextAlignment=TextAlignment.Right;
+                var pending=PlanningUi.Text("",11,true);pending.FontWeight=Microsoft.UI.Text.FontWeights.Normal;pending.TextAlignment=TextAlignment.Left;
+                var cell=PlanningUi.Rows(GridLength.Auto,GridLength.Auto);cell.Width=186;cell.RowSpacing=3;cell.ColumnDefinitions.Add(new(){Width=new(1,GridUnitType.Star)});cell.ColumnDefinitions.Add(new(){Width=GridLength.Auto});cell.Children.Add(caption);Grid.SetColumn(count,1);cell.Children.Add(count);Grid.SetRow(pending,1);Grid.SetColumnSpan(pending,2);cell.Children.Add(pending);
+                var button=new Button{Content=cell,Style=(Style)Application.Current.Resources["LimsStandardsSecondaryButtonStyle"],Padding=new(9,9,9,9),HorizontalAlignment=HorizontalAlignment.Stretch,HorizontalContentAlignment=HorizontalAlignment.Stretch,BorderThickness=new(3,0,0,0),CornerRadius=new(6)};
+                Motion.SetIsEnabled(button,true);AutomationProperties.SetName(button,label);button.Click+=async(_,_)=>await SelectQueue(key);_queueButtons.Children.Add(button);
+                entry=(button,caption,count,pending);_queueNavigation.Add(key,entry);
+            }
+            entry.Title.FontWeight=active?Microsoft.UI.Text.FontWeights.SemiBold:Microsoft.UI.Text.FontWeights.Normal;
+            entry.Count.Text=c is null?"—":c.Total.ToString("N0",CultureInfo.InvariantCulture);entry.Count.Foreground=PlanningUi.Brush(active?"LimsAccentBrush":"LimsTextPrimaryBrush");
+            entry.Pending.Text=c is null?"":c.Pending==1?"1 pendiente":$"{c.Pending:N0} pendientes";
+            if(key=="Reviewed"&&c is not null)entry.Pending.Text=string.Join(" · ",new[]{(c.Held,"retenidos"),(c.Resolved,"resueltos"),(c.Excluded,"excluidos")}.Where(s=>s.Item1>0).Select(s=>$"{s.Item1:N0} {s.Item2}"));
+            entry.Button.Background=PlanningUi.Brush(active?"LimsAccentSoftBrush":"LimsSurfaceBrush");entry.Button.BorderBrush=PlanningUi.Brush(active?"LimsAccentBrush":"LimsSurfaceBrush");
+            AutomationProperties.SetItemStatus(entry.Button,active?"Bandeja seleccionada":"");AutomationProperties.SetHelpText(entry.Button,CounterDescription(c));ToolTipService.SetToolTip(entry.Button,CounterDescription(c));
         }
-        var current=counters.FirstOrDefault(c=>c.Category==_reviewCategory);_queueSummary.Text=CounterDescription(current);
+        _paintingQueue=true;
+        try{var choices=Queues.Select(q=>new QueueChoice(q.Key,q.Label+(counters.FirstOrDefault(c=>c.Category==q.Key) is{} c?$" · {c.Total:N0}":""))).ToArray();_queuePicker.ItemsSource=choices;_queuePicker.SelectedItem=choices.First(q=>q.Key==_reviewCategory);}
+        finally{_paintingQueue=false;}
+        var current=counters.FirstOrDefault(c=>c.Category==_reviewCategory);
+        var states=current is null?[]:new[]{(current.Pending,"pendiente","pendientes"),(current.Held,"retenido","retenidos"),(current.Resolved,"resuelto","resueltos"),(current.Excluded,"excluido","excluidos")}.Where(s=>s.Item1>0).Select(s=>$"{s.Item1:N0} {(s.Item1==1?s.Item2:s.Item3)}").ToArray();
+        _queueSummary.Text=current is null?"":states.Length==0?"Sin casos en esta bandeja":string.Join(" · ",states);
+        ToolTipService.SetToolTip(_queuePicker,CounterDescription(current));
         ToolTipService.SetToolTip(_queueSummary,"Contadores de PostgreSQL para todo el alcance y los filtros; incluyen todas las situaciones y páginas. Las categorías pueden superponerse.");
     }
     private string CounterDescription(PlanningReviewCounter? c)=>(ReviewScopeLabel+" · ")+(c is null?"Cargando…":$"Total {c.Total:N0} · Pendientes {c.Pending:N0} · Retenidos {c.Held:N0} · Resueltos {c.Resolved:N0}"+(c.Excluded>0?$" · Excluidos {c.Excluded:N0}":""));
@@ -133,7 +168,7 @@ public sealed partial class PlanningImportsView
             _reviewCategory=key;_reviewPage=1;
         }
         finally{_switchingQueue=false;}
-        CloseReviewDetail();await RefreshReviews();
+        PaintQueueCounters(_reviewCounters);CloseReviewDetail();await RefreshReviews();
     }
     private void BuildReviewTable()
     {
@@ -150,14 +185,13 @@ public sealed partial class PlanningImportsView
         _reviewLoading=true;UpdateReviewActions();_reviewCells.SetInteractionEnabled(false);_reviewPrevious.IsEnabled=_reviewNext.IsEnabled=false;
         try
         {
-            _progress.Visibility=Visibility.Visible;_progress.IsIndeterminate=true;_reviewEmpty.Text="Cargando bandeja…";_reviewEmpty.Visibility=Visibility.Visible;
+            _progress.Visibility=Visibility.Visible;_progress.IsIndeterminate=true;_reviewEmpty.Text="Cargando bandeja…";_reviewEmpty.Visibility=_reviewRows.Count==0?Visibility.Visible:Visibility.Collapsed;
             var result=await _api.ReviewWorkspace(query,token);if(token.IsCancellationRequested)return;
             if(!result.IsSuccess||result.Value is not{} value){Message(result.Error??"No se pudo consultar la revisión.");_reviewEmpty.Text="No se pudo cargar la bandeja. Cambia los filtros para volver a consultar.";return;}
             _reviewRows=value.Items;LoadReviewCells();
             var index=selected is null?-1:_reviewRows.ToList().FindIndex(r=>r.Key==selected);
             if(index>=0){_reviewCells.Model.Select(index,Math.Min(range.Left,_reviewCells.Model.Columns.Count-1));_reviewCells.Model.Select(index,Math.Min(range.Right,_reviewCells.Model.Columns.Count-1),true);_reviewCells.Paint();_reviewCells.RestoreScroll(scroll);}
-            var counter=value.Counters.FirstOrDefault(c=>c.Category==query.Category);
-            _reviewCount.Text=$"{(value.Items.Count==0?0:(value.Page-1)*value.PageSize+1):N0}–{(value.Items.Count==0?0:(value.Page-1)*value.PageSize+value.Items.Count):N0} de {value.Total:N0} filtrados · {counter?.Total??0:N0} casos en {ReviewScopeLabel} (todas las situaciones)";
+            _reviewCount.Text=$"{(value.Items.Count==0?0:(value.Page-1)*value.PageSize+1):N0}–{(value.Items.Count==0?0:(value.Page-1)*value.PageSize+value.Items.Count):N0} de {value.Total:N0} casos filtrados";
             _reviewPrevious.IsEnabled=value.Page>1;_reviewNext.IsEnabled=value.Page*value.PageSize<value.Total;PaintQueueCounters(value.Counters);
             _activeFilters.Text=value.ScopeNotice;ToolTipService.SetToolTip(_reviewCount,value.ScopeNotice);
             _reviewEmpty.Text="No hay casos que coincidan con esta bandeja y sus filtros.";_reviewEmpty.Visibility=value.Items.Count==0?Visibility.Visible:Visibility.Collapsed;
@@ -213,7 +247,8 @@ public sealed partial class PlanningImportsView
         _reviewActionHint.Text=string.Join('\n',disabled.Distinct());_reviewActionHint.Visibility=disabled.Count>0?Visibility.Visible:Visibility.Collapsed;
         _reviewActions.IsEnabled=selected.Length>0&&!_reviewLoading;_detailButton.IsEnabled=row is not null&&!_reviewLoading;
         var range=_reviewCells.Model.Range;
-        _reviewSelection.Text=selected.Length==0?"0 celdas seleccionadas":$"{selected.Length:N0} filas · {selected.Length*(range.Right-range.Left+1):N0} celdas seleccionadas";
+        var cells=selected.Length*(range.Right-range.Left+1);
+        _reviewSelection.Text=selected.Length==0?"Sin selección":$"{selected.Length:N0} {(selected.Length==1?"fila":"filas")} · {cells:N0} {(cells==1?"celda seleccionada":"celdas seleccionadas")}";
     }
     private int _regularSituation=1;
     private Task OpenSelectedReview()=>SelectedReview is{} row?OpenReview(row):Task.CompletedTask;

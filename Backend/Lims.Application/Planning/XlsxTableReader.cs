@@ -19,7 +19,8 @@ public static class XlsxTableReader
     private static readonly XmlReaderSettings Settings = new()
     { DtdProcessing = DtdProcessing.Prohibit, XmlResolver = null, MaxCharactersInDocument = 64L * 1024 * 1024 };
 
-    public static SpreadsheetTable Read(byte[] bytes, IReadOnlyList<string> requiredHeaders, CancellationToken ct = default)
+    public static SpreadsheetTable Read(byte[] bytes, IReadOnlyList<string> requiredHeaders, CancellationToken ct = default)=>ReadWithHeaderKey(bytes,requiredHeaders,null,ct);
+    public static SpreadsheetTable ReadWithHeaderKey(byte[] bytes,IReadOnlyList<string> requiredHeaders,Func<string,string>? headerKey,CancellationToken ct=default)
     {
         if (bytes.Length == 0 || bytes.Length > PlanningLimits.MaxFileBytes) throw new InvalidDataException("Tamaño XLSX inválido (máximo 5 MiB).");
         using var stream = new MemoryStream(bytes, false);
@@ -93,7 +94,7 @@ public static class XlsxTableReader
                 {
                     if (scanned > 20) break;
                     var values = Enumerable.Range(0, cells.Keys.Max() + 1).Select(i => cells.GetValueOrDefault(i)?.Value.Trim() ?? "").ToArray();
-                    if (requiredHeaders.All(h => values.Contains(h, StringComparer.Ordinal)))
+                    if (requiredHeaders.All(h => values.Any(v=>(headerKey?.Invoke(v)??v)==h)))
                     {
                         if (cells.Values.Any(c => c.Formula) || values.Where(v => v.Length > 0).Distinct(StringComparer.Ordinal).Count() != values.Count(v => v.Length > 0))
                             throw new InvalidDataException("Encabezados repetidos o calculados.");

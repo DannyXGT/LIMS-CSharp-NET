@@ -7,18 +7,19 @@ using Lims.Contracts.Planning;
 
 namespace Lims.Application.Planning;
 
-public static class PlanningImportReader
+public static partial class PlanningImportReader
 {
     public static PlanningImportInput Read(string summaryName, byte[] summary, string reportName, byte[] report, ImportCut cut, CancellationToken ct = default)
     {
         ArgumentNullException.ThrowIfNull(cut);
         if (cut.Window is not ("First" or "Noon" or "Last")) throw new PlanningValidationException("Seleccione primera carga, mediodía o última carga.");
+        if(cut.Policy is not ("Preserve" or "HtmlReact"))throw new PlanningValidationException("Política de importación inválida.");
         var issues = new List<ImportIssue>();
         var rows = new List<PlanningSourceRow>();
         var files = new List<FileCoverage>();
         ReadFile("Summary", summaryName, summary, ["Report #", "Reg Date", "Delivery Date"]);
         ReadFile("Report List", reportName, report, ["Report_no", "Test_Name"]);
-        var fingerprint = Hash(Encoding.UTF8.GetBytes($"{PlanningLimits.ReaderProfile}|{cut.Window}|{cut.Day:yyyy-MM-dd}|{Hash(summary)}|{Hash(report)}"));
+        var fingerprint = Hash(Encoding.UTF8.GetBytes($"{PlanningLimits.ReaderProfile}|{cut.Policy}|{cut.TargetInDate:yyyy-MM-dd}|{cut.Window}|{cut.Day:yyyy-MM-dd}|{Hash(summary)}|{Hash(report)}"));
         return new(cut, summary, report, Path.GetFileName(summaryName), Path.GetFileName(reportName), fingerprint, files, rows, issues);
 
         void ReadFile(string file, string name, byte[] bytes, string[] headers)

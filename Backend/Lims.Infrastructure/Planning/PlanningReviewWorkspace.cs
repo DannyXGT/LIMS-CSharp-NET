@@ -8,7 +8,7 @@ namespace Lims.Infrastructure.Planning;
 
 public sealed partial class PostgresPlanningStore
 {
-    private static readonly string[] ReviewCategories=["SummaryWithoutReport","ReportWithoutSummary","MissingVendor","MissingEquivalence","ExecutionIdentity","ImportError","MissingParty","MissingTests","IncompleteData","Reviewed"];
+    private static readonly string[] ReviewCategories=["SummaryWithoutReport","ReportWithoutSummary","MissingVendor","MissingEquivalence","ExecutionIdentity","ImportError","MissingParty","MissingTests","IncompleteData","Reviewed","Admission"];
     private const string IntervenedReviewSql="""
         category NOT IN ('MissingVendor','ImportError') AND state IN ('Held','Resolved','Excluded') AND
         (decision_actor IS NOT NULL OR EXISTS(SELECT 1 FROM planning.history ih WHERE ih.episode_id=enriched.episode_id AND
@@ -22,13 +22,13 @@ public sealed partial class PostgresPlanningStore
     private const string ReviewCasesSql="""
         WITH source_candidates AS (
           SELECT b.report_sha256,s.sheet,s.row_number FROM planning.source_rows s JOIN planning.batches b ON b.id=s.batch_id
-          WHERE s.file='Report List' AND nullif(trim(s.original_test),'') IS NOT NULL AND b.status='Applied'
+          WHERE s.file IN ('Report List','Side2','React Active') AND nullif(trim(s.original_test),'') IS NOT NULL AND b.status='Applied'
           GROUP BY b.report_sha256,s.sheet,s.row_number HAVING bool_or(s.execution_id IS NULL)
         ), latest_source AS (
           SELECT DISTINCT ON(b.report_sha256,s.sheet,s.row_number) s.*
           FROM planning.source_rows s JOIN planning.batches b ON b.id=s.batch_id
           JOIN source_candidates k ON k.report_sha256=b.report_sha256 AND k.sheet=s.sheet AND k.row_number=s.row_number
-          WHERE s.file='Report List' AND b.status='Applied'
+          WHERE s.file IN ('Report List','Side2','React Active') AND b.status='Applied'
           ORDER BY b.report_sha256,s.sheet,s.row_number,b.applied_at DESC,b.id DESC
         ), cases AS (
           SELECT i.id::text AS key,i.kind AS category,i.episode_id,i.id AS incident_id,NULL::uuid AS execution_id,
@@ -74,9 +74,10 @@ public sealed partial class PostgresPlanningStore
           SELECT 'unnamed:'||b.report_sha256||':'||s.sheet||':'||s.row_number::text,'IncompleteData',s.episode_id,NULL::uuid,NULL::uuid,s.job,'Pending',
             'Test_Name no informado en fuente; distinto de equivalencia pendiente',0,NULL,NULL,NULL,s.batch_id,s.row_number
           FROM planning.source_rows s JOIN planning.batches b ON b.id=s.batch_id
-          WHERE s.file='Report List' AND nullif(trim(s.original_test),'') IS NULL AND b.status='Applied'
+          WHERE s.file IN ('Report List','Side2','React Active') AND nullif(trim(s.original_test),'') IS NULL AND b.status='Applied'
             AND NOT EXISTS(SELECT 1 FROM planning.source_rows newer JOIN planning.batches nb ON nb.id=newer.batch_id
-              WHERE nb.report_sha256=b.report_sha256 AND newer.sheet=s.sheet AND newer.row_number=s.row_number AND newer.file='Report List' AND nb.applied_at>b.applied_at)
+              WHERE nb.report_sha256=b.report_sha256 AND newer.sheet=s.sheet AND newer.row_number=s.row_number AND newer.file IN ('Report List','Side2','React Active') AND nb.applied_at>b.applied_at)
+        /*REACT_CASES*/
         ), enriched AS (
           SELECT r.key,r.category,r.episode_id,r.incident_id,r.execution_id,r.job,
             CASE WHEN r.state='Resolved' THEN 'Resolved' ELSE coalesce(d.state,r.state) END AS state,
@@ -147,18 +148,27 @@ public sealed partial class PostgresPlanningStore
         var where="FROM enriched WHERE "+scope+" AND (category=@category OR (@category='MissingTests' AND category='ExecutionIdentity') OR (@category='Reviewed' AND "+IntervenedReviewSql+")) AND (@situation='All' OR (@situation='Open' AND state IN ('Pending','Held')) OR state=@situation) AND (NOT @selected OR key=ANY(@keys)) ";
         await using var c=await database.Source.OpenConnectionAsync(ct).ConfigureAwait(false);
         await using var tx=await c.BeginTransactionAsync(System.Data.IsolationLevel.RepeatableRead,ct).ConfigureAwait(false);
+        var reviewCases=ReviewCasesSql.Replace("/*REACT_CASES*/",await HasReactLinks(c,tx,ct).ConfigureAwait(false)?"""
+            UNION ALL
+            SELECT 'admission:'||x.id::text,'Admission',x.episode_id,NULL::uuid,x.id,e.job,
+              CASE WHEN l.disposition='Active' AND l.react_row_id IS NOT NULL THEN 'Resolved' ELSE 'Pending' END,
+              CASE WHEN l.disposition='Active' AND l.react_row_id IS NULL THEN 'La fila React fue retirada; identidad e historial conservados' ELSE l.reason END,x.version,
+              x.original_test,x.equivalence,x.laboratory,l.batch_id,0
+            FROM planning.react_execution_links l JOIN planning.executions x ON x.id=l.execution_id
+            JOIN planning.episodes e ON e.id=x.episode_id
+            """:"",StringComparison.Ordinal);
         var counters=new List<PlanningReviewCounter>();
-        await using(var cmd=Command(c,tx,ReviewCasesSql+"SELECT category,count(*)::int,count(*) FILTER(WHERE state='Pending')::int,count(*) FILTER(WHERE state='Held')::int,count(*) FILTER(WHERE state='Resolved')::int,count(*) FILTER(WHERE state='Excluded')::int FROM enriched WHERE "+scope+filters+" GROUP BY category",args.ToArray()))
+        await using(var cmd=Command(c,tx,reviewCases+"SELECT category,count(*)::int,count(*) FILTER(WHERE state='Pending')::int,count(*) FILTER(WHERE state='Held')::int,count(*) FILTER(WHERE state='Resolved')::int,count(*) FILTER(WHERE state='Excluded')::int FROM enriched WHERE "+scope+filters+" GROUP BY category",args.ToArray()))
         await using(var r=await cmd.ExecuteReaderAsync(ct).ConfigureAwait(false))while(await r.ReadAsync(ct).ConfigureAwait(false))counters.Add(new(r.GetString(0),r.GetInt32(1),r.GetInt32(2),r.GetInt32(3),r.GetInt32(4),r.GetInt32(5)));
         foreach(var category in ReviewCategories)if(counters.All(c=>c.Category!=category))counters.Add(new(category,0,0,0,0));
         var identity=counters.Single(c=>c.Category=="ExecutionIdentity");var testsCounter=counters.Single(c=>c.Category=="MissingTests");counters.Remove(testsCounter);counters.Add(testsCounter with{Total=testsCounter.Total+identity.Total,Pending=testsCounter.Pending+identity.Pending,Held=testsCounter.Held+identity.Held,Resolved=testsCounter.Resolved+identity.Resolved,Excluded=testsCounter.Excluded+identity.Excluded});
         counters.RemoveAll(c=>c.Category=="Reviewed");
-        await using(var cmd=Command(c,tx,ReviewCasesSql+"SELECT count(*)::int,count(*) FILTER(WHERE state='Held')::int,count(*) FILTER(WHERE state='Resolved')::int,count(*) FILTER(WHERE state='Excluded')::int FROM enriched WHERE "+scope+filters+" AND "+IntervenedReviewSql,args.ToArray()))
+        await using(var cmd=Command(c,tx,reviewCases+"SELECT count(*)::int,count(*) FILTER(WHERE state='Held')::int,count(*) FILTER(WHERE state='Resolved')::int,count(*) FILTER(WHERE state='Excluded')::int FROM enriched WHERE "+scope+filters+" AND "+IntervenedReviewSql,args.ToArray()))
         await using(var r=await cmd.ExecuteReaderAsync(ct).ConfigureAwait(false)){await r.ReadAsync(ct).ConfigureAwait(false);counters.Add(new("Reviewed",r.GetInt32(0),0,r.GetInt32(1),r.GetInt32(2),r.GetInt32(3)));}
         int total;
-        await using(var cmd=Command(c,tx,ReviewCasesSql+"SELECT count(*)::int "+where+filters,args.ToArray()))total=(int)(await cmd.ExecuteScalarAsync(ct).ConfigureAwait(false))!;
+        await using(var cmd=Command(c,tx,reviewCases+"SELECT count(*)::int "+where+filters,args.ToArray()))total=(int)(await cmd.ExecuteScalarAsync(ct).ConfigureAwait(false))!;
         var items=new List<PlanningReviewCase>();
-        var sql=ReviewCasesSql+"""
+        var sql=reviewCases+"""
             SELECT p.key,p.category,p.episode_id,p.incident_id,p.execution_id,p.job,p.in_date,p.due_date,p.official_state,
               p.buyer,p.vendor,p.service,p.usd,p.state,p.reason,p.version,p.original_test,p.equivalence,p.laboratory,p.batch_id,p.source_row,
               coalesce(du.nombre,decision.actor_name),coalesce(p.decided_at,decision.at),p.origin,p.imported_at FROM (SELECT *

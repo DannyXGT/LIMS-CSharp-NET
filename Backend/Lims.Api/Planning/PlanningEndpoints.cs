@@ -50,6 +50,16 @@ internal static class PlanningEndpoints
         });
         group.MapGet("/jobs",async([AsParameters]PlanningQuery query,IPlanningStore store,CancellationToken ct)=>Results.Ok(await store.QueryAsync(query,ct).ConfigureAwait(false)));
         group.MapGet("/report-list",async([AsParameters]ReportListQuery query,IPlanningStore store,CancellationToken ct)=>Results.Ok(await store.ReportListAsync(query,ct).ConfigureAwait(false)));
+        group.MapPost("/report-list/digitize",async(ReportDigitization request,IPlanningStore store,HttpContext context,CancellationToken ct)=>
+        {
+            if(request.AdminOverride&&!context.User.IsInRole("Administrador"))return Results.Forbid();
+            return Results.Ok(await store.DigitizeReportAsync(request,Actor(context),context.User.IsInRole("Administrador"),ct).ConfigureAwait(false));
+        }).RequireAuthorization(PlanningPermissions.ReportMark);
+        group.MapGet("/report-list/schedules",async([AsParameters]ReportScheduleQuery query,IPlanningStore store,CancellationToken ct)=>Results.Ok(await store.ReportSchedulesAsync(query,ct).ConfigureAwait(false)));
+        group.MapGet("/report-list/schedules/{id:guid}",async(Guid id,IPlanningStore store,CancellationToken ct,bool groupByClock=false)=>Results.Ok(await store.ReportScheduleAsync(id,ct,groupByClock).ConfigureAwait(false)));
+        group.MapPost("/report-list/schedules/review",async(ReportScheduleReview request,IPlanningStore store,HttpContext context,CancellationToken ct)=>Results.Ok(await store.ReviewReportScheduleAsync(request,Actor(context),ct).ConfigureAwait(false))).RequireAuthorization(PlanningPermissions.ReportReview);
+        group.MapGet("/report-list/schedules/export",async([AsParameters]ReportScheduleQuery query,IPlanningStore store,CancellationToken ct)=>Results.File(await store.ExportReviewedSchedulesAsync(query,ct).ConfigureAwait(false),"text/csv; charset=utf-8","Horarios chequeados.csv"));
+        group.MapGet("/report-list/closures",async([AsParameters]ReportScheduleQuery query,IPlanningStore store,CancellationToken ct)=>Results.Ok(await store.ReportClosuresAsync(query,ct).ConfigureAwait(false)));
         group.MapPost("/report-list/check",async(ReportListCheck request,IPlanningStore store,HttpContext context,CancellationToken ct)=>
         {
             if(!request.Checked||request.AdminOverride)return Results.Problem(statusCode:403,detail:"Las correcciones requieren permiso de revisión.");
@@ -83,6 +93,8 @@ internal static class PlanningEndpoints
         group.MapGet("/reviews/export",async([AsParameters]PlanningReviewQuery query,IPlanningStore store,CancellationToken ct)=>Results.File(await store.ExportReviewsAsync(query,ct).ConfigureAwait(false),"text/csv; charset=utf-8","Revision de importaciones.csv"));
         group.MapPost("/reviews/export",async(PlanningReviewQuery query,IPlanningStore store,CancellationToken ct)=>Results.File(await store.ExportReviewsAsync(query,ct).ConfigureAwait(false),"text/csv; charset=utf-8","Revision de importaciones.csv"));
         group.MapPost("/imports/preview",Preview).RequireAuthorization(PlanningPermissions.Import);
+        group.MapPost("/imports/supplement/preview",PreviewSupplement).RequireAuthorization(PlanningPermissions.Import);
+        group.MapPost("/imports/react/preview",async(ReactTableReviewRequest request,IPlanningStore store,HttpContext context,CancellationToken ct)=>Results.Ok(await store.PreviewReactTablesAsync(Actor(context),request.Day,ct).ConfigureAwait(false))).RequireAuthorization(PlanningPermissions.Import);
         group.MapPost("/imports/{id:guid}/confirm",async(Guid id,IPlanningStore store,HttpContext context,CancellationToken ct)=>Results.Ok(await store.ConfirmAsync(id,Actor(context),ct).ConfigureAwait(false))).RequireAuthorization(PlanningPermissions.Import);
         group.MapGet("/equivalences",async(IPlanningStore store,CancellationToken ct)=>Results.Ok(await store.EquivalencesAsync(ct).ConfigureAwait(false)));
         group.MapGet("/equivalences/legacy",async(IPlanningStore store,CancellationToken ct)=>Results.Ok(await store.LegacyEquivalencesAsync(ct).ConfigureAwait(false))).RequireAuthorization(PlanningPermissions.Equivalences);
@@ -107,8 +119,22 @@ internal static class PlanningEndpoints
         if(!DateOnly.TryParseExact(form["day"],"yyyy-MM-dd",CultureInfo.InvariantCulture,DateTimeStyles.None,out var day))return Results.BadRequest(new{message="Fecha de corte inválida."});
         using var s=new MemoryStream();using var r=new MemoryStream();
         await summary.CopyToAsync(s,ct).ConfigureAwait(false);await report.CopyToAsync(r,ct).ConfigureAwait(false);
-        var input=PlanningImportReader.Read(summary.FileName,s.ToArray(),report.FileName,r.ToArray(),new(form["window"].ToString(),day),ct);
+        DateOnly? target=null;
+        if(!string.IsNullOrWhiteSpace(form["targetInDate"]))
+        {if(!DateOnly.TryParseExact(form["targetInDate"],"yyyy-MM-dd",CultureInfo.InvariantCulture,DateTimeStyles.None,out var parsed))return Results.BadRequest(new{message="Fecha de ingreso de pruebas inválida."});target=parsed;}
+        var policy=string.IsNullOrWhiteSpace(form["policy"])?"HtmlReact":form["policy"].ToString();
+        if(policy!="HtmlReact")return Results.BadRequest(new{message="La importación requiere las reglas de Consulta de Jobs y React."});
+        var input=PlanningImportReader.Read(summary.FileName,s.ToArray(),report.FileName,r.ToArray(),new(form["window"].ToString(),day,policy,target),ct);
         return Results.Ok(await store.PreviewAsync(input,Actor(context),ct).ConfigureAwait(false));
+    }
+    private static async Task<IResult> PreviewSupplement(HttpContext context,IPlanningStore store,CancellationToken ct)
+    {
+        if(!context.Request.HasFormContentType)return Results.BadRequest(new{message="Seleccione el XLSX complementario."});
+        var form=await context.Request.ReadFormAsync(ct).ConfigureAwait(false);var file=form.Files.GetFile("supplement");
+        if(file is null||file.Length is <=0 or >PlanningLimits.MaxFileBytes)return Results.BadRequest(new{message="Se requiere un XLSX complementario de máximo 5 MiB."});
+        if(!DateOnly.TryParseExact(form["day"],"yyyy-MM-dd",CultureInfo.InvariantCulture,DateTimeStyles.None,out var day))return Results.BadRequest(new{message="Día operativo inválido."});
+        using var bytes=new MemoryStream();await file.CopyToAsync(bytes,ct).ConfigureAwait(false);
+        return Results.Ok(await store.PreviewAsync(PlanningImportReader.ReadSupplement(file.FileName,bytes.ToArray(),day,ct),Actor(context),ct).ConfigureAwait(false));
     }
     private static int Actor(HttpContext context)=>ReferenceMaterials.ReferenceMaterialEndpoints.TryGetActorUserId(context,out var id)?id:throw new PlanningValidationException("Sesión sin identidad válida.");
 }

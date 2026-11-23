@@ -132,6 +132,7 @@ public sealed partial class PlanningImportsView
             check.Click+=(_,_)=>{if(check.IsChecked==true)_visibleReviewColumns.Add(column.Key);else _visibleReviewColumns.Remove(column.Key);BuildReviewTable();};panel.Children.Add(check);
         }
         panel.Children.Add(PlanningUi.Text("Arrastra el borde para redimensionar. Usa el menú del encabezado para mover columnas.",12,true));
+        panel.Children.Add(PlanningUi.Text("Teclado: Ctrl+C copia; Ctrl+A selecciona la página cargada; Shift+flechas amplía; Enter abre el expediente.",12,true));
         fly.Content=new ScrollViewer{Content=panel,MaxHeight=500,VerticalScrollBarVisibility=ScrollBarVisibility.Auto};return fly;
     }
 }

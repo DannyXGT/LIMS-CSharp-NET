@@ -20,7 +20,7 @@ public sealed partial class PostgresPlanningStore
                 await Write(writer,w.Buyer,NpgsqlDbType.Text,ct).ConfigureAwait(false);await Write(writer,w.Vendor,NpgsqlDbType.Text,ct).ConfigureAwait(false);await Write(writer,w.Service,NpgsqlDbType.Text,ct).ConfigureAwait(false);
                 await Write(writer,w.InDate,NpgsqlDbType.Date,ct).ConfigureAwait(false);await Write(writer,w.DueDate,NpgsqlDbType.Date,ct).ConfigureAwait(false);
                 await Write(writer,w.Amount,NpgsqlDbType.Numeric,ct).ConfigureAwait(false);await Write(writer,w.Currency,NpgsqlDbType.Text,ct).ConfigureAwait(false);await Write(writer,w.Usd,NpgsqlDbType.Numeric,ct).ConfigureAwait(false);
-                await Write(writer,e.HasSummary?batch:null,NpgsqlDbType.Uuid,ct).ConfigureAwait(false);await Write(writer,e.HasSummary?e.SourceRow:null,NpgsqlDbType.Integer,ct).ConfigureAwait(false);
+                await Write(writer,e.SourceRow>0?batch:null,NpgsqlDbType.Uuid,ct).ConfigureAwait(false);await Write(writer,e.SourceRow>0?e.SourceRow:null,NpgsqlDbType.Integer,ct).ConfigureAwait(false);
                 await Write(writer,Serialize(e.Official??new()),NpgsqlDbType.Jsonb,ct).ConfigureAwait(false);
             }
             await writer.CompleteAsync(ct).ConfigureAwait(false);
@@ -44,14 +44,15 @@ public sealed partial class PostgresPlanningStore
     }
     private static async Task CopyExecutions(NpgsqlConnection c,IReadOnlyList<ProposedExecution> executions,CancellationToken ct)
     {
-        await using var writer=await c.BeginBinaryImportAsync("COPY planning.executions(id,episode_id,original_test,test_key,equivalence,laboratory,no_program,origin) FROM STDIN (FORMAT BINARY)",ct).ConfigureAwait(false);
+        await using var writer=await c.BeginBinaryImportAsync("COPY planning.executions(id,episode_id,original_test,test_key,equivalence,laboratory,no_program,origin,execution_type) FROM STDIN (FORMAT BINARY)",ct).ConfigureAwait(false);
         foreach(var e in executions.Where(e=>e.Action=="Create"))
         {
             await writer.StartRowAsync(ct).ConfigureAwait(false);
             await Write(writer,e.Id,NpgsqlDbType.Uuid,ct).ConfigureAwait(false);await Write(writer,e.EpisodeId,NpgsqlDbType.Uuid,ct).ConfigureAwait(false);
             await Write(writer,e.OriginalTest,NpgsqlDbType.Text,ct).ConfigureAwait(false);await Write(writer,PlanningReconciler.TestKey(e.OriginalTest),NpgsqlDbType.Text,ct).ConfigureAwait(false);
             await Write(writer,e.Equivalence,NpgsqlDbType.Text,ct).ConfigureAwait(false);await Write(writer,e.Laboratory,NpgsqlDbType.Text,ct).ConfigureAwait(false);
-            await Write(writer,e.NoProgram,NpgsqlDbType.Boolean,ct).ConfigureAwait(false);await Write(writer,"ReportList",NpgsqlDbType.Text,ct).ConfigureAwait(false);
+            await Write(writer,e.NoProgram,NpgsqlDbType.Boolean,ct).ConfigureAwait(false);await Write(writer,e.Origin,NpgsqlDbType.Text,ct).ConfigureAwait(false);
+            await Write(writer,e.Rule,NpgsqlDbType.Text,ct).ConfigureAwait(false);
         }
         await writer.CompleteAsync(ct).ConfigureAwait(false);
     }
@@ -62,9 +63,9 @@ public sealed partial class PostgresPlanningStore
         await using var writer=await c.BeginBinaryImportAsync("COPY planning.source_rows(batch_id,file,row_number,sheet,job,original_test,fields,wip,episode_id,execution_id) FROM STDIN (FORMAT BINARY)",ct).ConfigureAwait(false);
         foreach(var row in input.Rows)
         {
-            executionRows.TryGetValue(row.Row,out var execution);if(row.File!="Report List")execution=null;
+            executionRows.TryGetValue(row.Row,out var execution);if(!PlanningReconciler.IsTestSource(row.File))execution=null;
             Guid? episode=row.File=="Summary"?(summaryEpisodes.TryGetValue((row.Job,row.Wip!.InDate),out var id)?id:null):execution?.EpisodeId;
-            if(episode is null&&row.File=="Report List"){var candidates=plan.Episodes.Where(e=>e.Job==row.Job).Take(2).ToArray();if(candidates.Length==1)episode=candidates[0].Id;}
+            if(episode is null&&PlanningReconciler.IsTestSource(row.File)){var candidates=plan.Episodes.Where(e=>e.Job==row.Job).Take(2).ToArray();if(candidates.Length==1)episode=candidates[0].Id;}
             await writer.StartRowAsync(ct).ConfigureAwait(false);
             await Write(writer,batch,NpgsqlDbType.Uuid,ct).ConfigureAwait(false);await Write(writer,row.File,NpgsqlDbType.Text,ct).ConfigureAwait(false);
             await Write(writer,row.Row,NpgsqlDbType.Integer,ct).ConfigureAwait(false);await Write(writer,row.Sheet,NpgsqlDbType.Text,ct).ConfigureAwait(false);
@@ -119,10 +120,10 @@ public sealed partial class PostgresPlanningStore
         INSERT INTO planning.incidents(id,episode_id,kind,state,reason)
         SELECT gen_random_uuid(),e.id,'ReportWithoutSummary','Pending','Report List conservado; cobertura de Summary insuficiente'
         FROM planning.episodes e WHERE e.id=ANY(@episodes) AND NOT EXISTS(
-          SELECT 1 FROM planning.source_rows s WHERE s.episode_id=e.id AND s.file='Summary')
+          SELECT 1 FROM planning.source_rows s WHERE s.episode_id=e.id AND s.file IN ('Summary','Side2','React Active'))
         ON CONFLICT(episode_id,kind,execution_id) DO NOTHING;
         UPDATE planning.incidents i SET state='Resolved',version=version+1
         WHERE i.episode_id=ANY(@episodes) AND i.kind='ReportWithoutSummary' AND EXISTS(
-          SELECT 1 FROM planning.source_rows s WHERE s.episode_id=i.episode_id AND s.file='Summary');
+          SELECT 1 FROM planning.source_rows s WHERE s.episode_id=i.episode_id AND s.file IN ('Summary','Side2','React Active'));
         """,ct,("episodes",episodes));
 }

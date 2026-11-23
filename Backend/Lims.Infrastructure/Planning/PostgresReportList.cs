@@ -17,10 +17,11 @@ public sealed partial class PostgresPlanningStore
         var order=query.Sort switch
         {
             "Default"=>"CASE WHEN @view='Checked' THEN x.digitized_at END DESC NULLS LAST,e.due_date NULLS LAST,e.job,x.equivalence",
-            "Job"=>"e.job","Test"=>"x.equivalence","Laboratory"=>"x.laboratory","Buyer"=>"e.buyer","Service"=>"e.service",
+            "Job"=>"e.job","Test"=>"coalesce(nullif(trim(x.equivalence),''),x.original_test)","Laboratory"=>"x.laboratory","Buyer"=>"e.buyer","Service"=>"e.service",
             "Block"=>"rc.block_number","Keep"=>"coalesce(rc.keep_in_planning,false)","VerifiedBy"=>"x.digitized_by",
-            "Date"=>"(x.digitized_at AT TIME ZONE 'America/Guatemala')::date","Time"=>"(x.digitized_at AT TIME ZONE 'America/Guatemala')::time",
-            "Checked"=>"(x.digitized_at IS NOT NULL AND x.tested_on IS NOT NULL)",
+            "InDate"=>"e.in_date","DueDate"=>"e.due_date","OriginalTest"=>"x.original_test","ExecutionId"=>"x.id","ExecutionType"=>"x.execution_type",
+            "Date"=>"x.tested_on","Time"=>"(x.digitized_at AT TIME ZONE 'America/Guatemala')::time",
+            "Checked"=>DigitizationSql,
             _=>throw new PlanningValidationException("Orden de Report List inválido.")
         };
         if(query.Sort!="Default")order+=(query.Descending?" DESC":" ASC")+" NULLS LAST";
@@ -31,7 +32,7 @@ public sealed partial class PostgresPlanningStore
             LEFT JOIN planning.report_checks rc ON rc.execution_id=x.id
             WHERE (@search='' OR CASE WHEN @multiple THEN upper(e.job)=ANY(@jobs)
               ELSE strpos(lower(concat_ws(' ',e.job,x.equivalence,x.original_test,e.buyer,x.digitized_by)),lower(@search))>0 END)
-            AND (@test='' OR strpos(lower(coalesce(x.equivalence,'')),lower(@test))>0)
+            AND (@test='' OR strpos(lower(concat_ws(' ',x.equivalence,x.original_test)),lower(@test))>0)
             AND (@lab='' OR strpos(lower(coalesce(x.laboratory,'')),lower(@lab))>0)
             AND (@service='' OR strpos(lower(coalesce(e.service,'')),lower(@service))>0)
             AND (@buyer='' OR strpos(lower(coalesce(e.buyer,'')),lower(@buyer))>0)
@@ -43,16 +44,19 @@ public sealed partial class PostgresPlanningStore
               OR (@view='Archived' AND x.digitized_at IS NOT NULL AND x.tested_on IS NOT NULL AND NOT coalesce(rc.keep_in_planning,false))
               OR (@view='Active' AND NOT (x.no_program OR upper(coalesce(trim(x.laboratory),''))='NO PROGRAMAR') AND (x.digitized_at IS NULL OR x.tested_on IS NULL OR coalesce(rc.keep_in_planning,false))))
             """;
+        var conditions=ColumnConditions(query.ColumnFilters);
+        var filteredWhere=where+conditions.Sql;
         var args=new (string,object?)[]{("search",search),("multiple",jobs.Length>1),("jobs",jobs.Select(j=>j.ToUpperInvariant()).ToArray()),("view",query.View),
-            ("test",query.Test??""),("lab",query.Laboratory??""),("service",query.Service??""),("buyer",query.Buyer??""),("verified",query.VerifiedBy??""),("block",query.Block),("date",query.CheckedDate),("take",size),("skip",(page-1)*size)};
+            ("test",query.Test??""),("lab",query.Laboratory??""),("service",query.Service??""),("buyer",query.Buyer??""),("verified",query.VerifiedBy??""),("block",query.Block),("date",query.CheckedDate),("take",size),("skip",(page-1)*size)}.Concat(conditions.Args).ToArray();
         await using var c=await database.Source.OpenConnectionAsync(ct).ConfigureAwait(false);
         await using var tx=await c.BeginTransactionAsync(IsolationLevel.RepeatableRead,ct).ConfigureAwait(false);
+        if(query.View is not ("All" or "Archived")&&await HasReactLinks(c,tx,ct).ConfigureAwait(false))filteredWhere+=" AND "+ReactOperationalPredicate;
         var revision=await Revision(c,tx,false,ct).ConfigureAwait(false);
         if(query.Revision is {} expected&&expected!=revision)throw new PlanningConflictException("Los datos cambiaron durante el desplazamiento. Actualice Report List para continuar.");
         int count;
-        await using(var cmd=Command(c,tx,"SELECT count(*)::int "+where,args))count=(int)(await cmd.ExecuteScalarAsync(ct).ConfigureAwait(false))!;
+        await using(var cmd=Command(c,tx,"SELECT count(*)::int "+filteredWhere,args))count=(int)(await cmd.ExecuteScalarAsync(ct).ConfigureAwait(false))!;
         var items=new List<ReportListItem>();
-        await using(var cmd=Command(c,tx,"SELECT "+RowColumns+",x.version,coalesce(rc.keep_in_planning,false),rc.block_number "+where+
+        await using(var cmd=Command(c,tx,"SELECT "+RowColumns+",x.version,coalesce(rc.keep_in_planning,false),rc.block_number "+filteredWhere+
             " ORDER BY "+order+",x.id LIMIT @take OFFSET @skip",args))
         await using(var r=await cmd.ExecuteReaderAsync(ct).ConfigureAwait(false))
             while(await r.ReadAsync(ct).ConfigureAwait(false))
@@ -71,6 +75,8 @@ public sealed partial class PostgresPlanningStore
             await using var cmd=Command(c,tx,"SELECT EXISTS(SELECT 1 FROM planning.report_scan_links)");
             if((bool)(await cmd.ExecuteScalarAsync(ct).ConfigureAwait(false))!)scannerSource="planning.report_scan_links";
         }
+        var executions=items.Select(x=>x.Execution).ToList();await EnrichScheduleReviews(c,tx,executions,ct).ConfigureAwait(false);
+        for(int i=0;i<items.Count;i++)items[i]=items[i] with{Execution=executions[i]};
         await tx.CommitAsync(ct).ConfigureAwait(false);return new(items,count,page,size,revision,new(scannerSource is not null,scannerSource));
     }
 
@@ -87,9 +93,11 @@ public sealed partial class PostgresPlanningStore
         await Bump(c,tx,ct).ConfigureAwait(false);await tx.CommitAsync(ct).ConfigureAwait(false);return result;
     }
 
-    private static async Task<ReportListResult> ApplyReportChecks(NpgsqlConnection c,NpgsqlTransaction tx,ReportListCheck request,int actor,bool scanner,string reason,CancellationToken ct)
+    private static async Task<ReportListResult> ApplyReportChecks(NpgsqlConnection c,NpgsqlTransaction tx,ReportListCheck request,int actor,bool scanner,string reason,CancellationToken ct,Guid? sessionId=null,string? requestHash=null)
     {
         var ready=new HashSet<string>(StringComparer.Ordinal);
+        sessionId??=Guid.NewGuid();bool sessionCreated=false;DateTimeOffset? operationalAt=request.CheckedAt?.ToUniversalTime();
+        if(request.Checked&&operationalAt is null){await using var clock=Command(c,tx,"SELECT clock_timestamp()");operationalAt=new DateTimeOffset((DateTime)(await clock.ExecuteScalarAsync(ct).ConfigureAwait(false))!);}
         foreach(var selected in request.Executions.OrderBy(e=>e.ExecutionId))
         {
             Guid episode;string job;string? eq,lab,by;bool complete,no,hold;long version;DateTimeOffset? at;DateOnly? tested;
@@ -117,7 +125,7 @@ public sealed partial class PostgresPlanningStore
                     actorName=(string?)(await cmd.ExecuteScalarAsync(ct).ConfigureAwait(false))??throw new PlanningValidationException("Actor no registrado.");
                 DateTimeOffset savedAt;
                 await using(var cmd=Command(c,tx,"SELECT clock_timestamp()"))savedAt=new DateTimeOffset((DateTime)(await cmd.ExecuteScalarAsync(ct).ConfigureAwait(false))!);
-                stamp=request.CheckedAt?.ToUniversalTime()??savedAt;
+                stamp=operationalAt;
                 // Revision lock serializes all writers. Only the most recent actor can reuse the block.
                 await using(var cmd=Command(c,tx,"SELECT number FROM planning.report_blocks WHERE actor_id=@actor AND last_checked_at>=@at-interval '15 minutes' AND number=(SELECT max(number) FROM planning.report_blocks)",("actor",actor),("at",savedAt)))
                     block=await cmd.ExecuteScalarAsync(ct).ConfigureAwait(false) as long?;
@@ -132,8 +140,17 @@ public sealed partial class PostgresPlanningStore
                 INSERT INTO planning.report_checks(execution_id,actor_id,checked_at,block_number) VALUES(@id,@actor::int,@at::timestamptz,@block::bigint)
                 ON CONFLICT(execution_id) DO UPDATE SET actor_id=EXCLUDED.actor_id,checked_at=EXCLUDED.checked_at,block_number=EXCLUDED.block_number
                 """,ct,("id",selected.ExecutionId),("actor",request.Checked?actor:null),("at",stamp),("block",block)).ConfigureAwait(false);
+            if(request.Checked)
+            {
+                if(!sessionCreated)
+                {
+                    await Execute(c,tx,"INSERT INTO planning.report_sessions(id,actor_id,operational_at,request_hash) VALUES(@id,@actor,@at,@hash)",ct,("id",sessionId),("actor",actor),("at",stamp),("hash",requestHash??sessionId.Value.ToString())).ConfigureAwait(false);
+                    sessionCreated=true;
+                }
+                await Execute(c,tx,"INSERT INTO planning.report_session_members(session_id,execution_id,digitization_version) VALUES(@session,@id,@version)",ct,("session",sessionId),("id",selected.ExecutionId),("version",version+1)).ConfigureAwait(false);
+            }
             await Audit(c,tx,episode,request.Checked?"ReportMarked":"ReportCorrected",actor,reason,
-                new {ExecutionId=selected.ExecutionId,Before=new{DigitizedAt=at,TestedOn=tested,DigitizedBy=by},After=new{DigitizedAt=stamp,TestedOn=testDate,DigitizedBy=actorName},BlockNumber=block,Source=scanner?"scanner":"manual",request.AdminOverride},ct).ConfigureAwait(false);
+                new {SessionId=request.Checked?sessionId:null,ExecutionId=selected.ExecutionId,Before=new{DigitizedAt=at,TestedOn=tested,DigitizedBy=by},After=new{DigitizedAt=stamp,TestedOn=testDate,DigitizedBy=actorName},BlockNumber=block,Source=scanner?"scanner":"manual",request.AdminOverride},ct).ConfigureAwait(false);
             if(!request.Checked)
                 await Execute(c,tx,"UPDATE planning.report_close_alerts a SET reopened_at=clock_timestamp() FROM planning.episodes e WHERE a.episode_id=e.id AND e.job=@job AND a.reopened_at IS NULL",ct,("job",job)).ConfigureAwait(false);
             else
@@ -162,13 +179,14 @@ public sealed partial class PostgresPlanningStore
         // Existing import installations can finish their identity upgrade before enabling Report List.
         await using(var available=Command(c,tx,"SELECT to_regclass('planning.report_close_alerts') IS NOT NULL"))
             if(await available.ExecuteScalarAsync(ct).ConfigureAwait(false) is not true)return;
-        await Execute(c,tx,"""
+        var admission=await HasReactLinks(c,tx,ct).ConfigureAwait(false)?" AND "+ReactOperationalPredicate:"";
+        await Execute(c,tx,("""
         UPDATE planning.report_close_alerts a SET reopened_at=clock_timestamp()
         FROM planning.episodes target WHERE target.id=a.episode_id AND a.reopened_at IS NULL
           AND (EXISTS(SELECT 1 FROM planning.executions x JOIN planning.episodes e ON e.id=x.episode_id WHERE e.job=target.job
-              AND NOT (x.no_program OR upper(coalesce(trim(x.laboratory),''))='NO PROGRAMAR') AND (x.digitized_at IS NULL OR x.tested_on IS NULL))
-            OR EXISTS(SELECT 1 FROM planning.source_rows s WHERE s.job=target.job AND s.file='Report List' AND s.execution_id IS NULL))
-        """,ct).ConfigureAwait(false);
+              AND NOT (x.no_program OR upper(coalesce(trim(x.laboratory),''))='NO PROGRAMAR') AND (x.digitized_at IS NULL OR x.tested_on IS NULL) /*ADMISSION*/)
+            OR EXISTS(SELECT 1 FROM planning.source_rows s WHERE s.job=target.job AND s.file IN ('Report List','Side2','React Active') AND s.execution_id IS NULL))
+        """).Replace("/*ADMISSION*/",admission,StringComparison.Ordinal),ct).ConfigureAwait(false);
     }
 
     public async Task KeepReportAsync(ReportListKeep request,int actor,CancellationToken ct)

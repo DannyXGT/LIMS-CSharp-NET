@@ -9,13 +9,15 @@ namespace Lims.Desktop.Planning;
 
 public sealed partial class PlanningImportsView
 {
-    private string? _summary,_report;
+    private string? _summary,_report,_supplement;
+    private bool _useReactTables;
     private int _step;
     private bool _updatingFlow;
     private readonly Grid _flowBody=new(){RowSpacing=8};
     private readonly Grid _steps=new(){ColumnSpacing=12};
     private readonly ComboBox _window=new(){Header="Corte operativo",ItemsSource=new[]{"Primera carga","Mediodía · 12:00","Última carga · 17:50"},SelectedIndex=0,MinWidth=200};
     private readonly CalendarDatePicker _day=new(){Header="Día operativo",Date=DateTimeOffset.Now,DateFormat="{year.full}-{month.integer(2)}-{day.integer(2)}",MinWidth=170};
+    private readonly CalendarDatePicker _targetInDate=new(){Header="Ingreso de pruebas · vacío: más reciente",DateFormat="{year.full}-{month.integer(2)}-{day.integer(2)}",MinWidth=250};
     private readonly TextBlock _summaryName=PlanningUi.Text("Selecciona el archivo Summary XLSX",13);
     private readonly TextBlock _reportName=PlanningUi.Text("Selecciona el archivo Report List XLSX",13);
     private readonly TextBlock _summaryCoverage=PlanningUi.Text("Pendiente de selección",12,true);
@@ -27,7 +29,7 @@ public sealed partial class PlanningImportsView
     {
         _window.Style=(Style)Application.Current.Resources["LimsCompactComboBoxStyle"];
         AutomationProperties.SetName(_day,"Día operativo");AutomationProperties.SetName(_window,"Corte operativo");
-        foreach(var height in new[]{GridLength.Auto,GridLength.Auto,GridLength.Auto,GridLength.Auto})_flowBody.RowDefinitions.Add(new(){Height=height});
+        foreach(var height in new[]{GridLength.Auto,GridLength.Auto,GridLength.Auto,GridLength.Auto,GridLength.Auto})_flowBody.RowDefinitions.Add(new(){Height=height});
         PlanningUi.Place(_flowBody,_steps,0);
         var files=new Grid{ColumnSpacing=10};files.ColumnDefinitions.Add(new());files.ColumnDefinitions.Add(new());
         files.Children.Add(FileCard("Summary",_summaryName,_summaryCoverage,()=>Pick(true)));
@@ -36,13 +38,16 @@ public sealed partial class PlanningImportsView
         _toConfirmation=Action("Revisa antes de agregar",LimsIconKind.ChevronRight,ReviewBeforeImport);
         _confirm=PlanningUi.Button("Confirmar lote revisado",Confirm,true,()=>!_busy&&_step==3&&_preview is{Status:"Preview"} p&&!p.Issues.Any(i=>i.Blocking));
         AutomationProperties.SetName(_confirm,"Confirmar lote revisado");LimsAction.SetIcon(_confirm,LimsIconKind.Save);
+        var sources=PlanningUi.Row(Action("Registros de React",LimsIconKind.Traceability,ReviewReactTables),Action("Carga complementaria",LimsIconKind.Import,PickSupplement));
+        PlanningUi.Place(_flowBody,sources,2);
         var formActions=PlanningUi.Row(_validate,_toConfirmation,_confirm);formActions.Spacing=8;
-        var options=PlanningUi.Row(_window,_day);options.Spacing=10;
-        var controls=Split(options,formActions);PlanningUi.Place(_flowBody,controls,2);
-        var validation=PlanningUi.Stack(_validationSummary,_fileIssues);validation.Spacing=2;PlanningUi.Place(_flowBody,validation,3);
+        var options=PlanningUi.Row(_window,_day,_targetInDate);options.Spacing=10;
+        var controls=Split(options,formActions);PlanningUi.Place(_flowBody,controls,3);
+        var validation=PlanningUi.Stack(_validationSummary,_fileIssues);validation.Spacing=2;PlanningUi.Place(_flowBody,validation,4);
         _fileIssues.ItemTemplate=TableTemplate([("File",95),("Code",180),("Message",740)]);
         _flow.Content=_flowBody;_flowBody.Margin=new(0,0,0,4);SetStep(0);
         _window.SelectionChanged+=(_,_)=>InvalidateCut();_day.DateChanged+=(_,_)=>InvalidateCut();
+        _targetInDate.DateChanged+=(_,_)=>InvalidateCut();
     }
     private static Border FileCard(string label,TextBlock filename,TextBlock coverage,Func<Task> pick)
     {
@@ -54,8 +59,9 @@ public sealed partial class PlanningImportsView
     {if(_updatingFlow||_busy||_preview?.Status!="Preview")return;_preview=null;SetStep(0);Message("El corte cambió. Vuelve a validar los archivos antes de confirmar.");}
     private void BeginImport()
     {
-        if(_busy)return;_preview=null;_summary=_report=null;_updatingFlow=true;
-        _day.Date=DateTimeOffset.Now;_window.SelectedIndex=0;_updatingFlow=false;
+        if(_busy)return;_preview=null;_summary=_report=_supplement=null;_updatingFlow=true;
+        _useReactTables=false;
+        _day.Date=DateTimeOffset.Now;_targetInDate.Date=null;_window.SelectedIndex=0;_updatingFlow=false;
         _summaryName.Text="Selecciona el archivo Summary XLSX";_reportName.Text="Selecciona el archivo Report List XLSX";
         _summaryCoverage.Text=_reportCoverage.Text="Pendiente de selección";_validationSummary.Text="";_fileIssues.ItemsSource=null;
         _changes.ItemsSource=null;_differenceCount.Text="";_differencePanel.Visibility=Visibility.Collapsed;
@@ -81,6 +87,8 @@ public sealed partial class PlanningImportsView
         try
         {
             var path=await PlanningUi.PickFile(XamlRoot);if(path is null)return;
+            _supplement=null;
+            _useReactTables=false;
             if(summary){_summary=path;_summaryName.Text=Path.GetFileName(path);_summaryCoverage.Text="Seleccionado · pendiente de validar";ToolTipService.SetToolTip(_summaryName,path);}
             else{_report=path;_reportName.Text=Path.GetFileName(path);_reportCoverage.Text="Seleccionado · pendiente de validar";ToolTipService.SetToolTip(_reportName,path);}
             _preview=null;SetStep(0);_fileIssues.ItemsSource=null;_validationSummary.Text="";
@@ -90,13 +98,13 @@ public sealed partial class PlanningImportsView
     private async Task Preview()
     {
         if(_busy)return;
-        if(_summary is null||_report is null){Message("Selecciona Summary y Report List.");return;}
+        if(!_useReactTables&&_supplement is null&&(_summary is null||_report is null)){Message("Selecciona Summary y Report List, una carga complementaria o los registros existentes de React.");return;}
         if(_day.Date is not{} selected){Message("Selecciona el día operativo.");return;}
         _preview=null;SetStep(1);Busy(true,"Validando estructura y conciliando los archivos reales…");
         try
         {
-            foreach(var path in new[]{_summary,_report})if(new FileInfo(path).Length>5*1024*1024){Message("Máximo 5 MiB por archivo.");SetStep(0);return;}
-            var result=await _api.Preview(Path.GetFileName(_summary),await File.ReadAllBytesAsync(_summary),Path.GetFileName(_report),await File.ReadAllBytesAsync(_report),new(_window.SelectedIndex switch{1=>"Noon",2=>"Last",_=>"First"},DateOnly.FromDateTime(selected.DateTime)),CancellationToken.None);
+            foreach(var path in new[]{_summary,_report,_supplement}.OfType<string>())if(new FileInfo(path).Length>5*1024*1024){Message("Máximo 5 MiB por archivo.");SetStep(0);return;}
+            var result=await RequestPreview(selected);
             if(!result.IsSuccess||result.Value is not{} preview){Message(result.Error??"No se pudo validar.");SetStep(0);return;}
             Show(preview);Message(preview.Status=="Applied"?"Este lote ya está confirmado; se conserva su identidad y no se duplica.":preview.Issues.Any(i=>i.Blocking)?"Hay errores de importación. Corrige los archivos antes de confirmar.":"Archivos validados. Revisa las diferencias antes de confirmar.");
             if(preview.Status=="Applied")await Summary(preview.Id);else await ReviewBeforeImport();
@@ -123,8 +131,8 @@ public sealed partial class PlanningImportsView
     }
     private async Task<PlanningImportInspection?> ReloadInspection()
     {
-        if(_summary is null||_report is null||_day.Date is not{} day)return null;
-        var refreshed=await _api.Preview(Path.GetFileName(_summary),await File.ReadAllBytesAsync(_summary),Path.GetFileName(_report),await File.ReadAllBytesAsync(_report),new(_window.SelectedIndex switch{1=>"Noon",2=>"Last",_=>"First"},DateOnly.FromDateTime(day.DateTime)),CancellationToken.None);
+        if((!_useReactTables&&_supplement is null&&(_summary is null||_report is null))||_day.Date is not{} day)return null;
+        var refreshed=await RequestPreview(day);
         if(refreshed.Value is not{} p){Message(refreshed.Error??"No se pudo recalcular.");return null;}_preview=p;Show(p);
         return (await _api.InspectImport(p.Id,CancellationToken.None)).Value;
     }
@@ -134,6 +142,35 @@ public sealed partial class PlanningImportsView
         var result=await _api.InspectImport(preview.Id,CancellationToken.None);
         if(result.Value is not{} data){Message(result.Error??"No se pudo abrir la revisión.");return;}
         TrackImportWindow(new PlanningImportReviewWindow(_api,data,_permissions().Contains(PlanningPermissions.Equivalences,StringComparer.Ordinal),ReloadInspection,ConfirmReviewed,_open));
+    }
+    private ImportCut CurrentCut(DateTimeOffset day)=>new(_window.SelectedIndex switch{1=>"Noon",2=>"Last",_=>"First"},
+        DateOnly.FromDateTime(day.DateTime),"HtmlReact",_targetInDate.Date is{} target?DateOnly.FromDateTime(target.DateTime):null);
+    private async Task<PlanningCall<PlanningImportPreview>> RequestPreview(DateTimeOffset day)
+    {
+        if(_useReactTables)return await _api.PreviewReactTables(DateOnly.FromDateTime(day.DateTime),CancellationToken.None);
+        if(_supplement is{} file)return await _api.PreviewSupplement(Path.GetFileName(file),await File.ReadAllBytesAsync(file),DateOnly.FromDateTime(day.DateTime),CancellationToken.None);
+        return await _api.Preview(Path.GetFileName(_summary!),await File.ReadAllBytesAsync(_summary!),Path.GetFileName(_report!),await File.ReadAllBytesAsync(_report!),CurrentCut(day),CancellationToken.None);
+    }
+    private async Task PickSupplement()
+    {
+        if(_busy)return;
+        try
+        {
+            var path=await PlanningUi.PickFile(XamlRoot);if(path is null)return;
+            _useReactTables=false;
+            _supplement=path;_summary=_report=null;_preview=null;SetStep(0);
+            _summaryName.Text="Carga complementaria · Side 2";_reportName.Text=Path.GetFileName(path);
+            _summaryCoverage.Text="JOB · prueba · laboratorio · ingreso · Due Date";_reportCoverage.Text="Pendiente de validar";
+            _fileIssues.ItemsSource=null;Message("La carga complementaria conserva el origen manual y sus fechas quedan protegidas.");
+        }
+        catch(Exception e)when(e is IOException or UnauthorizedAccessException){Message(e.Message);}
+    }
+    private async Task ReviewReactTables()
+    {
+        if(_busy)return;_useReactTables=true;_summary=_report=_supplement=null;_preview=null;SetStep(0);
+        _summaryName.Text="Registros existentes de LIMS React";_reportName.Text="Revisión desde las tablas actuales";
+        _summaryCoverage.Text="Se conservan los identificadores y valores originales";_reportCoverage.Text="Pendiente de conciliación";
+        await Preview();
     }
     private async Task<bool> ConfirmReviewed(PlanningImportInspection inspection)
     {

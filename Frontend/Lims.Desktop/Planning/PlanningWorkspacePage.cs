@@ -24,11 +24,11 @@ public sealed class PlanningWorkspacePage : Page, IDisposable
     public List<Section> Sections{get;}=[];
     public event Action? SectionsChanged;
     public async Task ShowSection(Section section){_content.Content=section.View;Motion.Enter(section.View,y:4,milliseconds:140);await section.Load();}
-    public PlanningWorkspacePage(PlanningApiClient api,Action back)
+    public PlanningWorkspacePage(PlanningApiClient api,Action back,Func<int?>? userId=null)
     {
         _api=api;_back=back;Background=PlanningUi.Brush("LimsBackgroundBrush");
         _jobs=new(api,OpenDossier,()=>_current?.Permissions??[]);_imports=new(api,OpenDossier,()=>_current?.Permissions??[]);
-        _reportList=new(api,OpenDossier,()=>_current?.Permissions??[],()=>_current?.Administration==true);
+        _reportList=new(api,OpenDossier,()=>_current?.Permissions??[],()=>_current?.Administration==true,userId);
         _reportList.Changed+=async()=>{await _jobs.RefreshPreservingSelection();foreach(var window in _windows.ToArray())await window.RefreshData();};
         _imports.OpenImportedJobs+=async id=>{_content.Content=_jobs;await _jobs.OpenBatch(id);};
         _imports.Applied+=async()=>{await _jobs.RefreshPreservingSelection();foreach(var window in _windows.ToArray())await window.RefreshData();};

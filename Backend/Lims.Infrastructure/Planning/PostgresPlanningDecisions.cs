@@ -30,6 +30,7 @@ public sealed partial class PostgresPlanningStore
         await Execute(c,tx,"UPDATE planning.episodes SET buyer=@buyer,vendor=@vendor,service=@service,in_date=@indate::date,due_date=@due::date,amount=@amount::numeric,currency=@currency,usd=@usd::numeric,manual_fields=@fields,version=version+1 WHERE id=@id",ct,
             ("buyer",w.Buyer),("vendor",w.Vendor),("service",w.Service),("indate",w.InDate),("due",w.DueDate),("amount",w.Amount),("currency",w.Currency),("usd",w.Usd),("fields",old.ManualFields.Concat(changed).Distinct(StringComparer.Ordinal).ToArray()),("id",id)).ConfigureAwait(false);
         await Audit(c,tx,id,"WipEdited",actor,reason,new { Before=old.Wip,After=w,Fields=changed,request.UsdEvidence },ct).ConfigureAwait(false);
+        await SyncReactWip(c,tx,id,w,changed,ct).ConfigureAwait(false);
         await RefreshIncidents(c,tx,id,actor,ct).ConfigureAwait(false);await Bump(c,tx,ct).ConfigureAwait(false);await tx.CommitAsync(ct).ConfigureAwait(false);
     }
     private static async Task<string[]> JobNames(NpgsqlConnection c,NpgsqlTransaction tx,Guid id,CancellationToken ct)
@@ -43,14 +44,17 @@ public sealed partial class PostgresPlanningStore
         await Revision(c,tx,true,ct).ConfigureAwait(false);await CheckEpisode(c,tx,id,request.Version,ct).ConfigureAwait(false);
         if(request.CatalogueVersion is{} catalogueVersion)
         {
-            var map=(await Mappings(c,tx,ct).ConfigureAwait(false)).SingleOrDefault(m=>PlanningReconciler.TestKey(m.OriginalTest)==PlanningReconciler.TestKey(test));
+            var catalogue=await HasReactCatalogue(c,tx,ct).ConfigureAwait(false)?await ReactMappings(c,tx,ct).ConfigureAwait(false):await Mappings(c,tx,ct).ConfigureAwait(false);
+            var map=catalogue.SingleOrDefault(m=>PlanningReconciler.TestKey(m.OriginalTest)==PlanningReconciler.TestKey(test));
             if(map is null||map.Version!=catalogueVersion||map.NoProgram||map.Equivalence!=equivalent||map.Laboratory!=lab)
                 throw new PlanningConflictException("La clasificación del catálogo cambió o no es válida. Recargue el catálogo antes de asignar la prueba.");
         }
         var execution=Guid.NewGuid();await InsertExecution(c,tx,execution,id,test,equivalent,lab,false,"Manual",ct).ConfigureAwait(false);
-        await ReopenReportAlerts(c,tx,ct).ConfigureAwait(false);
         await Execute(c,tx,"UPDATE planning.episodes SET version=version+1 WHERE id=@id",ct,("id",id)).ConfigureAwait(false);
         await Audit(c,tx,id,"ManualTestAdded",actor,reason,new{ExecutionId=execution,OriginalTest=test,Equivalence=equivalent,Laboratory=lab,request.CatalogueVersion},ct).ConfigureAwait(false);
+        var currentEpisode=(await Episodes(c,tx,await JobNames(c,tx,id,ct).ConfigureAwait(false),ct).ConfigureAwait(false)).Single(e=>e.Id==id);
+        await ProjectManualReactExecution(c,tx,currentEpisode,execution,test,equivalent,lab,actor,ct).ConfigureAwait(false);
+        await ReopenReportAlerts(c,tx,ct).ConfigureAwait(false);
         await RefreshIncidents(c,tx,id,actor,ct).ConfigureAwait(false);await Bump(c,tx,ct).ConfigureAwait(false);await tx.CommitAsync(ct).ConfigureAwait(false);
     }
     public async Task DecideIncidentAsync(Guid id,IncidentDecision request,int actor,CancellationToken ct)
@@ -81,14 +85,24 @@ public sealed partial class PostgresPlanningStore
         var equivalent=request.NoProgram?null:Required(request.Equivalence,512,"Equivalencia");var lab=request.NoProgram?null:Required(request.Laboratory,200,"Laboratorio");var key=PlanningReconciler.TestKey(test);
         await using var c=await database.Source.OpenConnectionAsync(ct).ConfigureAwait(false);await using var tx=await c.BeginTransactionAsync(ct).ConfigureAwait(false);
         await Revision(c,tx,true,ct).ConfigureAwait(false);
+        if(await HasReactCatalogue(c,tx,ct).ConfigureAwait(false))
+        {
+            var previousReact=(await ReactMappings(c,tx,ct).ConfigureAwait(false)).SingleOrDefault(m=>PlanningReconciler.TestKey(m.OriginalTest)==key);
+            await SaveReactEquivalence(c,tx,request,ct).ConfigureAwait(false);
+            await Audit(c,tx,null,"ReactEquivalenceSaved",actor,reason,new{Source="public.planificacion_test_map",Before=previousReact,After=request},ct).ConfigureAwait(false);
+            await using var local=Command(c,tx,"SELECT version FROM planning.equivalences WHERE test_key=@key",("key",key));
+            request=request with{Version=await local.ExecuteScalarAsync(ct).ConfigureAwait(false) as long?};
+        }
         await using(var cmd=Command(c,tx,"SELECT version FROM planning.equivalences WHERE test_key=@key",("key",key)))
         {var current=await cmd.ExecuteScalarAsync(ct).ConfigureAwait(false);if((current is null && request.Version is not null)||(current is long version && request.Version!=version))throw new PlanningConflictException("La equivalencia cambió. Recargue el catálogo.");}
         await Execute(c,tx,"INSERT INTO planning.equivalences(test_key,original_test,equivalence,laboratory,no_program) VALUES(@key,@test,@equivalence,@lab,@no) ON CONFLICT(test_key) DO UPDATE SET equivalence=EXCLUDED.equivalence,laboratory=EXCLUDED.laboratory,no_program=EXCLUDED.no_program,version=planning.equivalences.version+1",ct,
             ("key",key),("test",test),("equivalence",equivalent),("lab",lab),("no",request.NoProgram)).ConfigureAwait(false);
         var episodes=new List<Guid>();
-        await using(var cmd=Command(c,tx,"UPDATE planning.executions SET equivalence=@eq,laboratory=@lab,no_program=@no,version=version+1 WHERE test_key=@key AND origin='ReportList' RETURNING episode_id",("eq",equivalent),("lab",lab),("no",request.NoProgram),("key",key)))
+        await using(var cmd=Command(c,tx,"UPDATE planning.executions SET equivalence=@eq,laboratory=@lab,no_program=@no,version=version+1 WHERE test_key=@key AND origin='ReportList' AND execution_type IS DISTINCT FROM 'ReactSide2:v1' RETURNING episode_id",("eq",equivalent),("lab",lab),("no",request.NoProgram),("key",key)))
         await using(var r=await cmd.ExecuteReaderAsync(ct).ConfigureAwait(false))while(await r.ReadAsync(ct).ConfigureAwait(false))episodes.Add(r.GetGuid(0));
         foreach(var episode in episodes.Distinct())await Audit(c,tx,episode,"EquivalenceApplied",actor,reason,request,ct).ConfigureAwait(false);
+        await ReclassifyReactPending(c,tx,test,actor,null,ct).ConfigureAwait(false);
+        await ReopenReportAlerts(c,tx,ct).ConfigureAwait(false);
         await Audit(c,tx,null,"EquivalenceSaved",actor,reason,request,ct).ConfigureAwait(false);await Bump(c,tx,ct).ConfigureAwait(false);await tx.CommitAsync(ct).ConfigureAwait(false);
     }
     public async Task ResolveSourceAsync(SourceResolution request,int actor,CancellationToken ct)
@@ -103,12 +117,13 @@ public sealed partial class PostgresPlanningStore
         if(!(await JobNames(c,tx,request.EpisodeId,ct).ConfigureAwait(false)).Contains(job,StringComparer.Ordinal))throw new PlanningValidationException("La fila y el episodio deben pertenecer al mismo JOB.");
         var execution=request.ExecutionId??Guid.NewGuid();
         if(request.CreateExecution)
-        {var map=(await Mappings(c,tx,ct).ConfigureAwait(false)).SingleOrDefault(m=>PlanningReconciler.TestKey(m.OriginalTest)==PlanningReconciler.TestKey(test));await InsertExecution(c,tx,execution,request.EpisodeId,test,map?.Equivalence,map?.Laboratory,map?.NoProgram==true,"ReportList",ct).ConfigureAwait(false);}
+        {var catalogue=await HasReactCatalogue(c,tx,ct).ConfigureAwait(false)?await ReactMappings(c,tx,ct).ConfigureAwait(false):await Mappings(c,tx,ct).ConfigureAwait(false);var map=catalogue.SingleOrDefault(m=>PlanningReconciler.TestKey(m.OriginalTest)==PlanningReconciler.TestKey(test));await InsertExecution(c,tx,execution,request.EpisodeId,test,map?.Equivalence,map?.Laboratory,map?.NoProgram==true,"ReportList",ct).ConfigureAwait(false);}
         else
         {var candidate=(await Executions(c,tx,[request.EpisodeId],ct).ConfigureAwait(false)).SingleOrDefault(t=>t.Id==execution);if(candidate is null || PlanningReconciler.TestKey(candidate.OriginalTest)!=PlanningReconciler.TestKey(test))throw new PlanningValidationException("La ejecución elegida no coincide con el episodio y la prueba originales.");}
         await Execute(c,tx,"UPDATE planning.source_rows SET episode_id=@episode,execution_id=@execution WHERE batch_id=@batch AND file='Report List' AND row_number=@row",ct,("episode",request.EpisodeId),("execution",execution),("batch",request.BatchId),("row",request.ReportRow)).ConfigureAwait(false);
         await Execute(c,tx,"UPDATE planning.episodes SET version=version+1 WHERE id=@id",ct,("id",request.EpisodeId)).ConfigureAwait(false);
         await RefreshSummaryTray(c,tx,[request.EpisodeId],ct).ConfigureAwait(false);
+        await ReclassifyReactPending(c,tx,test,actor,request.BatchId,ct).ConfigureAwait(false);
         await Audit(c,tx,request.EpisodeId,"SourceIdentityResolved",actor,reason,new{request.BatchId,request.ReportRow,ExecutionId=execution,request.CreateExecution},ct).ConfigureAwait(false);
         await RefreshIncidents(c,tx,request.EpisodeId,actor,ct).ConfigureAwait(false);await Bump(c,tx,ct).ConfigureAwait(false);await tx.CommitAsync(ct).ConfigureAwait(false);
     }

@@ -31,23 +31,24 @@ public sealed partial class PlanningImportsView : Grid, IDisposable
     private readonly List<Window> _importWindows=[];
     public PlanningImportsView(PlanningApiClient api,Func<Guid,Task> open,Func<IReadOnlyList<string>> permissions)
     {
-        _api=api;_open=open;_permissions=permissions;RowSpacing=8;
-        foreach(var height in new[]{GridLength.Auto,GridLength.Auto,GridLength.Auto,GridLength.Auto,GridLength.Auto,new GridLength(1,GridUnitType.Star)})RowDefinitions.Add(new(){Height=height});
-        var title=PlanningUi.Text("Centro de Importaciones",22);title.FontWeight=Microsoft.UI.Text.FontWeights.SemiBold;
-        var labels=PlanningUi.Stack(title,PlanningUi.Text("Actualización y conciliación de JOBs desde TIPS",12,true));labels.Spacing=2;
-        var heading=new Grid{ColumnSpacing=12};heading.ColumnDefinitions.Add(new(){Width=GridLength.Auto});heading.ColumnDefinitions.Add(new());heading.ColumnDefinitions.Add(new(){Width=GridLength.Auto});
-        var icon=new Border{Width=38,Height=38,CornerRadius=new(8),Background=PlanningUi.Brush("LimsAccentSoftBrush"),Child=new LimsIcon{Icon=LimsIconKind.Import,Size=22,Foreground=PlanningUi.Brush("LimsAccentBrush")}};
-        heading.Children.Add(icon);Grid.SetColumn(labels,1);heading.Children.Add(labels);
+        _api=api;_open=open;_permissions=permissions;RowSpacing=0;
+        foreach(var height in new[]{GridLength.Auto,GridLength.Auto,GridLength.Auto,GridLength.Auto,new GridLength(1,GridUnitType.Star)})RowDefinitions.Add(new(){Height=height});
+        var title=PlanningUi.Text("Centro de Importaciones",20);title.FontWeight=Microsoft.UI.Text.FontWeights.SemiBold;title.VerticalAlignment=VerticalAlignment.Center;
+        var icon=new Border{Width=34,Height=34,CornerRadius=new(6),Background=PlanningUi.Brush("LimsAccentSoftBrush"),Child=new LimsIcon{Icon=LimsIconKind.Import,Size=20,Foreground=PlanningUi.Brush("LimsAccentBrush")}};
+        var identity=PlanningUi.Row(icon,title);identity.Spacing=10;identity.Margin=new(0,0,24,0);identity.VerticalAlignment=VerticalAlignment.Center;
+        var heading=new Grid{Padding=new(12,4,12,4)};heading.ColumnDefinitions.Add(new(){Width=GridLength.Auto});heading.ColumnDefinitions.Add(new(){Width=new(1,GridUnitType.Star)});heading.ColumnDefinitions.Add(new(){Width=GridLength.Auto});heading.RowDefinitions.Add(new(){Height=GridLength.Auto});heading.RowDefinitions.Add(new(){Height=GridLength.Auto});heading.Children.Add(identity);
         _new=Action("Nueva importación",LimsIconKind.Add,()=>{BeginImport();return Task.CompletedTask;},true);
         var history=Action("Ver historial",LimsIconKind.Traceability,async()=>{_tabs.SelectedIndex=2;await LoadHistory(CancellationToken.None);});
-        history.Visibility=Visibility.Collapsed;_new.Visibility=Visibility.Collapsed;var actions=PlanningUi.Row();actions.Spacing=8;Grid.SetColumn(actions,2);heading.Children.Add(actions);
-        PlanningUi.Place(this,heading,0);
-        BuildFlow();PlanningUi.Place(this,_flow,2);PlanningUi.Place(this,_resultHost,3);
+        history.Visibility=Visibility.Collapsed;_new.Visibility=Visibility.Collapsed;
+        PlanningUi.Place(this,Surface(heading,new Thickness(0)),0);
+        BuildFlow();_flow.Margin=new(0,8,0,0);PlanningUi.Place(this,_flow,1);PlanningUi.Place(this,_resultHost,2);
         _reviewPanel=ReviewPanel();_differencePanel=DifferencePanel();_historyPanel=HistoryPanel();
         _tabs.Items.Add(_previewTab);_tabs.Items.Add(new(){Label="Bandejas de revisión"});_tabs.Items.Add(new(){Label="Historial"});
         AutomationProperties.SetName(_tabs,"Secciones del Centro de Importaciones");
-        _tabs.SelectionChanged+=(_,_)=>SelectSection();_tabs.SelectedIndex=1;PlanningUi.Place(this,_tabs,1);
-        var message=PlanningUi.Stack(_progress,_status);message.Spacing=2;PlanningUi.Place(this,message,4);PlanningUi.Place(this,_section,5);
+        _tabs.SelectionChanged+=(_,_)=>SelectSection();_tabs.SelectedIndex=1;Grid.SetColumn(_tabs,1);heading.Children.Add(_tabs);_tabs.VerticalAlignment=VerticalAlignment.Center;
+        Grid.SetColumn(_reviewScope,2);heading.Children.Add(_reviewScope);_reviewScope.Margin=new(12,0,0,0);_reviewScope.Width=310;_reviewScope.VerticalAlignment=VerticalAlignment.Center;
+        heading.SizeChanged+=(_,_)=>{var narrow=heading.ActualWidth<1180;Grid.SetRow(_tabs,narrow?1:0);Grid.SetColumn(_tabs,narrow?0:1);Grid.SetColumnSpan(_tabs,narrow?3:1);identity.Margin=narrow?new(0,2,12,2):new(0,0,24,0);};
+        _status.Visibility=Visibility.Collapsed;var message=PlanningUi.Stack(_progress,_status);message.Spacing=2;PlanningUi.Place(this,message,3);_section.Margin=new(0,8,0,0);PlanningUi.Place(this,_section,4);
         _flow.Header="Nueva importación · selecciona Summary y Report List";_flow.IsExpanded=false;
         SizeChanged+=(_,e)=>{_shortWindow=e.NewSize.Height<650;CompactSurface();};_flow.RegisterPropertyChangedCallback(Expander.IsExpandedProperty,(_,_)=>CompactSurface());
         SelectSection();
@@ -82,6 +83,7 @@ public sealed partial class PlanningImportsView : Grid, IDisposable
     {
         if(_tabs.SelectedIndex==0&&!_busy&&_preview?.Status=="Applied"){BeginImport();}
         _flow.Visibility=_tabs.SelectedIndex==0?Visibility.Visible:Visibility.Collapsed;
+        _reviewScope.Visibility=_tabs.SelectedIndex==1?Visibility.Visible:Visibility.Collapsed;
         _resultHost.Visibility=Visibility.Collapsed;
         _section.Content=_tabs.SelectedIndex switch{0=>_differencePanel,2=>_historyPanel,_=>_reviewPanel};
         if(_tabs.SelectedIndex==0&&_preview is{} preview)ShowDifferences(preview);

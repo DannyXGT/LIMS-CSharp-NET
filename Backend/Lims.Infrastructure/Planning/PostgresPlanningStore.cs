@@ -47,10 +47,10 @@ public sealed partial class PostgresPlanningStore(PlanningDatabase database, Pla
     }
     private static async Task<List<StoredEpisode>> Episodes(NpgsqlConnection c, NpgsqlTransaction? tx, string[] jobs, CancellationToken ct)
     {
-        await using var cmd = Command(c, tx, "SELECT id,job,buyer,vendor,service,in_date,due_date,amount,currency,usd,version,manual_fields,source_in_date,official_fields::text FROM planning.episodes WHERE job=ANY(@jobs)", ("jobs", jobs));
+        await using var cmd = Command(c, tx, "SELECT id,job,buyer,vendor,service,in_date,due_date,amount,currency,usd,version,manual_fields,source_in_date,official_fields::text,EXISTS(SELECT 1 FROM planning.source_rows evidence WHERE evidence.episode_id=e.id AND evidence.file='Summary') FROM planning.episodes e WHERE job=ANY(@jobs)", ("jobs", jobs));
         await using var reader = await cmd.ExecuteReaderAsync(ct).ConfigureAwait(false);
         var result = new List<StoredEpisode>();
-        while (await reader.ReadAsync(ct).ConfigureAwait(false)) result.Add(new(reader.GetGuid(0), reader.GetString(1), Wip(reader, 2), reader.GetInt64(10), reader.GetFieldValue<string[]>(11), NullableDate(reader, 12),Read<PlanningOfficialState>(reader.GetString(13))));
+        while (await reader.ReadAsync(ct).ConfigureAwait(false)) result.Add(new(reader.GetGuid(0), reader.GetString(1), Wip(reader, 2), reader.GetInt64(10), reader.GetFieldValue<string[]>(11), NullableDate(reader, 12),Read<PlanningOfficialState>(reader.GetString(13)),reader.GetBoolean(14)));
         return result;
     }
     private static WipValues Wip(NpgsqlDataReader r, int o) => new(NullableString(r,o), NullableString(r,o+1), NullableString(r,o+2), NullableDate(r,o+3), NullableDate(r,o+4), r.IsDBNull(o+5)?null:r.GetDecimal(o+5), NullableString(r,o+6), r.IsDBNull(o+7)?null:r.GetDecimal(o+7));
@@ -58,13 +58,23 @@ public sealed partial class PostgresPlanningStore(PlanningDatabase database, Pla
     private static DateOnly? NullableDate(NpgsqlDataReader r, int i) => r.IsDBNull(i) ? null : r.GetFieldValue<DateOnly>(i);
     private static async Task<List<StoredExecution>> Executions(NpgsqlConnection c, NpgsqlTransaction? tx, Guid[] episodes, CancellationToken ct)
     {
-        await using var cmd = Command(c,tx,"SELECT id,episode_id,original_test,equivalence,laboratory,origin FROM planning.executions WHERE episode_id=ANY(@episodes)",("episodes",episodes));
+        await using var cmd = Command(c,tx,"SELECT id,episode_id,original_test,equivalence,laboratory,origin,execution_type,no_program FROM planning.executions WHERE episode_id=ANY(@episodes)",("episodes",episodes));
         await using var reader = await cmd.ExecuteReaderAsync(ct).ConfigureAwait(false); var result=new List<StoredExecution>();
-        while(await reader.ReadAsync(ct).ConfigureAwait(false)) result.Add(new(reader.GetGuid(0),reader.GetGuid(1),reader.GetString(2),NullableString(reader,3),NullableString(reader,4),reader.GetString(5)));
+        while(await reader.ReadAsync(ct).ConfigureAwait(false)) result.Add(new(reader.GetGuid(0),reader.GetGuid(1),reader.GetString(2),NullableString(reader,3),NullableString(reader,4),reader.GetString(5),NullableString(reader,6),reader.GetBoolean(7)));
+        await reader.DisposeAsync().ConfigureAwait(false);
+        var derived=result.Where(x=>x.ExecutionType is "DisneyRfSccp:v1" or "ReactToxicElements:v1").Select(x=>x.Id).ToArray();
+        if(derived.Length>0)
+        {
+            var backed=new HashSet<Guid>();
+            await using var source=Command(c,tx,"SELECT DISTINCT execution_id FROM planning.source_rows WHERE execution_id=ANY(@ids) AND file='Report List'",("ids",derived));
+            await using var evidence=await source.ExecuteReaderAsync(ct).ConfigureAwait(false);
+            while(await evidence.ReadAsync(ct).ConfigureAwait(false))backed.Add(evidence.GetGuid(0));
+            for(var i=0;i<result.Count;i++)if(backed.Contains(result[i].Id))result[i]=result[i] with{HasReportSource=true};
+        }
         return result;
     }
     public async Task<IReadOnlyList<PlanningEquivalence>> EquivalencesAsync(CancellationToken ct)
-    { await using var c=await database.Source.OpenConnectionAsync(ct).ConfigureAwait(false); return await Mappings(c,null,ct).ConfigureAwait(false); }
+    { await using var c=await database.Source.OpenConnectionAsync(ct).ConfigureAwait(false); return await HasReactCatalogue(c,null,ct).ConfigureAwait(false)?await ReactMappings(c,null,ct).ConfigureAwait(false):await Mappings(c,null,ct).ConfigureAwait(false); }
     private static async Task<List<PlanningEquivalence>> Mappings(NpgsqlConnection c,NpgsqlTransaction? tx,CancellationToken ct)
     {
         // Legacy HTML also stores the explicit NO PROGRAMAR decision in the laboratory field. Preserve its original values.
@@ -80,24 +90,32 @@ public sealed partial class PostgresPlanningStore(PlanningDatabase database, Pla
         await using var tx=await c.BeginTransactionAsync(IsolationLevel.ReadCommitted,ct).ConfigureAwait(false);
         // The revision row serializes previews and mutations, including simultaneous imports of the same bytes.
         var revision=await Revision(c,tx,true,ct).ConfigureAwait(false);
-        await using(var find=Command(c,tx,"SELECT preview::text,status FROM planning.batches WHERE fingerprint=@hash AND (status='Applied' OR (actor_id=@actor AND base_revision=@revision))",("hash",input.Fingerprint),("actor",actor),("revision",revision)))
+        string? reactToken=null;
+        if(input.Cut.Policy is "HtmlReact" or "HtmlReactSide2" or "ReactTable")
+        {
+            await RequireReactSchema(c,tx,ct).ConfigureAwait(false);reactToken=await ReadReactStateToken(c,tx,ct).ConfigureAwait(false);
+            if(input.SourceSnapshotToken is not null&&input.SourceSnapshotToken!=reactToken)throw new PlanningConflictException("Las tablas de React cambiaron al preparar la revisión. Actualice la instantánea.");
+        }
+        await using(var find=Command(c,tx,"SELECT preview::text,status FROM planning.batches WHERE fingerprint=@hash AND (status='Applied' OR (actor_id=@actor AND base_revision=@revision AND (@react::text IS NULL OR plan->>'reactStateToken'=@react)))",("hash",input.Fingerprint),("actor",actor),("revision",revision),("react",reactToken)))
         await using(var r=await find.ExecuteReaderAsync(ct).ConfigureAwait(false))
             if(await r.ReadAsync(ct).ConfigureAwait(false)) return Read<PlanningImportPreview>(r.GetString(0)) with { Status=r.GetString(1) };
         var jobs=input.Rows.Select(r=>r.Job).Distinct(StringComparer.Ordinal).ToArray();
         var episodes=await Episodes(c,tx,jobs,ct).ConfigureAwait(false);
         var executions=await Executions(c,tx,episodes.Select(e=>e.Id).ToArray(),ct).ConfigureAwait(false);
         var links=new List<StoredSourceIdentity>();
-        await using(var cmd=Command(c,tx,"SELECT DISTINCT b.report_sha256,s.row_number,s.sheet,s.execution_id FROM planning.source_rows s JOIN planning.batches b ON b.id=s.batch_id WHERE b.status='Applied' AND b.report_sha256=@hash AND s.file='Report List' AND s.execution_id IS NOT NULL",("hash",PlanningImportReader.Hash(input.Report))))
+        await using(var cmd=Command(c,tx,"SELECT DISTINCT b.report_sha256,s.row_number,s.sheet,s.execution_id FROM planning.source_rows s JOIN planning.batches b ON b.id=s.batch_id WHERE b.status='Applied' AND b.report_sha256=@hash AND s.file IN ('Report List','Side2','React Active') AND s.execution_id IS NOT NULL",("hash",PlanningImportReader.Hash(input.Report))))
         await using(var r=await cmd.ExecuteReaderAsync(ct).ConfigureAwait(false))
             while(await r.ReadAsync(ct).ConfigureAwait(false))links.Add(new(r.GetString(0),r.GetInt32(1),r.GetString(2),r.GetGuid(3)));
-        var plan=PlanningReconciler.Plan(input,episodes,executions,await Mappings(c,tx,ct).ConfigureAwait(false),links);
+        var maps=input.Cut.Policy=="ReactTable"?ReactSnapshotMappings(input,await ReactMappings(c,tx,ct).ConfigureAwait(false)):input.Cut.Policy=="HtmlReactSide2"?PlanningImportReader.SupplementMappings(input):input.Cut.Policy=="HtmlReact"?await ReactMappings(c,tx,ct).ConfigureAwait(false):await Mappings(c,tx,ct).ConfigureAwait(false);
+        var plan=PlanningReconciler.Plan(input,episodes,executions,maps,links);
+        if(input.Cut.Policy is "HtmlReact" or "HtmlReactSide2" or "ReactTable")plan=(await PrepareReactPlan(c,tx,plan,ct).ConfigureAwait(false)) with{ReactStateToken=reactToken};
         var id=Guid.NewGuid();
         var newIds=plan.Episodes.Where(e=>e.IsNew).Select(e=>e.Id).ToHashSet();
-        var changedIds=plan.Changes.Where(c=>c.Entity is "WIP" or "OfficialState").Select(c=>c.EpisodeId).ToHashSet();
+        var changedIds=plan.Changes.Where(c=>c.Entity is "WIP" or "OfficialState" or "Classification").Select(c=>c.EpisodeId).ToHashSet();
         var preview=new PlanningImportPreview(id,"Preview",revision,input.Cut,input.Files,plan.Changes,plan.Reviews,plan.Issues,DateTimeOffset.UtcNow,
-            plan.Episodes.Count(e=>e.IsNew),plan.Executions.Count(e=>e.Action=="Create"),plan.Changes.Where(e=>e.Entity is "WIP" or "OfficialState" && e.Action=="UpdateSource" && !newIds.Contains(e.EpisodeId??Guid.Empty)).Select(e=>e.EpisodeId).Distinct().Count(),plan.Executions.Count(e=>e.Action=="LinkManual"),
+            plan.Episodes.Count(e=>e.IsNew),plan.Executions.Count(e=>e.Action=="Create"),plan.Changes.Where(e=>e.Entity is "WIP" or "OfficialState" or "Classification" && e.Action=="UpdateSource" && !newIds.Contains(e.EpisodeId??Guid.Empty)).Select(e=>e.EpisodeId).Distinct().Count(),plan.Executions.Count(e=>e.Action=="LinkManual"),
             plan.Episodes.Count(e=>!e.IsNew&&!changedIds.Contains(e.Id)),
-            plan.Reviews.Count(r=>r.Category=="ExecutionIdentity"),plan.Reviews.Count(r=>r.Category is not ("BothFiles" or "ManualManaged")));
+            plan.Reviews.Count(r=>r.Category=="ExecutionIdentity"),plan.Reviews.Count(r=>r.Category is not ("BothFiles" or "ManualManaged")),plan.Admissions);
         // An unapplied stale preview can be superseded only by its creator; original files and audit remain in history.
         await using(var owner=Command(c,tx,"SELECT actor_id FROM planning.batches WHERE fingerprint=@hash",("hash",input.Fingerprint)))
         {
@@ -136,7 +154,14 @@ public sealed partial class PostgresPlanningStore(PlanningDatabase database, Pla
         if(preview.BaseRevision!=revision) throw new PlanningConflictException("La información cambió después de la revisión. Valide nuevamente los archivos.");
         if(preview.CreatedAt < DateTimeOffset.UtcNow.AddHours(-24)) throw new PlanningConflictException("La vista previa venció. Valide nuevamente los archivos.");
         if(plan.Issues.Any(i=>i.Blocking)) throw new PlanningValidationException("Corrija los errores estructurales antes de confirmar.");
+        if(input.Cut.Policy is "HtmlReact" or "HtmlReactSide2" or "ReactTable")
+        {
+            await RequireReactSchema(c,tx,ct).ConfigureAwait(false);
+            await Execute(c,tx,"LOCK TABLE public.planificacion_activa,public.planificacion_archivada,public.planificacion_test_map IN SHARE ROW EXCLUSIVE MODE",ct).ConfigureAwait(false);
+            if(plan.ReactStateToken!=await ReadReactStateToken(c,tx,ct).ConfigureAwait(false))throw new PlanningConflictException("Las tablas de React cambiaron después de la revisión. Valide de nuevo antes de confirmar.");
+        }
         var audit=new List<ImportAudit>();
+        if(input.Cut.Policy=="HtmlReactSide2")await Execute(c,tx,"UPDATE planning.episodes SET manual_fields=array_remove(array_remove(manual_fields,'InDate'),'DueDate') WHERE id=ANY(@ids)",ct,("ids",plan.Episodes.Select(e=>e.Id).ToArray())).ConfigureAwait(false);
         await CopyEpisodes(c,tx,id,plan.Episodes,ct).ConfigureAwait(false);
         var changesByEpisode=plan.Changes.ToLookup(c=>c.EpisodeId);
         foreach(var episode in plan.Episodes)
@@ -145,12 +170,21 @@ public sealed partial class PostgresPlanningStore(PlanningDatabase database, Pla
         }
         foreach(var change in plan.Changes.Where(c=>c.Entity=="OfficialState"&&c.EpisodeId is not null))
             audit.Add(new(change.EpisodeId!.Value,"OfficialStateImported",new { BatchId=id,Before=JsonSerializer.Deserialize<JsonElement>(change.Before),After=JsonSerializer.Deserialize<JsonElement>(change.After) }));
+        foreach(var change in plan.Changes.Where(c=>c.Entity=="Classification"&&c.EpisodeId is not null))
+            audit.Add(new(change.EpisodeId!.Value,"ClassificationSourceObserved",new{BatchId=id,change.OriginalTest,Before=JsonSerializer.Deserialize<JsonElement>(change.Before),After=JsonSerializer.Deserialize<JsonElement>(change.After),input.Cut.Policy}));
         await CopyExecutions(c,plan.Executions,ct).ConfigureAwait(false);
+        if(input.Cut.Policy is "HtmlReact" or "HtmlReactSide2" or "ReactTable")
+            foreach(var execution in plan.Executions.Where(e=>e.Action=="Observe"&&(e.Origin=="ReportList"||e.Rule=="ReactSide2:v1")))
+                await Execute(c,tx,"""
+                    UPDATE planning.executions SET equivalence=@eq,laboratory=@lab,no_program=@no,execution_type=coalesce(@rule,execution_type),version=version+1
+                    WHERE id=@id AND (equivalence,laboratory,no_program,execution_type) IS DISTINCT FROM (@eq,@lab,@no,coalesce(@rule,execution_type))
+                    """,ct,("id",execution.Id),("eq",execution.Equivalence),("lab",execution.Laboratory),("no",execution.NoProgram),("rule",execution.Rule)).ConfigureAwait(false);
         foreach(var execution in plan.Executions)
         {
             if(execution.Action!="Observe") audit.Add(new(execution.EpisodeId,execution.Action=="LinkManual"?"ManualSourceLinked":"TestImported",new { BatchId=id,execution.Id,execution.OriginalTest }));
         }
         await CopySources(c,id,input,plan,ct).ConfigureAwait(false);
+        if(input.Cut.Policy is "HtmlReact" or "HtmlReactSide2" or "ReactTable")await ApplyReactPlan(c,tx,id,plan,actor,ct).ConfigureAwait(false);
         await ReopenReportAlerts(c,tx,ct).ConfigureAwait(false);
         await RefreshSummaryTray(c,tx,plan.Episodes.Select(e=>e.Id).Concat(plan.Executions.Select(e=>e.EpisodeId)).Distinct().ToArray(),ct).ConfigureAwait(false);
         await ReconcileImportIncidents(c,tx,plan.Episodes.Select(e=>e.Id).Concat(plan.Executions.Select(e=>e.EpisodeId)).Distinct().ToArray(),audit,ct).ConfigureAwait(false);

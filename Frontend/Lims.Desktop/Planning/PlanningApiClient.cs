@@ -28,11 +28,25 @@ public sealed class PlanningApiClient(IHttpClientFactory clients)
         ["Search"]=query.Search,["View"]=query.View,["Laboratory"]=query.Laboratory,["Test"]=query.Test,["Service"]=query.Service,["Buyer"]=query.Buyer,
         ["Page"]=query.Page.ToString(CultureInfo.InvariantCulture),["PageSize"]=query.PageSize.ToString(CultureInfo.InvariantCulture),
         ["Sort"]=query.Sort,["Descending"]=query.Descending.ToString(),["VerifiedBy"]=query.VerifiedBy,["Block"]=query.Block?.ToString(CultureInfo.InvariantCulture),
-        ["CheckedDate"]=query.CheckedDate?.ToString("yyyy-MM-dd",CultureInfo.InvariantCulture),["Revision"]=query.Revision?.ToString(CultureInfo.InvariantCulture)
+        ["CheckedDate"]=query.CheckedDate?.ToString("yyyy-MM-dd",CultureInfo.InvariantCulture),["Revision"]=query.Revision?.ToString(CultureInfo.InvariantCulture),["ColumnFilters"]=query.ColumnFilters
         }.Where(p=>!string.IsNullOrEmpty(p.Value)).Select(p=>p.Key+"="+Uri.EscapeDataString(p.Value!))),null,ct).ConfigureAwait(false);
         return result.StatusCode==404?result with { Error="Report List todavía no está disponible en el servidor configurado. Se requiere actualizar el servidor para usar este módulo." }:result;
     }
     public Task<PlanningCall<ReportListResult>> CheckReport(ReportListCheck request,bool correction,CancellationToken ct)=>Send<ReportListResult>(HttpMethod.Post,"/api/planning/report-list/"+(correction?"correction":"check"),request,ct);
+    public Task<PlanningCall<ReportListResult>> DigitizeReport(ReportDigitization request,CancellationToken ct)=>Send<ReportListResult>(HttpMethod.Post,"/api/planning/report-list/digitize",request,ct);
+    private static string ScheduleQuery(ReportScheduleQuery q)=>string.Join('&',new Dictionary<string,string?>{
+        ["Search"]=q.Search,["State"]=q.State,["Page"]=q.Page.ToString(CultureInfo.InvariantCulture),["PageSize"]=q.PageSize.ToString(CultureInfo.InvariantCulture),["Revision"]=q.Revision?.ToString(CultureInfo.InvariantCulture),["GroupByClock"]=q.GroupByClock?"true":null
+    }.Where(p=>!string.IsNullOrEmpty(p.Value)).Select(p=>p.Key+"="+Uri.EscapeDataString(p.Value!)));
+    public Task<PlanningCall<ReportSchedulePage>> ReportSchedules(ReportScheduleQuery query,CancellationToken ct)=>Send<ReportSchedulePage>(HttpMethod.Get,"/api/planning/report-list/schedules?"+ScheduleQuery(query),null,ct);
+    public Task<PlanningCall<ReportScheduleDetail>> ReportSchedule(Guid id,CancellationToken ct,bool groupByClock=false)=>Send<ReportScheduleDetail>(HttpMethod.Get,$"/api/planning/report-list/schedules/{id:D}"+(groupByClock?"?groupByClock=true":""),null,ct);
+    public Task<PlanningCall<ReportSchedule>> ReviewSchedule(ReportScheduleReview request,CancellationToken ct)=>Send<ReportSchedule>(HttpMethod.Post,"/api/planning/report-list/schedules/review",request,ct);
+    public Task<PlanningCall<ReportClosurePage>> ReportClosures(ReportScheduleQuery query,CancellationToken ct)=>Send<ReportClosurePage>(HttpMethod.Get,"/api/planning/report-list/closures?"+ScheduleQuery(query),null,ct);
+    public async Task<PlanningCall<byte[]>> ExportSchedules(ReportScheduleQuery query,CancellationToken ct)
+    {
+        try{using var response=await clients.CreateClient(ApiClientNames.Authorized).GetAsync("/api/planning/report-list/schedules/export?"+ScheduleQuery(query),ct).ConfigureAwait(false);
+        return response.IsSuccessStatusCode?new(true,await response.Content.ReadAsByteArrayAsync(ct).ConfigureAwait(false),null,(int)response.StatusCode):new(false,null,await Error(response,ct).ConfigureAwait(false),(int)response.StatusCode);}
+        catch(HttpRequestException){return new(false,null,"No se pudo conectar con la API.",0);}
+    }
     public Task<PlanningCall<bool>> KeepReport(ReportListKeep request,CancellationToken ct)=>Send<bool>(HttpMethod.Put,"/api/planning/report-list/keep",request,ct);
     public Task<PlanningCall<ReportListResult>> ScanReport(ReportListScan request,CancellationToken ct)=>Send<ReportListResult>(HttpMethod.Post,"/api/planning/report-list/scan",request,ct);
     public Task<PlanningCall<JobDossier>> Dossier(Guid id,CancellationToken ct)=>Send<JobDossier>(HttpMethod.Get,$"/api/planning/jobs/{id:D}",null,ct);
@@ -75,8 +89,17 @@ public sealed class PlanningApiClient(IHttpClientFactory clients)
         var form=new MultipartFormDataContent();
         form.Add(new ByteArrayContent(summary),"summary",summaryName);form.Add(new ByteArrayContent(report),"report",reportName);
         form.Add(new StringContent(cut.Window),"window");form.Add(new StringContent(cut.Day.ToString("yyyy-MM-dd",CultureInfo.InvariantCulture)),"day");
+        form.Add(new StringContent(cut.Policy),"policy");
+        if(cut.TargetInDate is{} target)form.Add(new StringContent(target.ToString("yyyy-MM-dd",CultureInfo.InvariantCulture)),"targetInDate");
         return Send<PlanningImportPreview>(HttpMethod.Post,"/api/planning/imports/preview",form,ct);
     }
+    public Task<PlanningCall<PlanningImportPreview>> PreviewSupplement(string name,byte[] bytes,DateOnly day,CancellationToken ct)
+    {
+        var form=new MultipartFormDataContent();form.Add(new ByteArrayContent(bytes),"supplement",name);
+        form.Add(new StringContent(day.ToString("yyyy-MM-dd",CultureInfo.InvariantCulture)),"day");
+        return Send<PlanningImportPreview>(HttpMethod.Post,"/api/planning/imports/supplement/preview",form,ct);
+    }
+    public Task<PlanningCall<PlanningImportPreview>> PreviewReactTables(DateOnly day,CancellationToken ct)=>Send<PlanningImportPreview>(HttpMethod.Post,"/api/planning/imports/react/preview",new ReactTableReviewRequest(day),ct);
     public async Task<PlanningCall<byte[]>> Export(PlanningQuery query,CancellationToken ct)
     {
         try

@@ -1,4 +1,4 @@
-﻿namespace Lims.Contracts.Planning;
+namespace Lims.Contracts.Planning;
 
 public static class PlanningPermissions
 {
@@ -23,7 +23,8 @@ public sealed record PlanningRow(Guid EpisodeId, Guid? ExecutionId, string Job, 
     string? OriginalTest, string? Equivalence, string? Laboratory, string? Service, DateTimeOffset? DigitizedAt,
     DateOnly? TestedOn, string DigitizationState, string? DigitizedBy, string? ExecutionType, string Origin,
     string? Buyer, string? Vendor, bool HasIncidents, string? Responsible = null, string? Observation = null, long NoteVersion = 0,
-    bool OnHold = false, string? JobLabel = null, string? HoldReason = null, long ControlVersion = 0, decimal? Usd = null,bool NoProgram=false,string? SampleStatus=null,string? OfficialJobStatus=null)
+    bool OnHold = false, string? JobLabel = null, string? HoldReason = null, long ControlVersion = 0, decimal? Usd = null,bool NoProgram=false,string? SampleStatus=null,string? OfficialJobStatus=null,
+    string? ScheduleReviewState=null,string? ScheduleReviewedBy=null,DateTimeOffset? ScheduleReviewedAt=null,Guid? DigitizationSessionId=null)
 {
     public string PlanningTest => ExecutionId is null ? "WIP sin pruebas" : NoProgram ? "NO PROGRAMAR" : string.IsNullOrWhiteSpace(Equivalence) ? "Sin equivalencia" : Equivalence;
     public string JobState => SampleStatus ?? OfficialJobStatus ?? "No informado";
@@ -56,7 +57,9 @@ public sealed record ManualTestRequest(long Version, string OriginalTest, string
 public sealed record IncidentDecision(long Version, string State, string Reason);
 public sealed record EquivalenceDecision(string OriginalTest, string? Equivalence, string? Laboratory, bool NoProgram, long? Version, string Reason);
 public sealed record PlanningEquivalence(string OriginalTest, string? Equivalence, string? Laboratory, bool NoProgram, long Version);
-public sealed record ImportCut(string Window, DateOnly Day);
+public sealed record ImportCut(string Window, DateOnly Day, string Policy="Preserve", DateOnly? TargetInDate=null);
+public sealed record ReactTableReviewRequest(DateOnly Day);
+public sealed record PlanningAdmission(Guid ExecutionId,string Job,string OriginalTest,string State,string Reason,string? Rule=null);
 public sealed record ImportIssue(string File, int Row, string Code, string Message, bool Blocking = false);
 public sealed record ImportReview(string Category, string Job, Guid? EpisodeId, string? OriginalTest, string Description, int SourceRow = 0, Guid? BatchId = null)
 {
@@ -68,7 +71,8 @@ public sealed record FileCoverage(string File, string Name, string Sha256, int R
 public sealed record PlanningImportPreview(Guid Id, string Status, long BaseRevision, ImportCut Cut,
     IReadOnlyList<FileCoverage> Files, IReadOnlyList<ImportChange> Changes,
     IReadOnlyList<ImportReview> Reviews, IReadOnlyList<ImportIssue> Issues, DateTimeOffset CreatedAt,
-    int NewJobs, int NewTests, int UpdatedJobs, int LinkedManualTests,int UnchangedJobs=0,int AmbiguousRows=0,int PendingReview=0);
+    int NewJobs, int NewTests, int UpdatedJobs, int LinkedManualTests,int UnchangedJobs=0,int AmbiguousRows=0,int PendingReview=0,
+    IReadOnlyList<PlanningAdmission>? Admissions=null);
 public sealed record PlanningImportResult(Guid Id, string Status, int NewJobs, int NewTests, int UpdatedJobs, int LinkedManualTests, bool AlreadyApplied);
 public sealed record PlanningBatch(Guid Id, string Status, string SummaryName, string ReportName, string Window, DateOnly Day, DateTimeOffset CreatedAt, DateTimeOffset? AppliedAt,
     int ActorId=0,string? ActorName=null,int NewJobs=0,int NewTests=0,int UpdatedJobs=0,int WipChanges=0,int ReviewCases=0);
@@ -118,8 +122,8 @@ public static class PlanningLabels
     {
         "BothFiles" => "En ambos archivos", "SummaryWithoutReport" => "Summary sin Report List", "MissingTests" => "Sin pruebas asignadas",
         "MissingVendor" => "Sin Vendor", "MissingEquivalence" => "Sin equivalencia", "ManualManaged" => "Gestionados manualmente",
-        "ExecutionIdentity" => "Identidad por conciliar", "ReportWithoutSummary" => "Report List sin Summary", "ExternalClosed" => "Close Date externo", "Episode" => "Revisar episodio", _ => code
+        "ExecutionIdentity" => "Identidad por conciliar", "ReportWithoutSummary" => "Report List sin Summary", "ExternalClosed" => "Close Date externo", "Episode" => "Revisar episodio", "Admission"=>"Admisión al trabajo activo", "BusinessRule"=>"Reglas de negocio aplicadas", _ => code
     };
     public static string State(string code) => code switch { "Preview" => "En revisión", "Applied" => "Confirmado", "Pending" => "Pendiente", "Held" => "Retenido", "Resolved" => "Resuelto", "Excluded"=>"Excluido justificadamente", _ => code };
-    public static string Permission(string code) => code switch { PlanningPermissions.ReportMark => "Marcar Report List y escanear", PlanningPermissions.ReportReview => "Corregir marcados y permanencia", PlanningPermissions.View => "Consultar Planificación", PlanningPermissions.Import => "Revisar y confirmar importaciones", PlanningPermissions.EditWip => "Editar WIP y retener incidencias", PlanningPermissions.ManualTests => "Agregar pruebas y conciliar identidades", PlanningPermissions.Equivalences => "Administrar equivalencias y NO PROGRAMAR", _ => code };
+    public static string Permission(string code) => code switch { PlanningPermissions.ReportMark => "Digitar pruebas y capturar códigos AR", PlanningPermissions.ReportReview => "Chequear horarios, corregir digitación y permanencia", PlanningPermissions.View => "Consultar Planificación", PlanningPermissions.Import => "Revisar y confirmar importaciones", PlanningPermissions.EditWip => "Editar WIP y retener incidencias", PlanningPermissions.ManualTests => "Agregar pruebas y conciliar identidades", PlanningPermissions.Equivalences => "Administrar equivalencias y NO PROGRAMAR", _ => code };
 }
