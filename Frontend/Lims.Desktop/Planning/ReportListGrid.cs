@@ -10,6 +10,7 @@ using Windows.ApplicationModel.DataTransfer;
 using Windows.UI.Core;
 using Column = Lims.Desktop.Planning.ReportListTableModel.Column;
 using Lims.DesignSystem.Controls;
+using System.Runtime.CompilerServices;
 
 namespace Lims.Desktop.Planning;
 
@@ -23,15 +24,20 @@ internal sealed class ReportListGrid : Grid
     private bool _descending,_dragging;
     private HashSet<string> _filtered=[];
     public event Action<string>? PreferenceError;
-    private readonly ListView _rows=new(){SelectionMode=ListViewSelectionMode.None,HorizontalAlignment=HorizontalAlignment.Left,Padding=new(0),BorderThickness=new(0),IsMultiSelectCheckBoxEnabled=false};
+    private readonly ListView _rows=new(){SelectionMode=ListViewSelectionMode.None,Padding=new(0),BorderThickness=new(0),IsMultiSelectCheckBoxEnabled=false};
     private readonly HashSet<Guid> _marked=[];
     private CheckBox? _visibleCheck;
     private ReportListItem? _contextItem;
     private int? _checkAnchor;
-    private readonly ScrollViewer _viewport;
-    private readonly StackPanel _header=new(){Orientation=Orientation.Horizontal,Height=38};
+    private readonly ReportTableViewport _viewport;
+    private readonly StackPanel _header=new(){Orientation=Orientation.Horizontal,Height=40};
     private readonly Dictionary<ListViewItem,Grid> _realized=[];
     private readonly Dictionary<string,Button> _heads=[];
+    private readonly Brush _transparent=new SolidColorBrush(Microsoft.UI.Colors.Transparent);
+    private sealed class RowState {public int LayoutVersion=-1;public int Index;}
+    private readonly ConditionalWeakTable<Grid,RowState> _rowStates=new();
+    private int _layoutVersion;
+    private bool _visibleCheckPending;
     private bool _busy;
     public Func<bool>? CanKeep {get;set;}
     public Func<bool>? CanMark {get;set;}
@@ -47,21 +53,21 @@ internal sealed class ReportListGrid : Grid
     public int SelectedOutsideView=>Selected.Count(item=>!VisibleItems().Contains(item));
     public ReportListGrid()
     {
-        var table=PlanningUi.Rows(GridLength.Auto,new(1,GridUnitType.Star));table.RowSpacing=0;
-        PlanningUi.Place(table,_header,0);PlanningUi.Place(table,_rows,1);
-        _viewport=new ScrollViewer{Content=table,HorizontalScrollBarVisibility=ScrollBarVisibility.Auto,VerticalScrollBarVisibility=ScrollBarVisibility.Disabled,VerticalContentAlignment=VerticalAlignment.Stretch};Children.Add(_viewport);
-        _viewport.ViewChanged+=(_,_)=>RefreshRealized();_viewport.SizeChanged+=(_,_)=>RefreshRealized();
+        _viewport=new(_header,_rows);Children.Add(_viewport);
+        _viewport.Scrolled+=QueueVisibleCheck;
         _header.Background=PlanningUi.Brush("LimsSurfaceSecondaryBrush");
         _rows.ItemsPanel=(ItemsPanelTemplate)XamlReader.Load("<ItemsPanelTemplate xmlns='http://schemas.microsoft.com/winfx/2006/xaml/presentation'><ItemsStackPanel ItemsUpdatingScrollMode='KeepScrollOffset'/></ItemsPanelTemplate>");
         var style=new Style(typeof(ListViewItem)){BasedOn=(Style)Application.Current.Resources["LimsDataRowStyle"]};
-        style.Setters.Add(new Setter(ListViewItem.MinHeightProperty,34d));style.Setters.Add(new Setter(ListViewItem.PaddingProperty,new Thickness(0)));
+        style.Setters.Add(new Setter(ListViewItem.MinHeightProperty,32d));style.Setters.Add(new Setter(ListViewItem.PaddingProperty,new Thickness(0)));
         style.Setters.Add(new Setter(ListViewItem.MarginProperty,new Thickness(0)));style.Setters.Add(new Setter(ListViewItem.HorizontalContentAlignmentProperty,HorizontalAlignment.Stretch));
+        style.Setters.Add(new Setter(ListViewItem.UseSystemFocusVisualsProperty,false));
+        _rows.UseSystemFocusVisuals=false;
         _rows.ItemContainerStyle=style;
         AutomationProperties.SetName(_rows,"Ejecuciones de Report List");
         _rows.ContainerContentChanging+=ContainerChanging;
         _rows.PreviewKeyDown+=OnTableKeyDown;
-        _rows.Loaded+=(_,_)=>{var scroll=FindScroll(_rows);if(scroll is not null)scroll.ViewChanged+=(_,_)=>UpdateVisibleCheck();UpdateVisibleCheck();};
-        _rows.SizeChanged+=(_,_)=>UpdateVisibleCheck();
+        _rows.Loaded+=(_,_)=>QueueVisibleCheck();
+        _rows.SizeChanged+=(_,_)=>QueueVisibleCheck();
         AddHandler(PointerReleasedEvent,new PointerEventHandler((_,_)=>_dragging=false),true);
         Unloaded+=(_,_)=>_dragging=false;
         var menu=new MenuFlyout();var dossier=new MenuFlyoutItem{Text="Expediente e historial"};
@@ -70,7 +76,7 @@ internal sealed class ReportListGrid : Grid
         menu.Opening+=(_,_)=>{dossier.IsEnabled=_contextItem is not null;correction.Visibility=_contextItem?.Execution.Complete==true&&(CanKeep?.Invoke()??false)?Visibility.Visible:Visibility.Collapsed;correction.IsEnabled=!_busy;};_rows.ContextFlyout=menu;
         BuildHeader();
     }
-    public void SetSource(ReportListRows? rows){_dragging=false;_marked.Clear();_contextItem=null;_checkAnchor=null;_model.ClearCells();_model.Rows=rows is null?Array.Empty<ReportListItem>():rows;_realized.Clear();_rows.ItemsSource=rows;RefreshSelection();}
+    public void SetSource(ReportListRows? rows){_dragging=false;_marked.Clear();_contextItem=null;_checkAnchor=null;_model.ClearCells();_model.Rows=rows is null?Array.Empty<ReportListItem>():rows;_realized.Clear();_rows.ItemsSource=rows;_viewport.Scroll?.ChangeView(0,0,null,true);RefreshSelection();}
     public void SetUser(int? id)
     {
         var path=id is >0?System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),"Lims","ReportList","columns-"+id+".json"):null;
@@ -94,7 +100,12 @@ internal sealed class ReportListGrid : Grid
         UpdateVisibleCheck();PaintCells();
     }
     private bool? CheckValue(ReportListItem item)=>item.Execution.Complete||IsMarked(item)?true:item.Execution.DigitizedAt is not null||item.Execution.TestedOn is not null?null:false;
-    private HashSet<ReportListItem> VisibleItems()=>_realized.Values.Where(grid=>{var p=grid.TransformToVisual(_rows).TransformPoint(new Windows.Foundation.Point(0,0));return p.Y>=0&&p.Y+grid.ActualHeight<=_rows.ActualHeight+1;}).Select(grid=>grid.Tag).OfType<ReportListItem>().ToHashSet();
+    private HashSet<ReportListItem> VisibleItems()=>_realized.Values.Where(grid=>{var p=grid.TransformToVisual(_rows).TransformPoint(new Windows.Foundation.Point(0,0));return grid.ActualHeight>0&&p.Y>=0&&p.Y+grid.ActualHeight<=(_viewport.Scroll?.ViewportHeight??_rows.ActualHeight)+1;}).Select(grid=>grid.Tag).OfType<ReportListItem>().ToHashSet();
+    private void QueueVisibleCheck()
+    {
+        if(_visibleCheckPending)return;_visibleCheckPending=true;
+        DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low,()=>{_visibleCheckPending=false;UpdateVisibleCheck();});
+    }
     private void UpdateVisibleCheck()
     {
         if(_visibleCheck is null)return;var visible=VisibleItems().Where(ReportListTableModel.CanMark).ToArray();var count=visible.Count(IsMarked);
@@ -125,6 +136,7 @@ internal sealed class ReportListGrid : Grid
     {_filtered=keys.Select(key=>key switch{"TestedOn"=>"Date","DigitizedAt"=>"Time","DigitizationState"=>"Checked",_=>key}).ToHashSet();foreach(var (key,button) in _heads){button.Foreground=PlanningUi.Brush(_filtered.Contains(key)?"LimsAccentBrush":"LimsTextPrimaryBrush");if(button.Content is TextBlock text)text.Foreground=button.Foreground;}}
     private void BuildHeader()
     {
+        _layoutVersion++;
         _header.Children.Clear();_heads.Clear();_visibleCheck=null;
         foreach(var c in _columns)
         {
@@ -173,42 +185,66 @@ internal sealed class ReportListGrid : Grid
             grip.DragCompleted+=(_,_)=>{RefreshRealized();SavePreferences();};
             _header.Children.Add(head);
         }
-        _rows.Width=_columns.Sum(c=>c.Width);
-        _rows.ItemTemplate=(DataTemplate)XamlReader.Load("<DataTemplate xmlns='http://schemas.microsoft.com/winfx/2006/xaml/presentation'><Grid Height='34' HorizontalAlignment='Left'/></DataTemplate>");
+        _header.Width=_columns.Sum(c=>c.Width);
+        _rows.ItemTemplate=(DataTemplate)XamlReader.Load($"<DataTemplate xmlns='http://schemas.microsoft.com/winfx/2006/xaml/presentation'><Grid Height='32' Width='{_header.Width.ToString(System.Globalization.CultureInfo.InvariantCulture)}' HorizontalAlignment='Left'/></DataTemplate>");
         SetSort(_sort,_descending);SetFilters(_filtered);
     }
     private void ResizeRows()
     {
-        _rows.Width=_columns.Sum(c=>c.Width);
+        _header.Width=_columns.Sum(c=>c.Width);
         foreach(var grid in _realized.Values){grid.Width=_columns.Sum(c=>c.Width);for(int i=0;i<_columns.Count;i++)grid.ColumnDefinitions[i].Width=new(_columns[i].Width);}
     }
     private void ContainerChanging(ListViewBase sender,ContainerContentChangingEventArgs args)
     {
         if(args.ItemContainer is not ListViewItem container)return;
-        if(args.InRecycleQueue){_realized.Remove(container);UpdateVisibleCheck();return;}
+        if(args.InRecycleQueue){_realized.Remove(container);QueueVisibleCheck();return;}
+        if(args.Phase==0&&container.ContentTemplateRoot is not Grid){args.RegisterUpdateCallback(1,ContainerChanging);return;}
         if(args.Item is not ReportListItem item||container.ContentTemplateRoot is not Grid grid)return;
-        _realized[container]=grid;Populate(grid,item);UpdateVisibleCheck();args.Handled=true;
+        if(args.ItemIndex<0||args.ItemIndex>=_model.Rows.Count||!ReferenceEquals(_model.Rows[args.ItemIndex],item))return;
+        _rowStates.GetValue(grid,static _=>new()).Index=args.ItemIndex;
+        _realized[container]=grid;Populate(grid,item);QueueVisibleCheck();args.Handled=true;
     }
     private void Populate(Grid grid,ReportListItem item)
     {
-        grid.Tag=item;grid.Width=_columns.Sum(c=>c.Width);grid.ColumnDefinitions.Clear();grid.Children.Clear();
-        double offset=0;
+        grid.Tag=item;
+        if(_rowStates.GetValue(grid,static _=>new()).LayoutVersion!=_layoutVersion)BuildRow(grid);
+        var row=RowIndex(grid);
+        for(int i=0;i<_columns.Count;i++)
+        {
+            var c=_columns[i];var content=((Border)grid.Children[i]).Child;
+            if(content is CheckBox check)
+            {
+                check.IsChecked=c.Key=="Selection"?CheckValue(item):item.KeepInPlanning;
+                check.IsEnabled=!_busy&&(c.Key=="Selection"?(CanMark?.Invoke()??false)&&ReportListTableModel.CanMark(item):(CanKeep?.Invoke()??false));
+                check.Content=c.Key=="Selection"&&item.Execution.Complete?new LimsIcon{Icon=LimsIconKind.Lock,Size=11}:null;
+                AutomationProperties.SetName(check,(c.Key=="Selection"?"CHK ":"Mantener ")+item.Execution.Job+" · "+item.Execution.PlanningTest+" · "+item.Execution.ExecutionId);
+                AutomationProperties.SetItemStatus(check,ReportListTableModel.CheckDescription(item,IsMarked(item)));
+                ToolTipService.SetToolTip(check,c.Key=="Selection"?item.Execution.Complete?"Digitación guardada. Para corregir: clic derecho → Corregir digitación.":!ReportListTableModel.CanMark(item)?"Revise retención, equivalencia y programación en el expediente.":ReportListTableModel.CheckDescription(item,IsMarked(item))+" · Shift + clic para marcar varias visibles":"Conservar en Planificación después de digitar");
+            }
+            else if(content is TextBlock text)
+            {
+                var value=ReportListTableModel.Value(item,c.Key);text.Text=value;
+                text.Foreground=PlanningUi.Brush(item.Execution.Complete&&c.Key is "Time" or "Date" or "VerifiedBy" or "Checked"?"LimsAccentBrush":"LimsTextPrimaryBrush");
+                ToolTipService.SetToolTip(text,c.Key=="Test"?$"Prueba: {value}\nNombre técnico: {item.Execution.OriginalTest}\nEjecución: {item.Execution.ExecutionId}\nModo: {item.CheckMode}":value);
+                AutomationProperties.SetName(text,$"F{row+1} C{i+1} · {c.Label} · {value}");
+            }
+        }
+        PaintGrid(grid);
+    }
+    private void BuildRow(Grid grid)
+    {
+        grid.Width=_columns.Sum(c=>c.Width);grid.ColumnDefinitions.Clear();grid.Children.Clear();
+        _rowStates.GetValue(grid,static _=>new()).LayoutVersion=_layoutVersion;
         for(int i=0;i<_columns.Count;i++)
         {
             var c=_columns[i];grid.ColumnDefinitions.Add(new(){Width=new(c.Width)});FrameworkElement content;
-            var visible=offset+c.Width>=_viewport.HorizontalOffset&&offset<=_viewport.HorizontalOffset+Math.Max(_viewport.ViewportWidth,ActualWidth);offset+=c.Width;
-            if(!visible)continue;
             if(c.Key is "Selection" or "Keep")
             {
-                var check=new CheckBox{Tag=c.Key,IsThreeState=c.Key=="Selection",IsChecked=c.Key=="Selection"?CheckValue(item):item.KeepInPlanning,MinWidth=0,MinHeight=0,HorizontalAlignment=HorizontalAlignment.Center,VerticalAlignment=VerticalAlignment.Center};
-                AutomationProperties.SetName(check,(c.Key=="Selection"?"CHK ":"Mantener ")+item.Execution.Job+" · "+item.Execution.PlanningTest+" · "+item.Execution.ExecutionId);
-                AutomationProperties.SetItemStatus(check,ReportListTableModel.CheckDescription(item,IsMarked(item)));
-                if(c.Key=="Selection"&&item.Execution.Complete)check.Content=new LimsIcon{Icon=LimsIconKind.Lock,Size=11};
-                check.IsEnabled=!_busy&&(c.Key=="Selection"?(CanMark?.Invoke()??false)&&ReportListTableModel.CanMark(item):(CanKeep?.Invoke()??false));
-                ToolTipService.SetToolTip(check,c.Key=="Selection"?item.Execution.Complete?"Digitación guardada. Para corregir: clic derecho → Corregir digitación.":!ReportListTableModel.CanMark(item)?"Revise retención, equivalencia y programación en el expediente.":ReportListTableModel.CheckDescription(item,IsMarked(item))+" · Shift + clic para marcar varias visibles":"Conservar en Planificación después de digitar");
-                check.RightTapped+=(_,_)=>_contextItem=item;
+                var check=new CheckBox{Tag=c.Key,IsThreeState=c.Key=="Selection",MinWidth=0,MinHeight=0,HorizontalAlignment=HorizontalAlignment.Center,VerticalAlignment=VerticalAlignment.Center};
+                check.RightTapped+=(_,_)=>_contextItem=grid.Tag as ReportListItem;
                 check.Click+=async(_,_)=>
                 {
+                    if(grid.Tag is not ReportListItem item)return;
                     if(c.Key=="Selection"){ToggleMark(item,Shift());return;}
                     check.IsChecked=item.KeepInPlanning;
                     if(c.Key=="Keep"&&KeepRequested is {} keep)await keep(item);
@@ -217,39 +253,32 @@ internal sealed class ReportListGrid : Grid
             }
             else
             {
-                var value=ReportListTableModel.Value(item,c.Key);
-                var text=PlanningUi.Text(value??"",12);text.TextWrapping=TextWrapping.NoWrap;text.TextTrimming=TextTrimming.CharacterEllipsis;text.VerticalAlignment=VerticalAlignment.Center;text.Margin=new(8,0,8,0);
+                var text=PlanningUi.Text("",12);text.TextWrapping=TextWrapping.NoWrap;text.TextTrimming=TextTrimming.CharacterEllipsis;text.VerticalAlignment=VerticalAlignment.Center;text.Margin=new(8,0,8,0);
                 if(c.Key=="Test")text.FontWeight=Microsoft.UI.Text.FontWeights.SemiBold;
-                if(item.Execution.Complete&&c.Key is "Time" or "Date" or "VerifiedBy")text.Foreground=PlanningUi.Brush("LimsAccentBrush");
-                if(c.Key=="Checked"&&item.Execution.Complete)text.Foreground=PlanningUi.Brush("LimsAccentBrush");
-                ToolTipService.SetToolTip(text,c.Key=="Test"?$"{item.Execution.OriginalTest}\nEjecución: {item.Execution.ExecutionId}\nModo: {item.CheckMode}":value);
                 content=text;
             }
-            var cell=new Border{Child=content,Tag=i,BorderBrush=PlanningUi.Brush("LimsBorderBrush"),BorderThickness=new(0,0,1,1),Background=new SolidColorBrush(Microsoft.UI.Colors.Transparent)};
-            cell.RightTapped+=(_,_)=>_contextItem=item;
+            var cell=new Border{Child=content,Tag=i,BorderBrush=PlanningUi.Brush("LimsBorderBrush"),BorderThickness=new(0,0,1,1),Background=_transparent};
+            cell.RightTapped+=(_,_)=>_contextItem=grid.Tag as ReportListItem;
             var columnIndex=i;
             if(content is not CheckBox)
             {
-                AutomationProperties.SetName(content,$"F{_model.Rows.IndexOfItem(item)+1} C{i+1} · {c.Label} · {ReportListTableModel.Value(item,c.Key)}");
-                cell.PointerPressed+=(_,e)=>{_contextItem=item;if(e.GetCurrentPoint(cell).Properties.IsRightButtonPressed){_model.Select(_model.Rows.IndexOfItem(item),columnIndex);PaintCells();return;}if(!e.GetCurrentPoint(cell).Properties.IsLeftButtonPressed)return;_model.Select(_model.Rows.IndexOfItem(item),columnIndex,Shift());_dragging=true;_rows.Focus(FocusState.Programmatic);PaintCells();e.Handled=true;};
-                cell.PointerEntered+=(_,e)=>{if(_dragging&&e.GetCurrentPoint(cell).Properties.IsLeftButtonPressed){_model.Select(_model.Rows.IndexOfItem(item),columnIndex,true);PaintCells();}};
+                cell.PointerPressed+=(_,e)=>{_contextItem=grid.Tag as ReportListItem;if(e.GetCurrentPoint(cell).Properties.IsRightButtonPressed){_model.Select(RowIndex(grid),columnIndex);PaintCells();return;}if(!e.GetCurrentPoint(cell).Properties.IsLeftButtonPressed)return;_model.Select(RowIndex(grid),columnIndex,Shift());_dragging=true;_rows.Focus(FocusState.Programmatic);PaintCells();e.Handled=true;};
+                cell.PointerEntered+=(_,e)=>{if(_dragging&&e.GetCurrentPoint(cell).Properties.IsLeftButtonPressed){_model.Select(RowIndex(grid),columnIndex,true);PaintCells();}};
             }
             Grid.SetColumn(cell,i);grid.Children.Add(cell);
         }
-        PaintGrid(grid);
     }
+    private int RowIndex(Grid grid)=>_rowStates.TryGetValue(grid,out var state)?state.Index:0;
     private static bool Shift()=>(Microsoft.UI.Input.InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Shift)&CoreVirtualKeyStates.Down)!=0;
-    private static ScrollViewer? FindScroll(DependencyObject parent)
-    {for(var i=0;i<VisualTreeHelper.GetChildrenCount(parent);i++){var child=VisualTreeHelper.GetChild(parent,i);if(child is ScrollViewer scroll)return scroll;if(FindScroll(child) is {} nested)return nested;}return null;}
     private static bool Control()=>(Microsoft.UI.Input.InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Control)&CoreVirtualKeyStates.Down)!=0;
     private void PaintCells(){foreach(var grid in _realized.Values)PaintGrid(grid);}
     private void PaintGrid(Grid grid)
     {
-        if(grid.Tag is not ReportListItem item)return;var row=_model.Rows.IndexOfItem(item);
+        if(grid.Tag is not ReportListItem item)return;var row=RowIndex(grid);
         foreach(var cell in grid.Children.OfType<Border>())
         {
             var col=(int)cell.Tag;var selected=_model.Contains(row,col);var active=selected&&_model.Active==new SheetCell(row,col);
-            cell.Background=selected||IsMarked(item)?PlanningUi.Brush("LimsSelectionBrush"):new SolidColorBrush(Microsoft.UI.Colors.Transparent);
+            cell.Background=selected||IsMarked(item)?PlanningUi.Brush("LimsSelectionBrush"):_transparent;
             var savedCheck=_columns[col].Key=="Selection"&&item.Execution.Complete;
             cell.BorderBrush=PlanningUi.Brush(active||savedCheck?"LimsAccentBrush":"LimsBorderBrush");cell.BorderThickness=active?new(1):savedCheck?new(0,0,3,1):new(0,0,1,1);
         }
@@ -279,7 +308,7 @@ internal sealed class ReportListGrid : Grid
         }
         _model.Select(row,col,Shift()&&e.Key is not (VirtualKey.Tab or VirtualKey.Enter));PaintCells();
         _rows.ScrollIntoView(_model.Rows[_model.Active.Row]);var left=_columns.Take(_model.Active.Column).Sum(c=>c.Width);var right=left+_columns[_model.Active.Column].Width;
-        if(left<_viewport.HorizontalOffset)_viewport.ChangeView(left,null,null,true);else if(right>_viewport.HorizontalOffset+_viewport.ViewportWidth)_viewport.ChangeView(right-_viewport.ViewportWidth,null,null,true);
+        _viewport.Reveal(left,right);
         e.Handled=true;
     }
 }

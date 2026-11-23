@@ -12,10 +12,10 @@ public sealed class ReportListTableModel
     public static readonly IReadOnlySet<string> Required=new HashSet<string>(StringComparer.Ordinal){"InDate","DueDate","Job","Test","Laboratory","Time","Date","VerifiedBy","Selection"};
     public static readonly IReadOnlyList<Column> Available=[
         new("InDate","Fecha de ingreso",112),new("DueDate","Due Date",105),new("Job","JOB",145),
-        new("Test","Prueba de Planificación",210),new("Laboratory","Laboratorio",110),new("Buyer","Cliente",145),
+        new("Test","Prueba",210),new("Laboratory","Laboratorio",110),new("Buyer","Cliente",145),
         new("Time","Hora",85),new("Date","Fecha de prueba",112),
         new("VerifiedBy","Digitado por",135),new("Selection","CHK",85),new("Checked","Estado de digitación",155,false),
-        new("Block","Bloque histórico",110,false),new("Keep","Mantener",85,false),new("OriginalTest","Prueba original",260,false),
+        new("Block","Bloque histórico",110,false),new("Keep","Mantener",85,false),
         new("ExecutionId","Ejecución",290,false),new("ExecutionType","Tipo ejecución",140,false),new("Service","Servicio",120,false)];
     public List<Column> Columns {get;}=Available.Where(c=>c.Default).ToList();
     public IReadOnlyList<ReportListItem> Rows {get;set;}=[];
@@ -39,7 +39,7 @@ public sealed class ReportListTableModel
     public static string Quote(string s)=>s.IndexOfAny(['\t','\r','\n','"'])<0?s:"\""+s.Replace("\"","\"\"",StringComparison.Ordinal)+"\"";
     public static string Value(ReportListItem item,string key)=>key switch
     {
-        "Test"=>!string.IsNullOrWhiteSpace(item.Execution.Equivalence)?item.Execution.PlanningTest:item.Execution.NoProgram?"NO PROGRAMAR":(item.Execution.OriginalTest??"Sin nombre original")+" · Equivalencia pendiente",
+        "Test"=>item.Execution.PlanningTest,
         "Checked"=>PlanningSheetModel.Value(item.Execution,"DigitizationState"),
         "Time"=>item.CheckedTimeText,"Date"=>PlanningSheetModel.Value(item.Execution,"TestedOn"),
         "VerifiedBy"=>item.Execution.DigitizedBy??"","Block"=>item.BlockLabel,"Keep"=>item.KeepLabel,"Selection"=>"",

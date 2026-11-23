@@ -1,4 +1,4 @@
-﻿param([ValidateSet('Overview','Prepare','Select','Save','Saved','Groups','Review','Verify','Correction','Corrected','Scope','Layout','Preferences','Volume','Cells','Inspect')][string]$Step='Overview')
+param([ValidateSet('Overview','Prepare','Select','Save','Saved','Groups','Review','Verify','Correction','Corrected','Scope','Layout','Preferences','Volume','Cells','Inspect')][string]$Step='Overview')
 $ErrorActionPreference='Stop'
 $usabilityRoot=$PSScriptRoot;$source=[IO.File]::ReadAllText((Join-Path $PSScriptRoot 'validate-report-list-correction.ps1'))
 $begin=$source.IndexOf('$ErrorActionPreference=');$end=$source.IndexOf("if(`$Step -eq 'Inspect')")
@@ -20,7 +20,7 @@ if($Step -eq 'Prepare'){
 }
 if($Step -eq 'Inspect'){Inspect-Window;Capture 'current';exit}
 if($Step -eq 'Overview'){
- PhReport;foreach($label in @('Fecha de ingreso','Due Date','JOB','Prueba de Planificación','Laboratorio','Hora','Fecha de prueba','Digitado por')){Find-Named ('Ordenar Report List por '+$label)|Out-Null};Find-Named 'Marcar pruebas pendientes visibles'|Out-Null;Find-Named 'Configurar tabla de Report List'|Out-Null
+ PhReport;foreach($label in @('Fecha de ingreso','Due Date','JOB','Prueba','Laboratorio','Hora','Fecha de prueba','Digitado por')){Find-Named ('Ordenar Report List por '+$label)|Out-Null};Find-Named 'Marcar pruebas pendientes visibles'|Out-Null;Find-Named 'Configurar tabla de Report List'|Out-Null
  $names=@($window.FindAll([Windows.Automation.TreeScope]::Descendants,[Windows.Automation.Condition]::TrueCondition)|Where-Object{-not $_.Current.IsOffscreen}|ForEach-Object{$_.Current.Name})
  foreach($unwanted in @('Selección','Seleccionar cargadas','Captura AR','Copiar','Ordenar Report List por Estado de digitación','Ordenar Report List por Bloque','Ordenar Report List por Chequeo de horario')){if($names -contains $unwanted){throw ('Redundant default UI: '+$unwanted)}}
  if(@(Items 'Ejecuciones de Report List').Count -ne 2){throw 'Two repeated PH executions required'}

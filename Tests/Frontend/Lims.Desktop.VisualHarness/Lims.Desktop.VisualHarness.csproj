@@ -43,6 +43,9 @@
   <ItemGroup><Page Include="../../../Frontend/Lims.Desktop/Views/CommercialBottleVisual.xaml" Link="Views/CommercialBottleVisual.xaml" /><Compile Include="../../../Frontend/Lims.Desktop/Views/CommercialBottleVisual.xaml.cs;../../../Frontend/Lims.Desktop/Views/PreparationEditorHeader.cs;../../../Frontend/Lims.Desktop/Views/CommercialIntermediateDialog.cs" Link="Commercial/%(Filename)%(Extension)" /></ItemGroup>
   <!-- Compile the real presentation sources. No production startup/auth/HTTP is included. -->
   <ItemGroup>
+    <Compile Include="../../../Frontend/Lims.Desktop/Planning/ReportListGrid.cs;../../../Frontend/Lims.Desktop/Planning/ReportListRows.cs;../../../Frontend/Lims.Desktop/Planning/ReportListTableModel.cs;../../../Frontend/Lims.Desktop/Planning/ReportNativeTable.cs;../../../Frontend/Lims.Desktop/Planning/ReportTableViewport.cs;../../../Frontend/Lims.Desktop/Planning/PlanningUi.cs;../../../Frontend/Lims.Desktop/Planning/PlanningSheetModel.cs" Link="Planning/%(Filename)%(Extension)" />
+  </ItemGroup>
+  <ItemGroup>
     <Page Include="../../../Frontend/Lims.Desktop/Views/AlertsPage.xaml" Link="Views/AlertsPage.xaml" />
     <Compile Include="../../../Frontend/Lims.Desktop/Views/AlertsPage.xaml.cs;../../../Frontend/Lims.Desktop/Views/AlertsWorkspace.cs;../../../Frontend/Lims.Desktop/Views/AlertConfigurationDialog.cs;../../../Frontend/Lims.Desktop/ViewModels/AlertsViewModel.cs;../../../Frontend/Lims.Desktop/Services/WindowsAlertNotifications.cs;../../../Frontend/Lims.Desktop/Http/IAlertsApiClient.cs" Link="Alerts/%(Filename)%(Extension)" />
   </ItemGroup>

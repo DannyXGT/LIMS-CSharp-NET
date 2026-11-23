@@ -23,6 +23,42 @@ public sealed partial class PlanningPostgresTests
         """;
     private static PlanningImportInput ReactInput(params PlanningSourceRow[] rows)=>Input(rows) with{Cut=new("Noon",new(2026,11,16),"HtmlReact")};
     [PlanningDatabaseFact]
+    public async Task ReportListReadsCanonicalReactPlanningNameForExistingExecutionsAndUsesItForDigitization()
+    {
+        await using var db=await TestDatabase.Create();await db.Sql(ReactFixture);
+        await db.Sql("CREATE TABLE public.planificacion_nombre(id bigint PRIMARY KEY,nombre_planificacion text);INSERT INTO public.planificacion_nombre VALUES(146,'FORMALDEHYDE');INSERT INTO public.planificacion_test_map(nombre_tecnico,nombre_planificacion,lab,planificacion_nombre_id) VALUES('Formaldehyde Content','Old map alias','Chemical',146)");
+        var p=await db.Store.PreviewAsync(Input(Summary(),Report(test:"Formaldehyde Content"),Report(3,"Unknown technical")),1,default);await db.Store.ConfirmAsync(p.Id,1,default);
+        Assert.Equal(2L,await db.Scalar("SELECT count(*) FROM planning.executions WHERE equivalence IS NULL"));
+        var page=await db.Store.ReportListAsync(new(Test:"FORMALDEHYDE",Sort:"Test"),default);
+        var item=Assert.Single(page.Items);var id=item.Execution.ExecutionId!.Value;
+        Assert.Equal("FORMALDEHYDE",item.Execution.PlanningTest);Assert.Equal("Chemical",item.Execution.Laboratory);Assert.Equal("Formaldehyde Content",item.Execution.OriginalTest);
+        Assert.Equal("FORMALDEHYDE",Assert.Single(await db.Store.EquivalencesAsync(default)).Equivalence);
+        Assert.Equal(2L,await db.Scalar("SELECT count(*) FROM planning.executions WHERE equivalence IS NULL"));
+        Assert.Equal("Sin equivalencia",Assert.Single((await db.Store.ReportListAsync(new(Test:"Unknown technical"),default)).Items).Execution.PlanningTest);
+        await db.Store.CheckReportAsync(new([new(id,item.Version)],true,"Digitacion con nombre oficial React"),1,false,default);
+        Assert.Equal("FORMALDEHYDE",await db.Scalar("SELECT equivalence FROM planning.executions WHERE original_test='Formaldehyde Content'"));
+        Assert.Equal(1L,await db.Scalar("SELECT count(*) FROM planning.history WHERE action='ClassificationFromReact'"));
+        var beforeRename=(await db.Store.ReportListAsync(new(View:"All"),default)).Revision;
+        await db.Sql("UPDATE public.planificacion_nombre SET nombre_planificacion='Changed catalogue name'");
+        await Assert.ThrowsAsync<PlanningConflictException>(()=>db.Store.ReportListAsync(new(Revision:beforeRename),default));
+        var saved=Assert.Single((await db.Store.ReportListAsync(new(View:"Checked"),default)).Items);
+        Assert.Equal(id,saved.Execution.ExecutionId);Assert.Equal("FORMALDEHYDE",saved.Execution.PlanningTest);
+    }
+    [PlanningDatabaseFact]
+    public async Task ReportListKeepsManualAndSupplementClassificationAndHonorsCurrentReactNoProgram()
+    {
+        await using var db=await TestDatabase.Create();await db.Sql(ReactFixture);
+        await db.Sql("INSERT INTO public.planificacion_test_map(nombre_tecnico,nombre_planificacion,lab) VALUES('Technical source','Canonical name','Chemical')");
+        var p=await db.Store.PreviewAsync(Input(Summary(),Report(test:"Technical source")),1,default);await db.Store.ConfirmAsync(p.Id,1,default);
+        await db.Sql("UPDATE planning.executions SET origin='Manual',equivalence='Manual decision',laboratory='Physical'");
+        Assert.Equal("Manual decision",Assert.Single((await db.Store.ReportListAsync(new(),default)).Items).Execution.PlanningTest);
+        await db.Sql("UPDATE planning.executions SET origin='ReportList',execution_type='ReactSide2:v1'");
+        Assert.Equal("Manual decision",Assert.Single((await db.Store.ReportListAsync(new(),default)).Items).Execution.PlanningTest);
+        await db.Sql("UPDATE planning.executions SET execution_type=NULL;UPDATE public.planificacion_test_map SET activo=false");
+        Assert.Empty((await db.Store.ReportListAsync(new(),default)).Items);
+        Assert.Equal("NO PROGRAMAR",Assert.Single((await db.Store.ReportListAsync(new(View:"All"),default)).Items).Execution.PlanningTest);
+    }
+    [PlanningDatabaseFact]
     public async Task HtmlReactLinkDoesNotBlockLegacyRemovalAndPreservesTheIndependentHistory()
     {
         await using var db=await TestDatabase.Create();await db.Sql(ReactFixture+ReactPlanningSchema.Sql);

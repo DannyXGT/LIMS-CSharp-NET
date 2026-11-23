@@ -20,7 +20,7 @@ public sealed class ReportListTableTests
     [Fact]
     public void MissingEquivalenceKeepsOriginalAccessibleAndDoesNotPretendItIsVerified()
     {
-        var row=Row(equivalence:null);Assert.Equal("Original PH · Equivalencia pendiente",ReportListTableModel.Value(row,"Test"));
+        var row=Row(equivalence:null);Assert.Equal("Sin equivalencia",ReportListTableModel.Value(row,"Test"));
         Assert.Null(row.Execution.Equivalence);Assert.Equal("Original PH",ReportListTableModel.Value(row,"OriginalTest"));
     }
     [Fact]
@@ -41,6 +41,16 @@ public sealed class ReportListTableTests
         var model=new ReportListTableModel();model.LoadLayout("[{\"Key\":\"Job\",\"Width\":220},{\"Key\":\"Checked\",\"Width\":155}]");
         Assert.DoesNotContain(model.Columns,c=>c.Key=="Checked");Assert.Equal(220,model.Columns.Single(c=>c.Key=="Job").Width);
         model.Columns.Add(ReportListTableModel.Available.Single(c=>c.Key=="Checked"));var next=new ReportListTableModel();next.LoadLayout(model.SaveLayout());Assert.Contains(next.Columns,c=>c.Key=="Checked");
+    }
+    [Fact]
+    public void OnlyPlanningNameAppearsUnderPruebaAndOldTechnicalColumnIsRemovedFromUserLayouts()
+    {
+        var model=new ReportListTableModel();
+        model.LoadLayout("{\"Version\":2,\"Columns\":[{\"Key\":\"Job\",\"Width\":230},{\"Key\":\"Test\",\"Width\":210},{\"Key\":\"OriginalTest\",\"Width\":260}]}");
+        Assert.DoesNotContain(model.Columns,c=>c.Key=="OriginalTest");Assert.Equal("Prueba",model.Columns.Single(c=>c.Key=="Test").Label);
+        Assert.Equal(230,model.Columns.Single(c=>c.Key=="Job").Width);
+        var row=Row();Assert.Equal("PH",ReportListTableModel.Value(row,"Test"));Assert.Equal("Original PH",ReportListTableModel.Value(row,"OriginalTest"));
+        model.Rows=new[]{row};model.Select(0,model.Columns.FindIndex(c=>c.Key=="Test"));Assert.Equal("PH",model.Copy());
     }
     [Fact]
     public void TemporaryMarkCannotMasqueradeAsPersistedDigitizationAndCompletedRowsCannotBeMarkedAgain()

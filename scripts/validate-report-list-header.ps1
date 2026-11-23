@@ -1,4 +1,4 @@
-﻿param([ValidateSet('Overview','Selection','Settings','Columns','Navigation','Viewport','Inspect')][string]$Step='Overview',[int]$Width=1366,[int]$Height=768)
+param([ValidateSet('Overview','Selection','Settings','Columns','Navigation','Viewport','Inspect')][string]$Step='Overview',[int]$Width=1366,[int]$Height=768)
 $ErrorActionPreference='Stop'
 $headerScriptsRoot=$PSScriptRoot
 $source=[IO.File]::ReadAllText((Join-Path $PSScriptRoot 'validate-report-list-usability.ps1'))
@@ -25,7 +25,7 @@ function Assert-Header([bool]$sameLine){
 }
 if($Step -eq 'Inspect'){Inspect-Window;Capture 'current';exit}
 if($Step -eq 'Overview'){
- [ReportHeaderWindow]::ShowWindow([IntPtr]$window.Current.NativeWindowHandle,3)|Out-Null;Start-Sleep -Milliseconds 400;PhReport;foreach($name in @('Due Date','JOB','Prueba de Planificación','Laboratorio','Hora','Fecha de prueba','Digitado por')){Find-Named ('Ordenar Report List por '+$name)|Out-Null}
+ [ReportHeaderWindow]::ShowWindow([IntPtr]$window.Current.NativeWindowHandle,3)|Out-Null;Start-Sleep -Milliseconds 400;PhReport;foreach($name in @('Due Date','JOB','Prueba','Laboratorio','Hora','Fecha de prueba','Digitado por')){Find-Named ('Ordenar Report List por '+$name)|Out-Null}
  $saved=Wait-Check $baseline.Saved.execution.executionId $false 'Digitación guardada';$pending=Wait-Check $baseline.Pending.execution.executionId $true 'Sin información'
  $geometry=Assert-Header $true;(Find-Named 'Buscar JOB en Report List').SetFocus();Capture '01-cabecera-compacta';Capture '09-cabecera-detalle' 400;$geometry|ConvertTo-Json|Set-Content (Join-Path $out 'geometry-wide.json') -Encoding UTF8
 }

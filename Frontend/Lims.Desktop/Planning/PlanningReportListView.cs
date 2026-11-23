@@ -299,7 +299,18 @@ public sealed class PlanningReportListView : UserControl,IDisposable
     private async Task Synchronize()
     {
         if(_loading||_mutating||!IsLoaded)return;
-        try{var result=await _api.ReportList(new(PageSize:1),_request.Token);var current=_tabs.SelectedIndex==0?_rows?.Revision:_listRevision;if(!result.IsSuccess||result.Value is null){_connection.Text="Sin respuesta";return;}_connection.Text="API conectada";if(current==result.Value.Revision)return;if(_grid.Selected.Count>0||_opened is not null)Feedback("Hay cambios de otro usuario. Actualice antes de confirmar; su selección se conserva.");else await Load();}
+        try
+        {
+            var tab=_tabs.SelectedIndex;var ct=_request.Token;long? revision;
+            if(tab==0){var result=await _api.ReportList(new(PageSize:1),ct);revision=result.IsSuccess?result.Value?.Revision:null;}
+            else if(tab==1){var result=await _api.ReportSchedules(GroupQuery() with{Page=1,PageSize=1,Revision=null},ct);revision=result.IsSuccess?result.Value?.Revision:null;}
+            else{var result=await _api.ReportClosures(GroupQuery() with{Page=1,PageSize=1,Revision=null,State="All"},ct);revision=result.IsSuccess?result.Value?.Revision:null;}
+            if(ct.IsCancellationRequested||tab!=_tabs.SelectedIndex)return;
+            var current=tab==0?_rows?.Revision:_listRevision;
+            if(revision is null){_connection.Text="Sin respuesta";return;}
+            _connection.Text="API conectada";if(current==revision)return;
+            if(_grid.Selected.Count>0||_opened is not null)Feedback("Hay cambios de otro usuario. Actualice antes de confirmar; su selección se conserva.");else await Load();
+        }
         catch(OperationCanceledException){}
     }
     public void Clear(){_sync.Stop();_request.Cancel();_detailRequest.Cancel();_grid.SetSource(null);_grid.SetUser(null);_rows=null;_search.Text="";_scan.Text="";_columnFilters.Clear();_scheduleRows.Clear();_closureRows.Clear();_opened=null;_retry=null;Feedback(null);}

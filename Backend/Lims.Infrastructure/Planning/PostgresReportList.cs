@@ -50,13 +50,16 @@ public sealed partial class PostgresPlanningStore
             ("test",query.Test??""),("lab",query.Laboratory??""),("service",query.Service??""),("buyer",query.Buyer??""),("verified",query.VerifiedBy??""),("block",query.Block),("date",query.CheckedDate),("take",size),("skip",(page-1)*size)}.Concat(conditions.Args).ToArray();
         await using var c=await database.Source.OpenConnectionAsync(ct).ConfigureAwait(false);
         await using var tx=await c.BeginTransactionAsync(IsolationLevel.RepeatableRead,ct).ConfigureAwait(false);
+        var catalogue=await ReadReportCatalogue(c,tx,ct).ConfigureAwait(false);
+        if(catalogue.Sql.Length>0)filteredWhere=filteredWhere.Replace("planning.executions x","report_executions x",StringComparison.Ordinal);
+        args=args.Concat(catalogue.Args).ToArray();
         if(query.View is not ("All" or "Archived")&&await HasReactLinks(c,tx,ct).ConfigureAwait(false))filteredWhere+=" AND "+ReactOperationalPredicate;
-        var revision=await Revision(c,tx,false,ct).ConfigureAwait(false);
+        var revision=catalogue.Revision(await Revision(c,tx,false,ct).ConfigureAwait(false));
         if(query.Revision is {} expected&&expected!=revision)throw new PlanningConflictException("Los datos cambiaron durante el desplazamiento. Actualice Report List para continuar.");
         int count;
-        await using(var cmd=Command(c,tx,"SELECT count(*)::int "+filteredWhere,args))count=(int)(await cmd.ExecuteScalarAsync(ct).ConfigureAwait(false))!;
+        await using(var cmd=Command(c,tx,catalogue.Sql+"SELECT count(*)::int "+filteredWhere,args))count=(int)(await cmd.ExecuteScalarAsync(ct).ConfigureAwait(false))!;
         var items=new List<ReportListItem>();
-        await using(var cmd=Command(c,tx,"SELECT "+RowColumns+",x.version,coalesce(rc.keep_in_planning,false),rc.block_number "+filteredWhere+
+        await using(var cmd=Command(c,tx,catalogue.Sql+"SELECT "+RowColumns+",x.version,coalesce(rc.keep_in_planning,false),rc.block_number "+filteredWhere+
             " ORDER BY "+order+",x.id LIMIT @take OFFSET @skip",args))
         await using(var r=await cmd.ExecuteReaderAsync(ct).ConfigureAwait(false))
             while(await r.ReadAsync(ct).ConfigureAwait(false))
@@ -96,14 +99,15 @@ public sealed partial class PostgresPlanningStore
     private static async Task<ReportListResult> ApplyReportChecks(NpgsqlConnection c,NpgsqlTransaction tx,ReportListCheck request,int actor,bool scanner,string reason,CancellationToken ct,Guid? sessionId=null,string? requestHash=null)
     {
         var ready=new HashSet<string>(StringComparer.Ordinal);
+        var catalogue=await ReadReportCatalogue(c,tx,ct).ConfigureAwait(false);
         sessionId??=Guid.NewGuid();bool sessionCreated=false;DateTimeOffset? operationalAt=request.CheckedAt?.ToUniversalTime();
         if(request.Checked&&operationalAt is null){await using var clock=Command(c,tx,"SELECT clock_timestamp()");operationalAt=new DateTimeOffset((DateTime)(await clock.ExecuteScalarAsync(ct).ConfigureAwait(false))!);}
         foreach(var selected in request.Executions.OrderBy(e=>e.ExecutionId))
         {
-            Guid episode;string job;string? eq,lab,by;bool complete,no,hold;long version;DateTimeOffset? at;DateOnly? tested;
+            Guid episode;string job,key,origin;string? eq,lab,by,type;bool complete,no,hold;long version;DateTimeOffset? at;DateOnly? tested;
             await using(var cmd=Command(c,tx,"""
                 SELECT e.id,e.job,x.equivalence,x.laboratory,x.digitized_at,x.tested_on,x.digitized_by,x.version,
-                  (x.no_program OR upper(coalesce(trim(x.laboratory),''))='NO PROGRAMAR'),coalesce(jc.on_hold,false)
+                  (x.no_program OR upper(coalesce(trim(x.laboratory),''))='NO PROGRAMAR'),coalesce(jc.on_hold,false),x.test_key,x.origin,x.execution_type
                 FROM planning.executions x JOIN planning.episodes e ON e.id=x.episode_id
                 LEFT JOIN planning.job_controls jc ON jc.job=upper(trim(e.job)) WHERE x.id=@id FOR UPDATE OF x
                 """,("id",selected.ExecutionId)))
@@ -112,9 +116,14 @@ public sealed partial class PostgresPlanningStore
                 if(!await r.ReadAsync(ct).ConfigureAwait(false))throw new PlanningValidationException("No existe la ejecución seleccionada.");
                 episode=r.GetGuid(0);job=r.GetString(1);eq=NullableString(r,2);lab=NullableString(r,3);
                 at=r.IsDBNull(4)?null:r.GetFieldValue<DateTimeOffset>(4);tested=NullableDate(r,5);by=NullableString(r,6);version=r.GetInt64(7);no=r.GetBoolean(8);hold=r.GetBoolean(9);complete=at is not null&&tested is not null;
+                key=r.GetString(10);origin=r.GetString(11);type=NullableString(r,12);
             }
             if(version!=selected.Version)throw new PlanningConflictException("La ejecución cambió. Actualice Report List antes de marcar.");
             if(request.Checked&&complete||!request.Checked&&at is null&&tested is null)continue;
+            var beforeClassification=new{Equivalence=eq,Laboratory=lab,NoProgram=no};
+            PlanningEquivalence? source=null;
+            if(request.Checked&&origin=="ReportList"&&type is null&&catalogue.Items.TryGetValue(key,out source))
+            {eq=source.Equivalence;lab=source.Laboratory;no=source.NoProgram;}
             if(request.Checked&&(no||string.IsNullOrWhiteSpace(eq)||hold))throw new PlanningValidationException("Revise la equivalencia, NO PROGRAMAR o la retención del JOB antes de marcar.");
             var mode=ReportListRules.CheckMode(eq,lab);
             if(!request.AdminOverride&&((scanner&&mode!="scanner")||(!scanner&&mode!="manual")))throw new PlanningValidationException("Esta prueba requiere "+mode+". Use el flujo correspondiente.");
@@ -134,8 +143,10 @@ public sealed partial class PostgresPlanningStore
                 else await Execute(c,tx,"UPDATE planning.report_blocks SET last_checked_at=@at WHERE number=@block",ct,("at",savedAt),("block",block)).ConfigureAwait(false);
             }
             var testDate=stamp is null?(DateOnly?)null:DateOnly.FromDateTime(stamp.Value.ToOffset(TimeSpan.FromHours(-6)).DateTime);
-            await Execute(c,tx,"UPDATE planning.executions SET digitized_at=@at::timestamptz,tested_on=@date::date,digitized_by=@name,version=version+1 WHERE id=@id",ct,
-                ("at",stamp),("date",testDate),("name",actorName),("id",selected.ExecutionId)).ConfigureAwait(false);
+            await Execute(c,tx,"UPDATE planning.executions SET digitized_at=@at::timestamptz,tested_on=@date::date,digitized_by=@name,equivalence=CASE WHEN @classify THEN @eq ELSE equivalence END,laboratory=CASE WHEN @classify THEN @lab ELSE laboratory END,no_program=CASE WHEN @classify THEN @no ELSE no_program END,version=version+1 WHERE id=@id",ct,
+                ("at",stamp),("date",testDate),("name",actorName),("classify",source is not null),("eq",eq),("lab",lab),("no",no),("id",selected.ExecutionId)).ConfigureAwait(false);
+            if(source is not null&&(beforeClassification.Equivalence,beforeClassification.Laboratory,beforeClassification.NoProgram)!=(eq,lab,no))
+                await Audit(c,tx,episode,"ClassificationFromReact",actor,reason,new{ExecutionId=selected.ExecutionId,Before=beforeClassification,After=new{Equivalence=eq,Laboratory=lab,NoProgram=no},Source="public.planificacion_test_map + public.planificacion_nombre",source.Version},ct).ConfigureAwait(false);
             await Execute(c,tx,"""
                 INSERT INTO planning.report_checks(execution_id,actor_id,checked_at,block_number) VALUES(@id,@actor::int,@at::timestamptz,@block::bigint)
                 ON CONFLICT(execution_id) DO UPDATE SET actor_id=EXCLUDED.actor_id,checked_at=EXCLUDED.checked_at,block_number=EXCLUDED.block_number

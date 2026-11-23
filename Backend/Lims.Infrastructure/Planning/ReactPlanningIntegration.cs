@@ -56,16 +56,22 @@ public sealed partial class PostgresPlanningStore
             await using var r=await cmd.ExecuteReaderAsync(ct).ConfigureAwait(false);
             while(await r.ReadAsync(ct).ConfigureAwait(false))blacklist.Add(PlanningReconciler.TestKey(r.GetString(0)));
         }
-        await using(var cmd=Command(c,tx,"SELECT to_jsonb(m)::text FROM public.planificacion_test_map m ORDER BY id"))
+        bool hasNames;
+        await using(var available=Command(c,tx,"SELECT to_regclass('public.planificacion_nombre') IS NOT NULL"))
+            hasNames=await available.ExecuteScalarAsync(ct).ConfigureAwait(false) is true;
+        var catalogueSql=hasNames?"SELECT to_jsonb(m)::text,to_jsonb(p)::text FROM public.planificacion_test_map m LEFT JOIN public.planificacion_nombre p ON p.id=nullif(to_jsonb(m)->>'planificacion_nombre_id','')::bigint ORDER BY m.id":"SELECT to_jsonb(m)::text,NULL::text FROM public.planificacion_test_map m ORDER BY id";
+        await using(var cmd=Command(c,tx,catalogueSql))
         await using(var r=await cmd.ExecuteReaderAsync(ct).ConfigureAwait(false))
         while(await r.ReadAsync(ct).ConfigureAwait(false))
         {
             var raw=r.GetString(0);using var doc=JsonDocument.Parse(raw);var j=doc.RootElement;
-            string? Get(string name)=>j.TryGetProperty(name,out var v)&&v.ValueKind!=JsonValueKind.Null? v.ToString().Trim():null;
+            var masterRaw=r.IsDBNull(1)?"{}":r.GetString(1);using var master=JsonDocument.Parse(masterRaw);
+            static string? Field(JsonElement record,string name)=>record.TryGetProperty(name,out var v)&&v.ValueKind!=JsonValueKind.Null&&!string.IsNullOrWhiteSpace(v.ToString())?v.ToString().Trim():null;
+            string? Get(string name)=>Field(j,name);
             var test=Get("nombre_tecnico")??Get("test_name_tecnico");if(string.IsNullOrWhiteSpace(test))continue;
-            var eq=Get("nombre_planificacion")??Get("nombre_prueba_plan");var lab=Get("lab");
+            var eq=Field(master.RootElement,"nombre_planificacion")??Get("nombre_planificacion")??Get("nombre_prueba_plan");var lab=Get("lab");
             var no=Get("activo")=="False"||Get("activo")=="false"||blacklist.Contains(PlanningReconciler.TestKey(test))||PlanningImportRules.Token(lab)=="NO PROGRAMAR";
-            source.Add((test,no?null:eq,no?null:lab,no,raw));
+            source.Add((test,no?null:eq,no?null:lab,no,raw+masterRaw));
         }
         return source.GroupBy(s=>PlanningReconciler.TestKey(s.Test),StringComparer.Ordinal).Select(g=>
         {
