@@ -72,7 +72,7 @@ public sealed partial class PlanningPostgresTests
         await using var db=await TestDatabase.Create();var store=db.Store;
         await store.SaveEquivalenceAsync(new("PH","PH","CHEMICAL",false,null,"Catálogo de fixture"),1,default);
         await store.SaveEquivalenceAsync(new("CROCKING","CROCKING","PHYSICAL",false,null,"Catálogo de fixture"),1,default);
-        var input=Input(Summary() with{Job="GUAT-PRUEBA-001"},Report(test:"PH") with{Job="GUAT-PRUEBA-001"},Report(3,"PH") with{Job="GUAT-PRUEBA-001"},Report(4,"CROCKING") with{Job="GUAT-PRUEBA-001"});
+        var input=Input(Summary() with{Job="GUAT26000001"},Report(test:"PH") with{Job="GUAT26000001"},Report(3,"PH") with{Job="GUAT26000001"},Report(4,"CROCKING") with{Job="GUAT26000001"});
         var preview=await store.PreviewAsync(input,1,default);Assert.Equal(2,preview.AmbiguousRows);await store.ConfirmAsync(preview.Id,1,default);
         var episode=Assert.Single((await store.QueryAsync(new(),default)).Items).EpisodeId;
         foreach(var source in new[]{2,3})
@@ -157,7 +157,7 @@ public sealed partial class PlanningPostgresTests
     public async Task MarkedManualExecutionSurvivesNewSourceTestAndSummaryOnlyWip()
     {
         await using var db=await TestDatabase.Create();var store=db.Store;
-        var p=await store.PreviewAsync(Input(Summary(),Summary() with{Job="SUMMARY-ONLY",Row=3}),1,default);await store.ConfirmAsync(p.Id,1,default);
+        var p=await store.PreviewAsync(Input(Summary(),Summary() with{Job="SUMMARYONLY",Row=3}),1,default);await store.ConfirmAsync(p.Id,1,default);
         var episode=(await store.QueryAsync(new(Search:"J1",SearchMode:"Exact"),default)).Items.Single().EpisodeId;
         var d=(await store.DossierAsync(episode,default))!;
         await store.AddManualTestAsync(episode,new(d.Version,"PH","PH","CHEMICAL","Fixture manual"),1,default);
@@ -166,6 +166,6 @@ public sealed partial class PlanningPostgresTests
         var next=await store.PreviewAsync(Input(Summary(due:22),Report(test:"CROCKING")),1,default);Assert.Equal(1,next.NewTests);await store.ConfirmAsync(next.Id,1,default);
         d=(await store.DossierAsync(episode,default))!;Assert.Equal(2,d.Tests.Count);Assert.True(d.Tests.Single(t=>t.ExecutionId==manual.Execution.ExecutionId).Complete);
         Assert.Equal(1L,await db.Scalar("SELECT count(*) FROM planning.report_close_alerts WHERE reopened_at IS NOT NULL"));
-        var only=Assert.Single((await store.QueryAsync(new(Search:"SUMMARY-ONLY"),default)).Items);Assert.Null(only.ExecutionId);Assert.NotNull(only.DueDate);
+        var only=Assert.Single((await store.QueryAsync(new(Search:"SUMMARYONLY"),default)).Items);Assert.Null(only.ExecutionId);Assert.NotNull(only.DueDate);
     }
 }

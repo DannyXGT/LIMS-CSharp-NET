@@ -45,7 +45,7 @@ public sealed partial class PostgresPlanningStore
               OR (@view='Active' AND NOT (x.no_program OR upper(coalesce(trim(x.laboratory),''))='NO PROGRAMAR') AND (x.digitized_at IS NULL OR x.tested_on IS NULL OR coalesce(rc.keep_in_planning,false))))
             """;
         var conditions=ColumnConditions(query.ColumnFilters);
-        var filteredWhere=where+conditions.Sql;
+        var filteredWhere=where+" AND "+VisiblePlanningJobSql+" AND "+ClassifiedReportTestSql+conditions.Sql;
         var args=new (string,object?)[]{("search",search),("multiple",jobs.Length>1),("jobs",jobs.Select(j=>j.ToUpperInvariant()).ToArray()),("view",query.View),
             ("test",query.Test??""),("lab",query.Laboratory??""),("service",query.Service??""),("buyer",query.Buyer??""),("verified",query.VerifiedBy??""),("block",query.Block),("date",query.CheckedDate),("execution",query.ExecutionId),("take",size),("skip",Math.Clamp(query.Offset??(page-1)*size,0,500000000))}.Concat(conditions.Args).ToArray();
         await using var c=await database.Source.OpenConnectionAsync(ct).ConfigureAwait(false);
@@ -65,14 +65,7 @@ public sealed partial class PostgresPlanningStore
             while(await r.ReadAsync(ct).ConfigureAwait(false))
             {var row=Row(r);items.Add(new(row,r.GetInt64(29),r.GetBoolean(30),r.IsDBNull(31)?null:r.GetInt64(31),ReportListRules.CheckMode(row.Equivalence,row.Laboratory),r.GetInt64(32)));}
         string? scannerSource=null;
-        await using(var cmd=Command(c,tx,"""
-            SELECT table_schema||'.'||table_name FROM information_schema.columns
-            WHERE table_schema='public' AND table_name IN ('tabla_programacion_analitica','tabla_programacion')
-              AND column_name IN ('id','job','prueba')
-            GROUP BY table_schema,table_name HAVING count(*)=3
-              AND has_table_privilege(table_schema||'.'||table_name,'SELECT')
-            ORDER BY table_name LIMIT 1
-            """))scannerSource=await cmd.ExecuteScalarAsync(ct).ConfigureAwait(false) as string;
+        var trackingSources=await ReportTrackingSources(c,tx,ct).ConfigureAwait(false);scannerSource=trackingSources.Length==0?null:trackingSources[0];
         if(scannerSource is null)
         {
             await using var cmd=Command(c,tx,"SELECT EXISTS(SELECT 1 FROM planning.report_scan_links)");
@@ -219,6 +212,19 @@ public sealed partial class PostgresPlanningStore
         await Bump(c,tx,ct).ConfigureAwait(false);await tx.CommitAsync(ct).ConfigureAwait(false);
     }
 
+    private async Task<string[]> ReportTrackingSources(NpgsqlConnection c,NpgsqlTransaction tx,CancellationToken ct)
+    {
+        var available=new HashSet<string>(StringComparer.Ordinal);
+        await using var cmd=Command(c,tx,"""
+            SELECT table_schema||'.'||table_name FROM information_schema.columns
+            WHERE (table_schema||'.'||table_name)=ANY(@tables) AND column_name IN ('id','job','prueba')
+            GROUP BY table_schema,table_name HAVING count(*)=3 AND has_table_privilege(table_schema||'.'||table_name,'SELECT')
+            """,("tables",database.ReportTrackingTables.ToArray()));
+        await using var reader=await cmd.ExecuteReaderAsync(ct).ConfigureAwait(false);
+        while(await reader.ReadAsync(ct).ConfigureAwait(false))available.Add(reader.GetString(0));
+        return database.ReportTrackingTables.Where(available.Contains).ToArray();
+    }
+
     public async Task<ReportListResult> ScanReportAsync(ReportListScan request,int actor,CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(request);var reason=Reason(request.Reason);
@@ -232,20 +238,27 @@ public sealed partial class PostgresPlanningStore
         {
             // Read verified legacy tracking shapes only in the configured Planning database.
             // A barcode never falls back to JOB + test when several executions match.
-            foreach(var table in new[]{"tabla_programacion_analitica","tabla_programacion"})
+            foreach(var table in await ReportTrackingSources(c,tx,ct).ConfigureAwait(false))
             {
-                await using(var cmd=Command(c,tx,"SELECT count(*)=3 FROM information_schema.columns WHERE table_schema='public' AND table_name=@table AND column_name IN ('id','job','prueba')",("table",table)))
-                    if(await cmd.ExecuteScalarAsync(ct).ConfigureAwait(false) is not true)continue;
-                var candidates=new List<Guid>();
-                await using(var cmd=Command(c,tx,$"SELECT x.id FROM public.{table} t JOIN planning.episodes e ON upper(trim(e.job))=upper(trim(t.job)) JOIN planning.executions x ON x.episode_id=e.id AND upper(trim(x.equivalence))=upper(trim(t.prueba)) WHERE t.id=@id",("id",id)))
-                await using(var r=await cmd.ExecuteReaderAsync(ct).ConfigureAwait(false))while(await r.ReadAsync(ct).ConfigureAwait(false))candidates.Add(r.GetGuid(0));
-                if(candidates.Count>1)throw new PlanningConflictException("El código corresponde a varias ejecuciones; concilie su identidad antes de escanear.");
-                if(candidates.Count==0)continue;
-                execution=candidates[0];
+                string? job=null,test=null;
+                await using(var cmd=Command(c,tx,$"SELECT job,prueba FROM {table} WHERE id=@id",("id",id)))
+                await using(var r=await cmd.ExecuteReaderAsync(ct).ConfigureAwait(false))
+                    if(await r.ReadAsync(ct).ConfigureAwait(false)){job=NullableString(r,0);test=NullableString(r,1);}
+                if(job is null||test is null)continue;
+                var catalogue=await ReadReportCatalogue(c,tx,ct).ConfigureAwait(false);
+                var source=catalogue.Sql.Length>0?"report_executions":"planning.executions";
+                var candidates=new HashSet<Guid>();var token=ReportListRules.Token(test);
+                await using(var cmd=Command(c,tx,catalogue.Sql+$"SELECT x.id,x.equivalence,x.original_test FROM {source} x JOIN planning.episodes e ON e.id=x.episode_id WHERE upper(trim(e.job))=upper(trim(@job))",new[]{("job",(object?)job)}.Concat(catalogue.Args).ToArray()))
+                await using(var r=await cmd.ExecuteReaderAsync(ct).ConfigureAwait(false))
+                    while(await r.ReadAsync(ct).ConfigureAwait(false))
+                        if(ReportListRules.Token(NullableString(r,1)??"")==token||ReportListRules.Token(r.GetString(2))==token)candidates.Add(r.GetGuid(0));
+                if(candidates.Count>1)throw new PlanningConflictException($"El reporte AR #{id} pertenece a {job} · {test}, pero coincide con {candidates.Count} ejecuciones. Revise las pruebas repetidas antes de marcar.");
+                if(candidates.Count==0)throw new PlanningValidationException($"El reporte AR #{id} pertenece a {job} · {test}, pero esa prueba no está importada o conciliada en Report List. Importe o concilie ese JOB antes de escanearlo.");
+                execution=candidates.Single();
                 await Execute(c,tx,"INSERT INTO planning.report_scan_links(tracking_id,execution_id,actor_id,reason) VALUES(@tracking,@execution,@actor,@reason)",ct,("tracking",id),("execution",execution),("actor",actor),("reason",reason)).ConfigureAwait(false);break;
             }
         }
-        if(execution is null)throw new PlanningValidationException("El código AR no tiene una identidad de tracking verificada en esta base. No se marcará ninguna ejecución.");
+        if(execution is null)throw new PlanningValidationException($"El reporte AR #{id} no aparece en las tablas de reportes de React que consulta este servidor. Revise que la API use la misma base y tabla de reportes que LIMS React. No se marcó ninguna prueba.");
         long version;
         await using(var cmd=Command(c,tx,"SELECT version FROM planning.executions WHERE id=@id",("id",execution)))version=(long)(await cmd.ExecuteScalarAsync(ct).ConfigureAwait(false))!;
         var result=await ApplyReportChecks(c,tx,new([new(execution.Value,version)],true,reason,CheckedAt:request.CheckedAt),actor,true,reason,ct).ConfigureAwait(false);

@@ -145,7 +145,7 @@ public sealed partial class PostgresPlanningStore
             """;
         await using var c=await database.Source.OpenConnectionAsync(ct).ConfigureAwait(false);await using var tx=await c.BeginTransactionAsync(IsolationLevel.RepeatableRead,ct).ConfigureAwait(false);
         var integrated=await HasReactLinks(c,tx,ct).ConfigureAwait(false);
-        var closureSql=closure.Replace("/*ADMISSION*/",integrated?"WHERE "+ReactOperationalPredicate:"",StringComparison.Ordinal)
+        var closureSql=closure.Replace("/*ADMISSION*/","WHERE "+VisiblePlanningJobSql+(integrated?" AND "+ReactOperationalPredicate:""),StringComparison.Ordinal)
             .Replace("/*ADMISSION_BLOCK*/",integrated?"""
                 AND NOT EXISTS(SELECT 1 FROM planning.react_execution_links admission JOIN planning.executions x ON x.id=admission.execution_id
                   JOIN planning.episodes e ON e.id=x.episode_id WHERE e.job=c.job

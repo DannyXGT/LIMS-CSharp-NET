@@ -6,6 +6,15 @@ namespace Lims.Desktop.Tests;
 public sealed class ReportOperationalClockTests
 {
     [Fact]
+    public void ScannerUsesCurrentMinuteWithoutManualSetupAndHonorsAnOptionalFixedClock()
+    {
+        var clock=new ReportOperationalClock();
+        var now=new DateTimeOffset(2026,11,24,18,32,57,TimeSpan.Zero);
+        Assert.Equal(new DateTimeOffset(2026,11,24,12,32,0,TimeSpan.FromHours(-6)),clock.ForScan(now));
+        clock.Fix(now.AddHours(-1));Assert.Equal(clock.FixedAt,clock.ForScan(now.AddHours(2)));
+        clock.Clear();Assert.Equal(14,clock.ForScan(now.AddHours(2)).Hour);
+    }
+    [Fact]
     public void FixedMinuteStaysUntilExplicitlyReplacedAndGroupsAcrossTimeZoneRepresentations()
     {
         var clock=new ReportOperationalClock();Assert.Null(clock.FixedAt);

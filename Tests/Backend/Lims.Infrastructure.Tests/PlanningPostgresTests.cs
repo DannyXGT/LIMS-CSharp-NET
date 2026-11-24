@@ -319,21 +319,24 @@ public sealed partial class PlanningPostgresTests
         // Real source rows in an explicitly partial CI fixture; decisions below are test operator actions, never TIPS claims.
         var partial=input with{Rows=[source],Fingerprint=PlanningImportReader.Hash(System.Text.Encoding.UTF8.GetBytes("real-rows-ci-summary-only"))};
         var preview=await store.PreviewAsync(partial,1,default);await store.ConfirmAsync(preview.Id,1,default);
-        var row=Assert.Single((await store.QueryAsync(new(Search:job),default)).Items);var dossier=(await store.DossierAsync(row.EpisodeId,default))!;
-        Assert.Equal(source.Official!.SampleStatus,row.JobState);Assert.Equal(source.Wip!.Vendor,dossier.Wip.Vendor);
-        await store.AddManualTestAsync(row.EpisodeId,new(dossier.Version,actual.Test!,"DIMENSIONAL","Physical","CI local: clasificación real restaurada; decisión manual de prueba"),1,default);
-        dossier=(await store.DossierAsync(row.EpisodeId,default))!;var manual=Assert.Single(dossier.Tests).ExecutionId;
+        Assert.Empty((await store.QueryAsync(new(Search:job),default)).Items);
+        var episodeId=(Guid)(await db.Scalar("SELECT id FROM planning.episodes WHERE job='GUAT25038091-REV3'"))!;
+        var dossier=(await store.DossierAsync(episodeId,default))!;
+        Assert.Equal(source.Official!.SampleStatus,dossier.Official!.SampleStatus);
+        Assert.Equal(source.Wip!.Vendor,dossier.Wip.Vendor);
+        await store.AddManualTestAsync(episodeId,new(dossier.Version,actual.Test!,"DIMENSIONAL","Physical","CI local: clasificación real restaurada; decisión manual de prueba"),1,default);
+        dossier=(await store.DossierAsync(episodeId,default))!;var manual=Assert.Single(dossier.Tests).ExecutionId;
         var pending=Assert.Single(dossier.Incidents,i=>i.Kind=="SummaryWithoutReport");Assert.Equal("Pending",pending.State);
         await store.DecideIncidentAsync(pending.Id,new(pending.Version,"Resolved","CI local: confirmación explícita de asignación manual"),1,default);
         var complete=input with{Rows=[source,..actualTests],Fingerprint=PlanningImportReader.Hash(System.Text.Encoding.UTF8.GetBytes("real-rows-ci-both"))};
         preview=await store.PreviewAsync(complete,1,default);Assert.Equal(1,preview.LinkedManualTests);Assert.Equal(23,preview.NewTests);await store.ConfirmAsync(preview.Id,1,default);
-        dossier=(await store.DossierAsync(row.EpisodeId,default))!;Assert.Equal(24,dossier.Tests.Count);Assert.Contains(dossier.Tests,t=>t.ExecutionId==manual&&t.Origin=="Manual");
+        dossier=(await store.DossierAsync(episodeId,default))!;Assert.Equal(24,dossier.Tests.Count);Assert.Contains(dossier.Tests,t=>t.ExecutionId==manual&&t.Origin=="Manual");
         Assert.Equal("Resolved",Assert.Single(dossier.Incidents,i=>i.Kind=="SummaryWithoutReport").State);
         Assert.True((await store.ConfirmAsync(preview.Id,1,default)).AlreadyApplied);
-        await store.AddManualTestAsync(row.EpisodeId,new(dossier.Version,actual.Test!,"DIMENSIONAL","Physical","CI local: repetición autorizada de una prueba real"),1,default);
+        await store.AddManualTestAsync(episodeId,new(dossier.Version,actual.Test!,"DIMENSIONAL","Physical","CI local: repetición autorizada de una prueba real"),1,default);
         preview=await store.PreviewAsync(complete with{Fingerprint=Guid.NewGuid().ToString("N")},1,default);
         Assert.DoesNotContain(preview.Reviews,r=>r.Category=="ExecutionIdentity"&&r.OriginalTest==actual.Test);await store.ConfirmAsync(preview.Id,1,default);
-        Assert.Equal(25,(await store.DossierAsync(row.EpisodeId,default))!.Tests.Count);
+        Assert.Equal(25,(await store.DossierAsync(episodeId,default))!.Tests.Count);
         var reviewPage=await store.ReviewPageAsync("ExecutionIdentity",job,1,1,default);Assert.Equal(0,reviewPage.Total);Assert.Empty(reviewPage.Items);
     }
     [RealPlanningDatabaseFact]
@@ -446,7 +449,8 @@ public sealed partial class PlanningPostgresTests
         await using var db=await TestDatabase.Create();var store=db.Store;var p=await store.PreviewAsync(input,1,default);
         var inspection=(await store.InspectImportAsync(p.Id,default))!;Assert.Equal(1,p.NewJobs);Assert.Equal(2,p.NewTests);Assert.Equal(1,inspection.NewEmergencies);
         Assert.Equal(2,inspection.Items.Count(r=>r.Category=="Emergency"));Assert.All(inspection.Items.Where(r=>r.Category=="Emergency"),r=>Assert.Equal("Next Day",r.Service));
-        await store.ConfirmAsync(p.Id,1,default);Assert.Equal(2,(await store.QueryAsync(new(Search:"GUAT26011508-REV1"),default)).Total);
+        await store.ConfirmAsync(p.Id,1,default);Assert.Equal(0,(await store.QueryAsync(new(Search:"GUAT26011508-REV1"),default)).Total);
+        Assert.Equal(2L,await db.Scalar("SELECT count(*) FROM planning.executions"));
         Assert.True((await store.ConfirmAsync(p.Id,1,default)).AlreadyApplied);
     }
     [PlanningDatabaseFact]

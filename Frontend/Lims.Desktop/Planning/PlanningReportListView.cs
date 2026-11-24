@@ -10,7 +10,7 @@ using Windows.System;
 
 namespace Lims.Desktop.Planning;
 
-public sealed class PlanningReportListView : UserControl,IDisposable
+public sealed partial class PlanningReportListView : UserControl,IDisposable
 {
     private readonly PlanningApiClient _api;
     private readonly Func<IReadOnlyList<string>> _permissions;
@@ -18,7 +18,7 @@ public sealed class PlanningReportListView : UserControl,IDisposable
     private readonly Func<bool> _administrator;
     private readonly Func<int?> _userId;
     private readonly Dictionary<string,string> _columnFilters=[];
-    private readonly TextBox _search=PlanningUi.Field("",max:20000),_scan=PlanningUi.Field("",max:200);
+    private readonly TextBox _search=PlanningUi.Field("",max:20000);
     private readonly TextBox _test=PlanningUi.Field("Prueba de Planificación"),_lab=PlanningUi.Field("Laboratorio"),_service=PlanningUi.Field("Servicio"),_buyer=PlanningUi.Field("Cliente / Buyer");
     private readonly TextBox _clockDate=PlanningUi.Field("",DateTimeOffset.UtcNow.ToOffset(TimeSpan.FromHours(-6)).ToString("yyyy-MM-dd",CultureInfo.InvariantCulture),10);
     private readonly TextBox _clockTime=PlanningUi.Field("",DateTimeOffset.UtcNow.ToOffset(TimeSpan.FromHours(-6)).ToString("HH:mm",CultureInfo.InvariantCulture),5);
@@ -28,8 +28,7 @@ public sealed class PlanningReportListView : UserControl,IDisposable
     private readonly ReportListGrid _grid=new();
     private readonly TextBlock _status=PlanningUi.Text("",12,true),_result=PlanningUi.Text("",12),_connection=PlanningUi.Text("Conectando…",12,true),_selection=PlanningUi.Text("",12,true);
     private readonly ProgressRing _progress=new(){Width=18,Height=18,IsActive=false};
-    private readonly Button _mark,_review,_next;
-    private readonly MenuFlyoutItem _scanCommand;
+    private readonly Button _mark,_review,_next,_fixedBatch;
     private readonly StackPanel _intro;
     private readonly Border _context;
     private readonly Grid _digitization,_schedules,_closures;
@@ -40,8 +39,15 @@ public sealed class PlanningReportListView : UserControl,IDisposable
     private readonly ObservableCollection<ReportSchedule> _scheduleRows=[];
     private readonly ObservableCollection<ReportClosure> _closureRows=[];
     private readonly ReportOperationalClock _fixedClock=new();
-    private readonly TextBlock _clockLabel=PlanningUi.Text("Sin hora fija",12,true);
+    private readonly TextBlock _clockLabel=PlanningUi.Text("Hora actual",12,true);
+    private readonly DispatcherTimer _clockTick=new(){Interval=TimeSpan.FromSeconds(1)};
     private readonly DispatcherTimer _sync=new(){Interval=TimeSpan.FromSeconds(15)};
+    private readonly DispatcherTimer _searchDelay=new(){Interval=TimeSpan.FromMilliseconds(280)};
+    private readonly TextBlock _pageLabel=PlanningUi.Text("Página 1 de 1",12,true);
+    private readonly TextBox _pageNumber=PlanningUi.Field("", "1",7);
+    private readonly Button _previousPage,_nextPage;
+    private readonly StackPanel _pager;
+    private int _listPage=1;
     private CancellationTokenSource _request=new(),_detailRequest=new();
     private ReportListRows? _rows;
     private ReportScheduleDetail? _opened;
@@ -50,18 +56,20 @@ public sealed class PlanningReportListView : UserControl,IDisposable
     private long? _block,_listRevision;private DateOnly? _date;
     private int _page=1,_total;
     private bool _descending,_mutating,_trackingAvailable,_onlyTable,_loading;
+    private bool _pageNeedsReload,_disposed;
     public event Func<Task>? Changed;
-    public PlanningReportListView(PlanningApiClient api,Func<Guid,Task> dossier,Func<IReadOnlyList<string>> permissions,Func<bool> administrator,Func<int?>? userId=null)
+    public PlanningReportListView(PlanningApiClient api,Func<Guid,Task> dossier,Func<IReadOnlyList<string>> permissions,Func<bool> administrator,Func<int?>? userId=null,bool scannerEnabled=true,IReportScanner? scanner=null)
     {
-        _api=api;_permissions=permissions;_dossier=dossier;_administrator=administrator;_userId=userId??(()=>null);_grid.PreferenceError+=message=>Feedback(message);
+        _api=api;_permissions=permissions;_dossier=dossier;_administrator=administrator;_userId=userId??(()=>null);_serial=scanner??new ReportScanner();_grid.PreferenceError+=message=>Feedback(message);
         _search.PlaceholderText="Buscar por JOB, prueba o cliente";_search.MinWidth=180;_search.MinHeight=36;
         AutomationProperties.SetName(_search,"Buscar JOB en Report List");AutomationProperties.SetName(_view,"Vista");AutomationProperties.SetName(_scheduleState,"Estado de horarios");
+        _search.Header=null;_clockDate.Header=null;_clockTime.Header=null;
         _clockDate.MinWidth=115;_clockDate.Width=135;_clockDate.PlaceholderText="yyyy-MM-dd";_clockTime.MinWidth=100;_clockTime.Width=105;_clockTime.PlaceholderText="HH:mm";
         AutomationProperties.SetName(_clockDate,"Fecha de digitación");AutomationProperties.SetName(_clockTime,"Hora de digitación");
         ToolTipService.SetToolTip(_clockDate,"Fecha de prueba · Guatemala");ToolTipService.SetToolTip(_clockTime,"Hora de digitación · Guatemala");
-        _scan.PlaceholderText="Código AR · Enter para registrar";AutomationProperties.SetName(_scan,"Código AR de Report List");
         _search.KeyDown+=async(_,e)=>{if(e.Key==VirtualKey.Enter){e.Handled=true;await Load();}};
-        _scan.KeyDown+=async(_,e)=>{if(e.Key==VirtualKey.Enter){e.Handled=true;await Scan();}};
+        _search.TextChanged+=(_,_)=>{_searchDelay.Stop();if(!IsLoaded||_clearing)return;if(!_mutating){_request.Cancel();_grid.SetBusy(true);}_searchDelay.Start();};
+        _searchDelay.Tick+=async(_,_)=>{_searchDelay.Stop();if(_mutating){_searchDelay.Start();return;}if(!FlushKeyboard())await Load();};
         _view.SelectionChanged+=async(_,_)=>{if(IsLoaded&&_tabs.SelectedIndex==0)await Load();};
         _scheduleState.SelectionChanged+=async(_,_)=>{if(IsLoaded&&_tabs.SelectedIndex==1)await Load();};
         _grid.CanKeep=()=>!_mutating&&Has(PlanningPermissions.ReportReview);_grid.KeepRequested+=Keep;
@@ -86,7 +94,6 @@ public sealed class PlanningReportListView : UserControl,IDisposable
         filterPanel.Children.Add(Compact("Limpiar filtros",async()=>{_test.Text=_lab.Text=_service.Text=_buyer.Text=_verified="";_block=null;_date=null;_columnFilters.Clear();filterFlyout.Hide();await Load();}));
         var configuration=IconAction(LimsIconKind.Administration,"Configurar tabla de Report List",()=>Task.CompletedTask);var menu=_grid.ColumnsMenu();configuration.Flyout=menu;
         var only=new ToggleMenuFlyoutItem{Text="Ocultar encabezado"};only.Click+=(_,_)=>{_onlyTable=only.IsChecked;_intro.Visibility=_onlyTable?Visibility.Collapsed:Visibility.Visible;};menu.Items.Add(only);
-        _scanCommand=new MenuFlyoutItem{Text="Capturar código AR",Visibility=Visibility.Collapsed};_scanCommand.Click+=async(_,_)=>await OpenScanner();menu.Items.Add(_scanCommand);
         var tools=PlanningUi.Row(_view,_scheduleState,filters,refresh,configuration);tools.Spacing=6;tools.VerticalAlignment=VerticalAlignment.Center;
         var searchEntry=new Grid();_search.Padding=new(32,5,8,5);searchEntry.Children.Add(_search);searchEntry.Children.Add(new LimsIcon{Icon=LimsIconKind.Search,Size=15,HorizontalAlignment=HorizontalAlignment.Left,VerticalAlignment=VerticalAlignment.Center,Margin=new(10,0,0,0),Foreground=PlanningUi.Brush("LimsTextSecondaryBrush"),IsHitTestVisible=false});
         var searchGroup=new Grid{ColumnSpacing=6,MaxWidth=800,HorizontalAlignment=HorizontalAlignment.Stretch};foreach(var width in new[]{new GridLength(1,GridUnitType.Star),GridLength.Auto,GridLength.Auto})searchGroup.ColumnDefinitions.Add(new(){Width=width});searchGroup.Children.Add(searchEntry);Grid.SetColumn(find,1);searchGroup.Children.Add(find);Grid.SetColumn(multiple,2);searchGroup.Children.Add(multiple);
@@ -120,22 +127,30 @@ public sealed class PlanningReportListView : UserControl,IDisposable
         var groupTools=PlanningUi.Row(Compact("Exportar chequeados",ExportSchedules));groupTools.Visibility=Visibility.Collapsed;
         _next=Compact("Cargar más",async()=>await LoadGroups(false));_next.Visibility=Visibility.Collapsed;
         var body=new Grid();body.Children.Add(_digitization);body.Children.Add(_schedules);body.Children.Add(_closures);
-        var headerSurface=PlanningUi.Rows(GridLength.Auto,GridLength.Auto);headerSurface.RowSpacing=0;PlanningUi.Place(headerSurface,header,0);PlanningUi.Place(headerSurface,searchBar,1);
+        var headerSurface=PlanningUi.Rows(GridLength.Auto,GridLength.Auto,GridLength.Auto);headerSurface.RowSpacing=0;PlanningUi.Place(headerSurface,header,0);PlanningUi.Place(headerSurface,searchBar,1);
         var searchSurface=new Border{Child=headerSurface,Background=PlanningUi.Brush("LimsSurfaceBrush"),BorderBrush=PlanningUi.Brush("LimsBorderBrush"),BorderThickness=new(1),CornerRadius=new(8)};
-        var fix=Compact("Fijar Hora",()=>{_fixedClock.Fix(DateTimeOffset.UtcNow);var at=_fixedClock.FixedAt!.Value;_clockDate.Text=at.ToString("yyyy-MM-dd",CultureInfo.InvariantCulture);_clockTime.Text=at.ToString("HH:mm",CultureInfo.InvariantCulture);_clockLabel.Text="Hora fija";Feedback(null);return Task.CompletedTask;},true);
-        ToolTipService.SetToolTip(fix,"Captura fecha y hora de Guatemala; se mantienen para las siguientes digitaciones hasta volver a fijarlas.");
-        _clockDate.Width=112;_clockDate.MinWidth=100;_clockTime.Width=76;_clockTime.MinWidth=70;
-        _scan.MinWidth=140;_scan.Width=220;
-        _clockLabel.VerticalAlignment=VerticalAlignment.Center;var clockTools=PlanningUi.Row(fix,_clockLabel,_clockDate,_clockTime);clockTools.Spacing=6;
-        var scanTools=PlanningUi.Row(_scan,Compact("Leer AR",Scan));scanTools.Spacing=6;
-        var operation=new Grid{ColumnSpacing=12};operation.ColumnDefinitions.Add(new(){Width=GridLength.Auto});operation.ColumnDefinitions.Add(new(){Width=new(1,GridUnitType.Star)});operation.RowDefinitions.Add(new(){Height=GridLength.Auto});operation.RowDefinitions.Add(new(){Height=GridLength.Auto});operation.Children.Add(clockTools);Grid.SetColumn(scanTools,1);operation.Children.Add(scanTools);scanTools.HorizontalAlignment=HorizontalAlignment.Right;
-        operation.SizeChanged+=(_,_)=>{var narrow=operation.ActualWidth<800;Grid.SetColumn(scanTools,narrow?0:1);Grid.SetRow(scanTools,narrow?1:0);scanTools.HorizontalAlignment=narrow?HorizontalAlignment.Left:HorizontalAlignment.Right;};
-        var top=PlanningUi.Stack(searchSurface,operation,groupTools,_result);top.Spacing=6;
+        var clockSection=BuildClockSection();
+        var scannerSection=BuildScannerSection(scannerEnabled);
+        var batch=_fixedBatch=Compact("Digitar con hora fija",OpenFixedTimeBatch);AutomationProperties.SetName(batch,"Digitar lote con hora fija");
+        batch.Visibility=Has(PlanningPermissions.ReportMark)?Visibility.Visible:Visibility.Collapsed;
+        var clockTools=PlanningUi.Row(clockSection,batch);clockTools.Spacing=8;
+        var operation=new Grid{ColumnSpacing=18,Padding=new(12,7,12,8)};
+        operation.ColumnDefinitions.Add(new(){Width=GridLength.Auto});operation.ColumnDefinitions.Add(new(){Width=new(1,GridUnitType.Star)});operation.ColumnDefinitions.Add(new(){Width=GridLength.Auto});
+        operation.Children.Add(clockTools);Grid.SetColumn(_scanReceipt,1);operation.Children.Add(_scanReceipt);Grid.SetColumn(scannerSection,2);operation.Children.Add(scannerSection);
+        operation.SizeChanged+=(_,_)=>_scanReceipt.Visibility=operation.ActualWidth<850?Visibility.Collapsed:Visibility.Visible;
+        PlanningUi.Place(headerSurface,new Border{Child=operation,BorderBrush=PlanningUi.Brush("LimsBorderBrush"),BorderThickness=new(0,1,0,0)},2);
+        var top=PlanningUi.Stack(searchSurface,groupTools,_result);top.Spacing=6;
+        _previousPage=Compact("Anterior",async()=>await LoadPage(_listPage-1),enabledAfter:()=>!_loading&&!_mutating&&_listPage>1);
+        _nextPage=Compact("Siguiente",async()=>await LoadPage(_listPage+1),enabledAfter:()=>!_loading&&!_mutating&&_listPage<PageCount);
+        _pageNumber.Header=null;_pageNumber.MinWidth=42;_pageNumber.Width=48;_pageNumber.MinHeight=30;_pageNumber.Padding=new(6,3,6,3);AutomationProperties.SetName(_pageNumber,"Ir a página de Report List");
+        _pageNumber.KeyDown+=async(_,e)=>{if(e.Key==VirtualKey.Enter){e.Handled=true;if(int.TryParse(_pageNumber.Text,out var p))await LoadPage(p);}};
+        _pager=PlanningUi.Row(_previousPage,_pageLabel,_pageNumber,_nextPage);_pager.Spacing=8;_pageLabel.VerticalAlignment=VerticalAlignment.Center;
+        foreach(var b in new[]{_previousPage,_nextPage}){b.MinHeight=30;b.Padding=new(9,3,9,3);}
         var layout=PlanningUi.Rows(GridLength.Auto,new(1,GridUnitType.Star),GridLength.Auto);layout.RowSpacing=8;
-        PlanningUi.Place(layout,top,0);PlanningUi.Place(layout,body,1);PlanningUi.Place(layout,PlanningUi.Split(PlanningUi.Row(_progress,_status),PlanningUi.Row(_connection,_next)),2);Content=layout;
-        void SetView(){var index=_tabs.SelectedIndex;_digitization.Visibility=index==0?Visibility.Visible:Visibility.Collapsed;_schedules.Visibility=index==1?Visibility.Visible:Visibility.Collapsed;_closures.Visibility=index==2?Visibility.Visible:Visibility.Collapsed;_view.Visibility=filters.Visibility=multiple.Visibility=configuration.Visibility=index==0?Visibility.Visible:Visibility.Collapsed;_scheduleState.Visibility=groupTools.Visibility=index==1?Visibility.Visible:Visibility.Collapsed;_next.Visibility=index==0?Visibility.Collapsed:Visibility.Visible;}
-        _tabs.SelectionChanged+=async(_,_)=>{SetView();Feedback(null);Motion.Enter(body,y:3,milliseconds:150);await Load();};SetView();
-        _sync.Tick+=async(_,_)=>await Synchronize();Loaded+=(_,_)=>_sync.Start();Unloaded+=(_,_)=>{_sync.Stop();_request.Cancel();_detailRequest.Cancel();};
+        PlanningUi.Place(layout,top,0);PlanningUi.Place(layout,body,1);PlanningUi.Place(layout,PlanningUi.Split(PlanningUi.Row(_progress,_status),PlanningUi.Row(_pager,_connection,_next)),2);Content=layout;
+        void SetView(){var index=_tabs.SelectedIndex;batch.Visibility=index==0&&Has(PlanningPermissions.ReportMark)?Visibility.Visible:Visibility.Collapsed;_digitization.Visibility=index==0?Visibility.Visible:Visibility.Collapsed;_schedules.Visibility=index==1?Visibility.Visible:Visibility.Collapsed;_closures.Visibility=index==2?Visibility.Visible:Visibility.Collapsed;_view.Visibility=filters.Visibility=multiple.Visibility=configuration.Visibility=index==0?Visibility.Visible:Visibility.Collapsed;_scheduleState.Visibility=groupTools.Visibility=index==1?Visibility.Visible:Visibility.Collapsed;_next.Visibility=index==0?Visibility.Collapsed:Visibility.Visible;}
+        _tabs.SelectionChanged+=async(_,_)=>{SetView();_pager.Visibility=_tabs.SelectedIndex==0?Visibility.Visible:Visibility.Collapsed;Feedback(null);Motion.Enter(body,y:3,milliseconds:150);await Load();};SetView();
+        _sync.Tick+=async(_,_)=>await Synchronize();Loaded+=(_,_)=>{if(!_disposed){_sync.Start();_clockTick.Start();}};Unloaded+=(_,_)=>{_sync.Stop();_clockTick.Stop();if(!_disposed){_request.Cancel();_detailRequest.Cancel();}};
         Motion.ConfigureVisibility(_context);Motion.ConfigureVisibility(_result);Motion.ConfigureVisibility(_detail);
     }
     private static Button Compact(string title,Func<Task> action,bool primary=false,Func<bool>? enabledAfter=null)
@@ -151,13 +166,11 @@ public sealed class PlanningReportListView : UserControl,IDisposable
         _selection.Text=count==1?"1 prueba seleccionada":$"{count:N0} pruebas seleccionadas";_context.Visibility=count>0?Visibility.Visible:Visibility.Collapsed;
         if(showContext)Motion.Enter(_context,y:3,milliseconds:140);
         _mark.Visibility=Has(PlanningPermissions.ReportMark)?Visibility.Visible:Visibility.Collapsed;
+        _fixedBatch.Visibility=_tabs.SelectedIndex==0&&Has(PlanningPermissions.ReportMark)?Visibility.Visible:Visibility.Collapsed;_fixedBatch.IsEnabled=!_mutating&&Has(PlanningPermissions.ReportMark);
         _mark.IsEnabled=!_mutating&&count is >0 and <=500&&_grid.Selected.All(ReportListTableModel.CanMark);_clockDate.IsEnabled=_clockTime.IsEnabled=!_mutating;
     }
     private void UpdateScanner()
-    {
-        _scanCommand.Visibility=Has(PlanningPermissions.ReportMark)&&_trackingAvailable?Visibility.Visible:Visibility.Collapsed;_scanCommand.IsEnabled=!_mutating;_scan.IsEnabled=!_mutating;
-    }
-    private Task OpenScanner(){_scan.Focus(FocusState.Programmatic);return Task.CompletedTask;}
+    { _scannerSource.Text=_trackingAvailable?"Tracking · "+(_rows?.Capabilities?.ScannerSource??"verificado"):"La fuente de reportes no está disponible en el servidor"; }
     private async Task Multiple()
     {
         var text=PlanningUi.Field("JOBs",max:20000);text.AcceptsReturn=true;text.Height=190;text.Width=420;text.PlaceholderText="Pegue JOBs desde Excel";AutomationProperties.SetName(text,"JOBs de búsqueda múltiple");var error=PlanningUi.Text("Hasta 500 JOBs únicos",12,true);
@@ -165,23 +178,29 @@ public sealed class PlanningReportListView : UserControl,IDisposable
         dialog.PrimaryButtonClick+=(_,e)=>{try{PlanningJobList.Parse(text.Text);}catch(FormatException ex){error.Text=ex.Message;e.Cancel=true;}};
         if(await dialog.ShowAsync()!=ContentDialogResult.Primary)return;_search.Text=PlanningJobList.Parse(text.Text).Search;await Load();
     }
-    public async Task Load()
+    public Task Load(){_searchDelay.Stop();return LoadPage(1);}
+    private int PageCount=>Math.Max(1,((_rows?.Total??0)+499)/500);
+    private void UpdatePager(){_pageLabel.Text=$"Página {_listPage:N0} de {PageCount:N0} · 500 por página";_pageNumber.Text=_listPage.ToString(CultureInfo.InvariantCulture);_previousPage.IsEnabled=!_loading&&!_mutating&&_listPage>1;_nextPage.IsEnabled=!_loading&&!_mutating&&_listPage<PageCount;}
+    private async Task LoadPage(int requested,bool preserveScroll=false)
     {
-        if(_mutating)return;_request.Cancel();_request.Dispose();_request=new();_detailRequest.Cancel();_loading=true;var ct=_request.Token;_progress.IsActive=true;
+        if(_mutating||_disposed)return;_request.Cancel();_request.Dispose();_request=new();_detailRequest.Cancel();_loading=true;var ct=_request.Token;_progress.IsActive=true;
+        _previousPage.IsEnabled=_nextPage.IsEnabled=false;_grid.SetBusy(true);var target=Math.Clamp(requested,1,requested==1?1:PageCount);
         try
         {
             if(_tabs.SelectedIndex!=0){await LoadGroups(true);return;}
             _grid.SetUser(_userId());
             var query=new ReportListQuery(_search.Text,_view.SelectedIndex switch{1=>"Checked",2=>"All",_=>"Pending"},_lab.Text,_test.Text,_service.Text,_buyer.Text,PageSize:500,Sort:_sort,Descending:_descending,VerifiedBy:_verified,Block:_block,CheckedDate:_date,ColumnFilters:_columnFilters.Count==0?null:System.Text.Json.JsonSerializer.Serialize(_columnFilters));
-            ReportListRows? rows=null;rows=new ReportListRows(async(page,revision,cancellation)=>{var response=await _api.ReportList(query with{Page=page,Revision=revision,Offset=rows?.Count??0},cancellation);if(!response.IsSuccess||response.Value is null)throw new InvalidOperationException(response.Error??"No se pudo consultar Report List.");return response.Value;},ct);
+            ReportListRows? rows=null;rows=new ReportListRows(async(page,revision,cancellation)=>{var response=await _api.ReportList(query with{Page=page,Revision=revision},cancellation);if(!response.IsSuccess||response.Value is null)throw new InvalidOperationException(response.Error??"No se pudo consultar Report List.");return response.Value;},ct,target);
             _connection.Text="Consultando…";_status.Text="Cargando ejecuciones…";
-            rows.Updated+=error=>{if(ct.IsCancellationRequested)return;if(error is not null){_connection.Text="Sin respuesta";_status.Text=error.Message;return;}_connection.Text="API conectada";_status.Text=$"{rows.Count:N0} de {rows.Total:N0} ejecuciones";_trackingAvailable=rows.Capabilities?.ScannerAvailable==true;UpdateScanner();};
+            rows.Updated+=error=>{if(ct.IsCancellationRequested)return;if(error is not null){_connection.Text="Sin respuesta";_status.Text=error.Message;return;}_connection.Text="API conectada";var first=rows.Total==0?0:(target-1)*500+1;_status.Text=$"{first:N0}–{Math.Min(rows.Total,(target-1)*500+rows.Count):N0} de {rows.Total:N0} pruebas";_trackingAvailable=rows.Capabilities?.ScannerAvailable==true;UpdateScanner();};
             await rows.LoadNext();if(ct.IsCancellationRequested||rows.Revision is null)return;
-            _rows=rows;_listRevision=rows.Revision;_grid.SetSort(_sort,_descending);_grid.SetFilters(new[]{string.IsNullOrEmpty(_search.Text)?"":"Job",string.IsNullOrEmpty(_test.Text)?"":"Test",string.IsNullOrEmpty(_lab.Text)?"":"Laboratory",string.IsNullOrEmpty(_buyer.Text)?"":"Buyer",string.IsNullOrEmpty(_verified)?"":"VerifiedBy",_block is null?"":"Block",_date is null?"":"Date"}.Concat(_columnFilters.Keys));_grid.SetSource(rows);UpdateSelection();
+            if(target>1&&rows.Count==0){_loading=false;await LoadPage(Math.Max(1,(rows.Total+499)/500));return;}
+            _listPage=target;
+            _rows=rows;_listRevision=rows.Revision;_grid.SetSort(_sort,_descending);_grid.SetFilters(new[]{string.IsNullOrEmpty(_search.Text)?"":"Job",string.IsNullOrEmpty(_test.Text)?"":"Test",string.IsNullOrEmpty(_lab.Text)?"":"Laboratory",string.IsNullOrEmpty(_buyer.Text)?"":"Buyer",string.IsNullOrEmpty(_verified)?"":"VerifiedBy",_block is null?"":"Block",_date is null?"":"Date"}.Concat(_columnFilters.Keys));_grid.SetSource(rows,preserveScroll);UpdateSelection();
         }
         catch(OperationCanceledException){}
         catch(Exception e){_connection.Text="Sin respuesta";Feedback(e.Message);}
-        finally{if(!ct.IsCancellationRequested){_loading=false;_progress.IsActive=false;}}
+        finally{if(!ct.IsCancellationRequested){_loading=false;_progress.IsActive=false;_grid.SetBusy(false);UpdatePager();}}
     }
     private ReportScheduleQuery GroupQuery()=>new(_search.Text,_scheduleState.SelectedIndex switch{1=>"Pending",2=>"Reviewed",3=>"Exceptions",_=>"All"},_page,100,_page==1?null:_listRevision,GroupByClock:true);
     private async Task LoadGroups(bool reset)
@@ -228,7 +247,7 @@ public sealed class PlanningReportListView : UserControl,IDisposable
             if(_retry is null||_retry.OperationalAt!=at||_retry.Reason!=reason.Text||_retry.AdminOverride!=(admin.IsChecked==true)||!_retry.Executions.SequenceEqual(versions))_retry=new(Guid.NewGuid(),versions,at,reason.Text,admin.IsChecked==true);
             var response=await _api.DigitizeReport(_retry,_request.Token);if(!response.IsSuccess){Feedback(response.Error);return;}_retry=null;Feedback(selected.Length==1?"1 prueba digitada. Horario disponible para chequeo.":$"{selected.Length:N0} pruebas digitadas. Horario disponible para chequeo.");_grid.ClearSelection();if(Changed is{} changed)await changed();
         }
-        finally{_mutating=false;_grid.SetBusy(false);UpdateSelection();UpdateScanner();}
+        finally{_mutating=false;_grid.SetBusy(false);UpdateSelection();UpdateScanner();await RefillPage();}
         await Load();
     }
     private async Task ReviewSchedule()
@@ -270,7 +289,7 @@ public sealed class PlanningReportListView : UserControl,IDisposable
             if(Changed is{} changed)await changed();
         }
         catch(OperationCanceledException)when(_request.IsCancellationRequested){}
-        finally{_mutating=false;_grid.SetBusy(false);UpdateSelection();UpdateScanner();}
+        finally{_mutating=false;_grid.SetBusy(false);UpdateSelection();UpdateScanner();await RefillPage();}
     }
     private async Task CheckDirect(ReportListItem item)
     {
@@ -291,33 +310,41 @@ public sealed class PlanningReportListView : UserControl,IDisposable
             if(Changed is{} changed)await changed();
         }
         catch(OperationCanceledException)when(_request.IsCancellationRequested){}
-        finally{_mutating=false;_grid.SetBusy(false);UpdateSelection();UpdateScanner();}
+        finally{_mutating=false;_grid.SetBusy(false);UpdateSelection();UpdateScanner();await RefillPage();}
     }
-    private async Task<bool> RefreshSaved(Guid id)
+    private async Task<bool> RefreshSaved(Guid id,Action<ReportListItem>? saved=null)
     {
         var response=await _api.ReportList(new(View:"All",PageSize:1,ExecutionId:id),_request.Token);
         if(!response.IsSuccess||response.Value is not{} page||page.Items.Count!=1||page.Items[0].Execution.ExecutionId!=id){Feedback("La operación se guardó. Actualice el servidor y la lista para consultar su estado.");return false;}
+        saved?.Invoke(page.Items[0]);
         var stableOrder=_view.SelectedIndex!=2&&_sort is not ("Time" or "Date" or "VerifiedBy" or "Block" or "Keep" or "Checked");
+        var before=_rows?.Count??0;var visible=_rows?.Any(x=>x.Execution.ExecutionId==id)==true;
         var consistent=_rows?.ApplySaved(page.Items[0],page.Revision,_view.SelectedIndex switch{1=>"Checked",2=>"All",_=>"Pending"},page.DataRevision,page.CatalogueRevision,stableOrder)??true;_grid.RefreshSaved();
+        _pageNeedsReload|=!visible||before!=(_rows?.Count??0)||!stableOrder;UpdatePager();
         if(!consistent)Feedback("Operación guardada. Actualice la lista para seguir cargando páginas sin omitir pruebas.");return consistent;
     }
-    private async Task Scan()
+    private async Task RefillPage(){if(!_pageNeedsReload||_clearing||_disposed)return;_pageNeedsReload=false;await LoadPage(Math.Min(_listPage,PageCount),true);}
+    private async Task Scan(string code)
     {
-        if(_mutating||!Has(PlanningPermissions.ReportMark))return;if(!_trackingAvailable){Feedback("El servidor no tiene una fuente de tracking AR disponible.");return;}if(!OperationalTime(out var at))return;_mutating=true;_grid.SetBusy(true);UpdateScanner();
+        if(_mutating||!Has(PlanningPermissions.ReportMark))return;var at=_fixedClock.ForScan(DateTimeOffset.UtcNow);_mutating=true;_grid.SetBusy(true);UpdateScanner();
         try
         {
-            var response=await _api.ScanReport(new(_scan.Text,"Digitación mediante código AR",at),_request.Token);
-            if(!response.IsSuccess){Feedback(response.Error);return;}
-            foreach(var id in response.Value?.ExecutionIds??[])if(!await RefreshSaved(id))return;
-            Feedback($"Código AR verificado · digitación guardada a las {at:HH:mm}");_scan.Text="";_scan.Focus(FocusState.Programmatic);
+            var response=await _api.ScanReport(new(code,"Digitación automática mediante lector",at),_request.Token);
+            if(!response.IsSuccess){SetScannerStatus(_readerLabel+" · lectura rechazada",_readerConnected);ScanFeedback(ScanError(response.Error),true);return;}
+            if(response.Value?.ExecutionIds.Count is not >0){ScanFeedback("El servidor recibió la lectura, pero no confirmó ninguna prueba marcada. Actualice la lista antes de reintentar.",true);return;}
+            ReportListItem? target=null;foreach(var id in response.Value?.ExecutionIds??[])if(!await RefreshSaved(id,item=>target=item)){ScanFeedback("El servidor confirmó el marcado del reporte, pero no se pudo actualizar su detalle. Actualice la lista para consultar el estado.",true,"LIMS · Marcado confirmado",true);return;}
+            SetScannerStatus(_readerLabel,_readerConnected);
+            if(target is{} marked)ScanFeedback($"✓  {marked.Execution.Job} · {marked.Execution.PlanningTest} · marcado {marked.Execution.DigitizedAt?.ToOffset(TimeSpan.FromHours(-6)):HH:mm}",false);
+            Feedback(null);
             if(Changed is{} changed)await changed();
         }
-        catch(OperationCanceledException)when(_request.IsCancellationRequested){}
-        finally{_mutating=false;_grid.SetBusy(false);UpdateScanner();}
+        catch(OperationCanceledException)when(_request.IsCancellationRequested){ScanFeedback("La lectura se interrumpió. Consulte el estado de la prueba antes de volver a escanear.",true);}
+        catch(Exception e){ScanFeedback("No se pudo confirmar la lectura. "+e.Message,true);}
+        finally{_mutating=false;_grid.SetBusy(false);UpdateScanner();await RefillPage();}
     }
     private bool OperationalTime(out DateTimeOffset value)
     {
-        value=default;if(_fixedClock.FixedAt is null){Feedback("Pulse Fijar Hora antes de digitar o leer un código AR.");return false;}if(!DateTime.TryParseExact(_clockDate.Text+" "+_clockTime.Text,"yyyy-MM-dd HH:mm",CultureInfo.InvariantCulture,DateTimeStyles.None,out var local)){Feedback("Revise fecha y hora: yyyy-MM-dd y HH:mm.");return false;}value=new DateTimeOffset(DateTime.SpecifyKind(local,DateTimeKind.Unspecified),TimeSpan.FromHours(-6));return true;
+        value=default;if(_fixedClock.FixedAt is not{} fixedAt){Feedback("Fija un horario desde el reloj para digitar manualmente.");return false;}value=fixedAt;return true;
     }
     private void ColumnFilter(string key,FrameworkElement anchor)
     {
@@ -354,6 +381,6 @@ public sealed class PlanningReportListView : UserControl,IDisposable
         }
         catch(OperationCanceledException){}
     }
-    public void Clear(){_fixedClock.Clear();_clockLabel.Text="Sin hora fija";_sync.Stop();_request.Cancel();_detailRequest.Cancel();_grid.SetSource(null);_grid.SetUser(null);_rows=null;_search.Text="";_scan.Text="";_columnFilters.Clear();_scheduleRows.Clear();_closureRows.Clear();_opened=null;_retry=null;Feedback(null);}
-    public void Dispose(){Clear();_request.Dispose();_detailRequest.Dispose();}
+    public void Clear(){if(_disposed)return;_clearing=true;_batchDialog?.Dispose();_batchDialog?.Hide();StopScanner();_searchDelay.Stop();_fixedClock.Clear();_clockLabel.Text="Hora actual";_clockTick.Stop();_scanReceipt.Text="Escanea el reporte para marcar su JOB y prueba";_receivedScans=0;_scannerActivity.Text="Todavía no se han recibido datos del lector.";_sync.Stop();_request.Cancel();_detailRequest.Cancel();_grid.SetSource(null);_grid.SetUser(null);_rows=null;_search.Text="";_columnFilters.Clear();_scheduleRows.Clear();_closureRows.Clear();_opened=null;_retry=null;_pageNeedsReload=false;Feedback(null);_clearing=false;}
+    public void Dispose(){if(_disposed)return;Clear();_disposed=true;_serial.Dispose();_request.Dispose();_detailRequest.Dispose();}
 }

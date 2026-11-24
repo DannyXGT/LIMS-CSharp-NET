@@ -128,9 +128,13 @@ public partial class App : Microsoft.UI.Xaml.Application
             var navigation = (NavigationView)_shell.FindName("MainNavigation");
             switch (action)
             {
+                case "workspaceSelector": await ShowWorkspaceSelectorAsync(data); break;
                 case "motionRegression": await ValidateMotionRegressionAsync(); break;
                 case "reportListScroll": await ValidateReportListScrollAsync(); break;
                 case "reportListDirect": await ValidateReportListDirectAsync(); break;
+                case "reportListPaging": await ValidateReportListPagingAsync(); break;
+                case "reportReaderBatch": await ValidateReportReaderBatchAsync(); break;
+                case "reportScannerMessageBox": await ShowReportScannerMessageBoxAsync(); break;
                 case "alerts":
                     _alertsApi!.Fail = data.TryGetProperty("error", out var alertError) && alertError.GetBoolean();
                     _alertsApi.Empty = data.TryGetProperty("empty", out var alertEmpty) && alertEmpty.GetBoolean();

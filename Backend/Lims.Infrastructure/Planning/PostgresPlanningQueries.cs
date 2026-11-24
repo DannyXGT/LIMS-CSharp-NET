@@ -55,7 +55,7 @@ public sealed partial class PostgresPlanningStore
               OR (@state='Partial' AND ((x.digitized_at IS NULL)<>(x.tested_on IS NULL)))
               OR (@state='NoProgramar' AND (x.no_program OR upper(coalesce(trim(x.laboratory),''))='NO PROGRAMAR')) OR (@state='Exceptions' AND (EXISTS(SELECT 1 FROM planning.incidents i WHERE i.episode_id=e.id AND i.state<>'Resolved') OR (x.id IS NOT NULL AND x.equivalence IS NULL AND NOT x.no_program))))
             AND (@incident='' OR (@incident='MissingEquivalence' AND x.id IS NOT NULL AND x.equivalence IS NULL AND NOT x.no_program) OR EXISTS(SELECT 1 FROM planning.incidents i WHERE i.episode_id=e.id AND i.kind=@incident AND i.state<>'Resolved'))
-            """+columnConditions.Sql;
+            """+" AND "+VisiblePlanningJobSql+columnConditions.Sql;
         var args=new (string,object?)[]{("batch",query.BatchId),("search",search),("multiple",multiple.Length>1),("jobs",multiple.Select(j=>j.ToUpperInvariant()).ToArray()),("test",query.Test??""),("equivalence",query.Equivalence??""),
             ("lab",query.Laboratory??""),("service",query.Service??""),("buyer",query.Buyer??""),("vendor",query.Vendor??""),("from",query.From),("until",query.Until),("state",query.State??""),("incident",query.Incident??""),
             ("mode",query.SearchMode),("infrom",query.InFrom),("inuntil",query.InUntil),("overdue",query.Overdue),("today",today),

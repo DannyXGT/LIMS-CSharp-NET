@@ -81,7 +81,7 @@ internal sealed class ReportListGrid : Grid
         menu.Opening+=(_,_)=>{dossier.IsEnabled=_contextItem is not null;correction.Visibility=_contextItem?.Execution.Complete==true&&(CanKeep?.Invoke()??false)?Visibility.Visible:Visibility.Collapsed;correction.IsEnabled=!_busy;};_rows.ContextFlyout=menu;
         BuildHeader();
     }
-    public void SetSource(ReportListRows? rows){_dragging=false;_marked.Clear();_contextItem=null;_checkAnchor=null;_model.ClearCells();_model.Rows=rows is null?Array.Empty<ReportListItem>():rows;_realized.Clear();_rows.ItemsSource=rows;_viewport.Scroll?.ChangeView(0,0,null,true);RefreshSelection();}
+    public void SetSource(ReportListRows? rows,bool preserveScroll=false){var y=preserveScroll?_viewport.Scroll?.VerticalOffset??0:0;_dragging=false;_marked.Clear();_contextItem=null;_checkAnchor=null;_model.ClearCells();_model.Rows=rows is null?Array.Empty<ReportListItem>():rows;_realized.Clear();_rows.ItemsSource=rows;_viewport.Scroll?.ChangeView(0,y,null,true);RefreshSelection();}
     private void FitColumns()
     {
         var width=Math.Floor(_rows.ActualWidth)-16;

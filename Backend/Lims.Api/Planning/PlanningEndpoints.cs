@@ -12,7 +12,7 @@ internal static class PlanningEndpoints
 {
     public static void AddLimsPlanning(this IServiceCollection services,string connectionString,string identityConnectionString)
     {
-        services.AddSingleton(new PlanningDatabase(connectionString));
+        services.AddSingleton(provider=>new PlanningDatabase(connectionString,provider.GetRequiredService<IConfiguration>()["Planning:ReportTrackingTable"]));
         services.AddSingleton(new PlanningIdentityDatabase(identityConnectionString));
         services.AddScoped<IPlanningStore,PostgresPlanningStore>();
         services.Configure<FormOptions>(options=>options.MultipartBodyLengthLimit=12*1024*1024);

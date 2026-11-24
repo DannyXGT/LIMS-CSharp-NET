@@ -34,7 +34,8 @@ public sealed partial class PlanningPostgresTests
         Assert.Equal("FORMALDEHYDE",item.Execution.PlanningTest);Assert.Equal("Chemical",item.Execution.Laboratory);Assert.Equal("Formaldehyde Content",item.Execution.OriginalTest);
         Assert.Equal("FORMALDEHYDE",Assert.Single(await db.Store.EquivalencesAsync(default)).Equivalence);
         Assert.Equal(2L,await db.Scalar("SELECT count(*) FROM planning.executions WHERE equivalence IS NULL"));
-        Assert.Equal("Sin equivalencia",Assert.Single((await db.Store.ReportListAsync(new(Test:"Unknown technical"),default)).Items).Execution.PlanningTest);
+        Assert.Empty((await db.Store.ReportListAsync(new(Test:"Unknown technical"),default)).Items);
+        Assert.Single((await db.Store.ReviewWorkspaceAsync(new(Category:"MissingEquivalence",Search:"Unknown technical"),default)).Items);
         await db.Store.CheckReportAsync(new([new(id,item.Version)],true,"Digitacion con nombre oficial React"),1,false,default);
         Assert.Equal("FORMALDEHYDE",await db.Scalar("SELECT equivalence FROM planning.executions WHERE original_test='Formaldehyde Content'"));
         Assert.Equal(1L,await db.Scalar("SELECT count(*) FROM planning.history WHERE action='ClassificationFromReact'"));

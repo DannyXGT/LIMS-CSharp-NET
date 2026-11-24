@@ -6,6 +6,15 @@ namespace Lims.Desktop.Tests;
 public sealed class PlanningReportRowsTests
 {
     [Fact]
+    public async Task ExplicitPageLoadsOnlyItsFiveHundredRowsAndDoesNotAppendOnScroll()
+    {
+        var requests=new List<int>();var source=Enumerable.Range(0,1203).Select(_=>Item()).ToArray();
+        var rows=new ReportListRows((page,revision,_)=>{requests.Add(page);return Task.FromResult(new ReportListPage(source.Skip((page-1)*500).Take(500).ToArray(),source.Length,page,500,42));},default,2);
+        await rows.LoadNext();await rows.LoadNext();
+        Assert.Equal(500,rows.Count);Assert.False(rows.HasMoreItems);Assert.Equal(2,Assert.Single(requests));Assert.Equal(2,rows.Page);
+        Assert.Equal(source[500].Execution.ExecutionId,rows[0].Execution.ExecutionId);
+    }
+    [Fact]
     public void MarkHistoryIdentifiesTheExecutionEvenWhenPlanningNamesRepeat()
     {
         var id=Guid.NewGuid();var text=PlanningStatusText.Changes("{\"executionId\":\""+id+"\",\"before\":{\"digitizedBy\":null},\"after\":{\"digitizedBy\":\"Actor\"}}");

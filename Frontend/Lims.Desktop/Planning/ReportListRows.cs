@@ -13,19 +13,21 @@ public sealed class ReportListRows : ObservableCollection<ReportListItem>, ISupp
     private readonly CancellationToken _cancellation;
     private bool _busy,_failed;
     private int _page;
+    private readonly int? _singlePage;
+    public int Page => _singlePage??Math.Max(1,_page);
     public int Total { get; private set; }
     public long? Revision { get; private set; }
     public long? DataRevision {get;private set;}
     public long? CatalogueRevision {get;private set;}
     public ReportListCapabilities? Capabilities { get; private set; }
-    public bool HasMoreItems => !_failed && (_page==0 || Count<Total);
+    public bool HasMoreItems => !_failed && (_page==0 || _singlePage is null&&Count<Total);
     public event Action<Exception?>? Updated;
-    public ReportListRows(Func<int,long?,CancellationToken,Task<ReportListPage>> fetch,CancellationToken cancellation)
-    { _fetch=fetch;_cancellation=cancellation; }
+    public ReportListRows(Func<int,long?,CancellationToken,Task<ReportListPage>> fetch,CancellationToken cancellation,int? singlePage=null)
+    { _fetch=fetch;_cancellation=cancellation;_singlePage=singlePage; }
     public bool ApplySaved(ReportListItem item,long revision,string view,long? dataRevision=null,long? catalogueRevision=null,bool stableOrder=true)
     {
         var index=Enumerable.Range(0,Count).FirstOrDefault(i=>this[i].Execution.ExecutionId==item.Execution.ExecutionId,-1);
-        var consistent=(DataRevision is null||dataRevision is not null&&dataRevision>=DataRevision&&dataRevision<=DataRevision+1&&CatalogueRevision==catalogueRevision)&&(Count>=Total||stableOrder);
+        var consistent=(DataRevision is null||dataRevision is not null&&dataRevision>=DataRevision&&dataRevision<=DataRevision+1&&CatalogueRevision==catalogueRevision)&&(_singlePage is not null||Count>=Total||stableOrder);
         Revision=revision;DataRevision=dataRevision;CatalogueRevision=catalogueRevision;_failed=!consistent;
         if(index<0)return consistent;
         if(view=="Pending"&&item.Execution.Complete||view=="Checked"&&!item.Execution.Complete)
@@ -40,7 +42,7 @@ public sealed class ReportListRows : ObservableCollection<ReportListItem>, ISupp
         _busy=true;
         try
         {
-            var result=await _fetch(_page+1,Revision,_cancellation);
+            var result=await _fetch(_singlePage??_page+1,Revision,_cancellation);
             _cancellation.ThrowIfCancellationRequested();
             if(_page>0&&result.Revision!=Revision)throw new InvalidOperationException("Los datos cambiaron. Actualice Report List.");
             if(result.Items.Count==0&&Count<result.Total)throw new InvalidOperationException("La consulta cambió. Actualice Report List.");

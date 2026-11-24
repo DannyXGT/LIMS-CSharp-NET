@@ -5,6 +5,12 @@ public sealed class ReportOperationalClock
 {
     public DateTimeOffset? FixedAt {get;private set;}
     public void Clear()=>FixedAt=null;
+    public DateTimeOffset ForScan(DateTimeOffset now)
+    {
+        if(FixedAt is{} at)return at;
+        var local=now.ToOffset(TimeSpan.FromHours(-6));
+        return new(local.Year,local.Month,local.Day,local.Hour,local.Minute,0,local.Offset);
+    }
     public void Fix(DateTimeOffset now)
     {
         var local=now.ToOffset(TimeSpan.FromHours(-6));

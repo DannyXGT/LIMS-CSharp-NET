@@ -43,6 +43,7 @@ public sealed partial class PlanningPostgresTests
     public async Task ReportListFiltersAndSortExposeSourceDatesAndPreserveUnknownState()
     {
         await using var db=await TestDatabase.Create();var store=db.Store;
+        await store.SaveEquivalenceAsync(new("Unknown original","PH","Chemical",false,null,"Clasificación de fixture"),1,default);
         var preview=await store.PreviewAsync(Input(Summary(),Report(test:"Unknown original")),1,default);await store.ConfirmAsync(preview.Id,1,default);
         var result=await store.ReportListAsync(new(Sort:"InDate",ColumnFilters:"{\"InDate\":\"2026-11-16\",\"DueDate\":\"2026-11-20\",\"DigitizationState\":\"Sin información\"}"),default);
         var item=Assert.Single(result.Items);Assert.Equal(new DateOnly(2026,11,16),item.Execution.InDate);Assert.Equal(new DateOnly(2026,11,20),item.Execution.DueDate);Assert.Equal("Sin información",item.Execution.DigitizationState);
