@@ -7,6 +7,11 @@ namespace Lims.Desktop.Planning;
 
 internal static class PlanningUi
 {
+    public static Grid Split(UIElement left,UIElement right)
+    {
+        var grid=new Grid{ColumnSpacing=16};grid.ColumnDefinitions.Add(new(){Width=new(1,GridUnitType.Star)});grid.ColumnDefinitions.Add(new(){Width=GridLength.Auto});
+        grid.Children.Add(left);Grid.SetColumn((FrameworkElement)right,1);grid.Children.Add(right);return grid;
+    }
     public static TextBlock Text(string value,int size=14,bool muted=false)=>new(){Text=value,FontSize=size,TextWrapping=TextWrapping.Wrap,Foreground=Brush(muted?"LimsTextSecondaryBrush":"LimsTextPrimaryBrush")};
     public static Brush Brush(string name)=>(Brush)Application.Current.Resources[name];
     public static Button Button(string text,Func<Task> action,bool primary=false,Func<bool>? enabledAfter=null)

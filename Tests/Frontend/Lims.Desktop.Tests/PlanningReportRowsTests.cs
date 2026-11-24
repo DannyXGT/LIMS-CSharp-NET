@@ -41,4 +41,23 @@ public sealed class PlanningReportRowsTests
         var loading=rows.LoadNext();cancellation.Cancel();response.SetResult(new([Item()],1,1,500));await loading;
         Assert.Empty(rows);
     }
+    [Fact]
+    public async Task SavedCheckRemovesOnlyItsExecutionAndAdvancesRevisionWithoutReplacingTheCollection()
+    {
+        var a=Item();var b=Item();var rows=new ReportListRows((_,_,_)=>Task.FromResult(new ReportListPage([a,b],2,1,500,4)),default);
+        await rows.LoadNext();var saved=a with{Version=1,Execution=a.Execution with{DigitizedAt=DateTimeOffset.UtcNow,TestedOn=new(2026,11,23)}};
+        rows.ApplySaved(saved,5,"Pending");Assert.Same(b,Assert.Single(rows));Assert.Equal(1,rows.Total);Assert.Equal(5,rows.Revision);
+        rows.ApplySaved(b with{KeepInPlanning=true},6,"Pending");Assert.True(Assert.Single(rows).KeepInPlanning);Assert.Equal(6,rows.Revision);
+    }
+    [Fact]
+    public async Task SavingOneRowCannotHideAnExternalRevisionOrCatalogueChangeFromContinuation()
+    {
+        foreach(var (native,catalogue) in new[]{(12L,100L),(11L,101L)})
+        {
+            var item=Item();var rows=new ReportListRows((_,_,_)=>Task.FromResult(new ReportListPage([item],10,1,500,40,DataRevision:10,CatalogueRevision:100)),default);
+            await rows.LoadNext();Assert.False(rows.ApplySaved(item,41,"Pending",native,catalogue));Assert.False(rows.HasMoreItems);
+        }
+        var own=Item();var valid=new ReportListRows((_,_,_)=>Task.FromResult(new ReportListPage([own],10,1,500,40,DataRevision:10,CatalogueRevision:100)),default);
+        await valid.LoadNext();Assert.True(valid.ApplySaved(own,41,"Pending",11,100));Assert.True(valid.HasMoreItems);
+    }
 }

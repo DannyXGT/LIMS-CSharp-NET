@@ -39,16 +39,17 @@ public sealed class PlanningReportListView : UserControl,IDisposable
     private readonly ReportNativeTable<ReportScheduleMember> _members;
     private readonly ObservableCollection<ReportSchedule> _scheduleRows=[];
     private readonly ObservableCollection<ReportClosure> _closureRows=[];
+    private readonly ReportOperationalClock _fixedClock=new();
+    private readonly TextBlock _clockLabel=PlanningUi.Text("Sin hora fija",12,true);
     private readonly DispatcherTimer _sync=new(){Interval=TimeSpan.FromSeconds(15)};
     private CancellationTokenSource _request=new(),_detailRequest=new();
     private ReportListRows? _rows;
     private ReportScheduleDetail? _opened;
     private ReportDigitization? _retry;
-    private TextBlock? _scanFeedback;
     private string _sort="Default",_verified="";
     private long? _block,_listRevision;private DateOnly? _date;
     private int _page=1,_total;
-    private bool _descending,_mutating,_paused=true,_trackingAvailable,_onlyTable,_loading;
+    private bool _descending,_mutating,_trackingAvailable,_onlyTable,_loading;
     public event Func<Task>? Changed;
     public PlanningReportListView(PlanningApiClient api,Func<Guid,Task> dossier,Func<IReadOnlyList<string>> permissions,Func<bool> administrator,Func<int?>? userId=null)
     {
@@ -64,6 +65,7 @@ public sealed class PlanningReportListView : UserControl,IDisposable
         _view.SelectionChanged+=async(_,_)=>{if(IsLoaded&&_tabs.SelectedIndex==0)await Load();};
         _scheduleState.SelectionChanged+=async(_,_)=>{if(IsLoaded&&_tabs.SelectedIndex==1)await Load();};
         _grid.CanKeep=()=>!_mutating&&Has(PlanningPermissions.ReportReview);_grid.KeepRequested+=Keep;
+        _grid.CanCorrect=()=>!_mutating&&Has(PlanningPermissions.ReportReview);_grid.IsAdministrator=_administrator;_grid.CheckRequested+=CheckDirect;
         _grid.CanMark=()=>!_mutating&&Has(PlanningPermissions.ReportMark);_grid.CorrectionRequested+=Correct;
         _grid.OpenRequested+=item=>_dossier(item.Execution.EpisodeId);_grid.SortRequested+=async key=>{_descending=_sort==key&&!_descending;_sort=key;_grid.SetSort(key,_descending);await Load();};
         _grid.FilterRequested+=ColumnFilter;_grid.SelectionChanged+=UpdateSelection;
@@ -93,8 +95,8 @@ public sealed class PlanningReportListView : UserControl,IDisposable
         searchBar.SizeChanged+=(_,_)=>ArrangeSearch();tools.SizeChanged+=(_,_)=>ArrangeSearch();
         _mark=Compact("Guardar digitación",SaveDigitization,true,()=>!_mutating&&_grid.Selected.Count is >0 and <=500&&_grid.Selected.All(ReportListTableModel.CanMark));
         var clear=IconAction(LimsIconKind.Cancel,"Desmarcar selección temporal",()=>{_grid.ClearSelection();return Task.CompletedTask;});
-        var selectionRow=PlanningUi.Row(_selection,PlanningUi.Text("Fecha",12,true),_clockDate,PlanningUi.Text("Hora",12,true),_clockTime,_mark);selectionRow.Spacing=8;selectionRow.VerticalAlignment=VerticalAlignment.Center;
-        _context=new Border{Child=ConsultationVisuals.Split(selectionRow,clear),Padding=new(10,8,10,8),Background=PlanningUi.Brush("LimsSurfaceSecondaryBrush"),BorderBrush=PlanningUi.Brush("LimsAccentBrush"),BorderThickness=new(1),CornerRadius=new(8),Visibility=Visibility.Collapsed};_result.Visibility=Visibility.Collapsed;
+        var selectionRow=PlanningUi.Row(_selection,_mark);selectionRow.Spacing=8;selectionRow.VerticalAlignment=VerticalAlignment.Center;
+        _context=new Border{Child=PlanningUi.Split(selectionRow,clear),Padding=new(10,8,10,8),Background=PlanningUi.Brush("LimsSurfaceSecondaryBrush"),BorderBrush=PlanningUi.Brush("LimsAccentBrush"),BorderThickness=new(1),CornerRadius=new(8),Visibility=Visibility.Collapsed};_result.Visibility=Visibility.Collapsed;
         var table=new Border{Child=_grid,Background=PlanningUi.Brush("LimsSurfaceBrush"),BorderBrush=PlanningUi.Brush("LimsBorderBrush"),BorderThickness=new(1),CornerRadius=new(6)};
         _digitization=PlanningUi.Rows(GridLength.Auto,new(1,GridUnitType.Star));_digitization.RowSpacing=8;
         PlanningUi.Place(_digitization,_context,0);PlanningUi.Place(_digitization,table,1);
@@ -108,7 +110,7 @@ public sealed class PlanningReportListView : UserControl,IDisposable
         var close=Compact("Cerrar detalle",CloseSchedule);
         _history.Visibility=Visibility.Collapsed;
         var detailLayout=PlanningUi.Rows(GridLength.Auto,GridLength.Auto,new(1,GridUnitType.Star),GridLength.Auto,GridLength.Auto);detailLayout.RowSpacing=8;
-        PlanningUi.Place(detailLayout,ConsultationVisuals.Split(_detailTitle,close),0);PlanningUi.Place(detailLayout,_detailMeta,1);PlanningUi.Place(detailLayout,_members,2);
+        PlanningUi.Place(detailLayout,PlanningUi.Split(_detailTitle,close),0);PlanningUi.Place(detailLayout,_detailMeta,1);PlanningUi.Place(detailLayout,_members,2);
         PlanningUi.Place(detailLayout,PlanningUi.Row(_review,exceptions,allMembers,history),3);PlanningUi.Place(detailLayout,new ScrollViewer{Content=_history,MaxHeight=100},4);
         _detail=new Border{Child=detailLayout,Padding=new(12),Background=PlanningUi.Brush("LimsSurfaceBrush"),BorderBrush=PlanningUi.Brush("LimsBorderBrush"),BorderThickness=new(1),CornerRadius=new(6),Visibility=Visibility.Collapsed,Height=330};
         _schedules=PlanningUi.Rows(new(1,GridUnitType.Star),GridLength.Auto);_schedules.RowSpacing=8;PlanningUi.Place(_schedules,_scheduleTable,0);PlanningUi.Place(_schedules,_detail,1);
@@ -120,9 +122,17 @@ public sealed class PlanningReportListView : UserControl,IDisposable
         var body=new Grid();body.Children.Add(_digitization);body.Children.Add(_schedules);body.Children.Add(_closures);
         var headerSurface=PlanningUi.Rows(GridLength.Auto,GridLength.Auto);headerSurface.RowSpacing=0;PlanningUi.Place(headerSurface,header,0);PlanningUi.Place(headerSurface,searchBar,1);
         var searchSurface=new Border{Child=headerSurface,Background=PlanningUi.Brush("LimsSurfaceBrush"),BorderBrush=PlanningUi.Brush("LimsBorderBrush"),BorderThickness=new(1),CornerRadius=new(8)};
-        var top=PlanningUi.Stack(searchSurface,groupTools,_result);top.Spacing=8;
+        var fix=Compact("Fijar Hora",()=>{_fixedClock.Fix(DateTimeOffset.UtcNow);var at=_fixedClock.FixedAt!.Value;_clockDate.Text=at.ToString("yyyy-MM-dd",CultureInfo.InvariantCulture);_clockTime.Text=at.ToString("HH:mm",CultureInfo.InvariantCulture);_clockLabel.Text="Hora fija";Feedback(null);return Task.CompletedTask;},true);
+        ToolTipService.SetToolTip(fix,"Captura fecha y hora de Guatemala; se mantienen para las siguientes digitaciones hasta volver a fijarlas.");
+        _clockDate.Width=112;_clockDate.MinWidth=100;_clockTime.Width=76;_clockTime.MinWidth=70;
+        _scan.MinWidth=140;_scan.Width=220;
+        _clockLabel.VerticalAlignment=VerticalAlignment.Center;var clockTools=PlanningUi.Row(fix,_clockLabel,_clockDate,_clockTime);clockTools.Spacing=6;
+        var scanTools=PlanningUi.Row(_scan,Compact("Leer AR",Scan));scanTools.Spacing=6;
+        var operation=new Grid{ColumnSpacing=12};operation.ColumnDefinitions.Add(new(){Width=GridLength.Auto});operation.ColumnDefinitions.Add(new(){Width=new(1,GridUnitType.Star)});operation.RowDefinitions.Add(new(){Height=GridLength.Auto});operation.RowDefinitions.Add(new(){Height=GridLength.Auto});operation.Children.Add(clockTools);Grid.SetColumn(scanTools,1);operation.Children.Add(scanTools);scanTools.HorizontalAlignment=HorizontalAlignment.Right;
+        operation.SizeChanged+=(_,_)=>{var narrow=operation.ActualWidth<800;Grid.SetColumn(scanTools,narrow?0:1);Grid.SetRow(scanTools,narrow?1:0);scanTools.HorizontalAlignment=narrow?HorizontalAlignment.Left:HorizontalAlignment.Right;};
+        var top=PlanningUi.Stack(searchSurface,operation,groupTools,_result);top.Spacing=6;
         var layout=PlanningUi.Rows(GridLength.Auto,new(1,GridUnitType.Star),GridLength.Auto);layout.RowSpacing=8;
-        PlanningUi.Place(layout,top,0);PlanningUi.Place(layout,body,1);PlanningUi.Place(layout,ConsultationVisuals.Split(PlanningUi.Row(_progress,_status),PlanningUi.Row(_connection,_next)),2);Content=layout;
+        PlanningUi.Place(layout,top,0);PlanningUi.Place(layout,body,1);PlanningUi.Place(layout,PlanningUi.Split(PlanningUi.Row(_progress,_status),PlanningUi.Row(_connection,_next)),2);Content=layout;
         void SetView(){var index=_tabs.SelectedIndex;_digitization.Visibility=index==0?Visibility.Visible:Visibility.Collapsed;_schedules.Visibility=index==1?Visibility.Visible:Visibility.Collapsed;_closures.Visibility=index==2?Visibility.Visible:Visibility.Collapsed;_view.Visibility=filters.Visibility=multiple.Visibility=configuration.Visibility=index==0?Visibility.Visible:Visibility.Collapsed;_scheduleState.Visibility=groupTools.Visibility=index==1?Visibility.Visible:Visibility.Collapsed;_next.Visibility=index==0?Visibility.Collapsed:Visibility.Visible;}
         _tabs.SelectionChanged+=async(_,_)=>{SetView();Feedback(null);Motion.Enter(body,y:3,milliseconds:150);await Load();};SetView();
         _sync.Tick+=async(_,_)=>await Synchronize();Loaded+=(_,_)=>_sync.Start();Unloaded+=(_,_)=>{_sync.Stop();_request.Cancel();_detailRequest.Cancel();};
@@ -134,7 +144,7 @@ public sealed class PlanningReportListView : UserControl,IDisposable
     {var button=Compact(label,action);button.Style=(Style)Application.Current.Resources["LimsIconButtonStyle"];button.Content=new LimsIcon{Icon=icon,Size=16};button.Width=36;button.MinWidth=36;button.Padding=new(6);AutomationProperties.SetName(button,label);ToolTipService.SetToolTip(button,label);return button;}
     private bool Has(string permission)=>_permissions().Contains(permission,StringComparer.Ordinal);
     private Task CloseSchedule(){_detailRequest.Cancel();_detail.Visibility=Visibility.Collapsed;_opened=null;return Task.CompletedTask;}
-    private void Feedback(string? message){_result.Text=message??"";_result.Visibility=string.IsNullOrEmpty(message)?Visibility.Collapsed:Visibility.Visible;if(_scanFeedback is {} text){text.Text=message??"";text.Visibility=_result.Visibility;}if(!string.IsNullOrEmpty(message))Motion.Enter(_result,y:2,milliseconds:140);}
+    private void Feedback(string? message){_result.Text=message??"";_result.Visibility=string.IsNullOrEmpty(message)?Visibility.Collapsed:Visibility.Visible;if(!string.IsNullOrEmpty(message))Motion.Enter(_result,y:2,milliseconds:140);}
     private void UpdateSelection()
     {
         var count=_grid.Selected.Count;var showContext=count>0&&_context.Visibility!=Visibility.Visible;
@@ -147,17 +157,7 @@ public sealed class PlanningReportListView : UserControl,IDisposable
     {
         _scanCommand.Visibility=Has(PlanningPermissions.ReportMark)&&_trackingAvailable?Visibility.Visible:Visibility.Collapsed;_scanCommand.IsEnabled=!_mutating;_scan.IsEnabled=!_mutating;
     }
-    private async Task OpenScanner()
-    {
-        if(_mutating||!Has(PlanningPermissions.ReportMark)||!_trackingAvailable)return;
-        var date=PlanningUi.Field("Fecha",_clockDate.Text,10);var time=PlanningUi.Field("Hora",_clockTime.Text,5);
-        date.TextChanged+=(_,_)=>_clockDate.Text=date.Text;time.TextChanged+=(_,_)=>_clockTime.Text=time.Text;
-        _paused=false;_scan.Text="";
-        _scanFeedback=PlanningUi.Text("",12,true);_scanFeedback.Visibility=Visibility.Collapsed;
-        var dialog=new ContentDialog{XamlRoot=XamlRoot,Style=(Style)Application.Current.Resources["LimsEditorDialogStyle"],Title="Captura con código AR",Content=PlanningUi.Stack(_scan,PlanningUi.Row(date,time),PlanningUi.Text("Enter registra la prueba vinculada al código y guarda su fecha y hora.",12,true),_scanFeedback),CloseButtonText="Cerrar captura"};
-        dialog.Opened+=(_,_)=>_scan.Focus(FocusState.Programmatic);
-        try{await dialog.ShowAsync();}finally{_paused=true;dialog.Content=null;_scanFeedback=null;}
-    }
+    private Task OpenScanner(){_scan.Focus(FocusState.Programmatic);return Task.CompletedTask;}
     private async Task Multiple()
     {
         var text=PlanningUi.Field("JOBs",max:20000);text.AcceptsReturn=true;text.Height=190;text.Width=420;text.PlaceholderText="Pegue JOBs desde Excel";AutomationProperties.SetName(text,"JOBs de búsqueda múltiple");var error=PlanningUi.Text("Hasta 500 JOBs únicos",12,true);
@@ -173,7 +173,7 @@ public sealed class PlanningReportListView : UserControl,IDisposable
             if(_tabs.SelectedIndex!=0){await LoadGroups(true);return;}
             _grid.SetUser(_userId());
             var query=new ReportListQuery(_search.Text,_view.SelectedIndex switch{1=>"Checked",2=>"All",_=>"Pending"},_lab.Text,_test.Text,_service.Text,_buyer.Text,PageSize:500,Sort:_sort,Descending:_descending,VerifiedBy:_verified,Block:_block,CheckedDate:_date,ColumnFilters:_columnFilters.Count==0?null:System.Text.Json.JsonSerializer.Serialize(_columnFilters));
-            var rows=new ReportListRows(async(page,revision,cancellation)=>{var response=await _api.ReportList(query with{Page=page,Revision=revision},cancellation);if(!response.IsSuccess||response.Value is null)throw new InvalidOperationException(response.Error??"No se pudo consultar Report List.");return response.Value;},ct);
+            ReportListRows? rows=null;rows=new ReportListRows(async(page,revision,cancellation)=>{var response=await _api.ReportList(query with{Page=page,Revision=revision,Offset=rows?.Count??0},cancellation);if(!response.IsSuccess||response.Value is null)throw new InvalidOperationException(response.Error??"No se pudo consultar Report List.");return response.Value;},ct);
             _connection.Text="Consultando…";_status.Text="Cargando ejecuciones…";
             rows.Updated+=error=>{if(ct.IsCancellationRequested)return;if(error is not null){_connection.Text="Sin respuesta";_status.Text=error.Message;return;}_connection.Text="API conectada";_status.Text=$"{rows.Count:N0} de {rows.Total:N0} ejecuciones";_trackingAvailable=rows.Capabilities?.ScannerAvailable==true;UpdateScanner();};
             await rows.LoadNext();if(ct.IsCancellationRequested||rows.Revision is null)return;
@@ -226,7 +226,7 @@ public sealed class PlanningReportListView : UserControl,IDisposable
             if(await dialog.ShowAsync()!=ContentDialogResult.Primary)return;
             var versions=selected.Select(x=>new ReportExecutionVersion(x.Execution.ExecutionId!.Value,x.Version)).OrderBy(x=>x.ExecutionId).ToArray();
             if(_retry is null||_retry.OperationalAt!=at||_retry.Reason!=reason.Text||_retry.AdminOverride!=(admin.IsChecked==true)||!_retry.Executions.SequenceEqual(versions))_retry=new(Guid.NewGuid(),versions,at,reason.Text,admin.IsChecked==true);
-            var response=await _api.DigitizeReport(_retry,_request.Token);if(!response.IsSuccess){Feedback(response.Error);return;}_retry=null;Feedback(selected.Length==1?"1 prueba digitada. Horario disponible para chequeo.":$"{selected.Length:N0} pruebas digitadas. Horario disponible para chequeo.");_grid.ClearSelection();_view.SelectedIndex=2;if(Changed is{} changed)await changed();
+            var response=await _api.DigitizeReport(_retry,_request.Token);if(!response.IsSuccess){Feedback(response.Error);return;}_retry=null;Feedback(selected.Length==1?"1 prueba digitada. Horario disponible para chequeo.":$"{selected.Length:N0} pruebas digitadas. Horario disponible para chequeo.");_grid.ClearSelection();if(Changed is{} changed)await changed();
         }
         finally{_mutating=false;_grid.SetBusy(false);UpdateSelection();UpdateScanner();}
         await Load();
@@ -263,20 +263,61 @@ public sealed class PlanningReportListView : UserControl,IDisposable
         if(_mutating||!Has(PlanningPermissions.ReportReview))return;_mutating=true;_grid.SetBusy(true);
         try
         {
-            var keep=new CheckBox{Content="Mantener en programación",IsChecked=item.KeepInPlanning};var reason=PlanningUi.Field("Motivo obligatorio",max:1000);var dialog=new ContentDialog{XamlRoot=XamlRoot,Title=item.Execution.Job+" · "+item.Execution.PlanningTest,Content=PlanningUi.Stack(keep,reason),PrimaryButtonText="Guardar permanencia",CloseButtonText="Cancelar"};dialog.PrimaryButtonClick+=(_,e)=>e.Cancel=string.IsNullOrWhiteSpace(reason.Text);if(await dialog.ShowAsync()!=ContentDialogResult.Primary)return;
-            var response=await _api.KeepReport(new(new(item.Execution.ExecutionId!.Value,item.Version),keep.IsChecked==true,reason.Text),_request.Token);Feedback(response.IsSuccess?"Permanencia guardada.":response.Error);if(response.IsSuccess&&Changed is{} changed)await changed();
+            var response=await _api.KeepReport(new(new(item.Execution.ExecutionId!.Value,item.Version),!item.KeepInPlanning,"Mantener en Muestreo desde Report List",item.KeepVersion),_request.Token);
+            if(!response.IsSuccess){Feedback(response.Error);return;}
+            if(!await RefreshSaved(item.Execution.ExecutionId.Value))return;
+            Feedback(item.KeepInPlanning?"Permanencia en Muestreo desactivada.":"La prueba se mantendrá en Muestreo después de digitar.");
+            if(Changed is{} changed)await changed();
         }
-        finally{_mutating=false;_grid.SetBusy(false);UpdateSelection();}await Load();
+        catch(OperationCanceledException)when(_request.IsCancellationRequested){}
+        finally{_mutating=false;_grid.SetBusy(false);UpdateSelection();UpdateScanner();}
+    }
+    private async Task CheckDirect(ReportListItem item)
+    {
+        if(_mutating||!ReportListTableModel.CanCheck(item,Has(PlanningPermissions.ReportMark),Has(PlanningPermissions.ReportReview),_administrator()))return;
+        DateTimeOffset at=default;if(!item.Execution.Complete&&!OperationalTime(out at))return;
+        _mutating=true;_grid.SetBusy(true);UpdateScanner();
+        try
+        {
+            var version=new ReportExecutionVersion(item.Execution.ExecutionId!.Value,item.Version);
+            if(!item.Execution.Complete&&(_retry is null||_retry.OperationalAt!=at||_retry.Executions.Count!=1||_retry.Executions[0]!=version||_retry.Reason!="CHK desde Report List"||_retry.AdminOverride!=(_administrator()&&item.CheckMode!="manual")))
+                _retry=new(Guid.NewGuid(),[version],at,"CHK desde Report List",_administrator()&&item.CheckMode!="manual");
+            var response=item.Execution.Complete
+                ?await _api.CheckReport(new([version],false,"Desmarcado de CHK desde Report List",_administrator()&&item.CheckMode!="manual"),true,_request.Token)
+                :await _api.DigitizeReport(_retry!,_request.Token);
+            if(!response.IsSuccess){Feedback(response.Error);return;}
+            _retry=null;if(!await RefreshSaved(version.ExecutionId))return;
+            Feedback(item.Execution.Complete?"Corrección guardada. El chequeo del horario anterior requiere revisión.":$"Digitación guardada · {at:HH:mm} · horario pendiente de chequeo"+(response.Value?.ReadyJobs.Count>0?" · JOB listo en Cierres":""));
+            if(Changed is{} changed)await changed();
+        }
+        catch(OperationCanceledException)when(_request.IsCancellationRequested){}
+        finally{_mutating=false;_grid.SetBusy(false);UpdateSelection();UpdateScanner();}
+    }
+    private async Task<bool> RefreshSaved(Guid id)
+    {
+        var response=await _api.ReportList(new(View:"All",PageSize:1,ExecutionId:id),_request.Token);
+        if(!response.IsSuccess||response.Value is not{} page||page.Items.Count!=1||page.Items[0].Execution.ExecutionId!=id){Feedback("La operación se guardó. Actualice el servidor y la lista para consultar su estado.");return false;}
+        var stableOrder=_view.SelectedIndex!=2&&_sort is not ("Time" or "Date" or "VerifiedBy" or "Block" or "Keep" or "Checked");
+        var consistent=_rows?.ApplySaved(page.Items[0],page.Revision,_view.SelectedIndex switch{1=>"Checked",2=>"All",_=>"Pending"},page.DataRevision,page.CatalogueRevision,stableOrder)??true;_grid.RefreshSaved();
+        if(!consistent)Feedback("Operación guardada. Actualice la lista para seguir cargando páginas sin omitir pruebas.");return consistent;
     }
     private async Task Scan()
     {
-        if(_mutating||_paused||!_trackingAvailable||!Has(PlanningPermissions.ReportMark)||!OperationalTime(out var at))return;_mutating=true;_grid.SetBusy(true);UpdateScanner();
-        try{var response=await _api.ScanReport(new(_scan.Text,"Digitación mediante código AR",at),_request.Token);Feedback(response.IsSuccess?"Código verificado y ejecución digitada.":response.Error);if(response.IsSuccess){_scan.Text="";if(Changed is{} changed)await changed();}}
-        finally{_mutating=false;_grid.SetBusy(false);UpdateScanner();}await Load();
+        if(_mutating||!Has(PlanningPermissions.ReportMark))return;if(!_trackingAvailable){Feedback("El servidor no tiene una fuente de tracking AR disponible.");return;}if(!OperationalTime(out var at))return;_mutating=true;_grid.SetBusy(true);UpdateScanner();
+        try
+        {
+            var response=await _api.ScanReport(new(_scan.Text,"Digitación mediante código AR",at),_request.Token);
+            if(!response.IsSuccess){Feedback(response.Error);return;}
+            foreach(var id in response.Value?.ExecutionIds??[])if(!await RefreshSaved(id))return;
+            Feedback($"Código AR verificado · digitación guardada a las {at:HH:mm}");_scan.Text="";_scan.Focus(FocusState.Programmatic);
+            if(Changed is{} changed)await changed();
+        }
+        catch(OperationCanceledException)when(_request.IsCancellationRequested){}
+        finally{_mutating=false;_grid.SetBusy(false);UpdateScanner();}
     }
     private bool OperationalTime(out DateTimeOffset value)
     {
-        value=default;if(!DateTime.TryParseExact(_clockDate.Text+" "+_clockTime.Text,"yyyy-MM-dd HH:mm",CultureInfo.InvariantCulture,DateTimeStyles.None,out var local)){Feedback("Revise fecha y hora: yyyy-MM-dd y HH:mm.");return false;}value=new DateTimeOffset(DateTime.SpecifyKind(local,DateTimeKind.Unspecified),TimeSpan.FromHours(-6));return true;
+        value=default;if(_fixedClock.FixedAt is null){Feedback("Pulse Fijar Hora antes de digitar o leer un código AR.");return false;}if(!DateTime.TryParseExact(_clockDate.Text+" "+_clockTime.Text,"yyyy-MM-dd HH:mm",CultureInfo.InvariantCulture,DateTimeStyles.None,out var local)){Feedback("Revise fecha y hora: yyyy-MM-dd y HH:mm.");return false;}value=new DateTimeOffset(DateTime.SpecifyKind(local,DateTimeKind.Unspecified),TimeSpan.FromHours(-6));return true;
     }
     private void ColumnFilter(string key,FrameworkElement anchor)
     {
@@ -309,10 +350,10 @@ public sealed class PlanningReportListView : UserControl,IDisposable
             var current=tab==0?_rows?.Revision:_listRevision;
             if(revision is null){_connection.Text="Sin respuesta";return;}
             _connection.Text="API conectada";if(current==revision)return;
-            if(_grid.Selected.Count>0||_opened is not null)Feedback("Hay cambios de otro usuario. Actualice antes de confirmar; su selección se conserva.");else await Load();
+            if(_grid.Selected.Count>0||_opened is not null||(_rows?.Count??0)>0)Feedback("Hay cambios de otro usuario. Actualice antes de confirmar; su selección se conserva.");else await Load();
         }
         catch(OperationCanceledException){}
     }
-    public void Clear(){_sync.Stop();_request.Cancel();_detailRequest.Cancel();_grid.SetSource(null);_grid.SetUser(null);_rows=null;_search.Text="";_scan.Text="";_columnFilters.Clear();_scheduleRows.Clear();_closureRows.Clear();_opened=null;_retry=null;Feedback(null);}
+    public void Clear(){_fixedClock.Clear();_clockLabel.Text="Sin hora fija";_sync.Stop();_request.Cancel();_detailRequest.Cancel();_grid.SetSource(null);_grid.SetUser(null);_rows=null;_search.Text="";_scan.Text="";_columnFilters.Clear();_scheduleRows.Clear();_closureRows.Clear();_opened=null;_retry=null;Feedback(null);}
     public void Dispose(){Clear();_request.Dispose();_detailRequest.Dispose();}
 }

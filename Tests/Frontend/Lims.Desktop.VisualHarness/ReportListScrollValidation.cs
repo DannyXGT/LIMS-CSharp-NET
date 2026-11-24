@@ -52,16 +52,16 @@ public partial class App
             if(visible.Length<5)throw new InvalidOperationException("The native viewport did not render its visible rows.");
             foreach(var container in visible)
             {
-                if(container.ContentTemplateRoot is not Grid row||row.Tag is not ReportListItem item||row.Children.Count!=10)
+                if(container.ContentTemplateRoot is not Grid row||row.Tag is not ReportListItem item||row.Children.Count!=9)
                     throw new InvalidOperationException($"A visible recycled row is blank or incomplete: index={list.IndexFromContainer(container)}, root={container.ContentTemplateRoot?.GetType().Name}, children={(container.ContentTemplateRoot as Grid)?.Children.Count}, tag={(container.ContentTemplateRoot as Grid)?.Tag?.GetType().Name}.");
-                if(((Border)row.Children[3]).Child is not TextBlock plan||plan.Text!=item.Execution.PlanningTest)
+                if(((Border)row.Children[1]).Child is not TextBlock plan||plan.Text!=item.Execution.PlanningTest)
                     throw new InvalidOperationException("The Prueba cell did not retain its planning name.");
                 checkedRows++;
             }
         }
         Verify();
         var originalGrid=(Grid)Visible()[0].ContentTemplateRoot;
-        var originalCell=originalGrid.Children[3];
+        var originalCell=originalGrid.Children[1];
         var samples=new List<double>();
         for(int i=0;i<32;i++)
         {
@@ -69,7 +69,7 @@ public partial class App
             scroll.ChangeView(i%2==0?scroll.ScrollableWidth:0,null,null,true);
             await Task.Delay(20);samples.Add(timer.Elapsed.TotalMilliseconds);Verify();
         }
-        if(!ReferenceEquals(originalCell,originalGrid.Children[3]))throw new InvalidOperationException("Horizontal scrolling rebuilt the row controls.");
+        if(!ReferenceEquals(originalCell,originalGrid.Children[1]))throw new InvalidOperationException("Horizontal scrolling rebuilt the row controls.");
         for(int i=0;i<12;i++)
         {
             scroll.ChangeView(null,scroll.ScrollableHeight,null,true);await Task.Delay(140);Verify();
@@ -84,8 +84,8 @@ public partial class App
         scroll.ChangeView(scroll.ScrollableWidth,scroll.ScrollableHeight/2,null,true);await Task.Delay(150);Verify();
         var header=VisualDescendants<StackPanel>(grid).Single(s=>s.Height==40);
         var visibleRow=(Grid)Visible()[0].ContentTemplateRoot;
-        var headerX=header.Children[3].TransformToVisual(grid).TransformPoint(new()).X;
-        var cellX=visibleRow.Children[3].TransformToVisual(grid).TransformPoint(new()).X;
+        var headerX=header.Children[1].TransformToVisual(grid).TransformPoint(new()).X;
+        var cellX=visibleRow.Children[1].TransformToVisual(grid).TransformPoint(new()).X;
         if(Math.Abs(headerX-cellX)>1)throw new InvalidOperationException("The header and row columns lost horizontal alignment.");
         var members=new ReportNativeTable<string>("Fixture horarios",[("Horario",140),("Estado",200)],s=>[s,"Pendiente"]);
         members.SetItems(ReportScrollTimes);

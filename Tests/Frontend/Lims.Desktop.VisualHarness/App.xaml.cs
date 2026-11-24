@@ -130,6 +130,7 @@ public partial class App : Microsoft.UI.Xaml.Application
             {
                 case "motionRegression": await ValidateMotionRegressionAsync(); break;
                 case "reportListScroll": await ValidateReportListScrollAsync(); break;
+                case "reportListDirect": await ValidateReportListDirectAsync(); break;
                 case "alerts":
                     _alertsApi!.Fail = data.TryGetProperty("error", out var alertError) && alertError.GetBoolean();
                     _alertsApi.Empty = data.TryGetProperty("empty", out var alertEmpty) && alertEmpty.GetBoolean();

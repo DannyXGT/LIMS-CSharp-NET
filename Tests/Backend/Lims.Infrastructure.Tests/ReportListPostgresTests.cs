@@ -147,8 +147,9 @@ public sealed partial class PlanningPostgresTests
         var acc=(17*31+'1')%1296;const string digits="0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";var code=$"LIMS1-AR-1-{digits[acc/36]}{digits[acc%36]}";
         await Assert.ThrowsAsync<PlanningValidationException>(()=>store.ScanReportAsync(new(code,"No hay tracking"),1,default));
         await db.Sql("CREATE TABLE public.tabla_programacion_analitica(id bigint PRIMARY KEY,job text,prueba text); INSERT INTO public.tabla_programacion_analitica VALUES(1,'J1','AZO')");
-        await store.ScanReportAsync(new(code,"Escaneo fixture"),1,default);await store.ScanReportAsync(new(code,"Reintento fixture"),1,default);
-        Assert.Single((await store.ReportListAsync(new(View:"Checked"),default)).Items);Assert.Equal(1L,await db.Scalar("SELECT count(*) FROM planning.history WHERE action='ReportMarked'"));
+        var fixedAt=new DateTimeOffset(2026,11,23,8,45,0,TimeSpan.FromHours(-6));
+        await store.ScanReportAsync(new(code,"Escaneo fixture",fixedAt),1,default);await store.ScanReportAsync(new(code,"Reintento fixture",fixedAt),1,default);
+        Assert.Equal(fixedAt,Assert.Single((await store.ReportListAsync(new(View:"Checked"),default)).Items).Execution.DigitizedAt);Assert.Equal(1L,await db.Scalar("SELECT count(*) FROM planning.history WHERE action='ReportMarked'"));
         Assert.Equal(1L,await db.Scalar("SELECT count(*) FROM planning.report_scan_links"));
     }
 

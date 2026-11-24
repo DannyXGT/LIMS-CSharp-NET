@@ -33,14 +33,19 @@ internal sealed class ReportListGrid : Grid
     private readonly StackPanel _header=new(){Orientation=Orientation.Horizontal,Height=40};
     private readonly Dictionary<ListViewItem,Grid> _realized=[];
     private readonly Dictionary<string,Button> _heads=[];
+    private readonly Brush _completed=new SolidColorBrush(Windows.UI.Color.FromArgb(38,34,197,94));
     private readonly Brush _transparent=new SolidColorBrush(Microsoft.UI.Colors.Transparent);
     private sealed class RowState {public int LayoutVersion=-1;public int Index;}
     private readonly ConditionalWeakTable<Grid,RowState> _rowStates=new();
     private int _layoutVersion;
     private bool _visibleCheckPending;
     private bool _busy;
+    private double _fitWidth;
     public Func<bool>? CanKeep {get;set;}
     public Func<bool>? CanMark {get;set;}
+    public Func<bool>? CanCorrect {get;set;}
+    public Func<bool>? IsAdministrator {get;set;}
+    public event Func<ReportListItem,Task>? CheckRequested;
     public event Func<ReportListItem,Task>? KeepRequested;
     public event Func<ReportListItem,Task>? CorrectionRequested;
     public event Func<ReportListItem,Task>? OpenRequested;
@@ -67,7 +72,7 @@ internal sealed class ReportListGrid : Grid
         _rows.ContainerContentChanging+=ContainerChanging;
         _rows.PreviewKeyDown+=OnTableKeyDown;
         _rows.Loaded+=(_,_)=>QueueVisibleCheck();
-        _rows.SizeChanged+=(_,_)=>QueueVisibleCheck();
+        _rows.SizeChanged+=(_,_)=>{FitColumns();QueueVisibleCheck();};
         AddHandler(PointerReleasedEvent,new PointerEventHandler((_,_)=>_dragging=false),true);
         Unloaded+=(_,_)=>_dragging=false;
         var menu=new MenuFlyout();var dossier=new MenuFlyoutItem{Text="Expediente e historial"};
@@ -77,13 +82,20 @@ internal sealed class ReportListGrid : Grid
         BuildHeader();
     }
     public void SetSource(ReportListRows? rows){_dragging=false;_marked.Clear();_contextItem=null;_checkAnchor=null;_model.ClearCells();_model.Rows=rows is null?Array.Empty<ReportListItem>():rows;_realized.Clear();_rows.ItemsSource=rows;_viewport.Scroll?.ChangeView(0,0,null,true);RefreshSelection();}
+    private void FitColumns()
+    {
+        var width=Math.Floor(_rows.ActualWidth)-16;
+        if(width<700||Math.Abs(width-_fitWidth)<2)return;
+        _fitWidth=width;_model.Fit(width);BuildHeader();RefreshRealized();
+    }
+    public void RefreshSaved(){_model.ClearCells();foreach(var grid in _realized.Values)if(grid.Tag is ReportListItem item){var index=_model.Rows.IndexOfItem(item);if(index>=0)_rowStates.GetValue(grid,static _=>new()).Index=index;}RefreshRealized();QueueVisibleCheck();}
     public void SetUser(int? id)
     {
         var path=id is >0?System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),"Lims","ReportList","columns-"+id+".json"):null;
         if(_preferences==path)return;_preferences=path;
         try{_model.LoadLayout(path is not null&&System.IO.File.Exists(path)?System.IO.File.ReadAllText(path):null);}
         catch(Exception ex)when(ex is System.IO.IOException or UnauthorizedAccessException){_model.Restore();PreferenceError?.Invoke("No se pudieron leer las preferencias de columnas.");}
-        BuildHeader();RefreshRealized();
+        BuildHeader();RefreshRealized();_fitWidth=0;FitColumns();
     }
     private void SavePreferences()
     {
@@ -103,7 +115,7 @@ internal sealed class ReportListGrid : Grid
     private HashSet<ReportListItem> VisibleItems()=>_realized.Values.Where(grid=>{var p=grid.TransformToVisual(_rows).TransformPoint(new Windows.Foundation.Point(0,0));return grid.ActualHeight>0&&p.Y>=0&&p.Y+grid.ActualHeight<=(_viewport.Scroll?.ViewportHeight??_rows.ActualHeight)+1;}).Select(grid=>grid.Tag).OfType<ReportListItem>().ToHashSet();
     private void QueueVisibleCheck()
     {
-        if(_visibleCheckPending)return;_visibleCheckPending=true;
+        if(_visibleCheck is null||_visibleCheckPending)return;_visibleCheckPending=true;
         DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low,()=>{_visibleCheckPending=false;UpdateVisibleCheck();});
     }
     private void UpdateVisibleCheck()
@@ -129,9 +141,9 @@ internal sealed class ReportListGrid : Grid
         columns.Items.Add(new MenuFlyoutSeparator());var restore=new MenuFlyoutItem{Text="Restablecer columnas"};restore.Click+=(_,_)=>{_model.Restore();LayoutChanged();};columns.Items.Add(restore);
         return menu;
     }
-    private void LayoutChanged(){_model.ClearCells();BuildHeader();RefreshRealized();SavePreferences();}
+    private void LayoutChanged(){_model.ClearCells();_fitWidth=0;FitColumns();BuildHeader();RefreshRealized();SavePreferences();}
     public void SetSort(string key,bool descending)
-    {_sort=key;_descending=descending;foreach(var c in _columns)if(_heads.TryGetValue(c.Key,out var head)){var caption=PlanningUi.Text(c.Label+(c.Key==key?(descending?" ↓":" ↑"):""),12);caption.TextWrapping=TextWrapping.Wrap;caption.MaxLines=2;caption.VerticalAlignment=VerticalAlignment.Center;head.Content=caption;}}
+    {_sort=key;_descending=descending;foreach(var c in _columns)if(_heads.TryGetValue(c.Key,out var head)){var caption=PlanningUi.Text(c.Label+(c.Key==key?(descending?" ↓":" ↑"):""),11);caption.TextWrapping=c.Key=="Keep"?TextWrapping.Wrap:TextWrapping.NoWrap;caption.TextTrimming=TextTrimming.CharacterEllipsis;caption.MaxLines=c.Key=="Keep"?2:1;caption.VerticalAlignment=VerticalAlignment.Center;head.Content=caption;}}
     public void SetFilters(IEnumerable<string> keys)
     {_filtered=keys.Select(key=>key switch{"TestedOn"=>"Date","DigitizedAt"=>"Time","DigitizationState"=>"Checked",_=>key}).ToHashSet();foreach(var (key,button) in _heads){button.Foreground=PlanningUi.Brush(_filtered.Contains(key)?"LimsAccentBrush":"LimsTextPrimaryBrush");if(button.Content is TextBlock text)text.Foreground=button.Foreground;}}
     private void BuildHeader()
@@ -141,15 +153,19 @@ internal sealed class ReportListGrid : Grid
         foreach(var c in _columns)
         {
             var head=new Grid{Width=c.Width,BorderBrush=PlanningUi.Brush("LimsBorderBrush"),BorderThickness=new(0,0,1,1)};
+            if(c.Key=="Check")
+            {
+                var label=PlanningUi.Text("CHK",11);label.HorizontalAlignment=HorizontalAlignment.Center;label.VerticalAlignment=VerticalAlignment.Center;head.Children.Add(label);_header.Children.Add(head);continue;
+            }
             if(c.Key=="Selection")
             {
-                _visibleCheck=new CheckBox{Content="CHK",IsThreeState=true,MinWidth=0,FontSize=12,HorizontalAlignment=HorizontalAlignment.Center,VerticalAlignment=VerticalAlignment.Center};
+                _visibleCheck=new CheckBox{Content="Sel.",IsThreeState=true,MinWidth=0,FontSize=12,HorizontalAlignment=HorizontalAlignment.Center,VerticalAlignment=VerticalAlignment.Center};
                 AutomationProperties.SetName(_visibleCheck,"Marcar pruebas pendientes visibles");ToolTipService.SetToolTip(_visibleCheck,"Marcar o desmarcar solo las pruebas pendientes visibles");
                 _visibleCheck.Click+=(_,_)=>{var visible=VisibleItems().Where(ReportListTableModel.CanMark).ToArray();var add=visible.Any(item=>!IsMarked(item));foreach(var item in visible){if(add)_marked.Add(item.Execution.ExecutionId!.Value);else _marked.Remove(item.Execution.ExecutionId!.Value);}RefreshSelection();SelectionChanged?.Invoke();};head.Children.Add(_visibleCheck);_header.Children.Add(head);continue;
             }
             head.ColumnDefinitions.Add(new(){Width=new(1,GridUnitType.Star)});head.ColumnDefinitions.Add(new(){Width=GridLength.Auto});
             var sort=PlanningUi.Button(c.Label,async()=>{if(c.Key!="Selection"&&SortRequested is {} action)await action(c.Key);});
-            sort.FontSize=12;sort.MinWidth=0;sort.MinHeight=38;sort.Padding=new(8,0,4,0);sort.BorderThickness=new(0);sort.CornerRadius=new(0);
+            sort.FontSize=11;sort.MinWidth=0;sort.MinHeight=38;sort.Padding=new(6,0,2,0);sort.BorderThickness=new(0);sort.CornerRadius=new(0);
             sort.Background=PlanningUi.Brush("LimsSurfaceSecondaryBrush");sort.HorizontalContentAlignment=HorizontalAlignment.Left;
             AutomationProperties.SetName(sort,"Ordenar Report List por "+c.Label);head.Children.Add(sort);_heads[c.Key]=sort;
             var orderMenu=new MenuFlyout();
@@ -172,7 +188,7 @@ internal sealed class ReportListGrid : Grid
             sort.ContextFlyout=orderMenu;ToolTipService.SetToolTip(sort,"Ordenar · clic derecho para mover la columna");
             if(c.Key is not ("Selection" or "Keep"))
             {
-                var filter=new Button{Content=new FontIcon{Glyph="\uE71C",FontSize=11},Width=24,MinWidth=24,MinHeight=38,Padding=new(3),Style=(Style)Application.Current.Resources["LimsIconButtonStyle"]};
+                var filter=new Button{Content=new FontIcon{Glyph="\uE71C",FontSize=10},Width=20,MinWidth=20,MinHeight=38,Padding=new(2),Style=(Style)Application.Current.Resources["LimsIconButtonStyle"]};
                 AutomationProperties.SetName(filter,"Filtrar Report List por "+c.Label);filter.Click+=(_,_)=>FilterRequested?.Invoke(c.Key,filter);Grid.SetColumn(filter,1);head.Children.Add(filter);
             }
             var grip=new Microsoft.UI.Xaml.Controls.Primitives.Thumb{Width=7,MinWidth=0,HorizontalAlignment=HorizontalAlignment.Right,IsTabStop=false,
@@ -214,12 +230,12 @@ internal sealed class ReportListGrid : Grid
             var c=_columns[i];var content=((Border)grid.Children[i]).Child;
             if(content is CheckBox check)
             {
-                check.IsChecked=c.Key=="Selection"?CheckValue(item):item.KeepInPlanning;
-                check.IsEnabled=!_busy&&(c.Key=="Selection"?(CanMark?.Invoke()??false)&&ReportListTableModel.CanMark(item):(CanKeep?.Invoke()??false));
+                check.IsChecked=c.Key=="Check"?item.Execution.Complete:c.Key=="Selection"?CheckValue(item):item.KeepInPlanning;
+                check.IsEnabled=!_busy&&(c.Key=="Check"?ReportListTableModel.CanCheck(item,CanMark?.Invoke()??false,CanCorrect?.Invoke()??false,IsAdministrator?.Invoke()??false):c.Key=="Selection"?(CanMark?.Invoke()??false)&&ReportListTableModel.CanMark(item):(CanKeep?.Invoke()??false));
                 check.Content=c.Key=="Selection"&&item.Execution.Complete?new LimsIcon{Icon=LimsIconKind.Lock,Size=11}:null;
-                AutomationProperties.SetName(check,(c.Key=="Selection"?"CHK ":"Mantener ")+item.Execution.Job+" · "+item.Execution.PlanningTest+" · "+item.Execution.ExecutionId);
+                AutomationProperties.SetName(check,(c.Key=="Check"?"CHK ":c.Key=="Selection"?"Seleccionar ":"Mantener en Muestreo ")+item.Execution.Job+" · "+item.Execution.PlanningTest+" · "+item.Execution.ExecutionId);
                 AutomationProperties.SetItemStatus(check,ReportListTableModel.CheckDescription(item,IsMarked(item)));
-                ToolTipService.SetToolTip(check,c.Key=="Selection"?item.Execution.Complete?"Digitación guardada. Para corregir: clic derecho → Corregir digitación.":!ReportListTableModel.CanMark(item)?"Revise retención, equivalencia y programación en el expediente.":ReportListTableModel.CheckDescription(item,IsMarked(item))+" · Shift + clic para marcar varias visibles":"Conservar en Planificación después de digitar");
+                ToolTipService.SetToolTip(check,c.Key=="Check"?item.CheckMode!="manual"&&!(IsAdministrator?.Invoke()??false)?"Esta prueba se completa con el código AR del reporte.":item.Execution.Complete?"Digitación guardada. Desmarcar registra una corrección e invalida la revisión del horario.":"Guarda esta prueba con la fecha y hora fijadas.":c.Key=="Selection"?ReportListTableModel.CheckDescription(item,IsMarked(item)):"Conservar en Muestreo después de digitar");
             }
             else if(content is TextBlock text)
             {
@@ -238,13 +254,14 @@ internal sealed class ReportListGrid : Grid
         for(int i=0;i<_columns.Count;i++)
         {
             var c=_columns[i];grid.ColumnDefinitions.Add(new(){Width=new(c.Width)});FrameworkElement content;
-            if(c.Key is "Selection" or "Keep")
+            if(c.Key is "Selection" or "Keep" or "Check")
             {
                 var check=new CheckBox{Tag=c.Key,IsThreeState=c.Key=="Selection",MinWidth=0,MinHeight=0,HorizontalAlignment=HorizontalAlignment.Center,VerticalAlignment=VerticalAlignment.Center};
                 check.RightTapped+=(_,_)=>_contextItem=grid.Tag as ReportListItem;
                 check.Click+=async(_,_)=>
                 {
                     if(grid.Tag is not ReportListItem item)return;
+                    if(c.Key=="Check"){check.IsChecked=item.Execution.Complete;if(CheckRequested is{} action)await action(item);return;}
                     if(c.Key=="Selection"){ToggleMark(item,Shift());return;}
                     check.IsChecked=item.KeepInPlanning;
                     if(c.Key=="Keep"&&KeepRequested is {} keep)await keep(item);
@@ -253,12 +270,13 @@ internal sealed class ReportListGrid : Grid
             }
             else
             {
-                var text=PlanningUi.Text("",12);text.TextWrapping=TextWrapping.NoWrap;text.TextTrimming=TextTrimming.CharacterEllipsis;text.VerticalAlignment=VerticalAlignment.Center;text.Margin=new(8,0,8,0);
+                var text=PlanningUi.Text("",11);text.TextWrapping=TextWrapping.NoWrap;text.TextTrimming=TextTrimming.CharacterEllipsis;text.VerticalAlignment=VerticalAlignment.Center;text.Margin=new(7,0,7,0);
                 if(c.Key=="Test")text.FontWeight=Microsoft.UI.Text.FontWeights.SemiBold;
                 content=text;
             }
             var cell=new Border{Child=content,Tag=i,BorderBrush=PlanningUi.Brush("LimsBorderBrush"),BorderThickness=new(0,0,1,1),Background=_transparent};
             cell.RightTapped+=(_,_)=>_contextItem=grid.Tag as ReportListItem;
+            cell.DoubleTapped+=async(_,e)=>{if(content is CheckBox||grid.Tag is not ReportListItem item)return;e.Handled=true;if(CheckRequested is{} action)await action(item);};
             var columnIndex=i;
             if(content is not CheckBox)
             {
@@ -278,12 +296,14 @@ internal sealed class ReportListGrid : Grid
         foreach(var cell in grid.Children.OfType<Border>())
         {
             var col=(int)cell.Tag;var selected=_model.Contains(row,col);var active=selected&&_model.Active==new SheetCell(row,col);
-            cell.Background=selected||IsMarked(item)?PlanningUi.Brush("LimsSelectionBrush"):_transparent;
-            var savedCheck=_columns[col].Key=="Selection"&&item.Execution.Complete;
-            cell.BorderBrush=PlanningUi.Brush(active||savedCheck?"LimsAccentBrush":"LimsBorderBrush");cell.BorderThickness=active?new(1):savedCheck?new(0,0,3,1):new(0,0,1,1);
+            cell.Background=selected||IsMarked(item)?PlanningUi.Brush("LimsSelectionBrush"):item.Execution.Complete?_completed:_transparent;
+            var clock=item.Execution.DigitizedAt?.ToUnixTimeSeconds()/60;
+            var previous=row>0?_model.Rows[row-1].Execution.DigitizedAt?.ToUnixTimeSeconds()/60:null;
+            var starts=item.Execution.Complete&&clock!=previous;
+            cell.BorderBrush=PlanningUi.Brush(active||starts?"LimsAccentBrush":"LimsBorderBrush");cell.BorderThickness=active?new(1):new(0,starts?1:0,0,0.5);
         }
     }
-    private void OnTableKeyDown(object sender,KeyRoutedEventArgs e)
+    private async void OnTableKeyDown(object sender,KeyRoutedEventArgs e)
     {
         if(e.OriginalSource is CheckBox)return;
         if(Control()&&e.Key==VirtualKey.C)
@@ -299,7 +319,7 @@ internal sealed class ReportListGrid : Grid
         {
             case VirtualKey.Left:col--;break;case VirtualKey.Right:col++;break;
             case VirtualKey.Up:row--;break;case VirtualKey.Down:row++;break;
-            case VirtualKey.Enter:row+=Shift()?-1:1;break;
+            case VirtualKey.Enter:e.Handled=true;if(CheckRequested is{} action)await action(_model.Rows[row]);return;
             case VirtualKey.Tab:col+=Shift()?-1:1;if(col<0){col=_columns.Count-1;row--;}else if(col>=_columns.Count){col=0;row++;}break;
             case VirtualKey.Home:col=0;if(Control())row=0;break;
             case VirtualKey.End:col=_columns.Count-1;if(Control())row=_model.Rows.Count-1;break;

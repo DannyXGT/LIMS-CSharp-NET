@@ -16,7 +16,7 @@ public sealed partial class PostgresPlanningStore
         if(search.Length>20000||jobs.Length>500||new[]{query.Test,query.Laboratory,query.Service,query.Buyer,query.VerifiedBy}.Any(s=>s?.Length>512))throw new PlanningValidationException("Filtros demasiado largos; máximo 500 JOBs.");
         var order=query.Sort switch
         {
-            "Default"=>"CASE WHEN @view='Checked' THEN x.digitized_at END DESC NULLS LAST,e.due_date NULLS LAST,e.job,x.equivalence",
+            "Default"=>"CASE WHEN @view IN ('Checked','All') THEN date_trunc('minute',x.digitized_at) END DESC NULLS LAST,e.due_date NULLS LAST,e.job,x.equivalence",
             "Job"=>"e.job","Test"=>"coalesce(nullif(trim(x.equivalence),''),x.original_test)","Laboratory"=>"x.laboratory","Buyer"=>"e.buyer","Service"=>"e.service",
             "Block"=>"rc.block_number","Keep"=>"coalesce(rc.keep_in_planning,false)","VerifiedBy"=>"x.digitized_by",
             "InDate"=>"e.in_date","DueDate"=>"e.due_date","OriginalTest"=>"x.original_test","ExecutionId"=>"x.id","ExecutionType"=>"x.execution_type",
@@ -30,7 +30,7 @@ public sealed partial class PostgresPlanningStore
             FROM planning.episodes e JOIN planning.executions x ON x.episode_id=e.id
             LEFT JOIN planning.job_controls jc ON jc.job=upper(trim(e.job))
             LEFT JOIN planning.report_checks rc ON rc.execution_id=x.id
-            WHERE (@search='' OR CASE WHEN @multiple THEN upper(e.job)=ANY(@jobs)
+            WHERE (@execution::uuid IS NULL OR x.id=@execution::uuid) AND (@search='' OR CASE WHEN @multiple THEN upper(e.job)=ANY(@jobs)
               ELSE strpos(lower(concat_ws(' ',e.job,x.equivalence,x.original_test,e.buyer,x.digitized_by)),lower(@search))>0 END)
             AND (@test='' OR strpos(lower(concat_ws(' ',x.equivalence,x.original_test)),lower(@test))>0)
             AND (@lab='' OR strpos(lower(coalesce(x.laboratory,'')),lower(@lab))>0)
@@ -47,23 +47,23 @@ public sealed partial class PostgresPlanningStore
         var conditions=ColumnConditions(query.ColumnFilters);
         var filteredWhere=where+conditions.Sql;
         var args=new (string,object?)[]{("search",search),("multiple",jobs.Length>1),("jobs",jobs.Select(j=>j.ToUpperInvariant()).ToArray()),("view",query.View),
-            ("test",query.Test??""),("lab",query.Laboratory??""),("service",query.Service??""),("buyer",query.Buyer??""),("verified",query.VerifiedBy??""),("block",query.Block),("date",query.CheckedDate),("take",size),("skip",(page-1)*size)}.Concat(conditions.Args).ToArray();
+            ("test",query.Test??""),("lab",query.Laboratory??""),("service",query.Service??""),("buyer",query.Buyer??""),("verified",query.VerifiedBy??""),("block",query.Block),("date",query.CheckedDate),("execution",query.ExecutionId),("take",size),("skip",Math.Clamp(query.Offset??(page-1)*size,0,500000000))}.Concat(conditions.Args).ToArray();
         await using var c=await database.Source.OpenConnectionAsync(ct).ConfigureAwait(false);
         await using var tx=await c.BeginTransactionAsync(IsolationLevel.RepeatableRead,ct).ConfigureAwait(false);
         var catalogue=await ReadReportCatalogue(c,tx,ct).ConfigureAwait(false);
         if(catalogue.Sql.Length>0)filteredWhere=filteredWhere.Replace("planning.executions x","report_executions x",StringComparison.Ordinal);
         args=args.Concat(catalogue.Args).ToArray();
         if(query.View is not ("All" or "Archived")&&await HasReactLinks(c,tx,ct).ConfigureAwait(false))filteredWhere+=" AND "+ReactOperationalPredicate;
-        var revision=catalogue.Revision(await Revision(c,tx,false,ct).ConfigureAwait(false));
+        var dataRevision=await Revision(c,tx,false,ct).ConfigureAwait(false);var revision=catalogue.Revision(dataRevision);
         if(query.Revision is {} expected&&expected!=revision)throw new PlanningConflictException("Los datos cambiaron durante el desplazamiento. Actualice Report List para continuar.");
         int count;
         await using(var cmd=Command(c,tx,catalogue.Sql+"SELECT count(*)::int "+filteredWhere,args))count=(int)(await cmd.ExecuteScalarAsync(ct).ConfigureAwait(false))!;
         var items=new List<ReportListItem>();
-        await using(var cmd=Command(c,tx,catalogue.Sql+"SELECT "+RowColumns+",x.version,coalesce(rc.keep_in_planning,false),rc.block_number "+filteredWhere+
+        await using(var cmd=Command(c,tx,catalogue.Sql+"SELECT "+RowColumns+",x.version,coalesce(rc.keep_in_planning,false),rc.block_number,coalesce(rc.xmin::text::bigint,0) "+filteredWhere+
             " ORDER BY "+order+",x.id LIMIT @take OFFSET @skip",args))
         await using(var r=await cmd.ExecuteReaderAsync(ct).ConfigureAwait(false))
             while(await r.ReadAsync(ct).ConfigureAwait(false))
-            {var row=Row(r);items.Add(new(row,r.GetInt64(29),r.GetBoolean(30),r.IsDBNull(31)?null:r.GetInt64(31),ReportListRules.CheckMode(row.Equivalence,row.Laboratory)));}
+            {var row=Row(r);items.Add(new(row,r.GetInt64(29),r.GetBoolean(30),r.IsDBNull(31)?null:r.GetInt64(31),ReportListRules.CheckMode(row.Equivalence,row.Laboratory),r.GetInt64(32)));}
         string? scannerSource=null;
         await using(var cmd=Command(c,tx,"""
             SELECT table_schema||'.'||table_name FROM information_schema.columns
@@ -80,7 +80,7 @@ public sealed partial class PostgresPlanningStore
         }
         var executions=items.Select(x=>x.Execution).ToList();await EnrichScheduleReviews(c,tx,executions,ct).ConfigureAwait(false);
         for(int i=0;i<items.Count;i++)items[i]=items[i] with{Execution=executions[i]};
-        await tx.CommitAsync(ct).ConfigureAwait(false);return new(items,count,page,size,revision,new(scannerSource is not null,scannerSource));
+        await tx.CommitAsync(ct).ConfigureAwait(false);return new(items,count,page,size,revision,new(scannerSource is not null,scannerSource),dataRevision,catalogue.Revision(0));
     }
 
     public async Task<ReportListResult> CheckReportAsync(ReportListCheck request,int actor,bool administrator,CancellationToken ct)
@@ -206,8 +206,14 @@ public sealed partial class PostgresPlanningStore
         if(request.Execution is null)throw new PlanningValidationException("Seleccione una ejecución.");
         await using var c=await database.Source.OpenConnectionAsync(ct).ConfigureAwait(false);await using var tx=await c.BeginTransactionAsync(ct).ConfigureAwait(false);
         await Revision(c,tx,true,ct).ConfigureAwait(false);Guid episode;
-        await using(var cmd=Command(c,tx,"UPDATE planning.executions SET version=version+1 WHERE id=@id AND version=@version RETURNING episode_id",("id",request.Execution.ExecutionId),("version",request.Execution.Version)))
+        // Permanence has its own concurrency token; it does not alter a digitization snapshot.
+        await using(var cmd=Command(c,tx,"SELECT episode_id FROM planning.executions WHERE id=@id AND version=@version FOR UPDATE",("id",request.Execution.ExecutionId),("version",request.Execution.Version)))
             episode=(Guid)(await cmd.ExecuteScalarAsync(ct).ConfigureAwait(false)??throw new PlanningConflictException("La ejecución cambió o no existe."));
+        long keepVersion=0;bool current=false;
+        await using(var cmd=Command(c,tx,"SELECT xmin::text::bigint,keep_in_planning FROM planning.report_checks WHERE execution_id=@id",("id",request.Execution.ExecutionId)))
+        await using(var r=await cmd.ExecuteReaderAsync(ct).ConfigureAwait(false))if(await r.ReadAsync(ct).ConfigureAwait(false)){keepVersion=r.GetInt64(0);current=r.GetBoolean(1);}
+        if(request.KeepVersion is{} expected&&expected!=keepVersion)throw new PlanningConflictException("Cambió la permanencia en Muestreo. Actualice antes de modificarla.");
+        if(current==request.KeepInPlanning){await tx.CommitAsync(ct).ConfigureAwait(false);return;}
         await Execute(c,tx,"INSERT INTO planning.report_checks(execution_id,keep_in_planning) VALUES(@id,@keep) ON CONFLICT(execution_id) DO UPDATE SET keep_in_planning=EXCLUDED.keep_in_planning",ct,("id",request.Execution.ExecutionId),("keep",request.KeepInPlanning)).ConfigureAwait(false);
         await Audit(c,tx,episode,"ReportKeepChanged",actor,reason,request,ct).ConfigureAwait(false);
         await Bump(c,tx,ct).ConfigureAwait(false);await tx.CommitAsync(ct).ConfigureAwait(false);

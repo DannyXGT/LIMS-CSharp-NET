@@ -28,7 +28,7 @@ public sealed class PlanningApiClient(IHttpClientFactory clients)
         ["Search"]=query.Search,["View"]=query.View,["Laboratory"]=query.Laboratory,["Test"]=query.Test,["Service"]=query.Service,["Buyer"]=query.Buyer,
         ["Page"]=query.Page.ToString(CultureInfo.InvariantCulture),["PageSize"]=query.PageSize.ToString(CultureInfo.InvariantCulture),
         ["Sort"]=query.Sort,["Descending"]=query.Descending.ToString(),["VerifiedBy"]=query.VerifiedBy,["Block"]=query.Block?.ToString(CultureInfo.InvariantCulture),
-        ["CheckedDate"]=query.CheckedDate?.ToString("yyyy-MM-dd",CultureInfo.InvariantCulture),["Revision"]=query.Revision?.ToString(CultureInfo.InvariantCulture),["ColumnFilters"]=query.ColumnFilters
+        ["CheckedDate"]=query.CheckedDate?.ToString("yyyy-MM-dd",CultureInfo.InvariantCulture),["Revision"]=query.Revision?.ToString(CultureInfo.InvariantCulture),["ColumnFilters"]=query.ColumnFilters,["ExecutionId"]=query.ExecutionId?.ToString(),["Offset"]=query.Offset?.ToString(CultureInfo.InvariantCulture)
         }.Where(p=>!string.IsNullOrEmpty(p.Value)).Select(p=>p.Key+"="+Uri.EscapeDataString(p.Value!))),null,ct).ConfigureAwait(false);
         return result.StatusCode==404?result with { Error="Report List todavía no está disponible en el servidor configurado. Se requiere actualizar el servidor para usar este módulo." }:result;
     }

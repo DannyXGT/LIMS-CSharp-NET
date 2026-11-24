@@ -23,6 +23,7 @@
     <ProjectReference Include="../../../Backend/Lims.Infrastructure/Lims.Infrastructure.csproj" Aliases="PersistenceEngine" />
     <Compile Include="../../../Frontend/Lims.Desktop/ViewModels/SolventCompositionViewModel.cs;../../../Frontend/Lims.Desktop/Views/SolventCompositionEditor.cs" Link="Commercial/%(Filename)%(Extension)" />
     <PackageReference Include="CommunityToolkit.Mvvm" />
+    <PackageReference Include="Microsoft.Extensions.Http" />
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools" />
     <PackageReference Include="Microsoft.WindowsAppSDK" />
   </ItemGroup>
@@ -41,8 +42,9 @@
     <Compile Include="../../../Frontend/Lims.Desktop/Views/CommercialIntermediateWorkspace.xaml.cs;../../../Frontend/Lims.Desktop/ViewModels/CommercialIntermediateViewModel.cs" Link="Commercial/%(Filename)%(Extension)" />
   </ItemGroup>
   <ItemGroup><Page Include="../../../Frontend/Lims.Desktop/Views/CommercialBottleVisual.xaml" Link="Views/CommercialBottleVisual.xaml" /><Compile Include="../../../Frontend/Lims.Desktop/Views/CommercialBottleVisual.xaml.cs;../../../Frontend/Lims.Desktop/Views/PreparationEditorHeader.cs;../../../Frontend/Lims.Desktop/Views/CommercialIntermediateDialog.cs" Link="Commercial/%(Filename)%(Extension)" /></ItemGroup>
-  <!-- Compile the real presentation sources. No production startup/auth/HTTP is included. -->
+  <!-- Compile the real presentation sources. No production startup/auth or network connection is included. -->
   <ItemGroup>
+    <Compile Include="../../../Frontend/Lims.Desktop/Planning/PlanningReportListView.cs;../../../Frontend/Lims.Desktop/Planning/PlanningMultipleLookup.cs;../../../Frontend/Lims.Desktop/Planning/PlanningApiClient.cs;../../../Frontend/Lims.Desktop/Planning/PlanningStatusText.cs;../../../Frontend/Lims.Desktop/Planning/ReportOperationalClock.cs;../../../Frontend/Lims.Desktop/Http/ApiClientNames.cs" Link="Planning/%(Filename)%(Extension)" />
     <Compile Include="../../../Frontend/Lims.Desktop/Planning/ReportListGrid.cs;../../../Frontend/Lims.Desktop/Planning/ReportListRows.cs;../../../Frontend/Lims.Desktop/Planning/ReportListTableModel.cs;../../../Frontend/Lims.Desktop/Planning/ReportNativeTable.cs;../../../Frontend/Lims.Desktop/Planning/ReportTableViewport.cs;../../../Frontend/Lims.Desktop/Planning/PlanningUi.cs;../../../Frontend/Lims.Desktop/Planning/PlanningSheetModel.cs" Link="Planning/%(Filename)%(Extension)" />
   </ItemGroup>
   <ItemGroup>
