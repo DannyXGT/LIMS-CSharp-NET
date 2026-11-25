@@ -8,5 +8,6 @@ public enum LimsIconKind
     NewStandard, Edit, Replace, Archive, Save, Cancel, Delete, Search, Filter, ApplyFilters,
     ClearFilters, Export, Print, ViewDetail, Calendar, Availability,
     ChevronLeft, ChevronRight, ChevronDown, User, Lock, ShowPassword, HidePassword, SignIn, Error, Notifications,
-    Add, Refresh, Import, Maximize, Restore, Mail, Check
+    Add, Refresh, Import, Maximize, Restore, Mail, Check,
+    Jobs, Digitization, Closures, ReviewQueue, Equivalences, Access, SwitchWorkspace
 }

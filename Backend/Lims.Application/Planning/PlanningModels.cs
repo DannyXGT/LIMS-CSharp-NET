@@ -30,6 +30,10 @@ public interface IPlanningStore
     Task<ReportScheduleDetail> ReportScheduleAsync(Guid id,CancellationToken ct,bool groupByClock=false);
     Task<ReportSchedule> ReviewReportScheduleAsync(ReportScheduleReview request,int actor,CancellationToken ct);
     Task<ReportClosurePage> ReportClosuresAsync(ReportScheduleQuery query,CancellationToken ct);
+    Task<ReportClosurePage> ClosureWorkspaceAsync(ReportClosureQuery query,CancellationToken ct)=>throw new NotSupportedException();
+    Task<ReportClosureDetail> ClosureDetailAsync(string job,string fingerprint,CancellationToken ct)=>throw new NotSupportedException();
+    Task<ReportClosure> SaveClosureFollowUpAsync(ReportClosureFollowUp request,int actor,CancellationToken ct)=>throw new NotSupportedException();
+    Task<byte[]> ExportClosuresAsync(ReportClosureQuery query,CancellationToken ct)=>throw new NotSupportedException();
     Task<byte[]> ExportReviewedSchedulesAsync(ReportScheduleQuery query,CancellationToken ct);
     Task<ReportListResult> CheckReportAsync(ReportListCheck request,int actor,bool administrator,CancellationToken ct);
     Task KeepReportAsync(ReportListKeep request,int actor,CancellationToken ct);

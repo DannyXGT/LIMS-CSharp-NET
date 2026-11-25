@@ -30,7 +30,7 @@ public sealed partial class PlanningImportsView
     }
     private static string ReviewValue(PlanningReviewCase r,string key)=>key switch
     {
-        "Job"=>r.Job,"InDate"=>r.InDateText,"DueDate"=>r.DueDateText,"OfficialState"=>r.OfficialStateText,"Buyer"=>r.BuyerText,"Vendor"=>r.VendorText,
+        "CaseCategory"=>PlanningLabels.Category(r.Category),"Job"=>r.Job,"InDate"=>r.InDateText,"DueDate"=>r.DueDateText,"OfficialState"=>r.OfficialStateText,"Buyer"=>r.BuyerText,"Vendor"=>r.VendorText,
         "Service"=>r.ServiceText,"Usd"=>r.UsdText,"State"=>r.StateLabel,"OriginalTest"=>r.OriginalTest??"No informado","Equivalence"=>r.Equivalence??"No informado",
         "Laboratory"=>r.Laboratory??"No informado","Reason"=>r.Reason??"","Origin"=>r.Origin=="ReportList"?"Report List":r.Origin??"No informado",
         "ImportedAt"=>r.ImportedAt?.ToOffset(TimeSpan.FromHours(-6)).ToString("yyyy-MM-dd HH:mm",CultureInfo.InvariantCulture)??"No informado",_=>""

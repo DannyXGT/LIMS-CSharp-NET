@@ -21,7 +21,7 @@ public sealed class WorkspaceNavigationService(PlanningApiClient api,ISessionSer
         if(shellView is ShellPage planningShell)
         {
             planningShell.AttachPlanningWorkspace(_planning,api);
-            planningShell.PlanningVisibilityChanged+=visible=>LaboratoryVisibilityChanged?.Invoke(!visible);
+            planningShell.WorkspaceChanged+=()=>LaboratoryVisibilityChanged?.Invoke(ReferenceEquals(_host?.Content,_laboratory)&&planningShell.SelectedWorkspace=="laboratory");
         }
         host.Loaded+=(_,_)=>{if(AppWindowForHost is { } window)PlanningUi.Track(window);};
     }
@@ -30,11 +30,18 @@ public sealed class WorkspaceNavigationService(PlanningApiClient api,ISessionSer
     public void ShowLogin(){_planning?.Clear();Navigate(_login);}
     public void ShowAuthenticatedShell(){_planning?.Clear();Navigate(_selector);}
     private void Navigate(FrameworkElement? page)
-    {if(_host is null||page is null)throw new InvalidOperationException("La navegación no se ha inicializado.");_host.Content=page;LaboratoryVisibilityChanged?.Invoke(ReferenceEquals(page,_laboratory));}
+    {if(_host is null||page is null)throw new InvalidOperationException("La navegación no se ha inicializado.");_host.Content=page;LaboratoryVisibilityChanged?.Invoke(ReferenceEquals(page,_laboratory)&&page is ShellPage{SelectedWorkspace:"laboratory"});}
     private void Open(string workspace)
     {
-        if(workspace=="planning"){Navigate(_laboratory);if(_laboratory is ShellPage shell)shell.OpenPlanningWorkspace();}
-        else {Navigate(_laboratory);if(workspace=="administration"&&_laboratory is ShellPage shell)shell.OpenAdministrationWorkspace();}
+        if(_laboratory is not ShellPage shell)return;
+        shell.SelectWorkspace(workspace);
+        Navigate(_laboratory);
+        switch(workspace)
+        {
+            case "planning":shell.OpenPlanningWorkspace();break;
+            case "administration":shell.OpenAdministrationWorkspace();break;
+            case "laboratory":shell.OpenLaboratoryWorkspace();break;
+        }
     }
     public void Dispose(){_planning?.Dispose();_selector?.Dispose();}
 }

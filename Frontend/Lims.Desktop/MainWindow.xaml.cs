@@ -28,8 +28,7 @@ public sealed partial class MainWindow : Window
         ConfigureWindow();
         shellPage.Loaded += (_, _) =>
         {
-            SystemSearch.Visibility = Visibility.Visible;
-            NotificationsHost.Visibility = Visibility.Visible;
+            SystemSearch.Visibility = NotificationsHost.Visibility = shellPage.SelectedWorkspace == "laboratory" ? Visibility.Visible : Visibility.Collapsed;
             if (AppWindow.Presenter is OverlappedPresenter presenter) presenter.Maximize();
         };
         loginPage.Loaded += (_, _) =>

@@ -126,37 +126,8 @@ public sealed partial class PostgresPlanningStore
     }
     public async Task<ReportClosurePage> ReportClosuresAsync(ReportScheduleQuery query,CancellationToken ct)
     {
-        ValidateScheduleQuery(query);var page=Math.Clamp(query.Page,1,1000000);var size=Math.Clamp(query.PageSize,1,200);
-        const string closure="""
-            WITH complete AS (
-              SELECT e.job,count(*) FILTER(WHERE NOT (x.no_program OR upper(coalesce(trim(x.laboratory),''))='NO PROGRAMAR'))::int AS required,
-                count(*) FILTER(WHERE NOT (x.no_program OR upper(coalesce(trim(x.laboratory),''))='NO PROGRAMAR') AND x.digitized_at IS NOT NULL AND x.tested_on IS NOT NULL)::int AS digitized,
-                max(x.digitized_at) FILTER(WHERE NOT (x.no_program OR upper(coalesce(trim(x.laboratory),''))='NO PROGRAMAR')) AS last_at,min(e.due_date) AS due
-              FROM planning.episodes e LEFT JOIN planning.executions x ON x.episode_id=e.id
-              /*ADMISSION*/
-              GROUP BY e.job HAVING count(x.id)>0 AND bool_and(x.id IS NOT NULL)
-            ) SELECT c.* FROM complete c WHERE c.required>0 AND c.required=c.digitized
-              AND (@search='' OR strpos(lower(c.job),lower(@search))>0)
-              AND NOT EXISTS(SELECT 1 FROM planning.job_controls jc WHERE jc.job=upper(trim(c.job)) AND jc.on_hold)
-              AND NOT EXISTS(SELECT 1 FROM planning.source_rows s WHERE s.job=c.job AND s.file IN ('Report List','Side2','React Active') AND s.execution_id IS NULL)
-              AND NOT EXISTS(SELECT 1 FROM planning.episodes e JOIN planning.incidents i ON i.episode_id=e.id WHERE e.job=c.job AND i.state NOT IN ('Resolved','Excluded'))
-              AND NOT EXISTS(SELECT 1 FROM planning.episodes e JOIN planning.executions x ON x.episode_id=e.id WHERE e.job=c.job AND NOT x.no_program AND (nullif(trim(x.equivalence),'') IS NULL OR nullif(trim(x.laboratory),'') IS NULL))
-              /*ADMISSION_BLOCK*/
-            """;
-        await using var c=await database.Source.OpenConnectionAsync(ct).ConfigureAwait(false);await using var tx=await c.BeginTransactionAsync(IsolationLevel.RepeatableRead,ct).ConfigureAwait(false);
-        var integrated=await HasReactLinks(c,tx,ct).ConfigureAwait(false);
-        var closureSql=closure.Replace("/*ADMISSION*/","WHERE "+VisiblePlanningJobSql+(integrated?" AND "+ReactOperationalPredicate:""),StringComparison.Ordinal)
-            .Replace("/*ADMISSION_BLOCK*/",integrated?"""
-                AND NOT EXISTS(SELECT 1 FROM planning.react_execution_links admission JOIN planning.executions x ON x.id=admission.execution_id
-                  JOIN planning.episodes e ON e.id=x.episode_id WHERE e.job=c.job
-                    AND admission.disposition IN ('MissingEquivalence','InvalidLaboratory','IncompleteData','ReactIdentity','Revision','ReportWithoutSummary'))
-                """:"",StringComparison.Ordinal);
-        var revision=await Revision(c,tx,false,ct).ConfigureAwait(false);if(query.Revision is {} expected&&expected!=revision)throw new PlanningConflictException("Los JOBs cambiaron. Actualice Cierres.");
-        var args=new (string,object?)[]{("search",query.Search?.Trim()??""),("take",size),("skip",(page-1)*size)};
-        int total;await using(var cmd=Command(c,tx,"SELECT count(*)::int FROM ("+closureSql+") results",args))total=(int)(await cmd.ExecuteScalarAsync(ct).ConfigureAwait(false))!;
-        var items=new List<ReportClosure>();await using(var cmd=Command(c,tx,closureSql+" ORDER BY c.last_at DESC,c.job LIMIT @take OFFSET @skip",args))
-        await using(var r=await cmd.ExecuteReaderAsync(ct).ConfigureAwait(false))while(await r.ReadAsync(ct).ConfigureAwait(false))items.Add(new(r.GetString(0),r.GetInt32(1),r.GetInt32(2),r.GetFieldValue<DateTimeOffset>(3),NullableDate(r,4)));
-        await tx.CommitAsync(ct).ConfigureAwait(false);return new(items,total,page,size,revision,"Completos entre todas las ejecuciones persistidas del JOB. Cobertura externa TIPS no certificada; no constituye cierre oficial.");
+        ValidateScheduleQuery(query);
+        return await ClosureWorkspaceAsync(new(Search:query.Search,Scope:"All",Page:query.Page,PageSize:query.PageSize,Revision:query.Revision),ct).ConfigureAwait(false);
     }
     public async Task<byte[]> ExportReviewedSchedulesAsync(ReportScheduleQuery query,CancellationToken ct)
     {

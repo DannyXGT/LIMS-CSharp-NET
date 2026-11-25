@@ -99,6 +99,12 @@ public partial class App : Microsoft.UI.Xaml.Application
         var systemSearch = new AutoSuggestBox { Width = 280, FontSize = 12, MinHeight = 30, VerticalAlignment = VerticalAlignment.Center, PlaceholderText = "Buscar en el sistema...", QueryIcon = new SymbolIcon(Symbol.Find) };
         Microsoft.UI.Xaml.Automation.AutomationProperties.SetAutomationId(systemSearch, "SystemSearch");
         _shell.AttachSystemSearch(systemSearch); Grid.SetColumn(systemSearch, 2); title.Children.Add(systemSearch);
+        _shell.WorkspaceChanged += () =>
+        {
+            systemSearch.Visibility = bellHost.Visibility = _shell.SelectedWorkspace == "laboratory" ? Visibility.Visible : Visibility.Collapsed;
+            systemSearch.Text = string.Empty;
+            systemSearch.ItemsSource = null;
+        };
         root.Children.Add(title);
         Grid.SetRow(_shell, 1);
         root.Children.Add(_shell);
@@ -128,12 +134,15 @@ public partial class App : Microsoft.UI.Xaml.Application
             var navigation = (NavigationView)_shell.FindName("MainNavigation");
             switch (action)
             {
+                case "shellNavigation": await PreviewShellNavigationAsync(data); break;
                 case "workspaceSelector": await ShowWorkspaceSelectorAsync(data); break;
                 case "motionRegression": await ValidateMotionRegressionAsync(); break;
                 case "reportListScroll": await ValidateReportListScrollAsync(); break;
                 case "reportListDirect": await ValidateReportListDirectAsync(); break;
                 case "reportListPaging": await ValidateReportListPagingAsync(); break;
                 case "reportReaderBatch": await ValidateReportReaderBatchAsync(); break;
+                case "closures": await ValidateClosuresAsync(); break;
+                case "closuresSelectionCapture": await SaveClosureImage((FrameworkElement)_window!.Content,"cierres-seleccion-celdas.png"); break;
                 case "reportScannerMessageBox": await ShowReportScannerMessageBoxAsync(); break;
                 case "alerts":
                     _alertsApi!.Fail = data.TryGetProperty("error", out var alertError) && alertError.GetBoolean();

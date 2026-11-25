@@ -205,8 +205,8 @@
     <CornerRadius x:Key="OverlayCornerRadius">8</CornerRadius>
     <x:Double x:Key="CalendarViewHeaderNavigationButtonFontSize">13</x:Double>
     <Thickness x:Key="ComboBoxItemThemePadding">12,7</Thickness>
-    <x:Double x:Key="NavigationViewItemOnLeftMinHeight">40</x:Double>
-    <Thickness x:Key="NavigationViewItemButtonMargin">4,2</Thickness>
+    <x:Double x:Key="NavigationViewItemOnLeftMinHeight">36</x:Double>
+    <Thickness x:Key="NavigationViewItemButtonMargin">4,1</Thickness>
     <Thickness x:Key="NavigationViewHeaderMargin">24,12,0,0</Thickness>
     <Style x:Key="LimsPopupSurfaceStyle" TargetType="controls:LimsPopupSurface">
         <Setter Property="Background" Value="{ThemeResource LimsSurfaceBrush}" />
@@ -530,7 +530,7 @@
         <Setter Property="Foreground" Value="{ThemeResource LimsTextPrimaryBrush}" />
         <Setter Property="HorizontalContentAlignment" Value="Stretch" />
         <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="primitives:NavigationViewItemPresenter">
-            <Grid x:Name="LayoutRoot" MinHeight="40" Margin="4,2" Background="Transparent" CornerRadius="6" Control.IsTemplateFocusTarget="True">
+            <Grid x:Name="LayoutRoot" MinHeight="36" Margin="4,1" Background="Transparent" CornerRadius="6" Control.IsTemplateFocusTarget="True">
                 <VisualStateManager.VisualStateGroups>
                     <VisualStateGroup x:Name="PointerStates">
                         <VisualStateGroup.Transitions><VisualTransition GeneratedDuration="0:0:0.1" /></VisualStateGroup.Transitions>

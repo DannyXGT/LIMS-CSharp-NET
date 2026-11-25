@@ -35,7 +35,7 @@ public sealed partial class PlanningPostgresTests
         Assert.Equal("FORMALDEHYDE",Assert.Single(await db.Store.EquivalencesAsync(default)).Equivalence);
         Assert.Equal(2L,await db.Scalar("SELECT count(*) FROM planning.executions WHERE equivalence IS NULL"));
         Assert.Empty((await db.Store.ReportListAsync(new(Test:"Unknown technical"),default)).Items);
-        Assert.Single((await db.Store.ReviewWorkspaceAsync(new(Category:"MissingEquivalence",Search:"Unknown technical"),default)).Items);
+        Assert.Single(await AssertExclusiveQueues(db.Store,new(Search:"Unknown technical")),r=>r.Category=="MissingEquivalence"&&r.State=="Pending");
         await db.Store.CheckReportAsync(new([new(id,item.Version)],true,"Digitacion con nombre oficial React"),1,false,default);
         Assert.Equal("FORMALDEHYDE",await db.Scalar("SELECT equivalence FROM planning.executions WHERE original_test='Formaldehyde Content'"));
         Assert.Equal(1L,await db.Scalar("SELECT count(*) FROM planning.history WHERE action='ClassificationFromReact'"));
@@ -69,7 +69,7 @@ public sealed partial class PlanningPostgresTests
         await db.Sql("DELETE FROM public.planificacion_activa");
         Assert.Equal(id,await db.Scalar("SELECT id FROM planning.executions"));
         Assert.Equal(true,await db.Scalar("SELECT react_row_id IS NULL FROM planning.react_execution_links"));
-        Assert.Contains((await db.Store.ReviewWorkspaceAsync(new(Category:"Admission"),default)).Items,r=>r.Reason!.Contains("retirada",StringComparison.Ordinal));
+        Assert.Contains(await AssertExclusiveQueues(db.Store),r=>r.Category=="Admission"&&r.Reason!.Contains("retirada",StringComparison.Ordinal));
         p=await db.Store.PreviewAsync(ReactInput(Summary(),Report()),1,default);Assert.Equal("ReactIdentity",Assert.Single(p.Admissions!).State);
     }
     [PlanningDatabaseFact]
@@ -260,7 +260,7 @@ public sealed partial class PlanningPostgresTests
         Assert.Equal(2L,await db.Scalar("SELECT count(*) FROM planning.source_rows"));
         Assert.True((await db.Store.ConfirmAsync(p.Id,1,default)).AlreadyApplied);
         Assert.Equal(1L,await db.Scalar("SELECT count(*) FROM public.planificacion_activa"));
-        Assert.Contains((await db.Store.ReviewWorkspaceAsync(new(Category:"Admission",Situation:"All"),default)).Items,r=>r.State=="Resolved");
+        Assert.Contains(await AssertExclusiveQueues(db.Store),r=>r.Category=="Admission"&&r.State=="Resolved");
     }
     [PlanningDatabaseFact]
     public async Task PendingEquivalenceUsesReactQueueAndAssignmentReprocessesWithoutAnotherImport()
@@ -295,6 +295,6 @@ public sealed partial class PlanningPostgresTests
         Assert.Equal("Closed",Assert.Single(p.Admissions!).State);await db.Store.ConfirmAsync(p.Id,1,default);
         Assert.Equal(0L,await db.Scalar("SELECT count(*) FROM public.planificacion_activa"));
         Assert.Single((await db.Store.QueryAsync(new(Scope:"History"),default)).Items);
-        Assert.Contains((await db.Store.ReviewWorkspaceAsync(new(Category:"Admission"),default)).Items,r=>r.Reason=="Histórico cerrado");
+        Assert.Contains(await AssertExclusiveQueues(db.Store),r=>r.Category=="Admission"&&r.Reason=="Histórico cerrado");
     }
 }

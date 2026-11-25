@@ -41,6 +41,20 @@ public sealed class PlanningApiClient(IHttpClientFactory clients)
     public Task<PlanningCall<ReportScheduleDetail>> ReportSchedule(Guid id,CancellationToken ct,bool groupByClock=false)=>Send<ReportScheduleDetail>(HttpMethod.Get,$"/api/planning/report-list/schedules/{id:D}"+(groupByClock?"?groupByClock=true":""),null,ct);
     public Task<PlanningCall<ReportSchedule>> ReviewSchedule(ReportScheduleReview request,CancellationToken ct)=>Send<ReportSchedule>(HttpMethod.Post,"/api/planning/report-list/schedules/review",request,ct);
     public Task<PlanningCall<ReportClosurePage>> ReportClosures(ReportScheduleQuery query,CancellationToken ct)=>Send<ReportClosurePage>(HttpMethod.Get,"/api/planning/report-list/closures?"+ScheduleQuery(query),null,ct);
+    private static string ClosureQuery(ReportClosureQuery q)=>string.Join('&',new Dictionary<string,string?>{
+        ["Search"]=q.Search,["Scope"]=q.Scope,["State"]=q.State,["Laboratory"]=q.Laboratory,["From"]=q.From?.ToString("yyyy-MM-dd",CultureInfo.InvariantCulture),
+        ["Until"]=q.Until?.ToString("yyyy-MM-dd",CultureInfo.InvariantCulture),["Sort"]=q.Sort,["Page"]=q.Page.ToString(CultureInfo.InvariantCulture),
+        ["PageSize"]=q.PageSize.ToString(CultureInfo.InvariantCulture),["Revision"]=q.Revision?.ToString(CultureInfo.InvariantCulture),["IncludeTests"]=q.IncludeTests?"true":null,["Dates"]=q.Dates,["Times"]=q.Times
+    }.Where(p=>!string.IsNullOrEmpty(p.Value)).Select(p=>p.Key+"="+Uri.EscapeDataString(p.Value!)));
+    public Task<PlanningCall<ReportClosurePage>> Closures(ReportClosureQuery query,CancellationToken ct)=>Send<ReportClosurePage>(HttpMethod.Get,"/api/planning/closures?"+ClosureQuery(query),null,ct);
+    public Task<PlanningCall<ReportClosureDetail>> ClosureDetail(string job,string fingerprint,CancellationToken ct)=>Send<ReportClosureDetail>(HttpMethod.Get,"/api/planning/closures/detail?job="+Uri.EscapeDataString(job)+"&fingerprint="+Uri.EscapeDataString(fingerprint),null,ct);
+    public Task<PlanningCall<ReportClosure>> SaveClosureFollowUp(ReportClosureFollowUp request,CancellationToken ct)=>Send<ReportClosure>(HttpMethod.Put,"/api/planning/closures/follow-up",request,ct);
+    public async Task<PlanningCall<byte[]>> ExportClosures(ReportClosureQuery query,CancellationToken ct)
+    {
+        try{using var response=await clients.CreateClient(ApiClientNames.Authorized).GetAsync("/api/planning/closures/export?"+ClosureQuery(query),ct).ConfigureAwait(false);
+        return response.IsSuccessStatusCode?new(true,await response.Content.ReadAsByteArrayAsync(ct).ConfigureAwait(false),null,(int)response.StatusCode):new(false,null,await Error(response,ct).ConfigureAwait(false),(int)response.StatusCode);}
+        catch(HttpRequestException){return new(false,null,"No se pudo conectar con la API.",0);}
+    }
     public async Task<PlanningCall<byte[]>> ExportSchedules(ReportScheduleQuery query,CancellationToken ct)
     {
         try{using var response=await clients.CreateClient(ApiClientNames.Authorized).GetAsync("/api/planning/report-list/schedules/export?"+ScheduleQuery(query),ct).ConfigureAwait(false);

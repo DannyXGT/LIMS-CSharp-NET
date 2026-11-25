@@ -48,6 +48,7 @@ public sealed partial class PlanningImportsView
         }
         if(row is null){Add("Selección","Selecciona una sola fila para consultar sus fuentes e historial.");return;}
         _detailTitle.Text=row.Job;
+        Add("Bandeja",PlanningLabels.Category(row.QueueCategory??row.Category));
         Add("Incidencia",PlanningLabels.Category(row.Category)+" · "+row.StateLabel);
         Add("Prueba",row.OriginalTest??"No informada para esta incidencia");
         Add("Motivo",row.Reason??"No informado");

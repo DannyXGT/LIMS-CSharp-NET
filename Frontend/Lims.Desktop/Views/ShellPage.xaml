@@ -5,12 +5,64 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:design="using:Lims.DesignSystem.Controls"
     Background="{ThemeResource LimsBackgroundBrush}">
+    <Page.Resources>
+        <Style x:Key="ShellNavigationGroupStyle" TargetType="NavigationViewItemHeader">
+            <Setter Property="IsHitTestVisible" Value="True" />
+            <Setter Property="IsEnabled" Value="True" />
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="{ThemeResource LimsTextSecondaryBrush}" />
+            <Setter Property="MinHeight" Value="30" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="NavigationViewItemHeader">
+                        <Grid MinHeight="40" Background="Transparent">
+                            <ContentPresenter Content="{TemplateBinding Content}" ContentTemplate="{TemplateBinding ContentTemplate}" Margin="16,0,4,0" VerticalAlignment="Center" HorizontalAlignment="Stretch" />
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="ShellNavigationGroupToggleStyle" TargetType="ToggleButton">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Foreground" Value="{ThemeResource LimsTextSecondaryBrush}" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+            <Setter Property="MinHeight" Value="36" />
+            <Setter Property="Width" Value="240" />
+            <Setter Property="Padding" Value="0,0,8,0" />
+            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="UseSystemFocusVisuals" Value="True" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ToggleButton">
+                        <Border x:Name="GroupSurface" Background="Transparent" CornerRadius="6" MinHeight="36" Padding="8,0" Control.IsTemplateFocusTarget="True">
+                            <VisualStateManager.VisualStateGroups>
+                                <VisualStateGroup x:Name="CommonStates">
+                                    <VisualState x:Name="Normal" />
+                                    <VisualState x:Name="PointerOver"><VisualState.Setters><Setter Target="GroupSurface.Background" Value="{ThemeResource LimsSurfaceSecondaryBrush}" /></VisualState.Setters></VisualState>
+                                    <VisualState x:Name="Pressed"><VisualState.Setters><Setter Target="GroupSurface.Background" Value="{ThemeResource LimsSurfaceElevatedBrush}" /></VisualState.Setters></VisualState>
+                                    <VisualState x:Name="Disabled"><VisualState.Setters><Setter Target="GroupSurface.Opacity" Value="0.4" /></VisualState.Setters></VisualState>
+                                </VisualStateGroup>
+                                <VisualStateGroup x:Name="CheckStates"><VisualState x:Name="Checked" /><VisualState x:Name="Unchecked" /><VisualState x:Name="Indeterminate" /></VisualStateGroup>
+                            </VisualStateManager.VisualStateGroups>
+                            <ContentPresenter Content="{TemplateBinding Content}" ContentTemplate="{TemplateBinding ContentTemplate}" Foreground="{TemplateBinding Foreground}" HorizontalContentAlignment="Stretch" VerticalAlignment="Center" />
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Page.Resources>
     <NavigationView
         x:Name="MainNavigation"
+        Background="{ThemeResource LimsBackgroundBrush}"
         AlwaysShowHeader="True"
         IsBackButtonVisible="Collapsed"
         IsSettingsVisible="False"
-        OpenPaneLength="252"
+        FontSize="13"
+        OpenPaneLength="276"
         IsPaneOpen="False"
         PaneDisplayMode="Left"
         PaneOpening="OnPaneOpening"
@@ -19,19 +71,40 @@
         ItemInvoked="OnNavigationItemInvoked"
         SelectionChanged="OnSelectionChanged">
         <NavigationView.PaneHeader>
-            <StackPanel x:Name="BrandLabels" Margin="4,18,4,14" Spacing="3">
+            <StackPanel x:Name="BrandLabels" Margin="4,12,4,10" Spacing="3">
                 <TextBlock Style="{StaticResource LimsProductTitleStyle}" Text="LIMS" />
-                <TextBlock Style="{StaticResource LimsCaptionStyle}" Text="Gestión de laboratorio" />
+                <TextBlock x:Name="WorkspaceName" Style="{StaticResource LimsCaptionStyle}" Text="Suministros" />
             </StackPanel>
         </NavigationView.PaneHeader>
         <NavigationView.MenuItems>
             <NavigationViewItem x:Name="HomeItem" design:LimsIcon.NavigationIcon="Home" Content="Inicio" Tag="home" AutomationProperties.Name="Inicio" ToolTipService.ToolTip="Inicio"></NavigationViewItem>
-            <NavigationViewItemSeparator />
-            <NavigationViewItemHeader x:Name="MaterialsGroup" Content="MATERIALES DE REFERENCIA" />
-            <NavigationViewItem x:Name="StandardsItem" Icon="Library" Content="Estándares" AutomationProperties.Name="Estándares" ToolTipService.ToolTip="Estándares" IsEnabled="{x:Bind ViewModel.CanViewReferenceMaterials, Mode=OneWay}" Tag="standards"></NavigationViewItem>
+            <NavigationViewItemHeader x:Name="MaterialsGroup" Style="{StaticResource ShellNavigationGroupStyle}">
+                <ToggleButton x:Name="SuppliesToggle" Style="{StaticResource ShellNavigationGroupToggleStyle}" IsChecked="True" Checked="OnNavigationGroupToggled" Unchecked="OnNavigationGroupToggled" AutomationProperties.Name="Suministros" AutomationProperties.AutomationId="NavigationSuppliesGroup" AutomationProperties.HelpText="Mostrar u ocultar los módulos de Suministros">
+                    <Grid ColumnSpacing="8"><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                        <TextBlock Text="SUMINISTROS" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center" />
+                        <design:LimsIcon x:Name="SuppliesChevron" Grid.Column="1" Icon="ChevronDown" Size="12" />
+                    </Grid>
+                </ToggleButton>
+            </NavigationViewItemHeader>
+            <NavigationViewItem x:Name="StandardsItem" design:LimsIcon.NavigationIcon="Standards" Content="Estándares" AutomationProperties.Name="Estándares" ToolTipService.ToolTip="Estándares" IsEnabled="{x:Bind ViewModel.CanViewReferenceMaterials, Mode=OneWay}" Tag="standards"></NavigationViewItem>
             <NavigationViewItem x:Name="PreparationsItem" design:LimsIcon.NavigationIcon="Preparations" Content="Preparaciones" AutomationProperties.Name="Preparaciones" ToolTipService.ToolTip="Preparaciones" IsEnabled="{x:Bind ViewModel.CanViewReferenceMaterials, Mode=OneWay}" Tag="preparations" />
             <NavigationViewItem x:Name="AlertsItem" design:LimsIcon.NavigationIcon="Alerts" Content="Alertas" Tag="alerts" AutomationProperties.Name="Alertas" ToolTipService.ToolTip="Alertas y Notificaciones" Visibility="Collapsed" />
-            <NavigationViewItemHeader x:Name="AdministrationGroup" Content="ADMINISTRACIÓN" Visibility="Collapsed" />
+            <NavigationViewItemHeader x:Name="PlanningGroup" Style="{StaticResource ShellNavigationGroupStyle}" Visibility="Collapsed">
+                <ToggleButton x:Name="PlanningToggle" Style="{StaticResource ShellNavigationGroupToggleStyle}" IsChecked="True" Checked="OnNavigationGroupToggled" Unchecked="OnNavigationGroupToggled" AutomationProperties.Name="Planificación" AutomationProperties.AutomationId="NavigationPlanningGroup" AutomationProperties.HelpText="Mostrar u ocultar los módulos de Planificación">
+                    <Grid ColumnSpacing="8"><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                        <TextBlock Text="PLANIFICACIÓN" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center" />
+                        <design:LimsIcon x:Name="PlanningChevron" Grid.Column="1" Icon="ChevronDown" Size="12" />
+                    </Grid>
+                </ToggleButton>
+            </NavigationViewItemHeader>
+            <NavigationViewItemHeader x:Name="AdministrationGroup" Style="{StaticResource ShellNavigationGroupStyle}" Visibility="Collapsed">
+                <ToggleButton x:Name="AdministrationToggle" Style="{StaticResource ShellNavigationGroupToggleStyle}" IsChecked="True" Checked="OnNavigationGroupToggled" Unchecked="OnNavigationGroupToggled" AutomationProperties.Name="Administración" AutomationProperties.AutomationId="NavigationAdministrationGroup" AutomationProperties.HelpText="Mostrar u ocultar los módulos de Administración">
+                    <Grid ColumnSpacing="8"><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                        <TextBlock Text="ADMINISTRACIÓN" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center" />
+                        <design:LimsIcon x:Name="AdministrationChevron" Grid.Column="1" Icon="ChevronDown" Size="12" />
+                    </Grid>
+                </ToggleButton>
+            </NavigationViewItemHeader>
             <NavigationViewItem x:Name="PermissionsItem" design:LimsIcon.NavigationIcon="Administration" Content="Gestión de permisos" Tag="permissions" AutomationProperties.Name="Gestión de permisos" ToolTipService.ToolTip="Gestión de permisos" Visibility="Collapsed" />
         </NavigationView.MenuItems>
         <NavigationView.PaneFooter>
@@ -80,7 +153,7 @@
                 </Button>
             </Grid>
         </NavigationView.Header>
-        <Grid x:Name="Workspace" Padding="24,8,24,24" RowSpacing="12">
+        <Grid x:Name="Workspace" Background="{ThemeResource LimsBackgroundBrush}" Padding="24,8,24,24" RowSpacing="12">
             <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /></Grid.RowDefinitions>
             <InfoBar IsOpen="{x:Bind ViewModel.HasAccessWarning, Mode=OneWay}" IsClosable="False" Severity="Warning" Message="{x:Bind ViewModel.SessionMessage, Mode=OneWay}">
                 <InfoBar.ActionButton><Button Content="Reintentar" Click="OnRetryAccessClick" /></InfoBar.ActionButton>

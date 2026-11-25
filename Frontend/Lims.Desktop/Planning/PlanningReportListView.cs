@@ -31,13 +31,12 @@ public sealed partial class PlanningReportListView : UserControl,IDisposable
     private readonly Button _mark,_review,_next,_fixedBatch;
     private readonly StackPanel _intro;
     private readonly Border _context;
-    private readonly Grid _digitization,_schedules,_closures;
+    private readonly Grid _digitization,_schedules;
     private readonly Border _detail;
     private readonly TextBlock _detailTitle=PlanningUi.Text("",17),_detailMeta=PlanningUi.Text("",12,true),_history=PlanningUi.Text("",12,true);
     private readonly ReportNativeTable<ReportSchedule> _scheduleTable;
     private readonly ReportNativeTable<ReportScheduleMember> _members;
     private readonly ObservableCollection<ReportSchedule> _scheduleRows=[];
-    private readonly ObservableCollection<ReportClosure> _closureRows=[];
     private readonly ReportOperationalClock _fixedClock=new();
     private readonly TextBlock _clockLabel=PlanningUi.Text("Hora actual",12,true);
     private readonly DispatcherTimer _clockTick=new(){Interval=TimeSpan.FromSeconds(1)};
@@ -57,6 +56,7 @@ public sealed partial class PlanningReportListView : UserControl,IDisposable
     private int _page=1,_total;
     private bool _descending,_mutating,_trackingAvailable,_onlyTable,_loading;
     private bool _pageNeedsReload,_disposed;
+    private bool _selectingTab;
     public event Func<Task>? Changed;
     public PlanningReportListView(PlanningApiClient api,Func<Guid,Task> dossier,Func<IReadOnlyList<string>> permissions,Func<bool> administrator,Func<int?>? userId=null,bool scannerEnabled=true,IReportScanner? scanner=null)
     {
@@ -80,7 +80,7 @@ public sealed partial class PlanningReportListView : UserControl,IDisposable
         var pageTitle=PlanningUi.Text("Report List",20);pageTitle.FontWeight=Microsoft.UI.Text.FontWeights.SemiBold;pageTitle.VerticalAlignment=VerticalAlignment.Center;
         var identity=PlanningUi.Row(new Border{Child=new LimsIcon{Icon=LimsIconKind.Reports,Size=20,Foreground=PlanningUi.Brush("LimsAccentBrush")},Width=34,Height=34,Background=PlanningUi.Brush("LimsSurfaceSecondaryBrush"),CornerRadius=new(6)},pageTitle);identity.Spacing=10;identity.VerticalAlignment=VerticalAlignment.Center;
         _intro=PlanningUi.Stack(identity);_intro.Spacing=0;_intro.Margin=new(0,0,28,0);_intro.VerticalAlignment=VerticalAlignment.Center;
-        foreach(var title in new[]{"Digitación","Chequeo de horarios","Cierres"})_tabs.Items.Add(new LimsTabItem{Label=title});
+        foreach(var title in new[]{"Digitación","Chequeo de horarios"})_tabs.Items.Add(new LimsTabItem{Label=title});
         AutomationProperties.SetName(_tabs,"Vistas de Report List");
         var header=new Grid{ColumnSpacing=0,Padding=new(12,4,12,0)};header.ColumnDefinitions.Add(new(){Width=GridLength.Auto});header.ColumnDefinitions.Add(new(){Width=new(1,GridUnitType.Star)});header.RowDefinitions.Add(new(){Height=GridLength.Auto});header.RowDefinitions.Add(new(){Height=GridLength.Auto});header.Children.Add(_intro);Grid.SetColumn(_tabs,1);header.Children.Add(_tabs);_tabs.VerticalAlignment=VerticalAlignment.Center;
         header.SizeChanged+=(_,_)=>{var narrow=header.ActualWidth<760;Grid.SetRow(_tabs,narrow?1:0);Grid.SetColumn(_tabs,narrow?0:1);Grid.SetColumnSpan(_tabs,narrow?2:1);_intro.Margin=narrow?new(0,4,0,2):new(0,0,28,0);};
@@ -121,12 +121,9 @@ public sealed partial class PlanningReportListView : UserControl,IDisposable
         PlanningUi.Place(detailLayout,PlanningUi.Row(_review,exceptions,allMembers,history),3);PlanningUi.Place(detailLayout,new ScrollViewer{Content=_history,MaxHeight=100},4);
         _detail=new Border{Child=detailLayout,Padding=new(12),Background=PlanningUi.Brush("LimsSurfaceBrush"),BorderBrush=PlanningUi.Brush("LimsBorderBrush"),BorderThickness=new(1),CornerRadius=new(6),Visibility=Visibility.Collapsed,Height=330};
         _schedules=PlanningUi.Rows(new(1,GridUnitType.Star),GridLength.Auto);_schedules.RowSpacing=8;PlanningUi.Place(_schedules,_scheduleTable,0);PlanningUi.Place(_schedules,_detail,1);
-        var closureTable=new ReportNativeTable<ReportClosure>("JOBs completamente digitados",[("JOB",190),("Pruebas requeridas",150),("Digitadas",110),("Última digitación",200),("Due Date",130)],c=>[c.Job,c.Required.ToString("N0",CultureInfo.CurrentCulture),c.Digitized.ToString("N0",CultureInfo.CurrentCulture),c.LastDigitizedAt.ToOffset(TimeSpan.FromHours(-6)).ToString("yyyy-MM-dd HH:mm",CultureInfo.InvariantCulture),c.DueDate?.ToString("yyyy-MM-dd",CultureInfo.InvariantCulture)??""]);
-        closureTable.SetItems(_closureRows);
-        _closures=PlanningUi.Rows(GridLength.Auto,new(1,GridUnitType.Star));PlanningUi.Place(_closures,PlanningUi.Text("JOBs completos según las ejecuciones registradas. Cobertura TIPS no certificada; no constituye cierre oficial.",12,true),0);PlanningUi.Place(_closures,closureTable,1);
         var groupTools=PlanningUi.Row(Compact("Exportar chequeados",ExportSchedules));groupTools.Visibility=Visibility.Collapsed;
         _next=Compact("Cargar más",async()=>await LoadGroups(false));_next.Visibility=Visibility.Collapsed;
-        var body=new Grid();body.Children.Add(_digitization);body.Children.Add(_schedules);body.Children.Add(_closures);
+        var body=new Grid();body.Children.Add(_digitization);body.Children.Add(_schedules);
         var headerSurface=PlanningUi.Rows(GridLength.Auto,GridLength.Auto,GridLength.Auto);headerSurface.RowSpacing=0;PlanningUi.Place(headerSurface,header,0);PlanningUi.Place(headerSurface,searchBar,1);
         var searchSurface=new Border{Child=headerSurface,Background=PlanningUi.Brush("LimsSurfaceBrush"),BorderBrush=PlanningUi.Brush("LimsBorderBrush"),BorderThickness=new(1),CornerRadius=new(8)};
         var clockSection=BuildClockSection();
@@ -148,8 +145,8 @@ public sealed partial class PlanningReportListView : UserControl,IDisposable
         foreach(var b in new[]{_previousPage,_nextPage}){b.MinHeight=30;b.Padding=new(9,3,9,3);}
         var layout=PlanningUi.Rows(GridLength.Auto,new(1,GridUnitType.Star),GridLength.Auto);layout.RowSpacing=8;
         PlanningUi.Place(layout,top,0);PlanningUi.Place(layout,body,1);PlanningUi.Place(layout,PlanningUi.Split(PlanningUi.Row(_progress,_status),PlanningUi.Row(_pager,_connection,_next)),2);Content=layout;
-        void SetView(){var index=_tabs.SelectedIndex;batch.Visibility=index==0&&Has(PlanningPermissions.ReportMark)?Visibility.Visible:Visibility.Collapsed;_digitization.Visibility=index==0?Visibility.Visible:Visibility.Collapsed;_schedules.Visibility=index==1?Visibility.Visible:Visibility.Collapsed;_closures.Visibility=index==2?Visibility.Visible:Visibility.Collapsed;_view.Visibility=filters.Visibility=multiple.Visibility=configuration.Visibility=index==0?Visibility.Visible:Visibility.Collapsed;_scheduleState.Visibility=groupTools.Visibility=index==1?Visibility.Visible:Visibility.Collapsed;_next.Visibility=index==0?Visibility.Collapsed:Visibility.Visible;}
-        _tabs.SelectionChanged+=async(_,_)=>{SetView();_pager.Visibility=_tabs.SelectedIndex==0?Visibility.Visible:Visibility.Collapsed;Feedback(null);Motion.Enter(body,y:3,milliseconds:150);await Load();};SetView();
+        void SetView(){var index=_tabs.SelectedIndex;batch.Visibility=index==0&&Has(PlanningPermissions.ReportMark)?Visibility.Visible:Visibility.Collapsed;_digitization.Visibility=index==0?Visibility.Visible:Visibility.Collapsed;_schedules.Visibility=index==1?Visibility.Visible:Visibility.Collapsed;_view.Visibility=filters.Visibility=multiple.Visibility=configuration.Visibility=index==0?Visibility.Visible:Visibility.Collapsed;_scheduleState.Visibility=groupTools.Visibility=index==1?Visibility.Visible:Visibility.Collapsed;_next.Visibility=index==1?Visibility.Visible:Visibility.Collapsed;operation.Visibility=index==0?Visibility.Visible:Visibility.Collapsed;}
+        _tabs.SelectionChanged+=async(_,_)=>{SetView();_pager.Visibility=_tabs.SelectedIndex==0?Visibility.Visible:Visibility.Collapsed;Feedback(null);Motion.Enter(body,y:3,milliseconds:150);if(!_selectingTab)await Load();};SetView();
         _sync.Tick+=async(_,_)=>await Synchronize();Loaded+=(_,_)=>{if(!_disposed){_sync.Start();_clockTick.Start();}};Unloaded+=(_,_)=>{_sync.Stop();_clockTick.Stop();if(!_disposed){_request.Cancel();_detailRequest.Cancel();}};
         Motion.ConfigureVisibility(_context);Motion.ConfigureVisibility(_result);Motion.ConfigureVisibility(_detail);
     }
@@ -179,6 +176,8 @@ public sealed partial class PlanningReportListView : UserControl,IDisposable
         if(await dialog.ShowAsync()!=ContentDialogResult.Primary)return;_search.Text=PlanningJobList.Parse(text.Text).Search;await Load();
     }
     public Task Load(){_searchDelay.Stop();return LoadPage(1);}
+    public Task OpenDigitization()=>OpenTab(0);
+    private Task OpenTab(int index){_selectingTab=true;try{_tabs.SelectedIndex=index;}finally{_selectingTab=false;}return Load();}
     private int PageCount=>Math.Max(1,((_rows?.Total??0)+499)/500);
     private void UpdatePager(){_pageLabel.Text=$"Página {_listPage:N0} de {PageCount:N0} · 500 por página";_pageNumber.Text=_listPage.ToString(CultureInfo.InvariantCulture);_previousPage.IsEnabled=!_loading&&!_mutating&&_listPage>1;_nextPage.IsEnabled=!_loading&&!_mutating&&_listPage<PageCount;}
     private async Task LoadPage(int requested,bool preserveScroll=false)
@@ -187,7 +186,7 @@ public sealed partial class PlanningReportListView : UserControl,IDisposable
         _previousPage.IsEnabled=_nextPage.IsEnabled=false;_grid.SetBusy(true);var target=Math.Clamp(requested,1,requested==1?1:PageCount);
         try
         {
-            if(_tabs.SelectedIndex!=0){await LoadGroups(true);return;}
+            if(_tabs.SelectedIndex==1){await LoadGroups(true);return;}
             _grid.SetUser(_userId());
             var query=new ReportListQuery(_search.Text,_view.SelectedIndex switch{1=>"Checked",2=>"All",_=>"Pending"},_lab.Text,_test.Text,_service.Text,_buyer.Text,PageSize:500,Sort:_sort,Descending:_descending,VerifiedBy:_verified,Block:_block,CheckedDate:_date,ColumnFilters:_columnFilters.Count==0?null:System.Text.Json.JsonSerializer.Serialize(_columnFilters));
             ReportListRows? rows=null;rows=new ReportListRows(async(page,revision,cancellation)=>{var response=await _api.ReportList(query with{Page=page,Revision=revision},cancellation);if(!response.IsSuccess||response.Value is null)throw new InvalidOperationException(response.Error??"No se pudo consultar Report List.");return response.Value;},ct,target);
@@ -210,8 +209,7 @@ public sealed partial class PlanningReportListView : UserControl,IDisposable
         {
             if(reset){_page=1;_detail.Visibility=Visibility.Collapsed;_opened=null;}
             if(_tabs.SelectedIndex==1){var response=await _api.ReportSchedules(GroupQuery(),ct);if(ct.IsCancellationRequested)return;if(!response.IsSuccess||response.Value is not {} data){Feedback(response.Error);return;}if(reset)_scheduleRows.Clear();foreach(var s in data.Items)_scheduleRows.Add(s);_total=data.Total;_listRevision=data.Revision;_status.Text=$"{_scheduleRows.Count:N0} de {_total:N0} horarios · Seleccione un horario para revisarlo";}
-            else{var response=await _api.ReportClosures(GroupQuery() with{State="All"},ct);if(ct.IsCancellationRequested)return;if(!response.IsSuccess||response.Value is not {} data){Feedback(response.Error);return;}if(reset)_closureRows.Clear();foreach(var s in data.Items)_closureRows.Add(s);_total=data.Total;_listRevision=data.Revision;_status.Text=$"{_closureRows.Count:N0} de {_total:N0} JOBs completos entre registros disponibles";}
-            _connection.Text="API conectada";_page++;_next.IsEnabled=(_tabs.SelectedIndex==1?_scheduleRows.Count:_closureRows.Count)<_total;
+            _connection.Text="API conectada";_page++;_next.IsEnabled=_scheduleRows.Count<_total;
         }
         finally{_progress.IsActive=false;}
     }
@@ -371,8 +369,7 @@ public sealed partial class PlanningReportListView : UserControl,IDisposable
         {
             var tab=_tabs.SelectedIndex;var ct=_request.Token;long? revision;
             if(tab==0){var result=await _api.ReportList(new(PageSize:1),ct);revision=result.IsSuccess?result.Value?.Revision:null;}
-            else if(tab==1){var result=await _api.ReportSchedules(GroupQuery() with{Page=1,PageSize=1,Revision=null},ct);revision=result.IsSuccess?result.Value?.Revision:null;}
-            else{var result=await _api.ReportClosures(GroupQuery() with{Page=1,PageSize=1,Revision=null,State="All"},ct);revision=result.IsSuccess?result.Value?.Revision:null;}
+            else{var result=await _api.ReportSchedules(GroupQuery() with{Page=1,PageSize=1,Revision=null},ct);revision=result.IsSuccess?result.Value?.Revision:null;}
             if(ct.IsCancellationRequested||tab!=_tabs.SelectedIndex)return;
             var current=tab==0?_rows?.Revision:_listRevision;
             if(revision is null){_connection.Text="Sin respuesta";return;}
@@ -381,6 +378,6 @@ public sealed partial class PlanningReportListView : UserControl,IDisposable
         }
         catch(OperationCanceledException){}
     }
-    public void Clear(){if(_disposed)return;_clearing=true;_batchDialog?.Dispose();_batchDialog?.Hide();StopScanner();_searchDelay.Stop();_fixedClock.Clear();_clockLabel.Text="Hora actual";_clockTick.Stop();_scanReceipt.Text="Escanea el reporte para marcar su JOB y prueba";_receivedScans=0;_scannerActivity.Text="Todavía no se han recibido datos del lector.";_sync.Stop();_request.Cancel();_detailRequest.Cancel();_grid.SetSource(null);_grid.SetUser(null);_rows=null;_search.Text="";_columnFilters.Clear();_scheduleRows.Clear();_closureRows.Clear();_opened=null;_retry=null;_pageNeedsReload=false;Feedback(null);_clearing=false;}
+    public void Clear(){if(_disposed)return;_clearing=true;_batchDialog?.Dispose();_batchDialog?.Hide();StopScanner();_searchDelay.Stop();_fixedClock.Clear();_clockLabel.Text="Hora actual";_clockTick.Stop();_scanReceipt.Text="Escanea el reporte para marcar su JOB y prueba";_receivedScans=0;_scannerActivity.Text="Todavía no se han recibido datos del lector.";_sync.Stop();_request.Cancel();_detailRequest.Cancel();_grid.SetSource(null);_grid.SetUser(null);_rows=null;_search.Text="";_columnFilters.Clear();_scheduleRows.Clear();_opened=null;_retry=null;_pageNeedsReload=false;Feedback(null);_clearing=false;}
     public void Dispose(){if(_disposed)return;Clear();_disposed=true;_serial.Dispose();_request.Dispose();_detailRequest.Dispose();}
 }

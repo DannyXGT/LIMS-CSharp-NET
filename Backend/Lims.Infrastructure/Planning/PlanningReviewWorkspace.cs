@@ -8,7 +8,7 @@ namespace Lims.Infrastructure.Planning;
 
 public sealed partial class PostgresPlanningStore
 {
-    private static readonly string[] ReviewCategories=["SummaryWithoutReport","ReportWithoutSummary","MissingVendor","MissingEquivalence","ExecutionIdentity","ImportError","MissingParty","MissingTests","IncompleteData","Reviewed","Admission"];
+    private static readonly string[] ReviewCategories=["SummaryWithoutReport","ReportWithoutSummary","MissingVendor","MissingEquivalence","ExecutionIdentity","ImportError","MissingParty","MissingTests","IncompleteData","Reviewed","Admission","RevisionJobs"];
     private const string IntervenedReviewSql="""
         category NOT IN ('MissingVendor','ImportError') AND state IN ('Held','Resolved','Excluded') AND
         (decision_actor IS NOT NULL OR EXISTS(SELECT 1 FROM planning.history ih WHERE ih.episode_id=enriched.episode_id AND
@@ -31,6 +31,11 @@ public sealed partial class PostgresPlanningStore
           WHERE s.file IN ('Report List','Side2','React Active') AND b.status='Applied'
           ORDER BY b.report_sha256,s.sheet,s.row_number,b.applied_at DESC,b.id DESC
         ), cases AS (
+          SELECT 'revision:'||e.id::text AS key,'RevisionJobs' AS category,e.id AS episode_id,NULL::uuid AS incident_id,NULL::uuid AS execution_id,
+            e.job,'Pending' AS state,'JOB con REV o guion; separado del trabajo activo' AS reason,e.version,
+            NULL::text AS original_test,NULL::text AS equivalence,NULL::text AS laboratory,e.source_batch_id AS batch_id,coalesce(e.source_row,0) AS source_row
+          FROM planning.episodes e WHERE strpos(e.job,'-')>0 OR strpos(lower(e.job),'rev')>0
+          UNION ALL
           SELECT i.id::text AS key,i.kind AS category,i.episode_id,i.id AS incident_id,NULL::uuid AS execution_id,
             e.job,i.state,i.reason,i.version,NULL::text AS original_test,NULL::text AS equivalence,NULL::text AS laboratory,
             e.source_batch_id AS batch_id,coalesce(e.source_row,0) AS source_row
@@ -83,20 +88,49 @@ public sealed partial class PostgresPlanningStore
             CASE WHEN r.state='Resolved' THEN 'Resolved' ELSE coalesce(d.state,r.state) END AS state,
             coalesce(d.reason,r.reason) AS reason,coalesce(d.version,r.version) AS version,r.original_test,r.equivalence,r.laboratory,r.batch_id,r.source_row,
             e.in_date,e.due_date,coalesce(e.official_fields->>'sampleStatus',e.official_fields->>'jobStatus') AS official_state,
-            e.buyer,e.vendor,e.service,e.usd,coalesce(x.origin,CASE WHEN r.category='ReportWithoutSummary' THEN 'ReportList' ELSE 'Summary' END) AS origin,
+            e.buyer,e.vendor,e.service,e.usd,coalesce(x.origin,CASE WHEN r.category='ReportWithoutSummary' THEN 'ReportList'
+              WHEN r.category='RevisionJobs' THEN (SELECT CASE WHEN rs.file='Summary' THEN 'Summary' ELSE 'ReportList' END
+                FROM planning.source_rows rs WHERE rs.episode_id=e.id AND rs.file IN ('Summary','Report List','Side2','React Active')
+                ORDER BY (rs.file='Summary') DESC,rs.batch_id,rs.row_number LIMIT 1) ELSE 'Summary' END) AS origin,
             b.created_at AS imported_at,d.actor_id AS decision_actor,d.decided_at
           FROM cases r LEFT JOIN planning.episodes e ON e.id=r.episode_id LEFT JOIN planning.executions x ON x.id=r.execution_id
           LEFT JOIN planning.batches b ON b.id=r.batch_id LEFT JOIN planning.review_decisions d ON d.case_key=r.key
         )
         """;
+    // Assign the whole JOB before applying search, scope, situation, selection or pagination.
+    // Cases retain their source category and identity so all existing actions remain available.
+    private static readonly string ExclusiveReviewQueuesSql="""
+        , unique_cases AS (
+          SELECT DISTINCT ON (key) enriched.*, (/*INTERVENED*/) AS intervened
+          FROM enriched ORDER BY key,CASE category WHEN 'MissingParty' THEN 0 WHEN 'MissingVendor' THEN 1 ELSE 2 END,category
+        ), queue_candidates AS (
+          SELECT u.*,
+            CASE WHEN category='ImportError' THEN 'case:'||key ELSE 'job:'||upper(trim(job)) END AS queue_group,
+            CASE WHEN category<>'ImportError' AND (strpos(job,'-')>0 OR strpos(lower(job),'rev')>0) THEN 'RevisionJobs'
+                 WHEN intervened THEN 'Reviewed'
+                 WHEN category='MissingVendor' THEN 'MissingParty' WHEN category='ExecutionIdentity' THEN 'MissingTests'
+                 ELSE category END AS queue_candidate,
+            CASE WHEN category<>'ImportError' AND (strpos(job,'-')>0 OR strpos(lower(job),'rev')>0) THEN 0
+                 ELSE CASE WHEN state='Pending' THEN 0 WHEN intervened THEN 100 ELSE 200 END +
+                   CASE category WHEN 'ImportError' THEN 1 WHEN 'ReportWithoutSummary' THEN 2 WHEN 'SummaryWithoutReport' THEN 3
+                     WHEN 'MissingTests' THEN 4 WHEN 'ExecutionIdentity' THEN 4 WHEN 'MissingParty' THEN 5 WHEN 'MissingVendor' THEN 5
+                     WHEN 'MissingEquivalence' THEN 6 WHEN 'IncompleteData' THEN 7 WHEN 'Admission' THEN 8 ELSE 9 END END AS queue_priority
+          FROM unique_cases u
+        ), queue_owners AS (
+          SELECT queue_group,(array_agg(queue_candidate ORDER BY queue_priority,queue_candidate))[1] AS queue_category
+          FROM queue_candidates GROUP BY queue_group
+        ), assigned AS (
+          SELECT c.*,o.queue_category FROM queue_candidates c JOIN queue_owners o USING(queue_group)
+        )
+        """.Replace("/*INTERVENED*/",IntervenedReviewSql,StringComparison.Ordinal);
     private static readonly Dictionary<string,string> ReviewFields=new(StringComparer.Ordinal)
     {
-        ["Job"]="job",["InDate"]="in_date",["DueDate"]="due_date",["OfficialState"]="official_state",
+        ["CaseCategory"]="category",["Job"]="job",["InDate"]="in_date",["DueDate"]="due_date",["OfficialState"]="official_state",
         ["Buyer"]="buyer",["Vendor"]="vendor",["Service"]="service",["Usd"]="usd",["State"]="state",
         ["OriginalTest"]="original_test",["Equivalence"]="equivalence",["Laboratory"]="laboratory",["Reason"]="reason",["Origin"]="origin",["ImportedAt"]="imported_at"
     };
     public Task<PlanningReviewWorkspace> ReviewWorkspaceAsync(PlanningReviewQuery query,CancellationToken ct)=>ReviewWorkspacePage(query,2000,ct);
-    private async Task<PlanningReviewWorkspace> ReviewWorkspacePage(PlanningReviewQuery query,int maximum,CancellationToken ct)
+    private async Task<PlanningReviewWorkspace> ReviewWorkspacePage(PlanningReviewQuery query,int maximum,CancellationToken ct,string? decisionKey=null)
     {
         if(!ReviewCategories.Contains(query.Category,StringComparer.Ordinal)||query.Situation is not ("Open" or "All" or "Pending" or "Held" or "Resolved" or "Excluded")||query.Scope is not ("History" or "Batch"))
             throw new PlanningValidationException("Seleccione una bandeja y situación válidas.");
@@ -140,12 +174,13 @@ public sealed partial class PostgresPlanningStore
                 else
                 {
                     if(!ReviewFields.TryGetValue(field,out var column))throw new PlanningValidationException("Columna de filtro inválida.");
-                    var expression=field=="State"?"CASE state WHEN 'Pending' THEN 'Pendiente' WHEN 'Held' THEN 'Retenido' WHEN 'Resolved' THEN 'Resuelto' WHEN 'Excluded' THEN 'Excluido justificadamente' ELSE state END":field=="Origin"?"CASE origin WHEN 'ReportList' THEN 'Report List' ELSE origin END":column;
+                    var expression=field=="CaseCategory"?"concat_ws(' ',category,CASE category WHEN 'RevisionJobs' THEN 'REV y JOBs con guion' WHEN 'MissingParty' THEN 'Sin Buyer/Vendor' WHEN 'IncompleteData' THEN 'Datos incompletos' WHEN 'ImportError' THEN 'Error de importación' WHEN 'SummaryWithoutReport' THEN 'Summary sin Report List' WHEN 'ReportWithoutSummary' THEN 'Report List sin Summary' WHEN 'MissingTests' THEN 'Sin pruebas asignadas' WHEN 'MissingEquivalence' THEN 'Sin equivalencia' WHEN 'ExecutionIdentity' THEN 'Identidad por conciliar' WHEN 'Admission' THEN 'Admisión al trabajo activo' ELSE category END)":field=="State"?"CASE state WHEN 'Pending' THEN 'Pendiente' WHEN 'Held' THEN 'Retenido' WHEN 'Resolved' THEN 'Resuelto' WHEN 'Excluded' THEN 'Excluido justificadamente' ELSE state END":field=="Origin"?"CASE origin WHEN 'ReportList' THEN 'Report List' ELSE origin END":column;
                     filters.Append(CultureInfo.InvariantCulture,$" AND strpos(lower(coalesce(({expression})::text,'No informado')),lower(@{parameter}))>0");args.Add((parameter,field=="Usd"?value.Replace(",","",StringComparison.Ordinal):value));
                 }
             }
         }
-        var where="FROM enriched WHERE "+scope+" AND (category=@category OR (@category='MissingTests' AND category='ExecutionIdentity') OR (@category='Reviewed' AND "+IntervenedReviewSql+")) AND (@situation='All' OR (@situation='Open' AND state IN ('Pending','Held')) OR state=@situation) AND (NOT @selected OR key=ANY(@keys)) ";
+        args.Add(("decisionkey",decisionKey));
+        var where="FROM assigned enriched WHERE "+scope+" AND "+(decisionKey is null?"queue_category=@category":"key=@decisionkey AND category=@category")+" AND (@situation='All' OR (@situation='Open' AND state IN ('Pending','Held')) OR state=@situation) AND (NOT @selected OR key=ANY(@keys)) ";
         await using var c=await database.Source.OpenConnectionAsync(ct).ConfigureAwait(false);
         await using var tx=await c.BeginTransactionAsync(System.Data.IsolationLevel.RepeatableRead,ct).ConfigureAwait(false);
         var reviewCases=ReviewCasesSql.Replace("/*REACT_CASES*/",await HasReactLinks(c,tx,ct).ConfigureAwait(false)?"""
@@ -156,22 +191,18 @@ public sealed partial class PostgresPlanningStore
               x.original_test,x.equivalence,x.laboratory,l.batch_id,0
             FROM planning.react_execution_links l JOIN planning.executions x ON x.id=l.execution_id
             JOIN planning.episodes e ON e.id=x.episode_id
-            """:"",StringComparison.Ordinal);
+            """:"",StringComparison.Ordinal)+ExclusiveReviewQueuesSql;
         var counters=new List<PlanningReviewCounter>();
-        await using(var cmd=Command(c,tx,reviewCases+"SELECT category,count(*)::int,count(*) FILTER(WHERE state='Pending')::int,count(*) FILTER(WHERE state='Held')::int,count(*) FILTER(WHERE state='Resolved')::int,count(*) FILTER(WHERE state='Excluded')::int FROM enriched WHERE "+scope+filters+" GROUP BY category",args.ToArray()))
+        await using(var cmd=Command(c,tx,reviewCases+"SELECT queue_category,count(*)::int,count(*) FILTER(WHERE state='Pending')::int,count(*) FILTER(WHERE state='Held')::int,count(*) FILTER(WHERE state='Resolved')::int,count(*) FILTER(WHERE state='Excluded')::int FROM assigned enriched WHERE "+scope+filters+" GROUP BY queue_category",args.ToArray()))
         await using(var r=await cmd.ExecuteReaderAsync(ct).ConfigureAwait(false))while(await r.ReadAsync(ct).ConfigureAwait(false))counters.Add(new(r.GetString(0),r.GetInt32(1),r.GetInt32(2),r.GetInt32(3),r.GetInt32(4),r.GetInt32(5)));
         foreach(var category in ReviewCategories)if(counters.All(c=>c.Category!=category))counters.Add(new(category,0,0,0,0));
-        var identity=counters.Single(c=>c.Category=="ExecutionIdentity");var testsCounter=counters.Single(c=>c.Category=="MissingTests");counters.Remove(testsCounter);counters.Add(testsCounter with{Total=testsCounter.Total+identity.Total,Pending=testsCounter.Pending+identity.Pending,Held=testsCounter.Held+identity.Held,Resolved=testsCounter.Resolved+identity.Resolved,Excluded=testsCounter.Excluded+identity.Excluded});
-        counters.RemoveAll(c=>c.Category=="Reviewed");
-        await using(var cmd=Command(c,tx,reviewCases+"SELECT count(*)::int,count(*) FILTER(WHERE state='Held')::int,count(*) FILTER(WHERE state='Resolved')::int,count(*) FILTER(WHERE state='Excluded')::int FROM enriched WHERE "+scope+filters+" AND "+IntervenedReviewSql,args.ToArray()))
-        await using(var r=await cmd.ExecuteReaderAsync(ct).ConfigureAwait(false)){await r.ReadAsync(ct).ConfigureAwait(false);counters.Add(new("Reviewed",r.GetInt32(0),0,r.GetInt32(1),r.GetInt32(2),r.GetInt32(3)));}
         int total;
         await using(var cmd=Command(c,tx,reviewCases+"SELECT count(*)::int "+where+filters,args.ToArray()))total=(int)(await cmd.ExecuteScalarAsync(ct).ConfigureAwait(false))!;
         var items=new List<PlanningReviewCase>();
         var sql=reviewCases+"""
             SELECT p.key,p.category,p.episode_id,p.incident_id,p.execution_id,p.job,p.in_date,p.due_date,p.official_state,
               p.buyer,p.vendor,p.service,p.usd,p.state,p.reason,p.version,p.original_test,p.equivalence,p.laboratory,p.batch_id,p.source_row,
-              coalesce(du.nombre,decision.actor_name),coalesce(p.decided_at,decision.at),p.origin,p.imported_at FROM (SELECT *
+              coalesce(du.nombre,decision.actor_name),coalesce(p.decided_at,decision.at),p.origin,p.imported_at,p.queue_category FROM (SELECT *
             """+where+filters+" ORDER BY "+sort+(query.Descending?" DESC":" ASC")+" NULLS LAST,key LIMIT @take OFFSET @skip) p "+"""
             LEFT JOIN planning.actors du ON du.id=p.decision_actor LEFT JOIN LATERAL (
               SELECT u.nombre AS actor_name,h.at FROM planning.history h JOIN planning.actors u ON u.id=h.actor_id
@@ -181,17 +212,17 @@ public sealed partial class PostgresPlanningStore
             """;
         await using(var cmd=Command(c,tx,sql,args.ToArray()))
         await using(var r=await cmd.ExecuteReaderAsync(ct).ConfigureAwait(false))while(await r.ReadAsync(ct).ConfigureAwait(false))
-            items.Add(new(r.GetString(0),r.GetString(1),r.IsDBNull(2)?null:r.GetGuid(2),r.IsDBNull(3)?null:r.GetGuid(3),r.IsDBNull(4)?null:r.GetGuid(4),r.GetString(5),NullableDate(r,6),NullableDate(r,7),NullableString(r,8),NullableString(r,9),NullableString(r,10),NullableString(r,11),r.IsDBNull(12)?null:r.GetDecimal(12),r.GetString(13),NullableString(r,14),r.GetInt64(15),NullableString(r,16),NullableString(r,17),NullableString(r,18),r.IsDBNull(19)?null:r.GetGuid(19),r.GetInt32(20),NullableString(r,21),r.IsDBNull(22)?null:r.GetFieldValue<DateTimeOffset>(22),NullableString(r,23),r.IsDBNull(24)?null:r.GetFieldValue<DateTimeOffset>(24)));
+            items.Add(new(r.GetString(0),r.GetString(1),r.IsDBNull(2)?null:r.GetGuid(2),r.IsDBNull(3)?null:r.GetGuid(3),r.IsDBNull(4)?null:r.GetGuid(4),r.GetString(5),NullableDate(r,6),NullableDate(r,7),NullableString(r,8),NullableString(r,9),NullableString(r,10),NullableString(r,11),r.IsDBNull(12)?null:r.GetDecimal(12),r.GetString(13),NullableString(r,14),r.GetInt64(15),NullableString(r,16),NullableString(r,17),NullableString(r,18),r.IsDBNull(19)?null:r.GetGuid(19),r.GetInt32(20),NullableString(r,21),r.IsDBNull(22)?null:r.GetFieldValue<DateTimeOffset>(22),NullableString(r,23),r.IsDBNull(24)?null:r.GetFieldValue<DateTimeOffset>(24),r.GetString(25)));
         await tx.CommitAsync(ct).ConfigureAwait(false);
-        return new(items,total,page,size,counters,(query.Scope=="Batch"?"Lote seleccionado":"Histórico acumulado")+" · categorías independientes. Solo Summary no implica pérdida; la cobertura temporal de Report List no es verificable.");
+        return new(items,total,page,size,counters,(query.Scope=="Batch"?"Lote seleccionado":"Histórico acumulado")+" · una sola bandeja por JOB. Los otros motivos se conservan en la misma bandeja y el expediente.");
     }
     public async Task<byte[]> ExportReviewsAsync(PlanningReviewQuery query,CancellationToken ct)
     {
         var page=await ReviewWorkspacePage(query with{Page=1,PageSize=50001},50001,ct).ConfigureAwait(false);
         if(page.Total>50000)throw new PlanningValidationException("Máximo 50,000 casos por exportación; ajuste los filtros.");
         static string Cell(string? value){var text=value??"";if(text.Length>0&&"=+-@\t\r".Contains(text[0],StringComparison.Ordinal))text="'"+text;return "\""+text.Replace("\"","\"\"",StringComparison.Ordinal)+"\"";}
-        var csv=new StringBuilder("\uFEFFJOB,Fecha ingreso,Due Date,Estado,Buyer,Vendor,Service,USD,Situación,Prueba,Equivalencia,Laboratorio,Motivo,Decidido por,Fecha decisión,Bandeja,Episodio,Lote,Fila fuente,Origen,Fecha de lote\r\n");
-        foreach(var row in page.Items)csv.AppendLine(string.Join(',',new[]{row.Job,row.InDate?.ToString("yyyy-MM-dd",CultureInfo.InvariantCulture),row.DueDate?.ToString("yyyy-MM-dd",CultureInfo.InvariantCulture),row.OfficialState,row.Buyer,row.Vendor,row.Service,row.Usd?.ToString(CultureInfo.InvariantCulture),row.StateLabel,row.OriginalTest,row.Equivalence,row.Laboratory,row.Reason,row.DecidedBy,row.DecidedAt?.ToString("O",CultureInfo.InvariantCulture),row.Category,row.EpisodeId?.ToString(),row.BatchId?.ToString(),row.SourceRow.ToString(CultureInfo.InvariantCulture),row.Origin,row.ImportedAt?.ToString("O",CultureInfo.InvariantCulture)}.Select(Cell)));
+        var csv=new StringBuilder("\uFEFFJOB,Fecha ingreso,Due Date,Estado,Buyer,Vendor,Service,USD,Situación,Prueba,Equivalencia,Laboratorio,Motivo,Decidido por,Fecha decisión,Bandeja,Episodio,Lote,Fila fuente,Origen,Fecha de lote,Tipo de caso\r\n");
+        foreach(var row in page.Items)csv.AppendLine(string.Join(',',new[]{row.Job,row.InDate?.ToString("yyyy-MM-dd",CultureInfo.InvariantCulture),row.DueDate?.ToString("yyyy-MM-dd",CultureInfo.InvariantCulture),row.OfficialState,row.Buyer,row.Vendor,row.Service,row.Usd?.ToString(CultureInfo.InvariantCulture),row.StateLabel,row.OriginalTest,row.Equivalence,row.Laboratory,row.Reason,row.DecidedBy,row.DecidedAt?.ToString("O",CultureInfo.InvariantCulture),row.QueueCategory??row.Category,row.EpisodeId?.ToString(),row.BatchId?.ToString(),row.SourceRow.ToString(CultureInfo.InvariantCulture),row.Origin,row.ImportedAt?.ToString("O",CultureInfo.InvariantCulture),row.Category}.Select(Cell)));
         return Encoding.UTF8.GetBytes(csv.ToString());
     }
 }

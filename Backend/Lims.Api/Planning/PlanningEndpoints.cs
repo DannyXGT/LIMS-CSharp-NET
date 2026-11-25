@@ -60,6 +60,10 @@ internal static class PlanningEndpoints
         group.MapPost("/report-list/schedules/review",async(ReportScheduleReview request,IPlanningStore store,HttpContext context,CancellationToken ct)=>Results.Ok(await store.ReviewReportScheduleAsync(request,Actor(context),ct).ConfigureAwait(false))).RequireAuthorization(PlanningPermissions.ReportReview);
         group.MapGet("/report-list/schedules/export",async([AsParameters]ReportScheduleQuery query,IPlanningStore store,CancellationToken ct)=>Results.File(await store.ExportReviewedSchedulesAsync(query,ct).ConfigureAwait(false),"text/csv; charset=utf-8","Horarios chequeados.csv"));
         group.MapGet("/report-list/closures",async([AsParameters]ReportScheduleQuery query,IPlanningStore store,CancellationToken ct)=>Results.Ok(await store.ReportClosuresAsync(query,ct).ConfigureAwait(false)));
+        group.MapGet("/closures",async([AsParameters]ReportClosureQuery query,IPlanningStore store,CancellationToken ct)=>Results.Ok(await store.ClosureWorkspaceAsync(query,ct).ConfigureAwait(false)));
+        group.MapGet("/closures/detail",async(string job,string fingerprint,IPlanningStore store,CancellationToken ct)=>Results.Ok(await store.ClosureDetailAsync(job,fingerprint,ct).ConfigureAwait(false)));
+        group.MapGet("/closures/export",async([AsParameters]ReportClosureQuery query,IPlanningStore store,CancellationToken ct)=>Results.File(await store.ExportClosuresAsync(query,ct).ConfigureAwait(false),"text/csv; charset=utf-8","Cierres.csv"));
+        group.MapPut("/closures/follow-up",async(ReportClosureFollowUp request,IPlanningStore store,HttpContext context,CancellationToken ct)=>Results.Ok(await store.SaveClosureFollowUpAsync(request,Actor(context),ct).ConfigureAwait(false))).RequireAuthorization(PlanningPermissions.ReportReview);
         group.MapPost("/report-list/check",async(ReportListCheck request,IPlanningStore store,HttpContext context,CancellationToken ct)=>
         {
             if(!request.Checked||request.AdminOverride)return Results.Problem(statusCode:403,detail:"Las correcciones requieren permiso de revisión.");

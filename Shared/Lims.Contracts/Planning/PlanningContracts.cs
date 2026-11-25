@@ -83,7 +83,7 @@ public sealed record PlanningReviewCounter(string Category,int Total,int Pending
 public sealed record PlanningReviewCase(string Key,string Category,Guid? EpisodeId,Guid? IncidentId,Guid? ExecutionId,
     string Job,DateOnly? InDate,DateOnly? DueDate,string? OfficialState,string? Buyer,string? Vendor,string? Service,decimal? Usd,
     string State,string? Reason,long Version,string? OriginalTest,string? Equivalence,string? Laboratory,Guid? BatchId,int SourceRow,
-    string? DecidedBy,DateTimeOffset? DecidedAt,string? Origin=null,DateTimeOffset? ImportedAt=null)
+    string? DecidedBy,DateTimeOffset? DecidedAt,string? Origin=null,DateTimeOffset? ImportedAt=null,string? QueueCategory=null)
 {
     public string StateLabel=>PlanningLabels.State(State);
     public string InDateText=>InDate?.ToString("yyyy-MM-dd",System.Globalization.CultureInfo.InvariantCulture)??"No informado";
@@ -120,7 +120,7 @@ public static class PlanningLabels
 {
     public static string Category(string code) => code switch
     {
-        "BothFiles" => "En ambos archivos", "SummaryWithoutReport" => "Summary sin Report List", "MissingTests" => "Sin pruebas asignadas",
+        "RevisionJobs" => "REV y JOBs con guion", "MissingParty"=>"Sin Buyer/Vendor", "IncompleteData"=>"Datos incompletos", "ImportError"=>"Error de importación", "Reviewed"=>"Retenidos y resueltos", "BothFiles" => "En ambos archivos", "SummaryWithoutReport" => "Summary sin Report List", "MissingTests" => "Sin pruebas asignadas",
         "MissingVendor" => "Sin Vendor", "MissingEquivalence" => "Sin equivalencia", "ManualManaged" => "Gestionados manualmente",
         "ExecutionIdentity" => "Identidad por conciliar", "ReportWithoutSummary" => "Report List sin Summary", "ExternalClosed" => "Close Date externo", "Episode" => "Revisar episodio", "Admission"=>"Admisión al trabajo activo", "BusinessRule"=>"Reglas de negocio aplicadas", _ => code
     };

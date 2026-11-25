@@ -44,7 +44,7 @@ public sealed partial class PlanningPostgresTests
         var dossier=(await store.DossierAsync(rows[0].Execution.EpisodeId,default))!;
         Assert.Equal(5,dossier.Tests.Count);Assert.Equal(2,dossier.Tests.Count(t=>t.Complete));
         Assert.Equal(9L,await db.Scalar("SELECT count(*) FROM planning.executions"));
-        Assert.Single((await store.ReviewWorkspaceAsync(new(Category:"MissingEquivalence"),default)).Items);
+        Assert.Single(await AssertExclusiveQueues(store),r=>r.Category=="MissingEquivalence"&&r.State=="Pending");
     }
 
     [PlanningDatabaseFact]

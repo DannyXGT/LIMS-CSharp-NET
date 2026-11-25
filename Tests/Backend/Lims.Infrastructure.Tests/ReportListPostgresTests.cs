@@ -99,7 +99,7 @@ public sealed partial class PlanningPostgresTests
         await store.SaveEquivalenceAsync(new("Technical B","PH","CHEMICAL",false,null,"Fixture aprobado B"),1,default);
         var p=await store.PreviewAsync(Input(Summary(),Report(test:"Technical A"),Report(3,"Technical B"),Report(4,"Unknown")),1,default);await store.ConfirmAsync(p.Id,1,default);
         var rows=(await store.QueryAsync(new(),default)).Items;Assert.Equal(3,rows.Count);Assert.Equal(2,rows.Count(r=>r.PlanningTest=="PH"));Assert.Single(rows,r=>r.PlanningTest=="Sin equivalencia");
-        Assert.Single((await store.ReviewWorkspaceAsync(new(Category:"MissingEquivalence"),default)).Items);
+        Assert.Single(await AssertExclusiveQueues(store),r=>r.Category=="MissingEquivalence"&&r.State=="Pending");
         await store.SaveEquivalenceAsync(new("Technical A","PH vigente","CHEMICAL",false,0,"Cambio aprobado"),1,default);
         var updated=Assert.Single((await store.QueryAsync(new(ColumnFilters:"{\"PlanningTest\":\"vigente\"}"),default)).Items);Assert.Equal("Technical A",updated.OriginalTest);Assert.Equal("PH vigente",updated.PlanningTest);
         var csv=System.Text.Encoding.UTF8.GetString(await store.ExportAsync(new(),default));Assert.Contains("PH vigente",csv);Assert.Contains("Technical A",csv);

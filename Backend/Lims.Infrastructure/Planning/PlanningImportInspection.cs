@@ -82,13 +82,13 @@ public sealed partial class PostgresPlanningStore
     {
         ArgumentNullException.ThrowIfNull(request);var reason=Reason(request.Reason);
         if(request.State is not ("Pending" or "Held" or "Resolved" or "Excluded"))throw new PlanningValidationException("Situación inválida.");
-        var page=await ReviewWorkspaceAsync(new(Category:request.Category,Situation:"All",SelectedKeys:System.Text.Json.JsonSerializer.Serialize(new[]{request.Key})),ct).ConfigureAwait(false);
+        var page=await ReviewWorkspacePage(new(Category:request.Category,Situation:"All"),1,ct,request.Key).ConfigureAwait(false);
         var row=page.Items.SingleOrDefault()??throw new PlanningValidationException("El caso no existe en esta categoría.");
         if(row.IncidentId is{} incident){await DecideIncidentAsync(incident,new(request.Version,request.State,reason),actor,ct).ConfigureAwait(false);return;}
         if(request.State=="Resolved")throw new PlanningValidationException("Complete o concilie los datos de origen para resolver este caso; también puede retenerlo o excluirlo con justificación.");
         await using var c=await database.Source.OpenConnectionAsync(ct).ConfigureAwait(false);await using var tx=await c.BeginTransactionAsync(ct).ConfigureAwait(false);
         await Revision(c,tx,true,ct).ConfigureAwait(false);
-        var fresh=await ReviewWorkspaceAsync(new(Category:request.Category,Situation:"All",SelectedKeys:System.Text.Json.JsonSerializer.Serialize(new[]{request.Key})),ct).ConfigureAwait(false);
+        var fresh=await ReviewWorkspacePage(new(Category:request.Category,Situation:"All"),1,ct,request.Key).ConfigureAwait(false);
         row=fresh.Items.SingleOrDefault()??throw new PlanningConflictException("El caso ya no está disponible.");
         if(row.Version!=request.Version)throw new PlanningConflictException("Los datos o la revisión cambiaron. Actualice la bandeja.");
         if(row.State=="Resolved")throw new PlanningValidationException("El dato ya está completo. Su estado se deriva de la información persistida.");

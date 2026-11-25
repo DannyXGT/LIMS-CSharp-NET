@@ -9,6 +9,7 @@ namespace Lims.Desktop.Planning;
 internal sealed class ReportTableViewport : Grid
 {
     private readonly ListView _list;
+    private readonly Grid _headerHost;
     private readonly TranslateTransform _headerOffset=new();
     private double _lastVerticalOffset=double.NaN;
     public ScrollViewer? Scroll {get;private set;}
@@ -21,7 +22,7 @@ internal sealed class ReportTableViewport : Grid
         header.RenderTransform=_headerOffset;
         header.HorizontalAlignment=HorizontalAlignment.Left;
         var clip=new RectangleGeometry();
-        var head=new Grid{Clip=clip,MinHeight=40,Background=PlanningUi.Brush("LimsSurfaceSecondaryBrush")};
+        var head=_headerHost=new Grid{Clip=clip,MinHeight=40,Background=PlanningUi.Brush("LimsSurfaceSecondaryBrush")};
         head.Children.Add(header);
         head.SizeChanged+=(_,_)=>clip.Rect=new Rect(0,0,head.ActualWidth,head.ActualHeight);
         Children.Add(head);SetRow(list,1);Children.Add(list);
@@ -35,6 +36,7 @@ internal sealed class ReportTableViewport : Grid
         list.Loaded+=(_,_)=>Attach();
         list.Unloaded+=(_,_)=>Detach();
     }
+    public void ShowHeader(bool visible)=>_headerHost.Visibility=visible?Visibility.Visible:Visibility.Collapsed;
     private void Attach()
     {
         Detach();Scroll=FindScroll(_list);

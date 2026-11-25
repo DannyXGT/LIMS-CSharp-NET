@@ -14,8 +14,8 @@ namespace Lims.Desktop.Planning;
 public sealed partial class PlanningImportsView
 {
     private sealed record ReviewColumn(string Key,string Label,int Width);
-    private static readonly (string Key,string Label)[] Queues=[("SummaryWithoutReport","Solo Summary"),("ReportWithoutSummary","Solo Report List"),("MissingParty","Sin Buyer/Vendor"),("MissingEquivalence","Sin equivalencia"),("MissingTests","Pruebas por agregar"),("IncompleteData","Datos incompletos"),("Admission","Admisión al trabajo activo"),("Reviewed","Retenidos y resueltos")];
-    private static readonly ReviewColumn[] AllReviewColumns=[new("Job","JOB",185),new("Reason","Motivo",280),new("State","Situación",100),new("InDate","Fecha ingreso",105),new("DueDate","Due Date",105),new("OfficialState","Estado TIPS",145),new("Buyer","Buyer",165),new("Vendor","Vendor",175),new("Service","Servicio",110),new("Usd","USD",90),new("OriginalTest","Prueba original",280),new("Equivalence","Equivalencia",180),new("Laboratory","Laboratorio",120),new("Origin","Origen",110),new("ImportedAt","Fecha de lote",160)];
+    private static readonly (string Key,string Label)[] Queues=[("RevisionJobs","REV y JOBs con guion"),("SummaryWithoutReport","Solo Summary"),("ReportWithoutSummary","Solo Report List"),("MissingParty","Sin Buyer/Vendor"),("MissingEquivalence","Sin equivalencia"),("MissingTests","Pruebas por agregar"),("IncompleteData","Datos incompletos"),("Admission","Admisión al trabajo activo"),("ImportError","Errores de importación"),("Reviewed","Retenidos y resueltos")];
+    private static readonly ReviewColumn[] AllReviewColumns=[new("Job","JOB",185),new("Reason","Motivo",280),new("State","Situación",100),new("InDate","Fecha ingreso",105),new("DueDate","Due Date",105),new("OfficialState","Estado TIPS",145),new("Buyer","Buyer",165),new("Vendor","Vendor",175),new("Service","Servicio",110),new("Usd","USD",90),new("CaseCategory","Tipo de caso",190),new("OriginalTest","Prueba original",280),new("Equivalence","Equivalencia",180),new("Laboratory","Laboratorio",120),new("Origin","Origen",110),new("ImportedAt","Fecha de lote",160)];
     private readonly StackPanel _queueButtons=new(){Spacing=4};
     private sealed record QueueChoice(string Key,string Label);
     private readonly ComboBox _queuePicker=new(){DisplayMemberPath=nameof(QueueChoice.Label),Width=240,Visibility=Visibility.Collapsed};
@@ -41,7 +41,7 @@ public sealed partial class PlanningImportsView
     private bool _reviewDescending;
     private readonly Dictionary<string,string> _columnFilters=[];
     private ReviewColumn[] _reviewColumns=[];
-    private readonly HashSet<string> _visibleReviewColumns=AllReviewColumns.Take(10).Select(c=>c.Key).ToHashSet();
+    private readonly HashSet<string> _visibleReviewColumns=AllReviewColumns.Take(10).Select(c=>c.Key).Append("CaseCategory").ToHashSet();
     private IReadOnlyList<PlanningReviewCase> _reviewRows=[];
     private CancellationTokenSource? _reviewLoad;
     private IReadOnlyList<PlanningReviewCounter> _reviewCounters=[];
@@ -64,7 +64,7 @@ public sealed partial class PlanningImportsView
         var railTitle=PlanningUi.Text("Bandejas",14);railTitle.FontWeight=Microsoft.UI.Text.FontWeights.SemiBold;railTitle.Margin=new(10,4,0,6);
         var railCountLabel=PlanningUi.Text("Casos",11,true);railCountLabel.Margin=new(0,4,10,6);railCountLabel.VerticalAlignment=VerticalAlignment.Center;
         var railContent=PlanningUi.Rows(GridLength.Auto,new(1,GridUnitType.Star),GridLength.Auto);railContent.RowSpacing=4;PlanningUi.Place(railContent,Split(railTitle,railCountLabel),0);PlanningUi.Place(railContent,new ScrollViewer{Content=_queueButtons,HorizontalScrollBarVisibility=ScrollBarVisibility.Disabled,VerticalScrollBarVisibility=ScrollBarVisibility.Auto},1);
-        var overlap=PlanningUi.Text("Un caso puede aparecer en varias bandejas.",11,true);overlap.Margin=new(10,8,10,4);PlanningUi.Place(railContent,overlap,2);
+        var overlap=PlanningUi.Text("Cada JOB aparece en una sola bandeja.",11,true);overlap.Margin=new(10,8,10,4);PlanningUi.Place(railContent,overlap,2);
         var rail=Surface(railContent,new Thickness(6));rail.Width=224;AutomationProperties.SetName(rail,"Bandejas disponibles y sus contadores");layout.Children.Add(rail);
         _queuePicker.Style=(Style)Application.Current.Resources["LimsCompactComboBoxStyle"];AutomationProperties.SetName(_queuePicker,"Bandeja de revisión");_queuePicker.Margin=new(0,0,8,0);
         _queuePicker.SelectionChanged+=async(_,_)=>{if(!_paintingQueue&&_queuePicker.SelectedItem is QueueChoice choice&&choice.Key!=_reviewCategory)await SelectQueue(choice.Key);};
@@ -154,7 +154,7 @@ public sealed partial class PlanningImportsView
         var states=current is null?[]:new[]{(current.Pending,"pendiente","pendientes"),(current.Held,"retenido","retenidos"),(current.Resolved,"resuelto","resueltos"),(current.Excluded,"excluido","excluidos")}.Where(s=>s.Item1>0).Select(s=>$"{s.Item1:N0} {(s.Item1==1?s.Item2:s.Item3)}").ToArray();
         _queueSummary.Text=current is null?"":states.Length==0?"Sin casos en esta bandeja":string.Join(" · ",states);
         ToolTipService.SetToolTip(_queuePicker,CounterDescription(current));
-        ToolTipService.SetToolTip(_queueSummary,"Contadores de PostgreSQL para todo el alcance y los filtros; incluyen todas las situaciones y páginas. Las categorías pueden superponerse.");
+        ToolTipService.SetToolTip(_queueSummary,"Contadores de casos para todo el alcance y los filtros. Cada JOB pertenece a una sola bandeja; puede conservar varios motivos dentro de ella.");
     }
     private string CounterDescription(PlanningReviewCounter? c)=>(ReviewScopeLabel+" · ")+(c is null?"Cargando…":$"Total {c.Total:N0} · Pendientes {c.Pending:N0} · Retenidos {c.Held:N0} · Resueltos {c.Resolved:N0}"+(c.Excluded>0?$" · Excluidos {c.Excluded:N0}":""));
     private string ReviewScopeLabel=>_reviewBatch is null?"Histórico":$"Lote {_reviewBatch.Value.ToString()[..8]}";
@@ -287,9 +287,21 @@ public sealed partial class PlanningImportsView
     private async Task ResolveIdentity()
     {
         if(SelectedReview is not PlanningReviewCase{BatchId:{} batch,SourceRow:>0,State:"Pending"} row||!_permissions().Contains(PlanningPermissions.ManualTests,StringComparer.Ordinal))return;
-        var jobs=await _api.Jobs(new(Search:row.Job,SearchMode:"Exact",Scope:"History",PageSize:500),CancellationToken.None);
-        if(!jobs.IsSuccess){Message(jobs.Error??"No se pudieron consultar los episodios.");return;}
-        var episodes=(jobs.Value?.Items??[]).DistinctBy(r=>r.EpisodeId).ToArray();if(episodes.Length==0){Message("No hay episodio inequívoco. Importa el Summary correspondiente antes de conciliar.");return;}
+        IReadOnlyList<PlanningRow> candidates;
+        if(row.EpisodeId is{} knownEpisode)
+        {
+            // REV/suffix JOBs are intentionally absent from the normal consultation search.
+            var known=await _api.Dossier(knownEpisode,CancellationToken.None);
+            if(!known.IsSuccess||known.Value is not{} knownDossier){Message(known.Error??"No se pudo consultar el expediente.");return;}
+            candidates=[new(knownDossier.EpisodeId,null,knownDossier.Job,knownDossier.Wip.InDate,knownDossier.Wip.DueDate,null,null,null,knownDossier.Wip.Service,null,null,"Sin información",null,null,"Summary",knownDossier.Wip.Buyer,knownDossier.Wip.Vendor,false)];
+        }
+        else
+        {
+            var jobs=await _api.Jobs(new(Search:row.Job,SearchMode:"Exact",Scope:"History",PageSize:500),CancellationToken.None);
+            if(!jobs.IsSuccess){Message(jobs.Error??"No se pudieron consultar los episodios.");return;}
+            candidates=jobs.Value?.Items??[];
+        }
+        var episodes=candidates.DistinctBy(r=>r.EpisodeId).ToArray();if(episodes.Length==0){Message("No hay episodio inequívoco. Importa el Summary correspondiente antes de conciliar.");return;}
         var combo=new ComboBox{Header="Episodio",ItemsSource=episodes.Select(e=>$"{e.Job} · {e.InDate:yyyy-MM-dd} · {e.EpisodeId}").ToArray(),SelectedIndex=0};
         var execution=PlanningUi.Field("UUID de ejecución existente (vacío = nueva)",max:36);var reason=PlanningUi.Field("Motivo y verificación de identidad",max:1000);
         var dialog=new ContentDialog{XamlRoot=XamlRoot,Title="Conciliar fila original",Content=PlanningUi.Stack(PlanningUi.Text(row.OriginalTest??"Prueba no informada"),combo,execution,reason),PrimaryButtonText="Guardar conciliación",CloseButtonText="Cancelar"};

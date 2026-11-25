@@ -36,6 +36,34 @@ public sealed record ReportSessionVersion(Guid SessionId,long Version);
 public sealed record ReportScheduleReview(Guid SessionId,long Version,IReadOnlyList<ReportExecutionVersion> Executions,string Reason,IReadOnlyList<ReportSessionVersion>? ClockSessions=null);
 public sealed record ReportClosure(string Job,int Required,int Digitized,DateTimeOffset LastDigitizedAt,DateOnly? DueDate)
 {
+    public string? Buyer { get; init; }
+    public string Laboratories { get; init; }="";
+    public string DigitizedBy { get; init; }="";
+    public string LastTest { get; init; }="";
+    public decimal? Usd { get; init; }
+    public string? Service { get; init; }
+    public int GroupCount { get; init; }
+    public int Reviewed { get; init; }
+    public Guid[] EpisodeIds { get; init; }=[];
+    public string Fingerprint { get; init; }="";
+    public string State { get; init; }="Pending";
+    public string? Responsible { get; init; }
+    public string? Notes { get; init; }
+    public DateOnly? FollowUpOn { get; init; }
+    public long FollowUpVersion { get; init; }
+    public string? UpdatedBy { get; init; }
+    public DateTimeOffset? UpdatedAt { get; init; }
+    public bool Current { get; init; }=true;
+    public string StateText=>State switch{"Seen"=>"En seguimiento","Archived"=>"Atendido",_=>"Por atender"};
     public override string ToString()=>$"{Job} · {Digitized}/{Required} pruebas digitadas · {LastDigitizedAt.ToOffset(TimeSpan.FromHours(-6)):yyyy-MM-dd HH:mm}";
 }
-public sealed record ReportClosurePage(IReadOnlyList<ReportClosure> Items,int Total,int Page,int PageSize,long Revision,string Coverage);
+public sealed record ReportClosureFacet(DateOnly Date,string Time,int Count);
+public sealed record ReportClosurePage(IReadOnlyList<ReportClosure> Items,int Total,int Page,int PageSize,long Revision,string Coverage)
+{
+    public IReadOnlyList<ReportClosureFacet> Facets { get; init; }=[];
+}
+public sealed record ReportClosureQuery(string? Search=null,string Scope="Current",string State="All",string? Laboratory=null,
+    DateOnly? From=null,DateOnly? Until=null,string Sort="Latest",int Page=1,int PageSize=100,long? Revision=null,bool IncludeTests=false,string? Dates=null,string? Times=null);
+public sealed record ReportClosureFollowUp(Guid RequestId,string Job,string Fingerprint,long Version,string State,
+    string? Responsible,string? Notes,DateOnly? FollowUpOn,string Reason);
+public sealed record ReportClosureDetail(ReportClosure Closure,IReadOnlyList<PlanningRow> Tests,IReadOnlyList<PlanningHistory> History);

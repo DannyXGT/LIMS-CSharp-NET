@@ -1,5 +1,17 @@
 # Bandejas de revisión: composición y lectura con datos
 
+## Actualización del 24 de noviembre de 2026: bandejas exclusivas
+
+Se añade **REV y JOBs con guion**. Incluye todos los episodios persistidos cuyo JOB contenga `REV` (sin distinguir mayúsculas) o `-`, incluso si no tienen incidencias. Sus casos adicionales permanecen en esta misma bandeja, con sus identidades y acciones originales. La nueva fila de resumen por episodio permite abrir el expediente, retener o excluir con motivo; no elimina ni combina ejecuciones.
+
+La pertenencia es exclusiva por JOB completo, calculada en el servidor antes de situación, búsqueda, lote, filtros, selección y paginación. Prioridad: REV/guion; después, entre problemas pendientes, errores de archivo, Solo Report List, Solo Summary, pruebas/identidad por agregar, Buyer/Vendor, equivalencia, datos incompletos y admisión. Si no quedan pendientes y hay decisiones, el JOB pasa a Retenidos y resueltos. Los REV conservan su bandeja incluso retenidos o excluidos. Los errores de archivo sin JOB se asignan por caso. Los demás motivos del mismo JOB se conservan como filas distintas dentro de su única bandeja; los contadores cuentan casos, no JOBs únicos.
+
+Se elimina la duplicación del mismo incidente entre Sin Vendor y Sin Buyer/Vendor, y la duplicación de pertenencia entre la bandeja de origen y Retenidos y resueltos. `Category` mantiene el tipo de caso para las acciones existentes; `QueueCategory` identifica su única bandeja. La exportación respeta la misma asignación y añade Tipo de caso; la tabla y el detalle permiten distinguir ambos. Conciliar identidad utiliza el expediente conocido, también para JOBs excluidos de la consulta normal.
+
+Requiere actualizar API y cliente. No requiere migración SQL. Los párrafos siguientes describen la validación histórica de noviembre 20, anterior a esta regla de exclusividad.
+
+Validación local de esta actualización: cliente x64 Debug y API Release compilados con cero errores y advertencias. La regresión PostgreSQL pasó 71 de 72 casos; el restante aún consultaba Sin Buyer/Vendor como bandeja independiente para un JOB cuya prioridad lo asignaba a otra. Se ajustó la comprobación a su única bandeja conservando el caso original. La corrida final dirigida pasó cinco casos: exclusividad con filtros, lote, selección, CSV y reimportación; movimiento al resolver causas; conservación de ejecuciones repetidas y conciliación; procedencia de REV sin Summary y errores de archivo; y el recorrido corregido con archivos originales. Evidencia: `artifacts/validation/exclusive-review-queues/tests/queues-final.trx`, `queues-focused-final.trx` y `acceptance.json`. Son bases efímeras locales; no se desplegó producción ni se certificó la pantalla conectada del usuario.
+
 20 de noviembre de 2026. Ajuste de presentación dentro del Centro de Importaciones existente. Conserva autenticación, permisos, consulta al servidor, tabla virtualizada, fuentes y decisiones auditadas.
 
 ## Cambios

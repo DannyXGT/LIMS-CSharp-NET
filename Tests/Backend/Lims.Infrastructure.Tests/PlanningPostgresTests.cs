@@ -52,9 +52,9 @@ public sealed partial class PlanningPostgresTests
         Assert.All(dossier.History,h=>Assert.Equal("Actor sintético local",h.ActorName));
         Assert.Equal("Actor sintético local",Assert.Single(await store.BatchesAsync(default)).ActorName);
         Assert.NotNull(await store.InspectImportAsync(preview.Id,default));
-        var review=Assert.Single((await store.ReviewWorkspaceAsync(new(Category:"SummaryWithoutReport"),default)).Items);
+        var review=Assert.Single((await store.ReviewWorkspaceAsync(new(Category:"SummaryWithoutReport"),default)).Items,r=>r.Category=="SummaryWithoutReport");
         await store.DecideReviewAsync(new(review.Key,review.Category,review.Version,"Held","Retener en prueba separada"),1,default);
-        Assert.Equal("Actor sintético local",Assert.Single((await store.ReviewWorkspaceAsync(new(Category:"SummaryWithoutReport"),default)).Items).DecidedBy);
+        Assert.Equal("Actor sintético local",Assert.Single(await AssertExclusiveQueues(store),r=>r.Key==review.Key).DecidedBy);
         await host.Sql("INSERT INTO public.usuarios_permisos VALUES(1,'stock.view')");
         await store.SaveAccessAsync(1,new([PlanningPermissions.View],"Permiso real en host de prueba"),1,default);
         Assert.Contains(PlanningPermissions.View,Assert.Single(await store.AccessUsersAsync(default)).Permissions);
@@ -350,12 +350,12 @@ public sealed partial class PlanningPostgresTests
         input=input with{Rows=input.Rows.Where(r=>r.Job is solo or both or "GUAT26011849" or "GUAT26010723").ToArray(),Fingerprint=Guid.NewGuid().ToString("N")};
         await using var db=await TestDatabase.Create();var store=db.Store;
         var preview=await store.PreviewAsync(input,1,default);await store.ConfirmAsync(preview.Id,1,default);
-        var query=new PlanningReviewQuery(Search:solo,PageSize:1);
+        var query=new PlanningReviewQuery(Category:"RevisionJobs",Search:solo,PageSize:1,ColumnFilters:"{\"CaseCategory\":\"SummaryWithoutReport\"}");
         var page=await store.ReviewWorkspaceAsync(query,default);var row=Assert.Single(page.Items);Assert.Equal(1,page.Total);Assert.Equal(input.Rows.Single(r=>r.Job==solo&&r.File=="Summary").Official!.SampleStatus,row.OfficialState);
         Assert.NotNull(row.Buyer);Assert.NotNull(row.InDate);Assert.NotNull(row.IncidentId);
-        Assert.Single((await store.ReviewWorkspaceAsync(query with{ColumnFilters="{\"State\":\"Pendiente\"}"},default)).Items);
-        Assert.Single((await store.ReviewWorkspaceAsync(new(Category:"MissingVendor",Search:"GUAT26011849",ColumnFilters:"{\"Vendor\":\"No informado\"}"),default)).Items);
-        var counts=page.Counters;Assert.Contains(counts,c=>c.Category=="SummaryWithoutReport"&&c.Pending>0);Assert.Contains(counts,c=>c.Category=="Admission"&&c.Total==0);Assert.Equal(11,counts.Count);
+        Assert.Single((await store.ReviewWorkspaceAsync(query with{ColumnFilters="{\"State\":\"Pendiente\",\"CaseCategory\":\"SummaryWithoutReport\"}"},default)).Items);
+        Assert.Single(await AssertExclusiveQueues(store,new(Search:"GUAT26011849",ColumnFilters:"{\"Vendor\":\"No informado\",\"CaseCategory\":\"MissingParty\"}")),r=>r.Category=="MissingParty");
+        var counts=page.Counters;Assert.Contains(counts,c=>c.Category=="RevisionJobs"&&c.Pending>0);Assert.Contains(counts,c=>c.Category=="SummaryWithoutReport"&&c.Total==0);Assert.Contains(counts,c=>c.Category=="Admission"&&c.Total==0);Assert.Equal(12,counts.Count);
         var filtered=await store.ReviewWorkspaceAsync(query with{ColumnFilters="{\"Job\":\"DOES_NOT_EXIST\"}"},default);Assert.Empty(filtered.Items);Assert.All(filtered.Counters,c=>Assert.Equal(0,c.Total));
         var dates=await store.ReviewWorkspaceAsync(query with{ColumnFilters="{\"InDateFrom\":\"2040-01-01\"}"},default);Assert.Equal(0,dates.Total);
         await Assert.ThrowsAsync<PlanningValidationException>(()=>store.ReviewWorkspaceAsync(query with{Sort="job; DROP TABLE planning.episodes"},default));
@@ -399,23 +399,23 @@ public sealed partial class PlanningPostgresTests
         Assert.Contains(inspection.Items,r=>r.Category=="PartyComplemented"&&r.Job==both&&r.Vendor is not null);
         Assert.All(inspection.Items.Where(r=>r.Category=="MissingEquivalence"),r=>Assert.True(r.RelatedJobs>0));
         await store.ConfirmAsync(preview.Id,1,default);
-        var query=new PlanningReviewQuery(Category:"SummaryWithoutReport",Scope:"Batch",BatchId:preview.Id,PageSize:1);
+        var query=new PlanningReviewQuery(Category:"RevisionJobs",Scope:"Batch",BatchId:preview.Id,PageSize:1,ColumnFilters:"{\"CaseCategory\":\"SummaryWithoutReport\"}");
         var scoped=await store.ReviewWorkspaceAsync(query,default);Assert.True(scoped.Total>0);Assert.Single(scoped.Items);
         Assert.Empty((await store.ReviewWorkspaceAsync(query with{BatchId=Guid.NewGuid()},default)).Items);
         Assert.Empty((await store.ReviewWorkspaceAsync(query with{ImportedFrom=new(2040,1,1)},default)).Items);
         var csv=System.Text.Encoding.UTF8.GetString(await store.ExportReviewsAsync(query,default));Assert.Equal(scoped.Total+1,csv.Split("\r\n",StringSplitOptions.RemoveEmptyEntries).Length);
         Assert.True((await store.QueryAsync(new(BatchId:preview.Id,Scope:"History"),default)).Total>0);
         Assert.Equal(0,(await store.QueryAsync(new(BatchId:Guid.NewGuid(),Scope:"History"),default)).Total);
-        var unclassified=Assert.Single((await store.ReviewWorkspaceAsync(new(Category:"MissingEquivalence",Search:both,PageSize:1),default)).Items);
+        var unclassified=Assert.Single((await store.ReviewWorkspaceAsync(new(Category:"RevisionJobs",Search:both,PageSize:1,ColumnFilters:"{\"CaseCategory\":\"MissingEquivalence\"}"),default)).Items);
         await store.DecideReviewAsync(new(unclassified.Key,unclassified.Category,unclassified.Version,"Held","Decisión explícita local de revisión"),1,default);
-        var held=Assert.Single((await store.ReviewWorkspaceAsync(new(Category:"MissingEquivalence",Situation:"Held",SelectedKeys:System.Text.Json.JsonSerializer.Serialize(new[]{unclassified.Key})),default)).Items);
+        var held=Assert.Single((await store.ReviewWorkspaceAsync(new(Category:"RevisionJobs",Situation:"Held",SelectedKeys:System.Text.Json.JsonSerializer.Serialize(new[]{unclassified.Key})),default)).Items);
         Assert.NotNull(held.DecidedBy);Assert.NotNull(held.DecidedAt);
         await Assert.ThrowsAsync<PlanningConflictException>(()=>store.DecideReviewAsync(new(held.Key,held.Category,held.Version-1,"Excluded","Versión obsoleta"),1,default));
         await store.DecideReviewAsync(new(held.Key,held.Category,held.Version,"Excluded","Exclusión justificada para validar persistencia local"),1,default);
-        var excluded=Assert.Single((await store.ReviewWorkspaceAsync(new(Category:"MissingEquivalence",Situation:"Excluded",SelectedKeys:System.Text.Json.JsonSerializer.Serialize(new[]{held.Key})),default)).Items);
+        var excluded=Assert.Single((await store.ReviewWorkspaceAsync(new(Category:"RevisionJobs",Situation:"Excluded",SelectedKeys:System.Text.Json.JsonSerializer.Serialize(new[]{held.Key})),default)).Items);
         Assert.Equal("Excluded",excluded.State);
         var next=await store.PreviewAsync(input with{Cut=new("Last",new(2026,11,18)),Fingerprint=Guid.NewGuid().ToString("N")},1,default);await store.ConfirmAsync(next.Id,1,default);
-        Assert.Single((await store.ReviewWorkspaceAsync(new(Category:"MissingEquivalence",Situation:"Excluded",SelectedKeys:System.Text.Json.JsonSerializer.Serialize(new[]{held.Key})),default)).Items);
+        Assert.Single((await store.ReviewWorkspaceAsync(new(Category:"RevisionJobs",Situation:"Excluded",SelectedKeys:System.Text.Json.JsonSerializer.Serialize(new[]{held.Key})),default)).Items);
         Assert.True((await store.ConfirmAsync(next.Id,1,default)).AlreadyApplied);
         var final=(await store.InspectImportAsync(next.Id,default))!;Assert.Equal(0,final.Preview.NewJobs);Assert.Equal(0,final.Preview.NewTests);Assert.NotNull(final.AppliedAt);
         Assert.True(final.ExistingTests>0);Assert.NotEmpty(final.Laboratories);
@@ -428,14 +428,14 @@ public sealed partial class PlanningPostgresTests
         var input=Input(summary,Report() with{Test=null});
         var preview=await store.PreviewAsync(input,1,default);Assert.DoesNotContain(preview.Changes,c=>c.Entity=="Test");
         await store.ConfirmAsync(preview.Id,1,default);
-        Assert.Contains((await store.ReviewWorkspaceAsync(new(Category:"IncompleteData"),default)).Items,r=>r.Reason!.Contains("Test_Name",StringComparison.Ordinal));
+        Assert.Contains(await AssertExclusiveQueues(store),r=>r.Category=="IncompleteData"&&r.Reason!.Contains("Test_Name",StringComparison.Ordinal));
         Assert.Empty((await store.ReviewWorkspaceAsync(new(Category:"MissingEquivalence"),default)).Items);
-        var party=Assert.Single((await store.ReviewWorkspaceAsync(new(Category:"MissingParty"),default)).Items);Assert.Equal("Falta Buyer",party.Reason);
+        var party=Assert.Single(await AssertExclusiveQueues(store),r=>r.Category=="MissingParty");Assert.Equal("Falta Buyer",party.Reason);
         await store.DecideReviewAsync(new(party.Key,party.Category,party.Version,"Held","Buyer pendiente de verificación documental"),1,default);
-        var held=Assert.Single((await store.ReviewWorkspaceAsync(new(Category:"MissingParty",Situation:"Held"),default)).Items);Assert.NotNull(held.DecidedAt);
+        var held=Assert.Single(await AssertExclusiveQueues(store),r=>r.Key==party.Key&&r.State=="Held");Assert.NotNull(held.DecidedAt);
         var dossier=(await store.DossierAsync(party.EpisodeId!.Value,default))!;
         await store.EditWipAsync(dossier.EpisodeId,new(dossier.Version,dossier.Wip with{Buyer="Buyer verificado"},"Documento verificado para prueba aislada"),1,default);
-        Assert.Empty((await store.ReviewWorkspaceAsync(new(Category:"MissingParty"),default)).Items);
+        Assert.DoesNotContain(await AssertExclusiveQueues(store),r=>r.Category=="MissingParty"&&r.State=="Pending");
     }
     [RealPlanningDatabaseFact]
     public async Task ActualNextDayJobCountsOneEmergencyAndPreservesItsTwoOriginalExecutions()
@@ -486,7 +486,7 @@ public sealed partial class PlanningPostgresTests
             await fixture.Sql("CREATE TABLE public.departamentos(id integer PRIMARY KEY,nombre text);CREATE TABLE public.usuarios(id integer PRIMARY KEY,nombre text,id_departamento integer,activo boolean);CREATE TABLE public.usuarios_permisos(id_usuario integer,permiso_key text,PRIMARY KEY(id_usuario,permiso_key));INSERT INTO public.usuarios VALUES(1,'Actor sintético local',NULL,true);"+PlanningSchema.Sql+PlanningNotesSchema.Sql+PlanningControlsSchema.Sql+PlanningOfficialSchema.Sql+PlanningReviewSchema.Sql);
             if(migrateIdentity)
             {
-                await fixture.Sql(PlanningIdentitySchema.Sql+PlanningIdentitySchema.AccessSql+ReportListSchema.Sql+ReportScheduleSchema.Sql);
+                await fixture.Sql(PlanningIdentitySchema.Sql+PlanningIdentitySchema.AccessSql+ReportListSchema.Sql+ReportScheduleSchema.Sql+ReportClosureSchema.Sql);
                 await using var identity = new PlanningIdentityDatabase(cs.ConnectionString);
                 await identity.RegisterActorAsync(database,1,default);
             }
