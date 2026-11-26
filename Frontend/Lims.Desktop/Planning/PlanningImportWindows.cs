@@ -22,8 +22,11 @@ public sealed class PlanningImportReviewWindow : Window
     private PlanningImportInspection _data;
     private readonly Grid _layout=PlanningUi.Rows(GridLength.Auto,GridLength.Auto,GridLength.Auto,new(1,GridUnitType.Star),GridLength.Auto);
     private readonly TextBlock _metrics=PlanningUi.Text("",14),_message=PlanningUi.Text("",12,true),_footer=PlanningUi.Text("",12,true);
-    private readonly CheckBox _defer=new(){Content="Importar registros válidos y dejar explícitamente las equivalencias pendientes"};
-    private readonly ComboBox _section=new(){ItemsSource=new[]{"A · Emergencias nuevas","B · Summary sin Report List","C · Report List sin Summary","D · Buyer y Vendor","E · Pruebas sin nombre asignado","F · Admisión al trabajo activo","G · Reglas de negocio aplicadas","H · Diferencias entre fuentes"},SelectedIndex=0,MinWidth=310};
+    private readonly Grid _cards=new(){ColumnSpacing=12};
+    private readonly ContentControl _overview=new(){HorizontalContentAlignment=HorizontalAlignment.Stretch,VerticalContentAlignment=VerticalAlignment.Stretch};
+    private readonly Grid _reviewBody=new();
+    private readonly CheckBox _defer=new(){Content="Dejar equivalencias faltantes pendientes"};
+    private readonly ComboBox _section=new(){ItemsSource=new[]{"Emergencias nuevas","Summary sin Report List","Report List sin Summary","Buyer y Vendor","Pruebas sin nombre asignado","Admisión al trabajo activo","Reglas de negocio aplicadas","Diferencias entre fuentes","Resumen del lote"},SelectedIndex=8,MinWidth=280};
     private readonly TextBox _search=PlanningUi.Field("Buscar JOB o prueba",max:2000);
     private readonly ListView _rows=new(){SelectionMode=ListViewSelectionMode.Extended,IsMultiSelectCheckBoxEnabled=false};
     private readonly Grid _table=PlanningUi.Rows(new GridLength(36),new(1,GridUnitType.Star));
@@ -37,9 +40,10 @@ public sealed class PlanningImportReviewWindow : Window
         Func<PlanningImportInspection,Task<bool>> confirm,Func<Guid,Task> open)
     {
         _api=api;_data=data;_canClassify=canClassify;_reload=reload;_confirm=confirm;_open=open;
-        Title="Revisa antes de agregar";_layout.Padding=new(22);_layout.Background=PlanningUi.Brush("LimsBackgroundBrush");_layout.RowSpacing=10;
-        var title=PlanningUi.Stack(PlanningUi.Text("Nuevas del archivo a Planificación",12,true),PlanningUi.Text("Revisa antes de agregar",24),_metrics);title.Spacing=5;
-        PlanningUi.Place(_layout,PlanningUi.Surface(title),0);
+        Title="Revisa antes de agregar";_layout.Padding=new(18);_layout.Background=PlanningUi.Brush("LimsBackgroundBrush");_layout.RowSpacing=8;
+        var title=PlanningUi.Stack(PlanningUi.Text("NUEVAS DEL ARCHIVO A PLANIFICACIÓN",12,true),PlanningUi.Text("Revisa antes de agregar",24),
+            PlanningUi.Text(data.Preview.Cut.Policy=="HtmlReactSide2"?"Revisa las pruebas, fechas y laboratorios del archivo de planificación antes de agregar.":"Summary define los JOBs válidos. La carga es incremental: no archiva ni elimina registros existentes.",13,true),_cards,_metrics);title.Spacing=6;
+        PlanningUi.Place(_layout,SurfaceCompact(title),0);
         _section.Style=(Style)Application.Current.Resources["LimsCompactComboBoxStyle"];AutomationProperties.SetName(_section,"Sección de revisión previa");
         _search.Header=null;_search.PlaceholderText="Buscar JOB o prueba";_search.Width=230;AutomationProperties.SetName(_search,"Buscar en revisión previa");
         Button export=PlanningUi.Button("Exportar",Export);
@@ -50,27 +54,73 @@ public sealed class PlanningImportReviewWindow : Window
         _table.RowSpacing=0;_table.HorizontalAlignment=HorizontalAlignment.Left;
         _rows.ItemContainerStyle=(Style)Application.Current.Resources["LimsDataRowStyle"];
         AutomationProperties.SetName(_rows,"Registros de revisión antes de agregar");PlanningUi.Place(_table,_tableHeader,0);PlanningUi.Place(_table,_rows,1);
-        PlanningUi.Place(_layout,PlanningUi.Surface(new ScrollViewer{Content=_table,HorizontalScrollBarVisibility=ScrollBarVisibility.Auto,VerticalScrollBarVisibility=ScrollBarVisibility.Disabled,VerticalContentAlignment=VerticalAlignment.Stretch}),3);
+        _reviewBody.Children.Add(PlanningUi.Surface(new ScrollViewer{Content=_table,HorizontalScrollBarVisibility=ScrollBarVisibility.Auto,VerticalScrollBarVisibility=ScrollBarVisibility.Disabled,VerticalContentAlignment=VerticalAlignment.Stretch}));
+        _reviewBody.Children.Add(_overview);PlanningUi.Place(_layout,_reviewBody,3);
         _save=PlanningUi.Button("Confirmar importación",Confirm,true,CanConfirm);AutomationProperties.SetName(_save,"Confirmar importación");
         var cancel=PlanningUi.Button("Cancelar",()=>{Close();return Task.CompletedTask;});
         var buttons=PlanningUi.Row(cancel,_save);buttons.HorizontalAlignment=HorizontalAlignment.Right;
-        PlanningUi.Place(_layout,PlanningUi.Surface(PlanningUi.Stack(_footer,_defer,buttons)),4);Content=_layout;
+        var footer=PlanningUi.Stack(_footer,PlanningUi.Split(_defer,buttons));footer.Spacing=8;
+        PlanningUi.Place(_layout,SurfaceCompact(footer),4);Content=_layout;
         ConsultationVisuals.FitWindow(this,1500,900);AppWindow.SetIcon("Assets/Branding/LIMS.ico");
         _section.SelectionChanged+=(_,_)=>Filter();_search.TextChanged+=(_,_)=>Filter();_rows.SelectionChanged+=(_,_)=>Actions();
+        _rows.DoubleTapped+=async(_,_)=>{if(_section.SelectedIndex==4&&_canClassify)await Classify();};
         _defer.Checked+=(_,_)=>Actions();_defer.Unchecked+=(_,_)=>Actions();
         _rows.KeyDown+=async(_,e)=>{if(Microsoft.UI.Input.InputKeyboardSource.GetKeyStateForCurrentThread(Windows.System.VirtualKey.Control).HasFlag(Windows.UI.Core.CoreVirtualKeyStates.Down)){if(e.Key==Windows.System.VirtualKey.C){await Copy();e.Handled=true;}else if(e.Key==Windows.System.VirtualKey.A){_rows.SelectAll();e.Handled=true;}}};
         _layout.Loaded+=(_,_)=>{if(Motion.Enabled)Motion.Enter(_layout,y:4,milliseconds:140);};Paint();
     }
+    private static Border SurfaceCompact(UIElement content){var surface=PlanningUi.Surface(content);surface.Padding=new(12);return surface;}
     private void Paint()
     {
-        var p=_data.Preview;_metrics.Text=$"{_data.NewCombinations:N0} combinaciones JOB + prueba nuevas · {p.NewJobs:N0} JOBs nuevos · Existentes: {p.UnchangedJobs+p.UpdatedJobs:N0} JOBs / {_data.ExistingTests:N0} pruebas · {_data.NewEmergencies:N0} emergencias nuevas";
+        var p=_data.Preview;
+        _cards.Children.Clear();_cards.ColumnDefinitions.Clear();
+        foreach(var (label,count,section) in new (string,int,int)[]{("Nuevos JOB + prueba",_data.NewCombinations,5),("JOBs nuevos",p.NewJobs,5),("Pruebas existentes",_data.ExistingTests,5),("Emergencias nuevas",_data.NewEmergencies,0)})
+        {
+            var column=_cards.ColumnDefinitions.Count;_cards.ColumnDefinitions.Add(new());
+            var value=PlanningUi.Text(count.ToString("N0",CultureInfo.InvariantCulture),26);value.Foreground=PlanningUi.Brush(section==0?"LimsWarningBrush":"LimsAccentBrush");value.FontWeight=Microsoft.UI.Text.FontWeights.SemiBold;
+            var card=PlanningUi.Button(label,()=>{_section.SelectedIndex=section;return Task.CompletedTask;});
+            var metric=PlanningUi.Stack(PlanningUi.Text(label,12,true),value);metric.Spacing=2;card.Content=metric;card.HorizontalAlignment=HorizontalAlignment.Stretch;card.HorizontalContentAlignment=HorizontalAlignment.Left;card.Padding=new(12,8,12,8);
+            AutomationProperties.SetName(card,$"{label}: {count:N0}");Grid.SetColumn(card,column);_cards.Children.Add(card);
+        }
+        _metrics.Text=$"Summary sin Report List: {_data.Items.Count(r=>r.Category=="SummaryWithoutReport"):N0} · JOBs con datos comerciales faltantes: {_data.Items.Count(r=>r.Category=="MissingParty"):N0} · Pruebas por clasificar: {_data.PendingEquivalences:N0}";
+        _save.Content=_data.PendingEquivalences>0?"Agregar y dejar faltantes pendientes":"Agregar a Planificación";
         _footer.Text=$"{_data.ProcessedRows:N0} filas fuente a procesar · {p.NewTests:N0} ejecuciones nuevas · {_data.PendingEquivalences:N0} nombres por clasificar · {p.Issues.Count(i=>i.Blocking)} errores críticos";
         if(p.Admissions is{} admissions)_footer.Text+=$" · {admissions.Count(a=>a.State=="Active"):N0} admitidas al trabajo activo · {admissions.Count(a=>a.State!="Active"):N0} conservadas fuera del trabajo activo";
         _defer.Visibility=_data.PendingEquivalences>0?Visibility.Visible:Visibility.Collapsed;
-        _message.Text=string.Join(" · ",p.Issues.Where(i=>i.Blocking).Select(i=>$"{i.File}, fila {i.Row}: {i.Message}"));Filter();
+        _message.Text=string.Join(" · ",p.Issues.Where(i=>i.Blocking).Select(i=>$"{i.File}, fila {i.Row}: {i.Message}"));BuildOverview();Filter();
+    }
+    private void BuildOverview()
+    {
+        Border Panel(string title,string description,string category)
+        {
+            var items=_data.Items.Where(r=>r.Category==category).ToArray();
+            var list=new ListView{ItemsSource=items,Height=185,SelectionMode=ListViewSelectionMode.None};
+            list.ItemTemplate=(DataTemplate)XamlReader.Load("<DataTemplate xmlns='http://schemas.microsoft.com/winfx/2006/xaml/presentation'><StackPanel Margin='0,5' Spacing='3'><TextBlock Text='{Binding Job}' FontWeight='SemiBold' TextTrimming='CharacterEllipsis'/><TextBlock Text='{Binding OriginalTest}' TextTrimming='CharacterEllipsis'/><TextBlock Text='{Binding Service}' Opacity='0.7'/></StackPanel></DataTemplate>");
+            var body=PlanningUi.Stack(PlanningUi.Text($"{title} · {items.Length:N0}",18),PlanningUi.Text(description,12,true));
+            body.Children.Add(items.Length==0?PlanningUi.Text("Sin casos en este lote.",13,true):list);
+            return PlanningUi.Surface(body);
+        }
+        var pair=new Grid{ColumnSpacing=14};pair.ColumnDefinitions.Add(new());pair.ColumnDefinitions.Add(new());
+        pair.Children.Add(Panel("Emergencias nuevas","Express, Next Day y Same Day","Emergency"));
+        var summary=Panel("Summary sin Report List","Se informan estos JOBs; no se inventan pruebas ausentes del archivo.","SummaryWithoutReport");Grid.SetColumn(summary,1);pair.Children.Add(summary);
+        var body=PlanningUi.Stack(pair,Panel("Datos comerciales por completar","Revisa Buyer y Vendor y su procedencia.","MissingParty"));
+        var pending=_data.Items.Where(r=>r.Category=="MissingEquivalence").ToArray();
+        var mappings=PlanningUi.Stack(PlanningUi.Text($"Pruebas sin nombre asignado · {pending.Length:N0}",18),PlanningUi.Text("Asigna el nombre de Planificación o marca NO PROGRAMAR. Puedes dejar faltantes pendientes al agregar.",13,true));
+        foreach(var row in pending)
+        {
+            var edit=PlanningUi.Button("Asignar / No programar",()=>ClassifyOriginal(row.OriginalTest!));edit.IsEnabled=_canClassify&&!string.IsNullOrWhiteSpace(row.OriginalTest);
+            var jobs=PlanningUi.Text(row.Job,12,true);jobs.MaxLines=3;jobs.TextTrimming=TextTrimming.CharacterEllipsis;ToolTipService.SetToolTip(jobs,row.Job);
+            mappings.Children.Add(PlanningUi.Surface(PlanningUi.Stack(PlanningUi.Split(PlanningUi.Text(row.OriginalTest??"Sin nombre fuente",16),edit),PlanningUi.Text($"{row.RelatedJobs:N0} JOBs relacionados",12,true),jobs)));
+        }
+        if(pending.Length==0)mappings.Children.Add(PlanningUi.Text("Todas las pruebas de este lote tienen clasificación.",13,true));
+        body.Children.Add(PlanningUi.Surface(mappings));
+        _overview.Content=new ScrollViewer{Content=body,VerticalScrollBarVisibility=ScrollBarVisibility.Auto};
     }
     private void Filter()
     {
+        var overview=_section.SelectedIndex==8;
+        _reviewBody.Children[0].Visibility=overview?Visibility.Collapsed:Visibility.Visible;_overview.Visibility=overview?Visibility.Visible:Visibility.Collapsed;
+        _search.Visibility=overview?Visibility.Collapsed:Visibility.Visible;
+        if(overview){_visible=_data.Items.ToArray();_rows.ItemsSource=null;_message.Text="Revisa el lote antes de agregar. Las bandejas conservan los casos pendientes para seguimiento.";Actions();return;}
         var category=_section.SelectedIndex switch{1=>"SummaryWithoutReport",2=>"ReportWithoutSummary",3=>"MissingParty",4=>"MissingEquivalence",5=>"Admission",6=>"BusinessRule",7=>"SourceConflict",_=>"Emergency"};
         BuildRows(category);
         _visible=_data.Items.Where(r=>(r.Category==category||category=="MissingParty"&&r.Category=="PartyComplemented")&&((r.Job+" "+r.OriginalTest+" "+r.Explanation).Contains(_search.Text,StringComparison.OrdinalIgnoreCase))).ToArray();
@@ -96,6 +146,7 @@ public sealed class PlanningImportReviewWindow : Window
     private void Actions()
     {
         _save.IsEnabled=CanConfirm();
+        _overview.IsEnabled=!_busy;
         _classify.Visibility=_section.SelectedIndex==4?Visibility.Visible:Visibility.Collapsed;_classify.IsEnabled=!_busy&&_canClassify&&_rows.SelectedItems.Count==1&&_rows.SelectedItem is PlanningImportInspectionRow{OriginalTest:not null};
         _dossier.IsEnabled=!_busy&&_rows.SelectedItems.Count==1&&_rows.SelectedItem is PlanningImportInspectionRow{EpisodeId:not null};
     }
@@ -127,9 +178,17 @@ public sealed class PlanningImportReviewWindow : Window
     private async Task Classify()
     {
         if(_rows.SelectedItem is not PlanningImportInspectionRow{OriginalTest:{} original}||!_canClassify)return;
-        var result=await PlanningEquivalenceEditor.Show(_api,_layout.XamlRoot,original);if(!result)return;
+        await ClassifyOriginal(original);
+    }
+    private async Task ClassifyOriginal(string original)
+    {
+        if(_busy||!_canClassify)return;
         _busy=true;Actions();_progress.Visibility=Visibility.Visible;
-        try{var refreshed=await _reload();if(refreshed is not null){_data=refreshed;_defer.IsChecked=false;Paint();}else _message.Text="Clasificación guardada. Cierra y vuelve a validar los archivos antes de confirmar.";}
+        try
+        {
+            var result=await PlanningEquivalenceEditor.Show(_api,_layout.XamlRoot,original);if(!result)return;
+            var refreshed=await _reload();if(refreshed is not null){_data=refreshed;_defer.IsChecked=false;Paint();}else _message.Text="Clasificación guardada. Cierra y vuelve a validar los archivos antes de confirmar.";
+        }
         finally{_busy=false;_progress.Visibility=Visibility.Collapsed;Actions();}
     }
 }

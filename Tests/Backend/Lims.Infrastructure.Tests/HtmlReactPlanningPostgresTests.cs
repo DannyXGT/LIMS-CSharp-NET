@@ -23,6 +23,24 @@ public sealed partial class PlanningPostgresTests
         """;
     private static PlanningImportInput ReactInput(params PlanningSourceRow[] rows)=>Input(rows) with{Cut=new("Noon",new(2026,11,16),"HtmlReact")};
     [PlanningDatabaseFact]
+    public async Task HtmlReactLargePreviewBatchesIdentitiesAndKeepsAmbiguousRepeatsForReview()
+    {
+        await using var db=await TestDatabase.Create();await db.Sql(ReactFixture+ReactPlanningSchema.Sql);
+        await db.Sql("INSERT INTO public.planificacion_test_map(nombre_tecnico,nombre_planificacion,lab) VALUES('Technical source','Canonical name','Chemical')");
+        var rows=Enumerable.Range(1,1500).SelectMany(i=>new[]{Summary() with{Row=i+2,Job=$"VOLUME{i:D6}"},Report(i+2,"Technical source") with{Job=$"VOLUME{i:D6}"}})
+            .Concat([Summary(),Report(1503,"Unclassified source"),Summary() with{Row=1504,Job="REPEATED"},Report(1504,"Technical source") with{Job="REPEATED"},Report(1505,"Technical source") with{Job="REPEATED"}]).ToArray();
+        using var deadline=new CancellationTokenSource(TimeSpan.FromSeconds(25));
+        var preview=await db.Store.PreviewAsync(ReactInput(rows),1,deadline.Token);
+        var admissions=Assert.IsAssignableFrom<IReadOnlyList<PlanningAdmission>>(preview.Admissions);
+        Assert.Equal(1501,preview.NewTests);Assert.Equal(1501,admissions.Select(a=>a.ExecutionId).Distinct().Count());
+        Assert.Equal(1500,admissions.Count(a=>a.State=="Active"));
+        Assert.Equal("Unclassified source",Assert.Single(admissions,a=>a.State=="MissingEquivalence").OriginalTest);
+        Assert.Equal(2,preview.Reviews.Count(r=>r.Job=="REPEATED"&&r.Category=="ExecutionIdentity"));
+        var inspection=await db.Store.InspectImportAsync(preview.Id,deadline.Token);
+        Assert.Equal("Unclassified source",Assert.Single(inspection!.Items,r=>r.Category=="MissingEquivalence").OriginalTest);
+        Assert.Equal(0L,await db.Scalar("SELECT count(*) FROM public.planificacion_activa"));
+    }
+    [PlanningDatabaseFact]
     public async Task ReportListReadsCanonicalReactPlanningNameForExistingExecutionsAndUsesItForDigitization()
     {
         await using var db=await TestDatabase.Create();await db.Sql(ReactFixture);

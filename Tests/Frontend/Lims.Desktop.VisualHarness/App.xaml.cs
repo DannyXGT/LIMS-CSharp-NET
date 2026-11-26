@@ -136,6 +136,7 @@ public partial class App : Microsoft.UI.Xaml.Application
             {
                 case "shellNavigation": await PreviewShellNavigationAsync(data); break;
                 case "workspaceSelector": await ShowWorkspaceSelectorAsync(data); break;
+                case "planningImport": await ShowPlanningImportAsync(data); break;
                 case "motionRegression": await ValidateMotionRegressionAsync(); break;
                 case "reportListScroll": await ValidateReportListScrollAsync(); break;
                 case "reportListDirect": await ValidateReportListDirectAsync(); break;

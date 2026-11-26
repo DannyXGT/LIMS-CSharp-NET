@@ -14,6 +14,7 @@
     <ApplicationManifest>../../../Frontend/Lims.Desktop/app.manifest</ApplicationManifest>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="../../../Frontend/Lims.Desktop/Planning/PlanningImport*.cs;../../../Frontend/Lims.Desktop/Planning/PlanningReviewDetail.cs;../../../Frontend/Lims.Desktop/Planning/PlanningManualTestWindow.cs" Link="Planning/%(Filename)%(Extension)" />
     <Compile Include="../../../Frontend/Lims.Desktop/Planning/PlanningClosuresView.cs;../../../Frontend/Lims.Desktop/Planning/PlanningClosureFilters.cs;../../../Frontend/Lims.Desktop/Planning/ReportClosureGrid.cs;../../../Frontend/Lims.Desktop/Planning/ReportClosureSelection.cs;../../../Frontend/Lims.Desktop/Planning/PlanningClosuresPage.cs" Link="Planning/%(Filename)%(Extension)" />
     <Compile Include="../../../Frontend/Lims.Desktop/Planning/PlanningJobsView.cs;../../../Frontend/Lims.Desktop/Planning/PlanningConsultationFilters.cs;../../../Frontend/Lims.Desktop/Planning/PlanningSheetGrid.cs;../../../Frontend/Lims.Desktop/Planning/ConsultationHeader.cs;../../../Frontend/Lims.Desktop/Planning/ConsultationVisuals.cs;../../../Frontend/Lims.Desktop/Planning/PlanningMultiSearchWindow.cs" Link="Planning/%(Filename)%(Extension)" />
     <ApplicationDefinition Include="ValidationApp.xaml" />

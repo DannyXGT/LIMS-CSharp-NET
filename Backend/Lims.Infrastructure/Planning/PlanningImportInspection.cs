@@ -20,6 +20,9 @@ public sealed partial class PostgresPlanningStore
         }
         var maps=(await Mappings(c,tx,ct).ConfigureAwait(false)).ToDictionary(m=>PlanningReconciler.TestKey(m.OriginalTest),StringComparer.Ordinal);
         var items=new List<PlanningImportInspectionRow>();var episodes=plan.Episodes.ToDictionary(e=>e.Id);
+        var executionsById=plan.Executions.ToDictionary(x=>x.Id);
+        var createdEpisodes=plan.Executions.Where(x=>x.Action=="Create").Select(x=>x.EpisodeId).ToHashSet();
+        var pendingNames=plan.Admissions?.Where(a=>a.State=="MissingEquivalence").Select(a=>PlanningReconciler.TestKey(a.OriginalTest)).ToHashSet(StringComparer.Ordinal);
         var summaries=input.Rows.Where(r=>r.File=="Summary"||(r.File is "Side2" or "React Active")&&r.Wip is not null).Select(r=>r.Job).ToHashSet(StringComparer.Ordinal);
         var reports=input.Rows.Where(r=>PlanningReconciler.IsTestSource(r.File)).Select(r=>r.Job).ToHashSet(StringComparer.Ordinal);
         var reportOnly=reports.Except(summaries,StringComparer.Ordinal).ToArray();
@@ -40,13 +43,13 @@ public sealed partial class PostgresPlanningStore
                 "HtmlReactSide2"=>"Datos comerciales conservados del WIP conocido; la carga complementaria aporta las fechas y pruebas declaradas.",
                 _=>"Datos consolidados desde Summary; Report List no aporta Vendor. Se conserva procedencia de ambas fuentes."
             }));
-            if(e.IsNew&&Emergency(e.Source.Service)&&!plan.Executions.Any(x=>x.EpisodeId==e.Id&&x.Action=="Create"))items.Add(Row("Emergency",e,null,null,null,"JOB nuevo con servicio de emergencia; fuente Summary, sin inventar pruebas."));
+            if(e.IsNew&&Emergency(e.Source.Service)&&!createdEpisodes.Contains(e.Id))items.Add(Row("Emergency",e,null,null,null,"JOB nuevo con servicio de emergencia; fuente Summary, sin inventar pruebas."));
         }
         foreach(var x in plan.Executions.Where(x=>x.Action=="Create"))
             if(episodes.TryGetValue(x.EpisodeId,out var e)&&Emergency(e.Source.Service))items.Add(Row("Emergency",e,x.OriginalTest,x.Equivalence,x.Laboratory,"Ejecución nueva de servicio de emergencia",x.SourceRows.Count>0?x.SourceRows[0]:0));
         foreach(var admission in plan.Admissions??[])
         {
-            var x=plan.Executions.Single(x=>x.Id==admission.ExecutionId);
+            var x=executionsById[admission.ExecutionId];
             if(!episodes.TryGetValue(x.EpisodeId,out var e))continue;
             items.Add(Row("Admission",e,x.OriginalTest,x.Equivalence,x.Laboratory,admission.Reason,x.SourceRows.Count>0?x.SourceRows[0]:0,no:x.NoProgram));
             if(admission.Rule is not null)items.Add(Row("BusinessRule",e,x.OriginalTest,x.Equivalence,x.Laboratory,admission.Rule+" · "+admission.Reason));
@@ -56,8 +59,7 @@ public sealed partial class PostgresPlanningStore
         foreach(var group in input.Rows.Where(r=>r.File=="Report List").GroupBy(r=>string.IsNullOrWhiteSpace(r.Test)?"":PlanningReconciler.TestKey(r.Test),StringComparer.Ordinal))
         {
             var first=group.First();maps.TryGetValue(group.Key,out var map);
-            if(map is not null)continue;
-            if(plan.Admissions is not null&&!plan.Admissions.Any(a=>a.State=="MissingEquivalence"&&PlanningReconciler.TestKey(a.OriginalTest)==group.Key))continue;
+            if(pendingNames is not null?!pendingNames.Contains(group.Key):map is not null)continue;
             items.Add(new("MissingEquivalence",string.Join(", ",group.Select(r=>r.Job).Distinct(StringComparer.Ordinal)),null,first.Test,null,null,null,null,null,null,null,null,null,
                 group.Key.Length==0?"Falta el nombre en el archivo fuente. Completar la fuente; no asignar una equivalencia inventada.":"Nombre original conservado; buscar una clasificación existente o decidir NO PROGRAMAR.",first.Row,group.Select(r=>r.Job).Distinct(StringComparer.Ordinal).Count()));
         }

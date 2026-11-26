@@ -90,16 +90,41 @@ public sealed partial class PostgresPlanningStore
         var activeIds=admissions.Where(a=>a.State=="Active").Select(a=>a.ExecutionId).ToHashSet();
         var collisions=plan.Executions.Where(x=>activeIds.Contains(x.Id))
             .GroupBy(x=>PlanningReconciler.TestKey(x.Job+" - "+x.Equivalence)).Where(g=>g.Select(x=>(x.EpisodeId,x.Laboratory)).Distinct().Count()>1).SelectMany(g=>g.Select(x=>x.Id)).ToHashSet();
+        // Read identities in sets: a large workbook must not make one network round trip per execution.
+        var ids=admissions.Select(a=>a.ExecutionId).ToArray();
+        var priorLinks=new Dictionary<Guid,(string State,bool Removed)>();
+        await using(var cmd=Command(c,tx,"SELECT execution_id,disposition,react_row_id IS NULL FROM planning.react_execution_links WHERE execution_id=ANY(@ids)",("ids",ids)))
+        await using(var r=await cmd.ExecuteReaderAsync(ct).ConfigureAwait(false))
+            while(await r.ReadAsync(ct).ConfigureAwait(false))priorLinks.Add(r.GetGuid(0),(r.GetString(1),r.GetBoolean(2)));
+        var candidates=new Dictionary<long,(string Key,string Test,DateOnly? Date,bool Linked,List<(Guid Execution,Guid Episode,string Lab)> Owners)>();
+        var keys=plan.Executions.Select(x=>x.Job+" - "+x.Equivalence).Distinct().ToArray();
+        var sourceIds=plan.Executions.Where(x=>x.ReactRowId.HasValue).Select(x=>x.ReactRowId!.Value).Distinct().ToArray();
+        await using(var cmd=Command(c,tx,"""
+            SELECT a.id,a.job_prueba,coalesce(a.test_name_tecnico,''),coalesce(a.fecha_ingreso,a.reg_date),
+              l.execution_id,owned.episode_id,coalesce(owned.laboratory,'')
+            FROM public.planificacion_activa a
+            LEFT JOIN planning.react_execution_links l ON l.react_row_id=a.id
+            LEFT JOIN planning.executions owned ON owned.id=l.execution_id
+            WHERE a.id=ANY(@sources) OR a.job_prueba=ANY(@keys)
+            """,("sources",sourceIds),("keys",keys)))
+        await using(var r=await cmd.ExecuteReaderAsync(ct).ConfigureAwait(false))
+        while(await r.ReadAsync(ct).ConfigureAwait(false))
+        {
+            var id=r.GetInt64(0);
+            if(!candidates.TryGetValue(id,out var row))
+                candidates.Add(id,row=(r.GetString(1),r.GetString(2),NullableDate(r,3),!r.IsDBNull(4),[]));
+            if(!r.IsDBNull(5))row.Owners.Add((r.GetGuid(4),r.GetGuid(5),r.GetString(6)));
+        }
+        var byKey=candidates.GroupBy(p=>p.Value.Key,StringComparer.Ordinal).ToDictionary(g=>g.Key,g=>g.Select(p=>p.Key).ToArray(),StringComparer.Ordinal);
+        var episodes=plan.Episodes.ToDictionary(e=>e.Id);
         for(var i=0;i<admissions.Length;i++)
         {
             var a=admissions[i];var x=executions[a.ExecutionId];
-            await using(var removed=Command(c,tx,"SELECT EXISTS(SELECT 1 FROM planning.react_execution_links WHERE execution_id=@id AND disposition='Active' AND react_row_id IS NULL)",("id",x.Id)))
-                if(await removed.ExecuteScalarAsync(ct).ConfigureAwait(false) is true)
-                    admissions[i]=a=a with{State="ReactIdentity",Reason="La fila React enlazada fue retirada. Se conserva el UUID y se requiere una conciliación explícita para reactivar."};
-            if(a.State=="OutsideDate"&&x.Action!="Create")
+            if(priorLinks.TryGetValue(x.Id,out var prior)&&prior.State=="Active")
             {
-                await using var observed=Command(c,tx,"SELECT disposition FROM planning.react_execution_links WHERE execution_id=@id",("id",x.Id));
-                if(await observed.ExecuteScalarAsync(ct).ConfigureAwait(false) as string=="Active")
+                if(prior.Removed)
+                    admissions[i]=a=a with{State="ReactIdentity",Reason="La fila React enlazada fue retirada. Se conserva el UUID y se requiere una conciliación explícita para reactivar."};
+                else if(a.State=="OutsideDate"&&x.Action!="Create")
                     admissions[i]=a=a with{State="Active",Reason="Ejecución previamente admitida; una carga de otra fecha no la retira del trabajo activo."};
             }
             if(a.State!="Active")continue;
@@ -109,20 +134,16 @@ public sealed partial class PostgresPlanningStore
                 admissions[i]=a with{State="ReactIdentity",Reason="La combinación React corresponde a distintos ingresos o laboratorios. Se conservan los UUID separados; concilie antes de proyectar."};
             else
             {
-                var episode=plan.Episodes.SingleOrDefault(e=>e.Id==x.EpisodeId);
-                if(episode is null)continue;
-                await using var cmd=Command(c,tx,"""
-                    SELECT a.id,coalesce(a.test_name_tecnico,''),coalesce(a.fecha_ingreso,a.reg_date),
-                      EXISTS(SELECT 1 FROM planning.react_execution_links l JOIN planning.executions owned ON owned.id=l.execution_id
-                        WHERE l.react_row_id=a.id AND l.execution_id<>@execution AND (owned.episode_id<>@episode OR coalesce(owned.laboratory,'')<>coalesce(@lab,''))),
-                      EXISTS(SELECT 1 FROM planning.react_execution_links l WHERE l.react_row_id=a.id)
-                    FROM public.planificacion_activa a
-                    WHERE (@source::bigint IS NOT NULL AND a.id=@source::bigint) OR (@source::bigint IS NULL AND a.job_prueba=@key)
-                    """,("key",x.Job+" - "+x.Equivalence),("episode",x.EpisodeId),("lab",x.Laboratory),("source",x.ReactRowId),("execution",x.Id));
-                await using var reader=await cmd.ExecuteReaderAsync(ct).ConfigureAwait(false);
-                if(await reader.ReadAsync(ct).ConfigureAwait(false)&&
-                    (reader.GetBoolean(3)||(!reader.GetBoolean(4)&&
-                    x.ReactRowId!=reader.GetInt64(0)&&(PlanningReconciler.TestKey(reader.GetString(1))!=PlanningReconciler.TestKey(x.OriginalTest)||NullableDate(reader,2)!=episode.Source.InDate))))
+                if(!episodes.TryGetValue(x.EpisodeId,out var episode))continue;
+                var matches=x.ReactRowId is{} source
+                    ? candidates.ContainsKey(source)?new[]{source}:[]
+                    : byKey.GetValueOrDefault(x.Job+" - "+x.Equivalence)??[];
+                if(matches.Any(id=>
+                {
+                    var row=candidates[id];
+                    return row.Owners.Any(o=>o.Execution!=x.Id&&(o.Episode!=x.EpisodeId||o.Lab!=(x.Laboratory??"")))||
+                        (!row.Linked&&x.ReactRowId!=id&&(PlanningReconciler.TestKey(row.Test)!=PlanningReconciler.TestKey(x.OriginalTest)||row.Date!=episode.Source.InDate));
+                }))
                     admissions[i]=a with{State="ReactIdentity",Reason="La fila React existente tiene otra fecha, prueba fuente o UUID. Se conserva para conciliación."};
             }
         }

@@ -45,18 +45,19 @@ public sealed partial class PlanningImportsView : Grid, IDisposable
         _reviewPanel=ReviewPanel();_differencePanel=DifferencePanel();_historyPanel=HistoryPanel();
         _tabs.Items.Add(_previewTab);_tabs.Items.Add(new(){Label="Bandejas de revisión"});_tabs.Items.Add(new(){Label="Historial"});
         AutomationProperties.SetName(_tabs,"Secciones del Centro de Importaciones");
-        _tabs.SelectionChanged+=(_,_)=>SelectSection();_tabs.SelectedIndex=1;Grid.SetColumn(_tabs,1);heading.Children.Add(_tabs);_tabs.VerticalAlignment=VerticalAlignment.Center;
+        _tabs.SelectionChanged+=async(_,_)=>{SelectSection();if(_tabs.SelectedIndex!=0)await Load();};_tabs.SelectedIndex=0;Grid.SetColumn(_tabs,1);heading.Children.Add(_tabs);_tabs.VerticalAlignment=VerticalAlignment.Center;
         Grid.SetColumn(_reviewScope,2);heading.Children.Add(_reviewScope);_reviewScope.Margin=new(12,0,0,0);_reviewScope.Width=310;_reviewScope.VerticalAlignment=VerticalAlignment.Center;
-        heading.SizeChanged+=(_,_)=>{var narrow=heading.ActualWidth<1180;Grid.SetRow(_tabs,narrow?1:0);Grid.SetColumn(_tabs,narrow?0:1);Grid.SetColumnSpan(_tabs,narrow?3:1);identity.Margin=narrow?new(0,2,12,2):new(0,0,24,0);};
+        void ArrangeHeading(){var narrow=heading.ActualWidth<(_tabs.SelectedIndex==1?1310:900);Grid.SetRow(_tabs,narrow?1:0);Grid.SetColumn(_tabs,narrow?0:1);Grid.SetColumnSpan(_tabs,narrow?3:1);identity.Margin=narrow?new(0,2,12,2):new(0,0,24,0);}
+        heading.SizeChanged+=(_,_)=>ArrangeHeading();_tabs.SelectionChanged+=(_,_)=>ArrangeHeading();
         _status.Visibility=Visibility.Collapsed;var message=PlanningUi.Stack(_progress,_status);message.Spacing=2;PlanningUi.Place(this,message,3);_section.Margin=new(0,8,0,0);PlanningUi.Place(this,_section,4);
-        _flow.Header="Nueva importación · selecciona Summary y Report List";_flow.IsExpanded=false;
+        _flow.Header="Importar archivos de planificación";_flow.IsExpanded=true;
         SizeChanged+=(_,e)=>{_shortWindow=e.NewSize.Height<650;CompactSurface();};_flow.RegisterPropertyChangedCallback(Expander.IsExpandedProperty,(_,_)=>CompactSurface());
         SelectSection();
     }
     private void CompactSurface()
     {
         _resultHost.Visibility=Visibility.Collapsed;
-
+        if(ActualHeight>0)_flowScroll.MaxHeight=Math.Max(240,ActualHeight-130-(_preview is null?0:160));
     }
     private static Button Action(string text,LimsIconKind icon,Func<Task> action,bool primary=false)
     {
@@ -77,10 +78,12 @@ public sealed partial class PlanningImportsView : Grid, IDisposable
     {
         _busy=busy;_new.IsEnabled=!busy;_progress.IsIndeterminate=busy;_progress.Visibility=busy?Visibility.Visible:Visibility.Collapsed;
         _flow.IsEnabled=!busy;_confirm.IsEnabled=!busy&&_step==3&&_preview is{Status:"Preview"} p&&!p.Issues.Any(i=>i.Blocking);
+        UpdateImportActions();
         if(text is not null)Message(text);
     }
     private void SelectSection()
     {
+        if(_tabs.SelectedIndex==0&&!_busy){Cancel();_progress.Visibility=Visibility.Collapsed;Message("");}
         if(_tabs.SelectedIndex==0&&!_busy&&_preview?.Status=="Applied"){BeginImport();}
         _flow.Visibility=_tabs.SelectedIndex==0?Visibility.Visible:Visibility.Collapsed;
         _reviewScope.Visibility=_tabs.SelectedIndex==1?Visibility.Visible:Visibility.Collapsed;
@@ -92,7 +95,7 @@ public sealed partial class PlanningImportsView : Grid, IDisposable
     private void Show(PlanningImportPreview preview,bool history=false)
     {
         _preview=preview;
-        if(history){_updatingFlow=true;_summary=_report=null;_day.Date=new DateTimeOffset(preview.Cut.Day.ToDateTime(TimeOnly.MinValue),TimeSpan.FromHours(-6));_window.SelectedIndex=preview.Cut.Window switch{"Noon"=>1,"Last"=>2,_=>0};_updatingFlow=false;}
+        if(history){_updatingFlow=true;_summary=_report=_supplement=null;_importingSide2=preview.Cut.Policy=="HtmlReactSide2";_day.Date=new DateTimeOffset(preview.Cut.Day.ToDateTime(TimeOnly.MinValue),TimeSpan.FromHours(-6));_window.SelectedIndex=preview.Cut.Window switch{"Noon"=>1,"Last"=>2,_=>0};_updatingFlow=false;}
         UpdateFiles(preview);SetStep(preview.Status=="Applied"?4:2);
         _differencePanel.Visibility=Visibility.Visible;
         _flow.Header=$"{(preview.Status=="Applied"?"Lote confirmado":"Importación en revisión")} · {preview.Cut.Day:yyyy-MM-dd} · {CutLabel(preview.Cut.Window)} · Procedencia y validación";
@@ -122,20 +125,18 @@ public sealed partial class PlanningImportsView : Grid, IDisposable
     public async Task Load()
     {
         var canImport=_permissions().Contains(PlanningPermissions.Import,StringComparer.Ordinal);_new.Visibility=Visibility.Collapsed;_previewTab.IsEnabled=canImport;
-        if(_busy)return;Busy(true,"Actualizando bandejas e historial…");Cancel();_load=new();var ct=_load.Token;var begin=false;
+        if(_tabs.SelectedIndex==0)
+        {
+            if(!_initialized){_initialized=true;if(canImport)BeginImport();else _tabs.SelectedIndex=1;}
+            return;
+        }
+        if(_busy)return;Cancel();_load=new();var ct=_load.Token;
         try
         {
             await LoadHistory(ct);if(ct.IsCancellationRequested)return;
-            if(!_initialized)
-            {
-                _initialized=true;var latest=_batches.FirstOrDefault(b=>b.Status=="Applied");
-                if(latest is not null){SetReviewBatch(latest.Id);if(canImport){var result=await _api.Batch(latest.Id,ct);if(result.IsSuccess&&result.Value is{} preview)Show(preview,true);}}
-                else begin=canImport;
-            }
-            await RefreshReviews(ct);
+            if(_tabs.SelectedIndex==1)await RefreshReviews(ct);
         }
         catch(OperationCanceledException)when(ct.IsCancellationRequested){ }
-        finally{Busy(false);if(begin)BeginImport();else if(_status.Text=="Actualizando bandejas e historial…")Message("");}
     }
     private async Task Changed()
     {await RefreshReviews();if(Applied is{} applied)await applied();}

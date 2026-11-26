@@ -9,6 +9,18 @@ namespace Lims.Desktop.Tests;
 public sealed class PlanningCompatibilityTests
 {
     [Fact]
+    public async Task ImportTimeoutDistinguishesAnUnconfirmedPreviewFromAnUncertainConfirmation()
+    {
+        using var factory=new ClientFactory(_=>throw new TaskCanceledException("Simulated server timeout"));
+        var api=new PlanningApiClient(factory);
+        var preview=await api.Preview("Summary.xlsx",[],"Report.xlsx",[],new("First",new(2026,11,26)),default);
+        Assert.False(preview.IsSuccess);Assert.Contains("No se confirmó",preview.Error);Assert.DoesNotContain("historial",preview.Error);
+        var confirm=await api.Confirm(Guid.NewGuid(),default);
+        Assert.False(confirm.IsSuccess);Assert.Contains("historial",confirm.Error);Assert.Contains("comprobar si se guardó",confirm.Error);
+        var history=await api.Batches(default);
+        Assert.False(history.IsSuccess);Assert.Contains("consulta",history.Error);Assert.DoesNotContain("guardó",history.Error);
+    }
+    [Fact]
     public async Task ScheduleRequestsOmitAbsentRevisionAndEncodeSearchBeforeFirstPage()
     {
         var queries=new List<string>();

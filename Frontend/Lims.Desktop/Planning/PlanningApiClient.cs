@@ -137,7 +137,15 @@ public sealed class PlanningApiClient(IHttpClientFactory clients)
         }
         catch(HttpRequestException){return new(false,default,"No se pudo conectar con la API.",0);}
         catch(JsonException){return new(false,default,"La respuesta de la API no corresponde a esta versión de Planificación.",0);}
-        catch(OperationCanceledException) when(!ct.IsCancellationRequested){return new(false,default,"La operación excedió el tiempo de espera. Consulte el historial antes de reintentar.",0);}
+        catch(OperationCanceledException) when(!ct.IsCancellationRequested)
+        {
+            var message=path.EndsWith("/confirm",StringComparison.Ordinal)
+                ?"El servidor no respondió a la confirmación a tiempo. Consulta el historial para comprobar si se guardó antes de reintentar."
+                :path.EndsWith("/preview",StringComparison.Ordinal)
+                    ?"El servidor no terminó la revisión a tiempo. No se confirmó la importación. Tus archivos siguen seleccionados; puedes volver a importar."
+                    :"El servidor no respondió a la consulta a tiempo. Puedes volver a consultar.";
+            return new(false,default,message,0);
+        }
     }
     private static async Task<string> Error(HttpResponseMessage response,CancellationToken ct)
     {
